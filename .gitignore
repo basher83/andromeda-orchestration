@@ -1,0 +1,8 @@
+
+
+#Ignore insiders AI rules
+.github/copilot-instructions.md
+
+
+#Ignore cursor AI rules
+.cursor/rules/codacy.mdc
