@@ -6,3 +6,6 @@
 
 #Ignore cursor AI rules
 .cursor/rules/codacy.mdc
+
+ansible-navigator.log
+test_localhost-artifact-*.json
