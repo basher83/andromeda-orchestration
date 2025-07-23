@@ -1,11 +1,67 @@
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+*.egg-info/
+dist/
+build/
 
-#Ignore insiders AI rules
+# Ansible
+*.retry
+ansible.log
+*.log
+test_localhost-artifact-*.json
+inventory-output*.json
+ansible-navigator.log
+
+# 1Password environment
+scripts/set-1password-env.sh
+.env
+
+# IDE and AI tools
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .github/copilot-instructions.md
-
-
-#Ignore cursor AI rules
 .cursor/rules/codacy.mdc
 
-ansible-navigator.log
-test_localhost-artifact-*.json
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+/tmp/
+
+# Secrets - never commit these!
+**/secrets/
+**/credentials/
+*.pem
+*.key
+*.crt
+.secrets.baseline
+
+# Testing
+molecule/**/create.yml
+molecule/**/destroy.yml
+molecule/**/.cache/
+molecule/**/.molecule/
+
+# Pre-commit
+.pre-commit-config.yaml.lock

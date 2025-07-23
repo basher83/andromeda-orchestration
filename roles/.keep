@@ -1,0 +1,47 @@
+# Ansible Roles
+
+This directory will contain reusable Ansible roles for common tasks.
+
+## Planned roles:
+
+### Network Device Roles
+- `netbox-device` - Configure devices based on NetBox data
+- `network-backup` - Backup network device configurations
+- `vlan-management` - Manage VLANs across infrastructure
+
+### Infrastructure Roles
+- `proxmox-vm` - Provision and manage Proxmox VMs
+- `container-deploy` - Deploy and configure containers
+- `monitoring-agent` - Deploy monitoring agents
+
+### NetBox Integration Roles
+- `netbox-sync` - Synchronize data with NetBox
+- `netbox-inventory` - Generate inventory from NetBox
+- `netbox-compliance` - Check compliance against NetBox data
+
+### Security Roles
+- `hardening` - Apply security hardening
+- `certificate-management` - Manage TLS certificates
+- `firewall-config` - Configure firewall rules
+
+## Creating New Roles
+
+Use `ansible-galaxy role init <role_name>` to create the standard structure:
+```
+roles/
+└── role_name/
+    ├── defaults/
+    │   └── main.yml
+    ├── handlers/
+    │   └── main.yml
+    ├── meta/
+    │   └── main.yml
+    ├── tasks/
+    │   └── main.yml
+    ├── templates/
+    ├── tests/
+    │   ├── inventory
+    │   └── test.yml
+    └── vars/
+        └── main.yml
+```

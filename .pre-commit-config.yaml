@@ -1,0 +1,80 @@
+# Pre-commit hooks for Ansible projects
+# Install: uv pip install pre-commit
+# Setup: uv run pre-commit install
+# Run: uv run pre-commit run --all-files
+
+repos:
+  # YAML linting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]  # Allow custom tags
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: pretty-format-json
+        args: [--autofix]
+
+  # YAML formatting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--config-file=.yamllint]
+        types: [yaml]
+
+  # Ansible linting - Disabled in pre-commit due to module import issues
+  # Run via: task lint:ansible or uv run ansible-lint
+  # - repo: https://github.com/ansible/ansible-lint
+  #   rev: v24.2.0
+  #   hooks:
+  #     - id: ansible-lint
+
+  # Python code quality (for custom modules/plugins)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # Python type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.9.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, types-pyyaml]
+        files: \.(py)$
+        exclude: ^(tests/|docs/|archive/)
+
+  # Security checks - Disabled due to version conflicts
+  # Run via: task security
+  # - repo: https://github.com/Yelp/detect-secrets
+  #   rev: v1.4.0
+  #   hooks:
+  #     - id: detect-secrets
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+
+# Configuration for specific tools
+default_language_version:
+  python: python3.11

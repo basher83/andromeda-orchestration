@@ -2,7 +2,7 @@ version: 3
 
 images:
   base_image:
-    name: registry.fedoraproject.org/fedora:42
+    name: ghcr.io/ansible-community/community-ee-minimal:latest
 
 dependencies:
   python_interpreter:
@@ -12,8 +12,8 @@ dependencies:
   ansible_runner:
     package_pip: ansible-runner
   system:
-  - openssh-clients
-  - sshpass
+    - openssh-clients
+    - sshpass
   galaxy:
     collections:
-    - name: community.general
+      - name: community.general

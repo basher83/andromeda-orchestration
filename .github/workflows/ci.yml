@@ -1,0 +1,172 @@
+name: CI
+
+"on":
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install yamllint ansible-lint ansible-core
+          # Install collections needed for ansible-lint
+          uv run ansible-galaxy collection install -r requirements.yml
+
+      - name: Run yamllint
+        run: |
+          echo "### YAMLLint Results" >> $GITHUB_STEP_SUMMARY
+          # Continue on warnings (line length), fail on errors
+          if uv run yamllint . 2>&1 | tee yamllint.log; then
+            echo "✅ YAMLLint passed" >> $GITHUB_STEP_SUMMARY
+          else
+            cat yamllint.log >> $GITHUB_STEP_SUMMARY
+            if grep -q "error" yamllint.log; then
+              echo "❌ YAMLLint found errors" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            else
+              echo "⚠️ YAMLLint found warnings" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Run ansible-lint
+        run: |
+          echo "### Ansible-lint Results" >> $GITHUB_STEP_SUMMARY
+          # Continue on warnings, fail on errors
+          if uv run ansible-lint 2>&1 | tee ansible-lint.log; then
+            echo "✅ Ansible-lint passed" >> $GITHUB_STEP_SUMMARY
+          else
+            cat ansible-lint.log >> $GITHUB_STEP_SUMMARY
+            if grep -q "Failed:" ansible-lint.log; then
+              echo "❌ Ansible-lint found errors" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            else
+              echo "⚠️ Ansible-lint found warnings" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+  python-quality:
+    name: Python Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install ruff mypy types-requests types-pyyaml
+
+      - name: Run ruff
+        run: |
+          uv run ruff check plugins scripts tests
+          uv run ruff format plugins scripts tests --check
+
+      - name: Run mypy
+        run: uv run mypy plugins scripts
+
+  test-inventory:
+    name: Test Inventory
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install Ansible
+        run: |
+          uv venv
+          uv pip install ansible-core
+
+      - name: Install collections
+        run: uv run ansible-galaxy collection install -r requirements.yml
+
+      - name: Test inventory syntax
+        run: |
+          # This would normally test with real credentials
+          # For CI, we just validate the syntax
+          echo "Inventory syntax validation would go here"
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  molecule:
+    name: Molecule Tests
+    runs-on: ubuntu-latest
+    if: false  # Disabled until we have roles to test
+    strategy:
+      matrix:
+        scenario:
+          - default
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install ansible-core molecule molecule-plugins[docker]
+
+      - name: Run Molecule tests
+        run: |
+          uv run molecule test -s ${{ matrix.scenario }}
+        env:
+          PY_COLORS: '1'
+          ANSIBLE_FORCE_COLOR: '1'

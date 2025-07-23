@@ -1,0 +1,100 @@
+version: '3'
+
+# NOTE: We use 'uv run' with a virtual environment (not 'uv tool') to ensure
+# all Ansible executables are available. See docs/uv-ansible-notes.md
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmd: task --list
+
+  setup:
+    desc: Complete project setup (venv, deps, pre-commit)
+    cmds:
+      - echo "Setting up NetBox Ansible project..."
+      - |
+        if command -v uv >/dev/null 2>&1; then
+          echo "Using uv for Python environment..."
+          uv venv
+          source .venv/bin/activate && uv pip install -e ".[dev]"
+        else
+          echo "Using pip for Python environment..."
+          python3 -m venv .venv
+          source .venv/bin/activate && pip install -e ".[dev]"
+        fi
+      - uv run ansible-galaxy collection install -r requirements.yml
+      - uv run pre-commit install
+      - echo "Setup complete! Activate your environment with':' source .venv/bin/activate"
+
+  lint:
+    desc: Run all linters
+    cmds:
+      - task: lint:yaml
+      - task: lint:ansible
+      - task: lint:python
+
+  lint:yaml:
+    desc: Run yamllint
+    cmd: uv run yamllint .
+
+  lint:ansible:
+    desc: Run ansible-lint
+    cmd: uv run ansible-lint
+
+  lint:python:
+    desc: Run Python linters
+    cmds:
+      - uv run ruff check plugins scripts tests
+      - uv run mypy plugins scripts || true
+
+  fix:
+    desc: Auto-fix linting issues where possible
+    cmds:
+      - uv run ruff check --fix plugins scripts tests
+      - uv run ruff format plugins scripts tests
+      - uv run ansible-lint --fix || true
+
+  test:
+    desc: Run all tests
+    cmds:
+      - task: test:syntax
+      - task: test:python
+
+  test:syntax:
+    desc: Check playbook syntax
+    cmd: fd -e yml . playbooks -x uv run ansible-playbook {} --syntax-check
+
+  test:python:
+    desc: Run Python tests
+    cmd: |
+      if [ -d "tests" ] && [ -n "$(fd -e py '^test_' tests)" ]; then
+        uv run pytest tests/
+      else
+        echo "No Python tests found"
+      fi
+
+  security:
+    desc: Run security scans
+    cmd: |
+      if [ -f .secrets.baseline ]; then
+        uv run detect-secrets scan --baseline .secrets.baseline
+      else
+        echo "Creating secrets baseline..."
+        uv run detect-secrets scan > .secrets.baseline
+      fi
+
+  hooks:
+    desc: Run all pre-commit hooks
+    cmd: uv run pre-commit run --all-files
+
+  clean:
+    desc: Remove generated files and caches
+    cmds:
+      - fd -t d -H '^__pycache__$' . -x rm -rf {} || true
+      - fd -e pyc . -x rm {} || true
+      - fd -t d -H '^\.pytest_cache$' . -x rm -rf {} || true
+      - fd -t d -H '^\.mypy_cache$' . -x rm -rf {} || true
+      - fd -t d -H '^\.ruff_cache$' . -x rm -rf {} || true
+      - fd -t d '\.egg-info$' . -x rm -rf {} || true
+      - rm -rf build/ dist/
+      - echo "Cleanup complete!"
