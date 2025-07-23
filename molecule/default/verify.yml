@@ -1,0 +1,8 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Example verification task
+      ansible.builtin.debug:
+        msg: "Add your verification tasks here"

@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Include the role being tested
+      ansible.builtin.include_role:
+        name: "{{ molecule_yml.provisioner.env.MOLECULE_ROLE_NAME | default('role_under_test') }}"
+      when: molecule_yml.provisioner.env.MOLECULE_ROLE_NAME is defined

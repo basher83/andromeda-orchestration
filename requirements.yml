@@ -1,0 +1,26 @@
+---
+# Ansible Galaxy requirements file
+# Install with: ansible-galaxy install -r requirements.yml
+
+collections:
+  # General community modules
+  - name: community.general
+    version: ">=8.0.0"
+  # Proxmox modules
+  - name: community.proxmox
+    version: ">=1.0.0"
+
+  # NetBox integration (for future use)
+  - name: netbox.netbox
+    version: ">=3.13.0"
+
+  # 1Password Connect (optional - for onepassword.connect modules)
+  - name: onepassword.connect
+    version: ">=2.3.0"
+
+  # Additional useful collections
+  - name: ansible.posix
+    version: ">=1.5.0"
+
+  - name: ansible.utils
+    version: ">=2.10.0"

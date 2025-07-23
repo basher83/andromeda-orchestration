@@ -1,12 +1,13 @@
-plugin: community.general.proxmox
-url: https://proxmox.mydomain.com:8006
+plugin: community.proxmox.proxmox
+url: https://192.168.30.30:8006
 validate_certs: false
 want_facts: true
 
 # Instead of login with password, proxmox supports api token authentication since release 6.2.
 user: ansible@pve
 token_id: service
-token_secret: <<>>
+# Using 1Password CLI lookup
+token_secret: "{{ lookup('community.general.onepassword', 'Proxmox API - og-homelab', field='token_secret') }}"
 
 # Group vms by tags for reference in playbooks.
 keyed_groups:
@@ -14,7 +15,7 @@ keyed_groups:
     separator: ""
     prefix: tag_
 
-#groups:
+# groups:
 #  proxmox_managed_running: "'managed' in (proxmox_tags_parsed|list) and (proxmox_status == 'running')"
 #  proxmox_use_agent: proxmox_agent == "1"
 #  proxmox_usable: (proxmox_status == "running") and ('linux' in (proxmox_tags|split(';'))) and (( proxmox_vmtype == "lxc" ) or ( proxmox_vmtype == "qemu" and proxmox_agent == "1" ))
@@ -23,5 +24,5 @@ keyed_groups:
 #  mailservers: "'mail' in (proxmox_tags_parsed|list)"
 
 compose:
-  ansible_host: proxmox_name + ".mydomain.com"
-#  ansible_host: proxmox_net0["ip"].split('/')[0] if 'ip' in proxmox_net0 else proxmox_agent_interfaces[1]["ip-addresses"][0].split('/')[0]
+#  ansible_host: proxmox_name + ".mydomain.com"
+  ansible_host: proxmox_net0["ip"].split('/')[0] if 'ip' in proxmox_net0 else proxmox_agent_interfaces[1]["ip-addresses"][0].split('/')[0]
