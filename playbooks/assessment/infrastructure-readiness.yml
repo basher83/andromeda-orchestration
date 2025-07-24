@@ -1,0 +1,375 @@
+---
+# Infrastructure Readiness Assessment Playbook
+# Part of Phase 0: Infrastructure Assessment
+#
+# This playbook assesses the overall infrastructure readiness for deploying
+# NetBox, PowerDNS, and related services. It checks compute resources,
+# storage, networking, and integration points.
+#
+# Usage:
+#   ./bin/ansible-connect playbook playbooks/assessment/infrastructure-readiness.yml
+#   ./bin/ansible-connect playbook playbooks/assessment/infrastructure-readiness.yml -e target_inventory=doggos-homelab
+
+- name: Infrastructure Readiness Assessment
+  hosts: all
+  gather_facts: true
+  vars:
+    report_dir: "{{ playbook_dir }}/../../reports/infrastructure"
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    # Minimum requirements for services
+    min_requirements:
+      netbox:
+        ram_mb: 4096
+        disk_gb: 20
+        cpu_cores: 2
+      powerdns:
+        ram_mb: 1024
+        disk_gb: 10
+        cpu_cores: 1
+      mariadb:
+        ram_mb: 2048
+        disk_gb: 20
+        cpu_cores: 2
+      postgresql:
+        ram_mb: 2048
+        disk_gb: 30
+        cpu_cores: 2
+    required_ports:
+      consul:
+        - { port: 8300, proto: tcp, desc: "Server RPC" }
+        - { port: 8301, proto: tcp, desc: "Serf LAN" }
+        - { port: 8301, proto: udp, desc: "Serf LAN" }
+        - { port: 8302, proto: tcp, desc: "Serf WAN" }
+        - { port: 8302, proto: udp, desc: "Serf WAN" }
+        - { port: 8500, proto: tcp, desc: "HTTP API" }
+        - { port: 8600, proto: tcp, desc: "DNS" }
+        - { port: 8600, proto: udp, desc: "DNS" }
+      nomad:
+        - { port: 4646, proto: tcp, desc: "HTTP API" }
+        - { port: 4647, proto: tcp, desc: "RPC" }
+        - { port: 4648, proto: tcp, desc: "Serf" }
+      powerdns:
+        - { port: 53, proto: tcp, desc: "DNS" }
+        - { port: 53, proto: udp, desc: "DNS" }
+        - { port: 8081, proto: tcp, desc: "API/Web" }
+      netbox:
+        - { port: 8080, proto: tcp, desc: "HTTP" }
+        - { port: 443, proto: tcp, desc: "HTTPS" }
+
+  tasks:
+    - name: Create report directory
+      delegate_to: localhost
+      run_once: true
+      ansible.builtin.file:
+        path: "{{ report_dir }}"
+        state: directory
+        mode: '0755'
+
+    # System Resource Assessment
+    - name: Calculate available resources
+      ansible.builtin.set_fact:
+        system_resources:
+          total_ram_mb: "{{ ansible_memtotal_mb }}"
+          free_ram_mb: "{{ ansible_memfree_mb }}"
+          used_ram_percent: "{{ ((ansible_memtotal_mb - ansible_memfree_mb) / ansible_memtotal_mb * 100) | round(2) }}"
+          total_swap_mb: "{{ ansible_swaptotal_mb }}"
+          cpu_cores: "{{ ansible_processor_vcpus }}"
+          cpu_model: "{{ ansible_processor[2] | default('Unknown') }}"
+
+    - name: Get disk usage
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          df -BG | grep -vE '^Filesystem|tmpfs|cdrom|udev' | awk '{print $1 ":" $2 ":" $3 ":" $4 ":" $5 ":" $6}'
+      args:
+        executable: /bin/bash
+      register: disk_usage_raw
+      changed_when: false
+
+    - name: Parse disk usage
+      ansible.builtin.set_fact:
+        disk_usage: |
+          {% set disks = [] %}
+          {% for line in disk_usage_raw.stdout_lines %}
+          {% set parts = line.split(':') %}
+          {% if parts | length >= 6 %}
+          {% set _ = disks.append({
+            'filesystem': parts[0],
+            'total_gb': parts[1] | regex_replace('G', '') | int,
+            'used_gb': parts[2] | regex_replace('G', '') | int,
+            'available_gb': parts[3] | regex_replace('G', '') | int,
+            'use_percent': parts[4] | regex_replace('%', '') | int,
+            'mount': parts[5]
+          }) %}
+          {% endif %}
+          {% endfor %}
+          {{ disks }}
+
+    # Container Runtime Detection
+    - name: Check for Docker
+      ansible.builtin.command:
+        cmd: docker version --format json
+      register: docker_check
+      changed_when: false
+      failed_when: false
+
+    - name: Check for Podman
+      ansible.builtin.command:
+        cmd: podman version --format json
+      register: podman_check
+      changed_when: false
+      failed_when: false
+
+    - name: Check for containerd
+      ansible.builtin.command:
+        cmd: ctr version
+      register: containerd_check
+      changed_when: false
+      failed_when: false
+
+    # Orchestration Platform Detection
+    - name: Check for Nomad
+      ansible.builtin.command:
+        cmd: nomad version
+      register: nomad_check
+      changed_when: false
+      failed_when: false
+
+    - name: Get Nomad agent info if available
+      when: nomad_check.rc == 0
+      ansible.builtin.command:
+        cmd: nomad agent-info
+      register: nomad_agent_info
+      changed_when: false
+      failed_when: false
+
+    - name: Check for Kubernetes
+      ansible.builtin.command:
+        cmd: kubectl version --client -o json
+      register: k8s_check
+      changed_when: false
+      failed_when: false
+
+    # Network Connectivity Tests
+    - name: Test connectivity between nodes
+      ansible.builtin.command:
+        cmd: "ping -c 2 -W 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
+      loop: "{{ groups['all'] }}"
+      when: item != inventory_hostname
+      register: ping_tests
+      changed_when: false
+      failed_when: false
+
+    # Port Availability Checks
+    - name: Check required ports for Consul
+      ansible.builtin.wait_for:
+        port: "{{ item.port }}"
+        host: "{{ ansible_default_ipv4.address }}"
+        state: stopped
+        timeout: 2
+      loop: "{{ required_ports.consul }}"
+      register: consul_ports
+      failed_when: false
+
+    - name: Check required ports for Nomad
+      ansible.builtin.wait_for:
+        port: "{{ item.port }}"
+        host: "{{ ansible_default_ipv4.address }}"
+        state: stopped
+        timeout: 2
+      loop: "{{ required_ports.nomad }}"
+      register: nomad_ports
+      failed_when: false
+
+    - name: Check required ports for PowerDNS
+      ansible.builtin.wait_for:
+        port: "{{ item.port }}"
+        host: "{{ ansible_default_ipv4.address }}"
+        state: stopped
+        timeout: 2
+      loop: "{{ required_ports.powerdns }}"
+      register: powerdns_ports
+      failed_when: false
+
+    # Storage Backend Checks
+    - name: Check for persistent volume capabilities
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /var/lib/docker/volumes
+        - /var/lib/nomad
+        - /opt/nomad-volumes
+        - /data
+      register: storage_paths
+
+    # Firewall Status
+    - name: Check firewall status (iptables)
+      ansible.builtin.command:
+        cmd: iptables -L -n
+      register: iptables_status
+      changed_when: false
+      failed_when: false
+
+    - name: Check firewall status (firewalld)
+      ansible.builtin.systemd:
+        name: firewalld
+      register: firewalld_status
+      failed_when: false
+
+    - name: Check firewall status (ufw)
+      ansible.builtin.command:
+        cmd: ufw status
+      register: ufw_status
+      changed_when: false
+      failed_when: false
+
+    # Integration Readiness
+    - name: Check Consul-Nomad integration
+      when: nomad_check.rc == 0
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          nomad agent-info | grep -i consul || echo "No Consul integration found"
+      args:
+        executable: /bin/bash
+      register: consul_nomad_integration
+      changed_when: false
+
+    # Compile Readiness Report
+    - name: Compile infrastructure readiness report
+      ansible.builtin.set_fact:
+        readiness_report:
+          hostname: "{{ ansible_hostname }}"
+          fqdn: "{{ ansible_fqdn }}"
+          os: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+          kernel: "{{ ansible_kernel }}"
+          virtualization: "{{ ansible_virtualization_type | default('none') }}"
+          # Resources
+          resources:
+            cpu:
+              cores: "{{ system_resources.cpu_cores }}"
+              model: "{{ system_resources.cpu_model }}"
+            memory:
+              total_mb: "{{ system_resources.total_ram_mb }}"
+              free_mb: "{{ system_resources.free_ram_mb }}"
+              used_percent: "{{ system_resources.used_ram_percent }}"
+              swap_mb: "{{ system_resources.total_swap_mb }}"
+            storage: "{{ disk_usage }}"
+          # Container/Orchestration
+          container_runtime:
+            docker: "{{ docker_check.rc == 0 }}"
+            podman: "{{ podman_check.rc == 0 }}"
+            containerd: "{{ containerd_check.rc == 0 }}"
+          orchestration:
+            nomad:
+              installed: "{{ nomad_check.rc == 0 }}"
+              version: "{{ nomad_check.stdout | default('Not installed') }}"
+              consul_integrated: "{{ 'consul' in consul_nomad_integration.stdout | lower }}"
+            kubernetes: "{{ k8s_check.rc == 0 }}"
+          # Network
+          network:
+            connectivity_tests: |
+              {% set results = [] %}
+              {% for test in ping_tests.results | default([]) %}
+              {% if test.rc is defined %}
+              {% set _ = results.append({
+                'target': test.item,
+                'success': test.rc == 0
+              }) %}
+              {% endif %}
+              {% endfor %}
+              {{ results }}
+            firewall:
+              iptables_active: "{{ iptables_status.rc == 0 and 'ACCEPT' in iptables_status.stdout }}"
+              firewalld_active: "{{ firewalld_status.status.ActiveState | default('inactive') == 'active' }}"
+              ufw_active: "{{ ufw_status.rc == 0 and 'active' in ufw_status.stdout | lower }}"
+          # Port availability
+          port_availability:
+            consul: |
+              {% set available = [] %}
+              {% for port in consul_ports.results %}
+              {% if port.state is defined and port.state == 'stopped' %}
+              {% set _ = available.append(port.item.port) %}
+              {% endif %}
+              {% endfor %}
+              {{ available }}
+            nomad: |
+              {% set available = [] %}
+              {% for port in nomad_ports.results %}
+              {% if port.state is defined and port.state == 'stopped' %}
+              {% set _ = available.append(port.item.port) %}
+              {% endif %}
+              {% endfor %}
+              {{ available }}
+            powerdns: |
+              {% set available = [] %}
+              {% for port in powerdns_ports.results %}
+              {% if port.state is defined and port.state == 'stopped' %}
+              {% set _ = available.append(port.item.port) %}
+              {% endif %}
+              {% endfor %}
+              {{ available }}
+          # Storage
+          persistent_storage:
+            paths_available: |
+              {% set available = [] %}
+              {% for path in storage_paths.results %}
+              {% if path.stat.exists %}
+              {% set _ = available.append(path.item) %}
+              {% endif %}
+              {% endfor %}
+              {{ available }}
+          # Service Readiness Scores
+          readiness_scores:
+            can_run_netbox: >-
+              {{ system_resources.free_ram_mb | int >= min_requirements.netbox.ram_mb and
+                 system_resources.cpu_cores | int >= min_requirements.netbox.cpu_cores }}
+            can_run_powerdns: >-
+              {{ system_resources.free_ram_mb | int >= min_requirements.powerdns.ram_mb and
+                 system_resources.cpu_cores | int >= min_requirements.powerdns.cpu_cores }}
+            can_run_databases: >-
+              {{ system_resources.free_ram_mb | int >=
+                 (min_requirements.postgresql.ram_mb + min_requirements.mariadb.ram_mb) }}
+
+    - name: Save individual node readiness report
+      delegate_to: localhost
+      ansible.builtin.copy:
+        content: "{{ readiness_report | to_nice_yaml }}"
+        dest: "{{ report_dir }}/readiness_node_{{ ansible_hostname }}_{{ timestamp }}.yml"
+        mode: '0644'
+
+- name: Generate Infrastructure Readiness Summary
+  hosts: localhost
+  gather_facts: false
+  vars:
+    report_dir: "{{ playbook_dir }}/../../reports/infrastructure"
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+
+  tasks:
+    - name: Read all node reports
+      ansible.builtin.find:
+        paths: "{{ report_dir }}"
+        patterns: "readiness_node_*_{{ timestamp }}.yml"
+      register: node_reports
+
+    - name: Load node data
+      ansible.builtin.include_vars:
+        file: "{{ item.path }}"
+        name: "ready_node_{{ item.path | basename | regex_replace('readiness_node_(.+)_.*\\.yml', '\\1') }}"
+      loop: "{{ node_reports.files }}"
+
+    - name: Generate summary report
+      ansible.builtin.template:
+        src: infrastructure_readiness_summary.j2
+        dest: "{{ report_dir }}/infrastructure_readiness_summary_{{ timestamp }}.md"
+        mode: '0644'
+      vars:
+        all_nodes: "{{ hostvars }}"
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          Infrastructure Readiness Assessment Complete!
+          Reports saved to: {{ report_dir }}
+          - Individual node reports: readiness_node_*_{{ timestamp }}.yml
+          - Readiness summary: infrastructure_readiness_summary_{{ timestamp }}.md

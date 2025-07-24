@@ -1,0 +1,187 @@
+---
+# Consul Cluster Health Check Playbook
+# Part of Phase 0: Infrastructure Assessment
+#
+# This playbook performs a comprehensive health check of Consul clusters
+# across all environments to establish the current state before implementing
+# DNS & IPAM improvements.
+#
+# Usage:
+#   ./bin/ansible-connect playbook playbooks/assessment/consul-health-check.yml
+#   ./bin/ansible-connect playbook playbooks/assessment/consul-health-check.yml -e target_inventory=doggos-homelab
+
+- name: Consul Cluster Health Assessment
+  hosts: all
+  gather_facts: true
+  vars:
+    consul_api_port: 8500
+    consul_dns_port: 8600
+    report_dir: "{{ playbook_dir }}/../../reports/consul"
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+
+  tasks:
+    - name: Create report directory
+      delegate_to: localhost
+      run_once: true
+      ansible.builtin.file:
+        path: "{{ report_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if Consul is installed
+      ansible.builtin.command:
+        cmd: which consul
+      register: consul_installed
+      changed_when: false
+      failed_when: false
+
+    - name: Get Consul version
+      when: consul_installed.rc == 0
+      ansible.builtin.command:
+        cmd: consul version
+      register: consul_version
+      changed_when: false
+
+    - name: Check Consul service status
+      ansible.builtin.systemd:
+        name: consul
+      register: consul_service
+      failed_when: false
+
+    - name: Get Consul cluster members
+      when: consul_installed.rc == 0
+      ansible.builtin.command:
+        cmd: consul members
+      register: consul_members
+      changed_when: false
+      failed_when: false
+
+    - name: Check Consul leader
+      when: consul_installed.rc == 0
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}:{{ consul_api_port }}/v1/status/leader"
+        method: GET
+      register: consul_leader
+      failed_when: false
+
+    - name: Get Consul peers
+      when: consul_installed.rc == 0
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}:{{ consul_api_port }}/v1/status/peers"
+        method: GET
+      register: consul_peers
+      failed_when: false
+
+    - name: Check Consul DNS port
+      ansible.builtin.wait_for:
+        port: "{{ consul_dns_port }}"
+        host: "{{ ansible_default_ipv4.address }}"
+        timeout: 5
+      register: consul_dns_check
+      failed_when: false
+
+    - name: Test Consul DNS resolution
+      when: consul_dns_check is succeeded
+      ansible.builtin.command:
+        cmd: dig @{{ ansible_default_ipv4.address }} -p {{ consul_dns_port }} consul.service.consul
+      register: consul_dns_test
+      changed_when: false
+      failed_when: false
+
+    - name: Get Consul configuration
+      when: consul_installed.rc == 0
+      ansible.builtin.command:
+        cmd: consul config read
+      register: consul_config
+      changed_when: false
+      failed_when: false
+
+    - name: Check Consul ACL status
+      when: consul_installed.rc == 0
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}:{{ consul_api_port }}/v1/acl/list"
+        method: GET
+      register: consul_acl_check
+      failed_when: false
+
+    - name: List Consul services
+      when: consul_installed.rc == 0
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}:{{ consul_api_port }}/v1/catalog/services"
+        method: GET
+      register: consul_services
+      failed_when: false
+
+    - name: Check Consul encryption status
+      when: consul_installed.rc == 0
+      ansible.builtin.command:
+        cmd: consul keyring -list
+      register: consul_encryption
+      changed_when: false
+      failed_when: false
+
+    - name: Compile node report
+      ansible.builtin.set_fact:
+        node_report:
+          hostname: "{{ ansible_hostname }}"
+          fqdn: "{{ ansible_fqdn }}"
+          ip_address: "{{ ansible_default_ipv4.address }}"
+          consul_installed: "{{ consul_installed.rc == 0 }}"
+          consul_version: "{{ consul_version.stdout | default('Not installed') }}"
+          consul_service_state: "{{ consul_service.status.ActiveState | default('unknown') }}"
+          consul_members_count: "{{ consul_members.stdout_lines | default([]) | length }}"
+          consul_leader: "{{ consul_leader.json | default('unknown') }}"
+          consul_dns_available: "{{ consul_dns_check is succeeded }}"
+          consul_services_count: "{{ consul_services.json | default({}) | length }}"
+          consul_acl_enabled: "{{ consul_acl_check.status | default(0) == 403 }}"
+          consul_encryption_enabled: >-
+            {{ 'No gossip encryption keys present' not in consul_encryption.stdout | default('') }}
+          raw_data:
+            members: "{{ consul_members.stdout_lines | default([]) }}"
+            peers: "{{ consul_peers.json | default([]) }}"
+            services: "{{ consul_services.json | default({}) }}"
+            config: "{{ consul_config.stdout | default('') }}"
+
+    - name: Save individual node report
+      delegate_to: localhost
+      ansible.builtin.copy:
+        content: "{{ node_report | to_nice_yaml }}"
+        dest: "{{ report_dir }}/consul_node_{{ ansible_hostname }}_{{ timestamp }}.yml"
+        mode: '0644'
+
+- name: Generate Consul cluster summary report
+  hosts: localhost
+  gather_facts: false
+  vars:
+    report_dir: "{{ playbook_dir }}/../../reports/consul"
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+
+  tasks:
+    - name: Read all node reports
+      ansible.builtin.find:
+        paths: "{{ report_dir }}"
+        patterns: "consul_node_*_{{ timestamp }}.yml"
+      register: node_reports
+
+    - name: Load node data
+      ansible.builtin.include_vars:
+        file: "{{ item.path }}"
+        name: "node_{{ item.path | basename | regex_replace('consul_node_(.+)_.*\\.yml', '\\1') }}"
+      loop: "{{ node_reports.files }}"
+
+    - name: Generate summary report
+      ansible.builtin.template:
+        src: consul_health_summary.j2
+        dest: "{{ report_dir }}/consul_cluster_summary_{{ timestamp }}.md"
+        mode: '0644'
+      vars:
+        all_nodes: "{{ hostvars }}"
+
+    - name: Display summary
+      ansible.builtin.debug:
+        msg: |
+          Consul Health Check Complete!
+          Reports saved to: {{ report_dir }}
+          - Individual node reports: consul_node_*_{{ timestamp }}.yml
+          - Cluster summary: consul_cluster_summary_{{ timestamp }}.md
+

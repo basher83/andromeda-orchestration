@@ -1,0 +1,102 @@
+# Consul Cluster Health Assessment Report
+
+**Generated**: {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+## Executive Summary
+
+This report provides a comprehensive assessment of the Consul cluster infrastructure across all monitored nodes.
+
+## Cluster Overview
+
+### Node Status Summary
+
+| Node | Consul Installed | Version | Service Status | DNS Available | Leader |
+|------|-----------------|---------|----------------|---------------|---------|
+{% for host, data in all_nodes.items() if host.startswith('node_') %}
+{% set node = data %}
+| {{ node.hostname }} | {{ '✅' if node.consul_installed else '❌' }} | {{ node.consul_version }} | {{ node.consul_service_state }} | {{ '✅' if node.consul_dns_available else '❌' }} | {{ '👑' if node.consul_leader != 'unknown' and node.consul_leader != '' else '' }} |
+{% endfor %}
+
+### Cluster Health Indicators
+
+{% set consul_nodes = all_nodes.items() | selectattr('0', 'match', 'node_.*') | list %}
+{% set installed_count = consul_nodes | selectattr('1.consul_installed', 'equalto', true) | list | length %}
+{% set dns_enabled_count = consul_nodes | selectattr('1.consul_dns_available', 'equalto', true) | list | length %}
+{% set acl_enabled_count = consul_nodes | selectattr('1.consul_acl_enabled', 'equalto', true) | list | length %}
+{% set encryption_enabled_count = consul_nodes | selectattr('1.consul_encryption_enabled', 'equalto', true) | list | length %}
+
+- **Total Nodes Assessed**: {{ consul_nodes | length }}
+- **Nodes with Consul Installed**: {{ installed_count }}
+- **Nodes with DNS Enabled**: {{ dns_enabled_count }}
+- **Nodes with ACLs Enabled**: {{ acl_enabled_count }}
+- **Nodes with Encryption Enabled**: {{ encryption_enabled_count }}
+
+## Detailed Node Analysis
+
+{% for host, data in all_nodes.items() if host.startswith('node_') %}
+{% set node = data %}
+### {{ node.hostname }} ({{ node.ip_address }})
+
+**FQDN**: {{ node.fqdn }}
+
+#### Consul Status
+- **Installed**: {{ 'Yes' if node.consul_installed else 'No' }}
+{% if node.consul_installed %}
+- **Version**: {{ node.consul_version }}
+- **Service State**: {{ node.consul_service_state }}
+- **Cluster Members**: {{ node.consul_members_count }}
+- **Registered Services**: {{ node.consul_services_count }}
+{% endif %}
+
+#### Security Configuration
+- **ACLs Enabled**: {{ 'Yes' if node.consul_acl_enabled else 'No' }}
+- **Encryption Enabled**: {{ 'Yes' if node.consul_encryption_enabled else 'No' }}
+
+{% if node.consul_installed and node.raw_data.services %}
+#### Registered Services
+{% for service in node.raw_data.services.keys() %}
+- {{ service }}
+{% endfor %}
+{% endif %}
+
+---
+{% endfor %}
+
+## Recommendations
+
+{% if installed_count == 0 %}
+### 🚨 Critical Issues
+- **No Consul installations detected**. Consul needs to be deployed before proceeding with DNS/IPAM implementation.
+{% elif installed_count < consul_nodes|length %}
+### ⚠️ Warnings
+- **Incomplete Consul deployment**. Only {{ installed_count }} out of {{ consul_nodes|length }} nodes have Consul installed.
+{% endif %}
+
+{% if dns_enabled_count < installed_count %}
+### DNS Configuration
+- **DNS not fully configured**. Only {{ dns_enabled_count }} out of {{ installed_count }} Consul nodes have DNS enabled on port 8600.
+- Action: Configure Consul DNS on all nodes for service discovery.
+{% endif %}
+
+{% if acl_enabled_count == 0 %}
+### Security Improvements
+- **ACLs not configured**. Consider enabling ACLs for production security.
+{% endif %}
+
+{% if encryption_enabled_count == 0 %}
+- **Gossip encryption not enabled**. Consider enabling encryption for inter-node communication.
+{% endif %}
+
+## Next Steps
+
+Based on this assessment:
+
+1. **Address any critical issues** identified above
+2. **Proceed to Phase 1** of the DNS/IPAM implementation plan
+3. **Enable Consul DNS** on all nodes (port 8600)
+4. **Configure service registration** for existing infrastructure
+
+## Raw Data
+
+Individual node reports are available in:
+- `{{ report_dir }}/consul_node_*_{{ timestamp }}.yml`
