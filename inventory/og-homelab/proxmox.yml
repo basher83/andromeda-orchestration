@@ -7,7 +7,9 @@ want_facts: true
 user: ansible@pve
 token_id: service
 # Using 1Password CLI lookup
-token_secret: "{{ lookup('community.general.onepassword', 'Proxmox API - og-homelab', field='token_secret') }}"
+token_secret: >-
+  {{ lookup('community.general.onepassword', 'Proxmox API - og-homelab',
+            field='token_secret', vault='DevOps') }}
 
 # Group vms by tags for reference in playbooks.
 keyed_groups:
@@ -18,11 +20,15 @@ keyed_groups:
 # groups:
 #  proxmox_managed_running: "'managed' in (proxmox_tags_parsed|list) and (proxmox_status == 'running')"
 #  proxmox_use_agent: proxmox_agent == "1"
-#  proxmox_usable: (proxmox_status == "running") and ('linux' in (proxmox_tags|split(';'))) and (( proxmox_vmtype == "lxc" ) or ( proxmox_vmtype == "qemu" and proxmox_agent == "1" ))
+#  proxmox_usable: >-
+#    (proxmox_status == "running") and ('linux' in (proxmox_tags|split(';'))) and
+#    (( proxmox_vmtype == "lxc" ) or ( proxmox_vmtype == "qemu" and proxmox_agent == "1" ))
 #  labservers: "'lab' in (proxmox_tags_parsed|list)"
 #  webservers: "'web' in (proxmox_tags_parsed|list)"
 #  mailservers: "'mail' in (proxmox_tags_parsed|list)"
 
 compose:
 #  ansible_host: proxmox_name + ".mydomain.com"
-  ansible_host: proxmox_net0["ip"].split('/')[0] if 'ip' in proxmox_net0 else proxmox_agent_interfaces[1]["ip-addresses"][0].split('/')[0]
+  ansible_host: >-
+    {{ proxmox_net0["ip"].split('/')[0] if 'ip' in proxmox_net0
+       else proxmox_agent_interfaces[1]["ip-addresses"][0].split('/')[0] }}
