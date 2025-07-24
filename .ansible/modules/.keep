@@ -1,0 +1,3 @@
+# Ansible Custom Modules Directory
+# This directory can contain custom Ansible modules specific to this project
+# Custom modules extend Ansible's functionality for specific use cases
