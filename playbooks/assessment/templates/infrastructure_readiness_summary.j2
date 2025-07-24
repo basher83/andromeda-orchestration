@@ -1,0 +1,200 @@
+# Infrastructure Readiness Assessment Report
+
+**Generated**: {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+## Executive Summary
+
+This report assesses the infrastructure readiness for deploying NetBox, PowerDNS, and related services as part of the DNS & IPAM implementation project.
+
+## Resource Availability Overview
+
+### Compute Resources
+
+{% set ready_nodes = all_nodes.items() | selectattr('0', 'match', 'ready_node_.*') | list %}
+
+| Node | CPU Cores | Total RAM | Free RAM | Used RAM % | Can Run NetBox | Can Run PowerDNS |
+|------|-----------|-----------|----------|------------|----------------|------------------|
+{% for host, data in ready_nodes %}
+| {{ data.hostname }} | {{ data.resources.cpu.cores }} | {{ (data.resources.memory.total_mb | int / 1024) | round(2) }} GB | {{ (data.resources.memory.free_mb | int / 1024) | round(2) }} GB | {{ data.resources.memory.used_percent }}% | {{ '✅' if data.readiness_scores.can_run_netbox else '❌' }} | {{ '✅' if data.readiness_scores.can_run_powerdns else '❌' }} |
+{% endfor %}
+
+### Storage Availability
+
+{% for host, data in ready_nodes %}
+#### {{ data.hostname }}
+
+| Mount Point | Total | Available | Used % | Suitable for Services |
+|-------------|-------|-----------|--------|---------------------|
+{% for disk in data.resources.storage %}
+| {{ disk.mount }} | {{ disk.total_gb }} GB | {{ disk.available_gb }} GB | {{ disk.use_percent }}% | {{ '✅' if disk.available_gb > 30 else '⚠️' if disk.available_gb > 10 else '❌' }} |
+{% endfor %}
+
+{% endfor %}
+
+## Container & Orchestration Platform
+
+### Runtime Environment
+
+| Node | Docker | Podman | Containerd | Nomad | Kubernetes |
+|------|--------|--------|------------|-------|------------|
+{% for host, data in ready_nodes %}
+| {{ data.hostname }} | {{ '✅' if data.container_runtime.docker else '❌' }} | {{ '✅' if data.container_runtime.podman else '❌' }} | {{ '✅' if data.container_runtime.containerd else '❌' }} | {{ '✅' if data.orchestration.nomad.installed else '❌' }} | {{ '✅' if data.orchestration.kubernetes else '❌' }} |
+{% endfor %}
+
+### Nomad Cluster Status
+
+{% set nomad_nodes = ready_nodes | selectattr('1.orchestration.nomad.installed', 'equalto', true) | list %}
+{% if nomad_nodes %}
+| Node | Nomad Version | Consul Integration |
+|------|---------------|-------------------|
+{% for host, data in nomad_nodes %}
+| {{ data.hostname }} | {{ data.orchestration.nomad.version | regex_replace('Nomad v', '') }} | {{ '✅' if data.orchestration.nomad.consul_integrated else '❌' }} |
+{% endfor %}
+{% else %}
+**No Nomad installations detected**
+{% endif %}
+
+## Network Readiness
+
+### Inter-Node Connectivity
+
+{% set total_tests = 0 %}
+{% set successful_tests = 0 %}
+{% for host, data in ready_nodes %}
+{% for test in data.network.connectivity_tests %}
+{% set total_tests = total_tests + 1 %}
+{% if test.success %}
+{% set successful_tests = successful_tests + 1 %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+**Connectivity Test Results**: {{ successful_tests }}/{{ total_tests }} successful ({{ ((successful_tests / total_tests * 100) if total_tests > 0 else 0) | round(0) }}%)
+
+{% if total_tests > successful_tests %}
+### ⚠️ Connectivity Issues Detected
+
+| Source | Target | Status |
+|--------|--------|--------|
+{% for host, data in ready_nodes %}
+{% for test in data.network.connectivity_tests %}
+{% if not test.success %}
+| {{ data.hostname }} | {{ test.target }} | ❌ Failed |
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+### Firewall Status
+
+| Node | iptables | firewalld | ufw | Recommendation |
+|------|----------|-----------|-----|----------------|
+{% for host, data in ready_nodes %}
+| {{ data.hostname }} | {{ '✅' if data.network.firewall.iptables_active else '⚫' }} | {{ '✅' if data.network.firewall.firewalld_active else '⚫' }} | {{ '✅' if data.network.firewall.ufw_active else '⚫' }} | {{ 'Configure firewall rules' if (data.network.firewall.iptables_active or data.network.firewall.firewalld_active or data.network.firewall.ufw_active) else 'Enable firewall' }} |
+{% endfor %}
+
+### Port Availability
+
+#### Required Ports Status
+
+{% for host, data in ready_nodes %}
+**{{ data.hostname }}**:
+- Consul ports available: {{ data.port_availability.consul | length }}/8
+- Nomad ports available: {{ data.port_availability.nomad | length }}/3  
+- PowerDNS ports available: {{ data.port_availability.powerdns | length }}/3
+
+{% if data.port_availability.consul | length < 8 %}
+⚠️ Some Consul ports may be in use. Check ports: 8300-8302, 8500, 8600
+{% endif %}
+{% if 53 not in data.port_availability.powerdns %}
+⚠️ Port 53 is in use. Current DNS service may need to be reconfigured.
+{% endif %}
+
+{% endfor %}
+
+## Storage & Persistence
+
+### Persistent Volume Locations
+
+{% for host, data in ready_nodes %}
+**{{ data.hostname }}** available paths:
+{% for path in data.persistent_storage.paths_available %}
+- {{ path }}
+{% endfor %}
+{% if not data.persistent_storage.paths_available %}
+- ⚠️ No standard persistent storage paths found
+{% endif %}
+
+{% endfor %}
+
+## Deployment Readiness Summary
+
+### Overall Readiness Scores
+
+{% set can_deploy_netbox = ready_nodes | selectattr('1.readiness_scores.can_run_netbox', 'equalto', true) | list | length > 0 %}
+{% set can_deploy_powerdns = ready_nodes | selectattr('1.readiness_scores.can_run_powerdns', 'equalto', true) | list | length > 0 %}
+{% set can_deploy_databases = ready_nodes | selectattr('1.readiness_scores.can_run_databases', 'equalto', true) | list | length > 0 %}
+{% set has_nomad = nomad_nodes | length > 0 %}
+{% set has_consul_integration = nomad_nodes | selectattr('1.orchestration.nomad.consul_integrated', 'equalto', true) | list | length > 0 %}
+
+| Component | Ready | Notes |
+|-----------|-------|-------|
+| NetBox Deployment | {{ '✅' if can_deploy_netbox else '❌' }} | {{ 'Sufficient resources available' if can_deploy_netbox else 'Insufficient resources' }} |
+| PowerDNS Deployment | {{ '✅' if can_deploy_powerdns else '❌' }} | {{ 'Sufficient resources available' if can_deploy_powerdns else 'Insufficient resources' }} |
+| Database Services | {{ '✅' if can_deploy_databases else '❌' }} | {{ 'Can run PostgreSQL + MariaDB' if can_deploy_databases else 'Insufficient resources for databases' }} |
+| Nomad Orchestration | {{ '✅' if has_nomad else '❌' }} | {{ 'Nomad cluster operational' if has_nomad else 'Nomad not deployed' }} |
+| Consul Integration | {{ '✅' if has_consul_integration else '⚠️' }} | {{ 'Consul-Nomad integrated' if has_consul_integration else 'Integration needed' }} |
+
+## Recommendations
+
+### Immediate Actions Required
+
+{% if not has_nomad %}
+1. **Deploy Nomad**: No Nomad installation detected. Nomad is required for service orchestration.
+{% endif %}
+
+{% if has_nomad and not has_consul_integration %}
+2. **Enable Consul Integration**: Configure Nomad to integrate with Consul for service discovery.
+{% endif %}
+
+{% if not can_deploy_databases %}
+3. **Resource Allocation**: Insufficient resources for database services. Consider:
+   - Adding more RAM to nodes
+   - Deploying databases on dedicated nodes
+   - Using external database services
+{% endif %}
+
+### Pre-Deployment Checklist
+
+- [ ] Ensure all nodes can communicate with each other
+- [ ] Configure firewall rules for required ports
+- [ ] Set up persistent storage volumes
+- [ ] Enable Consul DNS on port 8600
+- [ ] Configure Nomad-Consul integration
+- [ ] Prepare database deployment strategy
+- [ ] Plan IP allocation for services
+
+### Resource Planning
+
+Based on the assessment, recommended deployment strategy:
+
+{% if can_deploy_netbox and can_deploy_powerdns and can_deploy_databases %}
+**✅ Full deployment possible** - Infrastructure can support all services
+{% elif can_deploy_powerdns %}
+**⚠️ Partial deployment recommended** - Start with PowerDNS, deploy NetBox later
+{% else %}
+**❌ Infrastructure upgrade needed** - Add resources before deployment
+{% endif %}
+
+### Next Steps
+
+1. Address any critical issues identified above
+2. Run Consul health check to verify service discovery
+3. Plan service placement based on available resources
+4. Create Nomad job specifications for services
+5. Prepare persistent volume claims
+
+## Detailed Node Information
+
+Complete node reports with all metrics are available in:
+- `{{ report_dir }}/readiness_node_*_{{ timestamp }}.yml`

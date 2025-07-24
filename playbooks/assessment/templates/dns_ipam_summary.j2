@@ -1,0 +1,195 @@
+# DNS & IPAM Infrastructure Audit Report
+
+**Generated**: {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+
+## Executive Summary
+
+This report provides a comprehensive audit of the current DNS and IP Address Management (IPAM) infrastructure across all assessed nodes.
+
+## DNS Infrastructure Overview
+
+### DNS Services Detected
+
+{% set all_dns_nodes = all_nodes.items() | selectattr('0', 'match', 'dns_node_.*') | list %}
+{% set services_summary = {} %}
+{% for host, data in all_dns_nodes %}
+{% for service, running in data.dns.services_running.items() %}
+{% if running %}
+{% set _ = services_summary.update({service: services_summary.get(service, 0) + 1}) %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+| Service | Node Count | Status |
+|---------|------------|--------|
+{% for service, count in services_summary.items() %}
+| {{ service | replace('_', '-') | title }} | {{ count }} | Active |
+{% endfor %}
+{% if not services_summary %}
+| No DNS services detected | - | ⚠️ Warning |
+{% endif %}
+
+### DNS Configuration Summary
+
+| Node | Nameservers | Search Domains | Open DNS Ports | Custom Hosts |
+|------|-------------|----------------|----------------|--------------|
+{% for host, data in all_dns_nodes %}
+| {{ data.hostname }} | {{ data.dns.nameservers | join(', ') | default('None', true) }} | {{ data.dns.search_domains | join(', ') | default('None', true) }} | {{ data.dns.ports_open | join(', ') | default('None', true) }} | {{ data.dns.custom_hosts_entries }} |
+{% endfor %}
+
+### Pi-hole Status
+
+{% set pihole_nodes = all_dns_nodes | selectattr('1.dns.pihole.installed', 'equalto', true) | list %}
+{% if pihole_nodes %}
+| Node | Custom DNS Entries | Status |
+|------|-------------------|--------|
+{% for host, data in pihole_nodes %}
+| {{ data.hostname }} | {{ data.dns.pihole.custom_entries }} | Active |
+{% endfor %}
+{% else %}
+**No Pi-hole installations detected**
+{% endif %}
+
+## Network & IPAM Overview
+
+### Network Interfaces
+
+{% for host, data in all_dns_nodes %}
+#### {{ data.hostname }}
+
+{% for iface, details in data.network.interfaces.items() %}
+{% if details.ipv4.address is defined %}
+- **{{ iface }}**: {{ details.ipv4.address }}/{{ details.ipv4.prefix }} ({{ details.mac }})
+{% endif %}
+{% endfor %}
+- **Default Gateway**: {{ data.network.default_gateway }}
+- **DHCP-provided DNS**: {{ 'Yes' if data.network.dns_servers_via_dhcp else 'No' }}
+
+{% endfor %}
+
+### Subnet Summary
+
+{% set all_subnets = [] %}
+{% for host, data in all_dns_nodes %}
+{% for subnet in data.ipam.subnets %}
+{% set _ = all_subnets.append(subnet) %}
+{% endfor %}
+{% endfor %}
+
+**Discovered Subnets**:
+{% for subnet in all_subnets | unique | sort %}
+- {{ subnet }}
+{% endfor %}
+
+### IP Allocation Metrics
+
+| Node | ARP Entries | Zone Files | Network Interfaces |
+|------|-------------|------------|-------------------|
+{% for host, data in all_dns_nodes %}
+| {{ data.hostname }} | {{ data.ipam.arp_entries }} | {{ data.dns.zone_files_found }} | {{ data.network.interfaces | length }} |
+{% endfor %}
+
+## Current State Analysis
+
+### DNS Resolution Chain
+
+Based on the audit, the current DNS resolution flow appears to be:
+
+1. **Client DNS Configuration**:
+{% set unique_nameservers = [] %}
+{% for host, data in all_dns_nodes %}
+{% for ns in data.dns.nameservers %}
+{% if ns not in unique_nameservers %}
+{% set _ = unique_nameservers.append(ns) %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+   - Primary nameservers in use: {{ unique_nameservers | join(', ') }}
+   
+2. **Local DNS Services**:
+{% if 'pihole' in services_summary %}
+   - Pi-hole providing filtering and local DNS
+{% endif %}
+{% if 'unbound' in services_summary %}
+   - Unbound providing recursive DNS resolution
+{% endif %}
+{% if 'dnsmasq' in services_summary %}
+   - dnsmasq providing DHCP and DNS services
+{% endif %}
+{% if 'systemd_resolved' in services_summary %}
+   - systemd-resolved managing local DNS resolution
+{% endif %}
+
+3. **Service Discovery**:
+   - Consul DNS on port 8600: {{ 'Available' if 8600 in all_dns_nodes[0][1].dns.ports_open else 'Not configured' }}
+
+### IPAM Current State
+
+- **IP Management**: Currently {{ 'Ad-hoc' if not services_summary else 'Distributed across services' }}
+- **DHCP Management**: {{ 'Via Pi-hole' if 'pihole' in services_summary else 'Unknown/Manual' }}
+- **Documentation**: Found in /etc/hosts files and service-specific configurations
+
+## Gap Analysis for NetBox/PowerDNS Implementation
+
+### DNS Gaps
+{% if not services_summary or 'pdns' not in services_summary %}
+- ❌ No PowerDNS installation detected
+{% endif %}
+{% if 8600 not in all_dns_nodes[0][1].dns.ports_open %}
+- ❌ Consul DNS not configured on port 8600
+{% endif %}
+- ❌ No centralized DNS management API
+- ❌ No DNSSEC support detected
+- ❌ No DNS performance metrics or monitoring
+
+### IPAM Gaps
+- ❌ No centralized IPAM system (NetBox) deployed
+- ❌ IP allocations scattered across multiple systems
+- ❌ No API-driven IP management
+- ❌ No IP allocation history or audit trail
+- ❌ No integration between DNS and IPAM
+
+## Recommendations for Phase 1
+
+Based on this audit, the following actions are recommended:
+
+1. **Immediate Actions**:
+   - Enable Consul DNS on all nodes (port 8600)
+   - Document all custom DNS entries from Pi-hole and hosts files
+   - Create inventory of all statically assigned IPs
+
+2. **Data Collection for Migration**:
+   - Export all Pi-hole custom DNS entries
+   - Document all DHCP reservations
+   - Map all subnets and VLANs in use
+   - Identify critical DNS records that must not have downtime
+
+3. **Preparation for PowerDNS**:
+   - Plan DNS zone structure (forward and reverse zones)
+   - Design PowerDNS deployment architecture
+   - Prepare migration scripts for existing DNS data
+
+4. **NetBox Planning**:
+   - Design IP prefix hierarchy
+   - Plan device and VM import strategy
+   - Prepare custom fields for specific requirements
+
+## Migration Considerations
+
+### Critical Services to Maintain
+{% if pihole_nodes %}
+- Pi-hole filtering functionality ({{ pihole_nodes | length }} nodes)
+{% endif %}
+- Local DNS resolution for all services
+- DHCP services if currently provided
+
+### Data to Preserve
+- {{ all_dns_nodes | map(attribute='1.dns.custom_hosts_entries') | sum }} custom host entries
+- All DHCP reservations
+- DNS zone configurations
+- Service-specific DNS records
+
+## Raw Data Files
+
+Individual node reports containing detailed configuration data are available in:
+- `{{ report_dir }}/dns_ipam_node_*_{{ timestamp }}.yml`
