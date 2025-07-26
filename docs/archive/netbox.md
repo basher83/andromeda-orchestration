@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document provides comprehensive guidance on using Ansible with NetBox, based on analysis of the `netboxlabs/netbox-learning` repository. NetBox serves as the central source of truth for network automation, providing dynamic inventory, data queries, and state management capabilities for Ansible-driven network operations.
+This document provides comprehensive guidance on using Ansible with NetBox, based on analysis of the
+`netboxlabs/netbox-learning` repository. NetBox serves as the central source of truth for network automation, providing
+dynamic inventory, data queries, and state management capabilities for Ansible-driven network operations.
 
 **Key Integration Patterns:**
 
@@ -54,7 +56,7 @@ export NETBOX_TOKEN="your-api-token-here"
 
 The plugin creates hierarchical inventory groups:
 
-```
+```text
 @device_roles_distribution     # Devices with "distribution" role
 @device_roles_access          # Devices with "access" role
 @sites_cisco_devnet          # Devices at "cisco-devnet" site
@@ -172,7 +174,7 @@ hostvars['sw1']:
 
 ### Directory Structure
 
-```
+```text
 roles/
 ├── netbox_ipam/
 │   ├── tasks/main.yml
@@ -250,7 +252,8 @@ ipam_roles:
 
 - name: Query Cisco Catalyst Center Device
   uri:
-    url: "https://{{ hostvars[inventory_hostname].custom_fields['cisco_catalyst_center'] }}/dna/intent/api/v1/network-device/{{ hostvars[inventory_hostname].custom_fields['ccc_device_id'] }}"
+    url: >-
+      https://{{ hostvars[inventory_hostname].custom_fields['cisco_catalyst_center'] }}/dna/intent/api/v1/network-device/{{ hostvars[inventory_hostname].custom_fields['ccc_device_id'] }}
     headers:
       Authorization: "Bearer {{ ccc_auth_token }}"
     method: GET
@@ -633,4 +636,6 @@ curl -H "Authorization: Token ${NETBOX_TOKEN}" "${NETBOX_API}/api/status/"
 ansible-playbook -i netbox_inv.yml playbook.yml -vvv
 ```
 
-This comprehensive guide covers the essential patterns for integrating Ansible with NetBox, from basic dynamic inventory to advanced automation workflows. The examples are based on real implementations from the NetBox learning repository and demonstrate production-ready patterns for network automation.
+This comprehensive guide covers the essential patterns for integrating Ansible with NetBox, from basic dynamic inventory
+to advanced automation workflows. The examples are based on real implementations from the NetBox learning repository and
+demonstrate production-ready patterns for network automation.

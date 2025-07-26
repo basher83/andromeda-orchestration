@@ -33,7 +33,9 @@ A phased approach to move from ad-hoc DNS to a robust, service-aware infrastruct
 
 ## Phase 3: Hook up NetBox → PowerDNS
 
-**🛠️ Bootstrap Tip:** You don’t need NetBox fully populated to start—seed it with just the key host records you’ll initially manage (e.g., `proxmox01.lab.local`, `nomad-client.lab.local`). PowerDNS will sync these, and you can flesh out the rest of your IPAM in parallel.
+**🛠️ Bootstrap Tip:** You don't need NetBox fully populated to start—seed it with just the key host records you'll
+initially manage (e.g., `proxmox01.lab.local`, `nomad-client.lab.local`). PowerDNS will sync these, and you can flesh
+out the rest of your IPAM in parallel.
 
 1. **NetBox IPAM**
    - Install and configure NetBox if not already running.
@@ -71,9 +73,11 @@ A phased approach to move from ad-hoc DNS to a robust, service-aware infrastruct
    - Dashboard for query rates and replication lag.
 
 5. **TLS/SSL Management**
-   - **Public endpoints:** Use DNS-01 ACME (Let’s Encrypt via PowerDNS API) in a Nomad job to obtain `*.lab.example.com` wildcard certificates.
+   - **Public endpoints:** Use DNS-01 ACME (Let's Encrypt via PowerDNS API) in a Nomad job to obtain
+     `*.lab.example.com` wildcard certificates.
    - **Internal services:** Leverage Vault PKI or Consul Connect mTLS for service-to-service encryption.
-   - **Automation:** Schedule Nomad periodic jobs for certificate issuance and renewal; store certs in host volumes, Consul KV, or Vault.
+   - **Automation:** Schedule Nomad periodic jobs for certificate issuance and renewal; store certs in host volumes,
+     Consul KV, or Vault.
 
 ---
 

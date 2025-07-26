@@ -2,7 +2,9 @@
 
 ## Overview
 
-The `onepassword.connect` Ansible collection (v2.3.0) provides enterprise-grade secret management integration between Ansible and 1Password through the 1Password Connect API. This collection enables secure, automated management of passwords, API keys, and other sensitive data within Ansible playbooks while following infrastructure-as-code principles.
+The `onepassword.connect` Ansible collection (v2.3.0) provides enterprise-grade secret management integration between
+Ansible and 1Password through the 1Password Connect API. This collection enables secure, automated management of
+passwords, API keys, and other sensitive data within Ansible playbooks while following infrastructure-as-code principles.
 
 **Key Features:**
 
@@ -532,7 +534,10 @@ ansible-galaxy collection list | grep onepassword.connect
 
 ## Conclusion
 
-The 1Password Connect Ansible collection provides a robust, enterprise-grade solution for secret management that integrates seamlessly with Ansible automation workflows. By following the security best practices and patterns outlined in this documentation, you can implement secure, scalable secret management that maintains the principles of infrastructure as code while protecting sensitive data.
+The 1Password Connect Ansible collection provides a robust, enterprise-grade solution for secret management that
+integrates seamlessly with Ansible automation workflows. By following the security best practices and patterns outlined
+in this documentation, you can implement secure, scalable secret management that maintains the principles of
+infrastructure as code while protecting sensitive data.
 
 **Key Takeaways:**
 

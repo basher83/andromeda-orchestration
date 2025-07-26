@@ -5,6 +5,7 @@ This document outlines the testing and quality assurance approach for the NetBox
 ## Overview
 
 We use a comprehensive testing strategy that includes:
+
 - **Linting** - Static code analysis for style and best practices
 - **Unit Testing** - Testing individual components (Python plugins)
 - **Integration Testing** - Testing playbook functionality
@@ -14,8 +15,8 @@ We use a comprehensive testing strategy that includes:
 
 ### 1. Ansible Lint
 
-**Tool**: `ansible-lint`  
-**Config**: `.ansible-lint`  
+**Tool**: `ansible-lint`
+**Config**: `.ansible-lint`
 **Purpose**: Enforce Ansible best practices and catch common mistakes
 
 ```bash
@@ -30,6 +31,7 @@ uv run ansible-lint --profile=shared
 ```
 
 Key rules enforced:
+
 - Proper task naming conventions
 - FQCN (Fully Qualified Collection Names) usage
 - Idempotency checks
@@ -37,8 +39,8 @@ Key rules enforced:
 
 ### 2. YAML Lint
 
-**Tool**: `yamllint`  
-**Config**: `.yamllint`  
+**Tool**: `yamllint`
+**Config**: `.yamllint`
 **Purpose**: Ensure consistent YAML formatting
 
 ```bash
@@ -54,8 +56,8 @@ uv run yamllint --format parsable . | sed -e 's/^\([^:]*:[^:]*\):/::error file=\
 
 ### 3. Python Tools (for plugins/scripts)
 
-**Tools**: `ruff`, `mypy`  
-**Config**: `pyproject.toml`  
+**Tools**: `ruff`, `mypy`
+**Config**: `pyproject.toml`
 **Purpose**: Python code quality and type checking
 
 ```bash
@@ -72,8 +74,8 @@ uv run mypy plugins scripts
 
 ### 4. Pre-commit Hooks
 
-**Tool**: `pre-commit`  
-**Config**: `.pre-commit-config.yaml`  
+**Tool**: `pre-commit`
+**Config**: `.pre-commit-config.yaml`
 **Purpose**: Automated checks before commits
 
 ```bash
@@ -92,8 +94,8 @@ uv run pre-commit autoupdate
 
 ### 5. Molecule (Role Testing)
 
-**Tool**: `molecule`  
-**Config**: `molecule/default/molecule.yml`  
+**Tool**: `molecule`
+**Config**: `molecule/default/molecule.yml`
 **Purpose**: Test Ansible roles in isolation
 
 ```bash
@@ -170,6 +172,7 @@ uv run ansible-galaxy collection install -r requirements.yml
 ### Before Committing
 
 1. **Run linters**:
+
    ```bash
    uv run yamllint .
    uv run ansible-lint
@@ -177,15 +180,17 @@ uv run ansible-galaxy collection install -r requirements.yml
    ```
 
 2. **Run tests**:
+
    ```bash
    # Test playbooks
    uv run ansible-playbook playbooks/test_*.yml --check
-   
+
    # Test Python code
    uv run pytest tests/
    ```
 
 3. **Check secrets**:
+
    ```bash
    # Detect secrets
    uv run detect-secrets scan --baseline .secrets.baseline
@@ -233,16 +238,18 @@ def test_invalid_credentials():
 ## Best Practices
 
 1. **Always run pre-commit** before pushing:
+
    ```bash
    uv run pre-commit run --all-files
    ```
 
 2. **Fix linting issues** immediately:
+
    ```bash
    # Auto-fix Python
    uv run ruff check --fix .
    uv run ruff format .
-   
+
    # Review Ansible issues
    uv run ansible-lint --fix
    ```
@@ -284,19 +291,21 @@ def test_invalid_credentials():
 ## Security Testing
 
 1. **Secret Detection**:
+
    ```bash
    # Initial baseline
    uv run detect-secrets scan > .secrets.baseline
-   
+
    # Audit baseline
    uv run detect-secrets audit .secrets.baseline
    ```
 
 2. **Dependency Scanning**:
+
    ```bash
    # With pip-audit
    uv run pip-audit
-   
+
    # With safety
    uv run safety check
    ```
