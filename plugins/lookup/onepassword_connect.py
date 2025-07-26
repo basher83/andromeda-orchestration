@@ -34,6 +34,7 @@ EXAMPLES = r"""
 
 import json
 import os
+from typing import Any
 
 from ansible.errors import AnsibleError
 from ansible.module_utils.urls import open_url
@@ -41,7 +42,7 @@ from ansible.plugins.lookup import LookupBase
 
 
 class LookupModule(LookupBase):
-    def run(self, terms, variables=None, **kwargs):
+    def run(self, terms: list, variables: dict | None = None, **kwargs: Any) -> list:
         if not terms:
             raise AnsibleError("Item title is required")
 

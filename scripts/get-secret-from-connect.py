@@ -10,7 +10,7 @@ import sys
 import urllib.request
 
 
-def get_secret(item_title, field_label, vault_id=None):
+def get_secret(item_title: str, field_label: str, vault_id: str | None = None) -> str:
     connect_host = os.environ.get("OP_CONNECT_HOST")
     connect_token = os.environ.get("OP_CONNECT_TOKEN")
 
@@ -60,7 +60,8 @@ def get_secret(item_title, field_label, vault_id=None):
         for field in item_details.get("fields", []):
             if field.get("label") == field_label:
                 print(field.get("value"))
-                return
+                value = field.get("value", "")
+                return str(value) if value is not None else ""
 
         print(f"Error: Field '{field_label}' not found", file=sys.stderr)
         sys.exit(1)

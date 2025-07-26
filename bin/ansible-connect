@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Universal Ansible wrapper for 1Password Connect integration
-# 
-# Usage: 
+#
+# Usage:
 #   ./bin/ansible-connect <command> [args...]
 #
 # Examples:
@@ -54,7 +54,7 @@ fi
 
 # Create temporary directory for processed files
 TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
+trap 'rm -rf $TEMP_DIR' EXIT
 
 # Process inventory files and replace token placeholder
 for arg in "$@"; do

@@ -6,7 +6,7 @@ This directory will contain production playbooks for managing infrastructure com
 
 ### Network Management
 - `configure-switches.yml` - Configure network switches from NetBox data
-- `configure-routers.yml` - Configure routers based on NetBox inventory  
+- `configure-routers.yml` - Configure routers based on NetBox inventory
 - `backup-network-configs.yml` - Backup network device configurations
 
 ### VM/Container Management
