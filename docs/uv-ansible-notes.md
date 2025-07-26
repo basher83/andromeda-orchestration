@@ -9,6 +9,7 @@ This project uses `uv` with Ansible in a virtual environment setup, which avoids
 The issue with `uv tool install ansible-core` is that it doesn't install all the necessary executables from Ansible's sub-packages. This would mean commands like `ansible-playbook`, `ansible-galaxy`, etc. wouldn't be available.
 
 Our approach:
+
 1. Create a virtual environment: `uv venv`
 2. Install packages in the venv: `uv pip install -e ".[dev]"`
 3. Run commands with: `uv run <command>`
@@ -25,6 +26,7 @@ This ensures all Ansible executables are properly installed and accessible.
 ### Commands that work with our setup
 
 All these commands work correctly:
+
 ```bash
 uv run ansible --version
 uv run ansible-playbook playbooks/site.yml

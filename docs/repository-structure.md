@@ -4,7 +4,7 @@ This document provides a detailed explanation of the repository organization and
 
 ## Directory Structure
 
-```
+```text
 netbox-ansible/
 ├── bin/                        # Executable wrapper scripts
 ├── docs/                       # Documentation
@@ -49,6 +49,7 @@ netbox-ansible/
 ### `/inventory/`
 
 Organized by environment:
+
 - **og-homelab/proxmox.yml** - Proxmox dynamic inventory configuration
 
 ### `/playbooks/`
@@ -77,12 +78,14 @@ Organized by environment:
 ### Standard Workflow
 
 1. Set up environment:
+
    ```bash
    cp scripts/set-1password-env.sh.example scripts/set-1password-env.sh
    # Edit with your values
    ```
 
 2. Run commands through wrapper:
+
    ```bash
    ./bin/ansible-connect playbook playbooks/site.yml
    ./bin/ansible-connect inventory -i inventory/og-homelab/proxmox.yml --list
@@ -91,6 +94,7 @@ Organized by environment:
 ### Direct Ansible Usage
 
 If you prefer not to use the wrapper:
+
 ```bash
 source scripts/set-1password-env.sh
 export PROXMOX_TOKEN_SECRET=$(scripts/get-secret-from-connect.py "Item Name" "field")

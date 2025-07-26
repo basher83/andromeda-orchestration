@@ -19,6 +19,7 @@ This project supports two methods for integrating 1Password with Ansible:
 2. **1Password Connect** - Uses a self-hosted Connect server with API access
 
 Both methods allow you to:
+
 - Store credentials securely in 1Password
 - Retrieve credentials dynamically during Ansible execution
 - Avoid hardcoding sensitive data in your code
@@ -29,11 +30,13 @@ Both methods allow you to:
 ### 1Password CLI
 
 **Pros:**
+
 - Simple setup for individual users
 - No server infrastructure required
 - Works with personal 1Password accounts
 
 **Cons:**
+
 - Requires authentication for each session
 - May prompt for Master Password/Touch ID
 - Less suitable for automation
@@ -41,12 +44,14 @@ Both methods allow you to:
 ### 1Password Connect
 
 **Pros:**
+
 - No authentication prompts (uses API tokens)
 - Better for CI/CD and automation
 - Centralized access control
 - Full audit logging
 
 **Cons:**
+
 - Requires running Connect server
 - Business/Enterprise accounts only
 - More complex initial setup
@@ -169,13 +174,14 @@ token_secret: "{{ lookup('community.general.onepassword', 'Proxmox API - Product
   vars:
     # Retrieve multiple fields
     proxmox_creds: "{{ lookup('community.general.onepassword', 'Proxmox API - Production') }}"
-    
+
   tasks:
     - name: Use credentials
       uri:
         url: "{{ proxmox_creds.url }}/api2/json/nodes"
         headers:
-          Authorization: "PVEAPIToken={{ proxmox_creds.username }}!{{ proxmox_creds.token_id }}={{ proxmox_creds.token_secret }}"
+          Authorization: >-
+            PVEAPIToken={{ proxmox_creds.username }}!{{ proxmox_creds.token_id }}={{ proxmox_creds.token_secret }}
 ```
 
 ### Using the Wrapper Script
@@ -209,6 +215,7 @@ The `bin/ansible-connect` wrapper handles all the complexity:
 ### 3. Item Structure
 
 Recommended fields for API credentials:
+
 - `url` - The API endpoint
 - `username` or `user` - The username
 - `password` or `token_secret` - The secret
@@ -236,14 +243,17 @@ Always include error handling in playbooks:
 ### Common Issues
 
 #### "No route to host" on macOS
+
 - This is due to macOS Sequoia's Local Network permissions
 - See [troubleshooting.md](troubleshooting.md) for the fix
 
 #### Authentication Prompts with CLI
+
 - Use 1Password Connect for automation
 - Or set `OP_SESSION` environment variable after signing in
 
 #### "Item not found" Errors
+
 - Verify the item name matches exactly
 - Check vault permissions for Connect tokens
 - Ensure you're using the correct vault
@@ -251,6 +261,7 @@ Always include error handling in playbooks:
 ### Debugging
 
 Enable verbose output:
+
 ```bash
 # Debug 1Password lookups
 ANSIBLE_DEBUG=1 ansible-playbook -vvv playbook.yml

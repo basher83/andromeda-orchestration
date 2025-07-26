@@ -13,22 +13,26 @@ This guide covers common issues and their solutions when working with this Ansib
 ## macOS Sequoia Local Network Permissions
 
 ### Problem
-```
+
+```text
 OSError: [Errno 65] No route to host
 ```
 
 When trying to connect to local network addresses (192.168.x.x) on macOS 15 (Sequoia) or later.
 
 ### Cause
-macOS Sequoia introduced Local Network Privacy permissions that block applications from accessing local network devices without explicit permission.
+
+macOS Sequoia introduced Local Network Privacy permissions that block applications from accessing local network devices
+without explicit permission.
 
 ### Solution
 
 1. **Grant permissions in System Settings:**
-   ```
+
+   ```text
    System Settings > Privacy & Security > Local Network
    ```
-   
+
    Enable permissions for:
    - Terminal
    - Python / Python3
@@ -37,12 +41,14 @@ macOS Sequoia introduced Local Network Privacy permissions that block applicatio
 2. **Restart Terminal** after granting permissions
 
 3. **Test the connection:**
+
    ```bash
    python3 -c "import socket; s = socket.socket(); print(s.connect_ex(('192.168.x.x', 8006)))"
    # Should return 0 if successful
    ```
 
 ### Prevention
+
 - Always grant Local Network permissions before running Ansible on macOS Sequoia
 - Consider adding a pre-flight check to your scripts
 
@@ -50,25 +56,29 @@ macOS Sequoia introduced Local Network Privacy permissions that block applicatio
 
 ### Problem: "Server hostname or auth token not defined"
 
-#### Check environment variables:
+#### Check environment variables
+
 ```bash
 echo $OP_CONNECT_HOST
 echo $OP_CONNECT_TOKEN
 ```
 
-#### Solution:
+#### 1Password Solution
+
 ```bash
 source scripts/set-1password-env.sh
 ```
 
 ### Problem: "No route to host" when connecting to Connect server
 
-#### Test connectivity:
+#### Test connectivity
+
 ```bash
 curl -I $OP_CONNECT_HOST/health
 ```
 
-#### Common causes:
+#### Connect Common causes
+
 - Firewall blocking the connection
 - Docker container not running
 - Incorrect hostname/port
@@ -76,7 +86,9 @@ curl -I $OP_CONNECT_HOST/health
 ### Problem: CLI authentication prompts
 
 #### For automation, use Connect instead of CLI
-#### Or export session token:
+
+#### Or export session token
+
 ```bash
 export OP_SESSION=$(op signin --raw)
 ```
@@ -85,13 +97,16 @@ export OP_SESSION=$(op signin --raw)
 
 ### Problem: "Failed to parse inventory with auto plugin"
 
-#### Common causes:
+#### Inventory Common causes
+
 1. **Missing Python dependencies:**
+
    ```bash
    uv pip install proxmoxer requests
    ```
 
 2. **Invalid YAML syntax:**
+
    ```bash
    yamllint inventory/og-homelab/proxmox.yml
    ```
@@ -103,6 +118,7 @@ export OP_SESSION=$(op signin --raw)
 ### Problem: "vault is required with 1Password Connect"
 
 This error occurs when using the wrong lookup plugin.
+
 - Use `community.general.onepassword` for CLI
 - Use `onepassword_connect` (custom) for Connect
 
@@ -110,7 +126,8 @@ This error occurs when using the wrong lookup plugin.
 
 ### Problem: "objc[pid]: ... may have been in progress in another thread when fork() was called"
 
-#### Solution:
+#### Fork Solution
+
 ```bash
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 ```
@@ -119,7 +136,8 @@ This is automatically set in the wrapper script.
 
 ### Problem: Module import errors
 
-#### Ensure Ansible's Python has required modules:
+#### Ensure Ansible's Python has required modules
+
 ```bash
 # Find Ansible's Python
 ansible --version | grep "python"
@@ -132,19 +150,22 @@ uv pip install requests proxmoxer
 
 ### Problem: Proxmox API unreachable
 
-#### Diagnostic steps:
+#### Diagnostic steps
 
 1. **Test DNS resolution:**
+
    ```bash
    nslookup proxmox.example.com
    ```
 
 2. **Test port connectivity:**
+
    ```bash
    nc -zv proxmox.example.com 8006
    ```
 
 3. **Test with curl:**
+
    ```bash
    curl -k https://proxmox.example.com:8006
    ```
@@ -155,7 +176,8 @@ uv pip install requests proxmoxer
 
 ### Problem: SSL certificate errors
 
-#### For self-signed certificates:
+#### For self-signed certificates
+
 ```yaml
 # In inventory file
 validate_certs: false
@@ -163,29 +185,34 @@ validate_certs: false
 
 ## Debugging Tips
 
-### Enable Ansible debugging:
+### Enable Ansible debugging
+
 ```bash
 ANSIBLE_DEBUG=1 ansible-playbook -vvvv playbook.yml
 ```
 
-### Test individual components:
+### Test individual components
 
 1. **Test 1Password lookup:**
+
    ```bash
    ansible localhost -m debug -a "msg={{ lookup('community.general.onepassword', 'Test Item') }}"
    ```
 
 2. **Test inventory plugin:**
+
    ```bash
    ansible-inventory -i inventory/og-homelab/proxmox.yml --list
    ```
 
 3. **Test connectivity:**
+
    ```bash
    ansible all -i inventory/og-homelab/proxmox.yml -m ping
    ```
 
-### Common log locations:
+### Common log locations
+
 - Ansible: `~/.ansible/ansible.log` (if configured)
 - 1Password CLI: `~/.config/op/logs/`
 - System logs: `/var/log/system.log` (macOS)
