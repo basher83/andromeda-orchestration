@@ -29,6 +29,7 @@ ansible-navigator.log
 # 1Password environment
 scripts/set-1password-env.sh
 .env
+.envrc
 
 # IDE and AI tools
 .vscode/
