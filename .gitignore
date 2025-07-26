@@ -65,3 +65,7 @@ molecule/**/.molecule/
 
 # Pre-commit
 .pre-commit-config.yaml.lock
+
+# Infisical scan results
+infisical-scan-results.sarif
+.infisical-scan-baseline.json
