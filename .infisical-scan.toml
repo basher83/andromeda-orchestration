@@ -1,0 +1,70 @@
+# Infisical scan configuration
+# This file configures secret scanning for the repository
+
+# Paths to exclude from scanning
+exclude_paths = [
+    ".git/**",
+    ".serena/cache/**",
+    "reports/**",
+    "*.log",
+    "*.pyc",
+    "__pycache__/**",
+    ".venv/**",
+    "venv/**",
+    ".tox/**",
+    ".pytest_cache/**",
+    ".coverage",
+    "htmlcov/**",
+    "dist/**",
+    "build/**",
+    "*.egg-info/**"
+]
+
+# File extensions to skip
+exclude_extensions = [
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".bmp",
+    ".ico",
+    ".pdf",
+    ".zip",
+    ".tar",
+    ".gz",
+    ".bz2",
+    ".7z",
+    ".rar",
+    ".exe",
+    ".dll",
+    ".so",
+    ".dylib"
+]
+
+# Additional patterns to allow (false positives)
+# These are patterns that might look like secrets but are safe
+allow_list = [
+    # RFC1918 private IPs
+    "192\\.168\\.\\d{1,3}\\.\\d{1,3}",
+    "10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
+    "172\\.(1[6-9]|2[0-9]|3[01])\\.\\d{1,3}\\.\\d{1,3}",
+    
+    # Common placeholder values
+    "changeme",
+    "CHANGEME",
+    "your-.*-here",
+    "YOUR-.*-HERE",
+    
+    # Ansible variable references
+    "\\{\\{.*\\}\\}",
+    "\\$\\{.*\\}",
+    
+    # Consul/Nomad template references
+    "\\{\\{\\s*key\\s+[\"'].*[\"']\\s*\\}\\}",
+    "\\{\\{\\s*env\\s+[\"'].*[\"']\\s*\\}\\}",
+    
+    # Example domains
+    "example\\.com",
+    "localhost",
+    "127\\.0\\.0\\.1"
+]
