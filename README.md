@@ -2,11 +2,13 @@
 
 [![CI](https://github.com/YOUR_USERNAME/netbox-ansible/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/netbox-ansible/actions/workflows/ci.yml)
 
-An Ansible automation project that integrates NetBox as a source of truth for network infrastructure management, with secure credential management through 1Password.
+An Ansible automation project that integrates NetBox as a source of truth for network infrastructure management, with
+secure credential management through 1Password.
 
 ## Overview
 
 This project provides a framework for managing network infrastructure using Ansible with:
+
 - Dynamic inventory from Proxmox (current) and NetBox (planned)
 - Secure credential management via 1Password (CLI and Connect)
 - Containerized execution environments
@@ -23,12 +25,14 @@ This project provides a framework for managing network infrastructure using Ansi
 ## Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd netbox-ansible
    ```
 
 2. **Run the setup script**
+
    ```bash
    ./scripts/setup.sh
    # Or use task for complete setup with dev tools
@@ -36,12 +40,14 @@ This project provides a framework for managing network infrastructure using Ansi
    ```
 
 3. **Configure 1Password integration**
+
    ```bash
    # Edit the environment file created by setup
    vi scripts/set-1password-env.sh
    ```
 
 4. **Test the setup**
+
    ```bash
    ./bin/ansible-connect inventory -i inventory/og-homelab/proxmox.yml --list
    ```
@@ -53,7 +59,7 @@ This project provides a framework for managing network infrastructure using Ansi
 This project uses comprehensive linting and testing:
 
 - **ansible-lint** - Ansible best practices and style guide
-- **yamllint** - YAML file formatting  
+- **yamllint** - YAML file formatting
 - **ruff** - Python linting and formatting
 - **mypy** - Python type checking
 - **pre-commit** - Git hooks for automated checks (see [docs/pre-commit-setup.md](docs/pre-commit-setup.md))
@@ -86,7 +92,7 @@ See [docs/testing-strategy.md](docs/testing-strategy.md) for detailed testing in
 
 ## Directory Structure
 
-```
+```text
 ├── bin/                    # Executable wrapper scripts
 │   └── ansible-connect     # Main wrapper for 1Password integration
 ├── docs/                   # Documentation
@@ -125,6 +131,7 @@ Use the `ansible-connect` wrapper to automatically handle credential retrieval:
 ### Managing Secrets
 
 See [docs/1password-integration.md](docs/1password-integration.md) for detailed instructions on:
+
 - Setting up 1Password CLI or Connect
 - Storing credentials securely
 - Using credentials in playbooks and inventories
@@ -132,11 +139,13 @@ See [docs/1password-integration.md](docs/1password-integration.md) for detailed 
 ## Configuration
 
 ### Ansible Configuration (`ansible.cfg`)
+
 - Configured for local plugin directories
 - Inventory path set to `./inventory`
 - Host key checking disabled for development
 
 ### Execution Environment
+
 - Uses `community-ee-minimal` container
 - Configuration in `execution-environment.yml`
 - Includes required collections and dependencies
