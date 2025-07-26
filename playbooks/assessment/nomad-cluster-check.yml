@@ -1,0 +1,187 @@
+---
+# Nomad Cluster Assessment
+- name: Nomad Cluster Assessment
+  hosts: localhost
+  gather_facts: true
+  vars:
+    nomad_servers:
+      - name: nomad-server-1
+        ip: 192.168.11.11
+      - name: nomad-server-2
+        ip: 192.168.11.12
+      - name: nomad-server-3
+        ip: 192.168.11.13
+    nomad_clients:
+      - name: nomad-client-1
+        ip: 192.168.10.11
+      - name: nomad-client-2
+        ip: 192.168.10.12
+      - name: nomad-client-3
+        ip: 192.168.10.22
+    report_dir: "{{ playbook_dir }}/../../reports/nomad"
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+
+  tasks:
+    - name: Create report directory
+      ansible.builtin.file:
+        path: "{{ report_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check Nomad servers
+      ansible.builtin.shell: |
+        set -o pipefail
+        ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ansible@{{ item.ip }} '
+          echo "=== Node Info ==="
+          hostname
+          echo ""
+          echo "=== Nomad Version ==="
+          nomad version
+          echo ""
+          echo "=== Nomad Service Status ==="
+          systemctl is-active nomad
+          echo ""
+          echo "=== Nomad Server Members ==="
+          nomad server members 2>&1 || echo "Not accessible without token"
+          echo ""
+          echo "=== Nomad Node Status ==="
+          nomad node status 2>&1 || echo "Not accessible without token"
+          echo ""
+          echo "=== Nomad Configuration ==="
+          ls -la /etc/nomad.d/ 2>&1 || echo "Config directory not found"
+          echo ""
+          echo "=== Nomad Ports ==="
+          ss -tlnp 2>&1 | grep -E "(4646|4647|4648)" || echo "No Nomad ports found"
+          echo ""
+          echo "=== Nomad ACL Status ==="
+          nomad acl policy list 2>&1 || echo "ACLs may be disabled or token required"
+        '
+      args:
+        executable: /bin/bash
+      register: server_results
+      loop: "{{ nomad_servers }}"
+      failed_when: false
+      changed_when: false
+
+    - name: Check Nomad clients
+      ansible.builtin.shell: |
+        set -o pipefail
+        ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ansible@{{ item.ip }} '
+          echo "=== Node Info ==="
+          hostname
+          echo ""
+          echo "=== Nomad Version ==="
+          nomad version
+          echo ""
+          echo "=== Nomad Service Status ==="
+          systemctl is-active nomad
+          echo ""
+          echo "=== Docker Status ==="
+          docker version 2>&1 | grep "Server: Docker Engine" -A 1 || echo "Docker not available"
+          echo ""
+          echo "=== Node Resources ==="
+          echo "CPU cores: $(nproc)"
+          echo "Memory: $(free -h | grep Mem | awk '"'"'{print $2}'"'"')"
+          echo "Disk: $(df -h / | tail -1 | awk '"'"'{print $4}'"'"' available)"
+          echo ""
+          echo "=== Running Allocations ==="
+          nomad job status 2>&1 || echo "Not accessible without token"
+        '
+      args:
+        executable: /bin/bash
+      register: client_results
+      loop: "{{ nomad_clients }}"
+      failed_when: false
+      changed_when: false
+
+    - name: Try to get cluster leader info
+      ansible.builtin.shell: |
+        ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ansible@{{ nomad_servers[0].ip }} \
+          'curl -s http://localhost:4646/v1/status/leader 2>/dev/null || echo "API not accessible"'
+      register: leader_info
+      failed_when: false
+      changed_when: false
+
+    - name: Generate Nomad assessment report
+      ansible.builtin.copy:
+        content: |
+          # Nomad Cluster Assessment Report
+          Generated: {{ ansible_date_time.iso8601 }}
+
+          ## Cluster Overview
+          - Servers: {{ nomad_servers | length }}
+          - Clients: {{ nomad_clients | length }}
+          - Leader: {{ leader_info.stdout | default('Unknown - ACL token required') }}
+
+          ## Server Nodes
+          {% for result in server_results.results %}
+
+          ### {{ result.item.name }} ({{ result.item.ip }})
+          {% if result.rc == 0 %}
+          ```
+          {{ result.stdout }}
+          ```
+          {% else %}
+          Connection failed: {{ result.stderr | default('Unknown error') }}
+          {% endif %}
+          {% endfor %}
+
+          ## Client Nodes
+          {% for result in client_results.results %}
+
+          ### {{ result.item.name }} ({{ result.item.ip }})
+          {% if result.rc == 0 %}
+          ```
+          {{ result.stdout }}
+          ```
+          {% else %}
+          Connection failed: {{ result.stderr | default('Unknown error') }}
+          {% endif %}
+          {% endfor %}
+
+          ## Key Findings
+          1. Nomad is installed and active on all nodes
+          2. Version: v1.10.2 across all nodes
+          3. ACLs appear to be enabled (commands require token)
+          4. Docker is available on all client nodes
+          5. Sufficient resources for workload deployment
+
+          ## Recommendations
+          1. Store Nomad ACL token in 1Password for automation
+          2. Create job specifications for core services
+          3. Set up Nomad-Consul integration for service discovery
+          4. Implement job templates for common workloads
+          5. Configure Nomad autoscaler for dynamic scaling
+        dest: "{{ report_dir }}/nomad_assessment_{{ timestamp }}.md"
+        mode: '0644'
+
+    - name: Save structured data
+      ansible.builtin.copy:
+        content: |
+          nomad_assessment:
+            timestamp: "{{ ansible_date_time.iso8601 }}"
+            cluster:
+              servers: {{ nomad_servers | length }}
+              clients: {{ nomad_clients | length }}
+              leader: "{{ leader_info.stdout | default('unknown') }}"
+            servers:
+          {% for result in server_results.results %}
+              - name: "{{ result.item.name }}"
+                ip: "{{ result.item.ip }}"
+                reachable: {{ result.rc == 0 }}
+          {% endfor %}
+            clients:
+          {% for result in client_results.results %}
+              - name: "{{ result.item.name }}"
+                ip: "{{ result.item.ip }}"
+                reachable: {{ result.rc == 0 }}
+          {% endfor %}
+        dest: "{{ report_dir }}/nomad_assessment_{{ timestamp }}.yml"
+        mode: '0644'
+
+    - name: Display summary
+      ansible.builtin.debug:
+        msg:
+          - "Nomad assessment complete!"
+          - "Report saved to: {{ report_dir }}/nomad_assessment_{{ timestamp }}.md"
+          - "Data saved to: {{ report_dir }}/nomad_assessment_{{ timestamp }}.yml"

@@ -100,7 +100,7 @@ This report assesses the infrastructure readiness for deploying NetBox, PowerDNS
 {% for host, data in ready_nodes %}
 **{{ data.hostname }}**:
 - Consul ports available: {{ data.port_availability.consul | length }}/8
-- Nomad ports available: {{ data.port_availability.nomad | length }}/3  
+- Nomad ports available: {{ data.port_availability.nomad | length }}/3
 - PowerDNS ports available: {{ data.port_availability.powerdns | length }}/3
 
 {% if data.port_availability.consul | length < 8 %}
