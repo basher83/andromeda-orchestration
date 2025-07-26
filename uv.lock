@@ -14,6 +14,14 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "aenum"
+version = "3.1.16"
+source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
+wheels = [
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/e3/52/6ad8f63ec8da1bf40f96996d25d5b650fdd38f5975f8c813732c47388f18/aenum-3.1.16-py3-none-any.whl", hash = "sha256:9035092855a98e41b66e3d0998bd7b96280e85ceb3a04cc035636138a1943eaf", size = 165627, upload-time = "2025-04-25T03:17:58.89Z" },
+]
+
+[[package]]
 name = "ansible-compat"
 version = "25.6.0"
 source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
@@ -142,6 +150,34 @@ wheels = [
     { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/e3/ee/adda3d46d4a9120772fae6de454c8495603c37c4c3b9c60f25b1ab6401fe/black-25.1.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:030b9759066a4ee5e5aca28c3c77f9c64789cdd4de8ac1df642c40b708be6171", size = 1782926, upload-time = "2025-01-29T04:18:58.564Z" },
     { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/cc/64/94eb5f45dcb997d2082f097a3944cfc7fe87e071907f677e80788a2d7b7a/black-25.1.0-cp313-cp313-win_amd64.whl", hash = "sha256:a22f402b410566e2d1c950708c77ebf5ebd5d0d88a6a2e87c86d9fb48afa0d18", size = 1442613, upload-time = "2025-01-29T04:19:27.63Z" },
     { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/09/71/54e999902aed72baf26bca0d50781b01838251a462612966e9fc4891eadd/black-25.1.0-py3-none-any.whl", hash = "sha256:95e8176dae143ba9097f351d174fdaf0ccd29efb414b362ae3fd72bf0f710717", size = 207646, upload-time = "2025-01-29T04:15:38.082Z" },
+]
+
+[[package]]
+name = "boto3"
+version = "1.39.14"
+source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
+dependencies = [
+    { name = "botocore" },
+    { name = "jmespath" },
+    { name = "s3transfer" },
+]
+sdist = { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/66/8f/acc7d434730e0c931ece4b46c983bf5afb7ae63abb545b535f0eda538476/boto3-1.39.14.tar.gz", hash = "sha256:fabb16360a93b449d5241006485bcc761c26694e75ac01009f4459f114acc06e", size = 111844, upload-time = "2025-07-25T19:25:26.943Z" }
+wheels = [
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/93/9a/01ea17a58a27b7f4a7a6f6e2f4d4191b9e92362b77b6d58689f2d7eccb99/boto3-1.39.14-py3-none-any.whl", hash = "sha256:82c6868cad18c3bd4170915e9525f9af5f83e9779c528417f8863629558fc2d0", size = 139898, upload-time = "2025-07-25T19:25:25.506Z" },
+]
+
+[[package]]
+name = "botocore"
+version = "1.39.14"
+source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
+dependencies = [
+    { name = "jmespath" },
+    { name = "python-dateutil" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/cc/ca/8994676a67f0a9d39a0844124f196c4dedc2fbca370c839f61246c1fea6d/botocore-1.39.14.tar.gz", hash = "sha256:7fc44d4ad13b524e5d8a6296785776ef5898ac026ff74df9b35313831d507926", size = 14226110, upload-time = "2025-07-25T19:25:17.751Z" }
+wheels = [
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/08/c0/6b8200686c1f9ea44ab0daab0223b04799d60ccf882b9d7f770fbb40571e/botocore-1.39.14-py3-none-any.whl", hash = "sha256:4ed551c77194167b7e8063f33059bc2f9b2ead0ed4ee33dc7857273648ed4349", size = 13888318, upload-time = "2025-07-25T19:25:13.386Z" },
 ]
 
 [[package]]
@@ -474,6 +510,40 @@ wheels = [
 ]
 
 [[package]]
+name = "infisical-python"
+version = "2.3.6"
+source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
+wheels = [
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/af/66/0cfde935d90d2aa5dab0bdaa012e4a76beee26f69d53d14865d8cc253eef/infisical_python-2.3.6-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:f255e066b928a9e83cfb84589fa57d04f4b9f055f97915916e3d01adb93b17b4", size = 6920020, upload-time = "2025-04-17T17:08:17.191Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/5e/3b/49c1c1639839e9789fc3cbe6117839b919b5e3ef627fa3b4575c73a736b5/infisical_python-2.3.6-cp310-none-win_amd64.whl", hash = "sha256:feefdcaa46e3c03e170841338aac2f97d55964bf5293764dd154f715a84d0d2c", size = 6275015, upload-time = "2025-04-17T17:08:19.257Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/23/82/1c1091a6c86c2df55116b53e0f0cc6c9ab5bd674404b2df1916e2374378c/infisical_python-2.3.6-cp311-cp311-macosx_10_7_x86_64.whl", hash = "sha256:81c61f092c18a991120c249eac09c6b957f33f0ed86b93db13ec3def187c9ab8", size = 6963050, upload-time = "2025-04-17T17:08:21.114Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/81/d3/a3ce1cfa00fd0b3780431918a94659cde2ad2389a5eeaac06037a75506f3/infisical_python-2.3.6-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:5c78bca289052ccf61108f36621c3f7f15fa58b2149a96009e5668b1dd2cfd76", size = 6581682, upload-time = "2025-04-17T17:08:22.833Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/fd/80/e86fd87ed06af77d34d7600bd57a8800a7192cf4834848cde6d27489c6a2/infisical_python-2.3.6-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:199f10faf53161265f313e6542c35500ef3e4b9cced9f439715c821519b47897", size = 6919877, upload-time = "2025-04-17T17:08:24.624Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/5f/bd/376f228130f6ef7073e9495bb7cb27e2d3e02881dc4f146b1e75c02982c6/infisical_python-2.3.6-cp311-none-win_amd64.whl", hash = "sha256:8fe1254b86d9d447c0d734cfbf6bec858215b45af599350a5c66fc4cab8b43bd", size = 6272363, upload-time = "2025-04-17T17:08:26.042Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/aa/c5/05b6ee891dc5acc132ab7ee3a52ca6a16bcfaf8b8343903bbdb57b0cfb65/infisical_python-2.3.6-cp312-cp312-macosx_10_7_x86_64.whl", hash = "sha256:1ed5c5da24013b8fbede899569775420cfd7d120dec26b465771a608dc9255ea", size = 6963287, upload-time = "2025-04-17T17:08:27.529Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/3c/e3/5b3a88097fe26573836d8138e22abd2816350ef8cc826e6b3ee1a74ba49d/infisical_python-2.3.6-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:63a80e9827f90e1a1bcf97463b11982fb56a2dc7cd0f4f431355d8946b216ef4", size = 6581512, upload-time = "2025-04-17T17:08:30.661Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/28/70/7c0f2c76bc3aeb2df9275a445edf57bf39244f261df994971dea31175a0c/infisical_python-2.3.6-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:3015b4bb746e470f2d5de588018475e8933f8ad58d49cd012bf4398679d543f6", size = 6920065, upload-time = "2025-04-17T17:08:32.059Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/be/52/a83f23cdc77f66c2ce4d2cbb27e82256184027f9e095b2605f640a0d9eb7/infisical_python-2.3.6-cp312-none-win_amd64.whl", hash = "sha256:fc66284e44bec19a9caafc57daaefd37844da75ce60406e760a8a27196883809", size = 6272617, upload-time = "2025-04-17T17:08:33.579Z" },
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/76/6d/e7074a4fe3f5d28aea7f468ceca941ebc8ecc7d553c004f415b94a297ba0/infisical_python-2.3.6-cp313-none-win_amd64.whl", hash = "sha256:c543bf48c4460fb89f2b7e3d78d0678be12bb1b8c193df6bb54edf01374d656a", size = 6272614, upload-time = "2025-04-17T17:08:35.226Z" },
+]
+
+[[package]]
+name = "infisicalsdk"
+version = "1.0.9"
+source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
+dependencies = [
+    { name = "aenum" },
+    { name = "boto3" },
+    { name = "botocore" },
+    { name = "python-dateutil" },
+    { name = "requests" },
+]
+sdist = { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/b7/c7/a97d25ab2a406f6c7b0021c4f2de83dd8075cc35e5a5c10f4036231a7c6d/infisicalsdk-1.0.9.tar.gz", hash = "sha256:5284e4ee631f8fe2fc2ee72a1e4a096ed6cc0fa7d026786f5795bee44be15d96", size = 13993, upload-time = "2025-06-26T20:31:50.347Z" }
+wheels = [
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/3b/d9/c260187aa564da26e96435f83acf2b5ecd6beb9042479c6ad0b970044305/infisicalsdk-1.0.9-py3-none-any.whl", hash = "sha256:dd0f97dd0d3f2e04d705b29012813a548a4d25c2b6606366b62d1593992e7a69", size = 13659, upload-time = "2025-06-26T20:31:49.503Z" },
+]
+
+[[package]]
 name = "iniconfig"
 version = "2.1.0"
 source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
@@ -492,6 +562,15 @@ dependencies = [
 sdist = { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/df/bf/f7da0350254c0ed7c72f3e33cef02e048281fec7ecec5f032d4aac52226b/jinja2-3.1.6.tar.gz", hash = "sha256:0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d", size = 245115, upload-time = "2025-03-05T20:05:02.478Z" }
 wheels = [
     { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67", size = 134899, upload-time = "2025-03-05T20:05:00.369Z" },
+]
+
+[[package]]
+name = "jmespath"
+version = "1.0.1"
+source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
+sdist = { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/00/2a/e867e8531cf3e36b41201936b7fa7ba7b5702dbef42922193f05c8976cd6/jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe", size = 25843, upload-time = "2022-06-17T18:00:12.224Z" }
+wheels = [
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/31/b4/b9b800c45527aadd64d5b442f9b932b00648617eb5d63d2c7a6587b7cafc/jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980", size = 20256, upload-time = "2022-06-17T18:00:10.251Z" },
 ]
 
 [[package]]
@@ -707,6 +786,8 @@ source = { editable = "." }
 dependencies = [
     { name = "ansible-core", version = "2.17.13", source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }, marker = "python_full_version < '3.11'" },
     { name = "ansible-core", version = "2.19.0", source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }, marker = "python_full_version >= '3.11'" },
+    { name = "infisical-python" },
+    { name = "infisicalsdk" },
     { name = "jinja2" },
     { name = "netaddr" },
     { name = "python-dateutil" },
@@ -733,6 +814,8 @@ dev = [
 requires-dist = [
     { name = "ansible-core", specifier = ">=2.15" },
     { name = "ansible-lint", marker = "extra == 'dev'", specifier = ">=24.2.0" },
+    { name = "infisical-python", specifier = ">=2.2.0" },
+    { name = "infisicalsdk", specifier = ">=1.0.0" },
     { name = "jinja2", specifier = ">=3.1" },
     { name = "molecule", marker = "extra == 'dev'", specifier = ">=24.2.0" },
     { name = "molecule-plugins", extras = ["docker"], marker = "extra == 'dev'", specifier = ">=23.5.0" },
@@ -1264,6 +1347,18 @@ wheels = [
     { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/35/cf/441b7fc58368455233cfb5b77206c849b6dfb48b23de532adcc2e50ccc06/ruff-0.12.4-py3-none-win32.whl", hash = "sha256:4de27977827893cdfb1211d42d84bc180fceb7b72471104671c59be37041cf93", size = 10267904, upload-time = "2025-07-17T17:27:11.814Z" },
     { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/ce/7e/20af4a0df5e1299e7368d5ea4350412226afb03d95507faae94c80f00afd/ruff-0.12.4-py3-none-win_amd64.whl", hash = "sha256:fe0b9e9eb23736b453143d72d2ceca5db323963330d5b7859d60d101147d461a", size = 11209038, upload-time = "2025-07-17T17:27:14.417Z" },
     { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/11/02/8857d0dfb8f44ef299a5dfd898f673edefb71e3b533b3b9d2db4c832dd13/ruff-0.12.4-py3-none-win_arm64.whl", hash = "sha256:0618ec4442a83ab545e5b71202a5c0ed7791e8471435b94e655b570a5031a98e", size = 10469336, upload-time = "2025-07-17T17:27:16.913Z" },
+]
+
+[[package]]
+name = "s3transfer"
+version = "0.13.1"
+source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
+dependencies = [
+    { name = "botocore" },
+]
+sdist = { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/6d/05/d52bf1e65044b4e5e27d4e63e8d1579dbdec54fce685908ae09bc3720030/s3transfer-0.13.1.tar.gz", hash = "sha256:c3fdba22ba1bd367922f27ec8032d6a1cf5f10c934fb5d68cf60fd5a23d936cf", size = 150589, upload-time = "2025-07-18T19:22:42.31Z" }
+wheels = [
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/6d/4f/d073e09df851cfa251ef7840007d04db3293a0482ce607d2b993926089be/s3transfer-0.13.1-py3-none-any.whl", hash = "sha256:a981aa7429be23fe6dfc13e80e4020057cbab622b08c0315288758d67cabc724", size = 85308, upload-time = "2025-07-18T19:22:40.947Z" },
 ]
 
 [[package]]

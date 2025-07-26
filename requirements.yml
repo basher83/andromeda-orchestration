@@ -18,6 +18,10 @@ collections:
   - name: onepassword.connect
     version: ">=2.3.0"
 
+  # Infisical secrets management
+  - name: infisical.vault
+    version: ">=1.1.0"
+
   # Additional useful collections
   - name: ansible.posix
     version: ">=1.5.0"
