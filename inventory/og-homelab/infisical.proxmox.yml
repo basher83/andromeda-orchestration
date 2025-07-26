@@ -1,0 +1,31 @@
+---
+plugin: community.proxmox.proxmox
+url: https://192.168.1.19:8006
+validate_certs: false
+want_facts: true
+
+# Instead of login with password, proxmox supports api token authentication since release 6.2.
+user: ansible@pve
+token_id: service
+
+# Using Infisical lookup instead of 1Password
+# Expects INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET environment variables
+token_secret: >-
+  {{ (lookup('infisical.vault.read_secrets',
+             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+             env_slug='prod',
+             path='/apollo-13',
+             secret_name='ANSIBLE_TOKEN_SECRET_OG')).value }}
+
+# Group vms by tags for reference in playbooks.
+keyed_groups:
+  - key: proxmox_tags_parsed
+    separator: ""
+    prefix: tag_
+
+compose:
+  ansible_host: >-
+    {{ proxmox_ipconfig0.ip | default(proxmox_net0.ip) | default(proxmox_name) |
+       regex_replace('/\d+$', '') }}
