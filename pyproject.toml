@@ -10,6 +10,8 @@ dependencies = [
     "jinja2>=3.1",
     "netaddr>=0.9",
     "python-dateutil>=2.8",
+    "infisical-python>=2.2.0",
+    "infisicalsdk>=1.0.0",
 ]
 
 [project.optional-dependencies]

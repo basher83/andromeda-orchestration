@@ -21,6 +21,14 @@
         "/Users/basher8383/dev/learning/netbox-ansible"
       ],
       "env": {}
+    },
+    "infisical": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@infisical/mcp@latest"
+      ],
+      "env": {}
     }
   }
 }

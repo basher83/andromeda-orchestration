@@ -11,9 +11,12 @@ dependencies:
     package_pip: ansible-core
   ansible_runner:
     package_pip: ansible-runner
+  python:
+    - infisical-python
   system:
     - openssh-clients
     - sshpass
   galaxy:
     collections:
       - name: community.general
+      - name: infisical.vault
