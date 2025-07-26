@@ -3,6 +3,7 @@
 When completing any development task in this project, follow these steps:
 
 ## 1. Code Quality Checks
+
 ```bash
 # Run all linters
 task lint
@@ -14,6 +15,7 @@ task fix
 ```
 
 ## 2. Test Your Changes
+
 ```bash
 # Check playbook syntax
 ansible-playbook <your-playbook>.yml --syntax-check
@@ -25,6 +27,7 @@ ansible-playbook <your-playbook>.yml --syntax-check
 ```
 
 ## 3. Security Verification
+
 ```bash
 # Run security scan
 task security
@@ -34,18 +37,21 @@ rg -i "password|token|secret" --glob "!*.md" --glob "!*example*"
 ```
 
 ## 4. Documentation Updates
+
 - Update relevant documentation in `docs/`
 - Update CLAUDE.md if the project focus changes
 - Add/update playbook comments and examples
 - Update the implementation plan checklist if working on DNS/IPAM
 
 ## 5. Pre-commit Hooks
+
 ```bash
 # Run all pre-commit hooks
 task hooks
 ```
 
 ## 6. Git Workflow
+
 ```bash
 # Check your changes
 git status
@@ -60,6 +66,7 @@ git push origin feature/dns-ipam-phase-0
 ```
 
 ## 7. Validation
+
 - Verify the playbook runs successfully
 - Check that the output/reports are generated as expected
 - Test rollback procedures if applicable
