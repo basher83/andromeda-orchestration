@@ -1,0 +1,82 @@
+---
+# Check Nomad cluster status and health
+- name: Nomad Cluster Status Check
+  hosts: localhost
+  gather_facts: false
+  vars:
+    nomad_addr: "http://192.168.11.11:4646"
+
+  tasks:
+    - name: Check cluster leader
+      ansible.builtin.uri:
+        url: "{{ nomad_addr }}/v1/status/leader"
+        method: GET
+      register: leader_check
+
+    - name: Get server members
+      ansible.builtin.command:
+        cmd: "nomad server members"
+      environment:
+        NOMAD_ADDR: "{{ nomad_addr }}"
+      register: server_members
+      changed_when: false
+
+    - name: Get node status
+      ansible.builtin.command:
+        cmd: "nomad node status"
+      environment:
+        NOMAD_ADDR: "{{ nomad_addr }}"
+      register: node_status
+      changed_when: false
+
+    - name: Get running jobs
+      ansible.builtin.command:
+        cmd: "nomad job status"
+      environment:
+        NOMAD_ADDR: "{{ nomad_addr }}"
+      register: job_status
+      changed_when: false
+      failed_when: false
+
+    - name: Get system jobs
+      ansible.builtin.uri:
+        url: "{{ nomad_addr }}/v1/jobs"
+        method: GET
+      register: all_jobs
+
+    - name: Display cluster summary
+      ansible.builtin.debug:
+        msg:
+          - "=== Nomad Cluster Status ==="
+          - "Leader: {{ leader_check.json }}"
+          - ""
+          - "=== Server Members ==="
+          - "{{ server_members.stdout_lines }}"
+          - ""
+          - "=== Client Nodes ==="
+          - "{{ node_status.stdout_lines }}"
+          - ""
+          - "=== Running Jobs ==="
+          - "Total jobs: {{ all_jobs.json | length }}"
+          - "{{ job_status.stdout_lines | default(['No jobs running']) }}"
+
+    - name: Check node resources
+      ansible.builtin.uri:
+        url: "{{ nomad_addr }}/v1/nodes"
+        method: GET
+      register: nodes_data
+
+    - name: Calculate cluster resources
+      ansible.builtin.set_fact:
+        total_cpu: "{{ nodes_data.json | map(attribute='Resources.CPU') | sum }}"
+        total_memory: "{{ nodes_data.json | map(attribute='Resources.MemoryMB') | sum }}"
+        total_disk: "{{ nodes_data.json | map(attribute='Resources.DiskMB') | sum }}"
+
+    - name: Display resource summary
+      ansible.builtin.debug:
+        msg:
+          - "=== Cluster Resources ==="
+          - "Total CPU: {{ total_cpu }} MHz"
+          - "Total Memory: {{ (total_memory | int / 1024) | round(1) }} GB"
+          - "Total Disk: {{ (total_disk | int / 1024) | round(1) }} GB"
+          - "Nodes: {{ nodes_data.json | length }}"

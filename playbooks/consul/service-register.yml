@@ -1,0 +1,58 @@
+---
+# Register services with Consul using hashicorp-tools collection
+- name: Register Service with Consul using HashiCorp Tools
+  hosts: localhost
+  gather_facts: false
+  vars:
+    consul_token: >-
+      {{ lookup('community.general.onepassword', 'Consul ACL - doggos-homelab',
+                field='token', vault='DevOps') }}
+    consul_host: "192.168.11.11"
+    consul_port: 8500
+
+  tasks:
+    - name: Register service
+      community.general.consul:
+        host: "{{ consul_host }}"
+        port: "{{ consul_port }}"
+        token: "{{ consul_token }}"
+        service_name: "{{ service.name }}"
+        service_port: "{{ service.port | int }}"
+        service_id: "{{ service.id | default(service.name + '-' + ansible_date_time.epoch) }}"
+        tags: "{{ service.tags | default([]) }}"
+        state: present
+      register: service_result
+
+    - name: Add health check if provided
+      community.general.consul:
+        host: "{{ consul_host }}"
+        port: "{{ consul_port }}"
+        token: "{{ consul_token }}"
+        name: "{{ service.name }}-check"
+        service_id: "{{ service_result.service_id }}"
+        interval: "{{ service.check.interval | default('30s') }}"
+        timeout: "{{ service.check.timeout | default('5s') }}"
+        http: "{{ service.check.http | default(omit) }}"
+        tcp: "{{ service.check.tcp | default(omit) }}"
+        script: "{{ service.check.script | default(omit) }}"
+        state: present
+      when: service.check is defined
+
+    - name: Query service from catalog
+      ansible.builtin.uri:
+        url: "http://{{ consul_host }}:{{ consul_port }}/v1/catalog/service/{{ service.name }}"
+        headers:
+          X-Consul-Token: "{{ consul_token }}"
+      register: catalog_info
+
+    - name: Display registration result
+      ansible.builtin.debug:
+        msg:
+          - "Service '{{ service.name }}' registered successfully!"
+          - "Service instances: {{ catalog_info.services | length }}"
+          - "Health checks: {{ 'Configured' if service.check is defined else 'None' }}"
+
+# Usage:
+# ansible-playbook playbooks/consul/service-register-v2.yml \
+#   -e '{"service": {"name": "web", "port": 8080, "tags": ["primary"],
+#        "check": {"http": "http://localhost:8080/health"}}}'

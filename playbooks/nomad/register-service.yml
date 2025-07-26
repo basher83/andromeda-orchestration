@@ -1,0 +1,54 @@
+---
+# Register a service with Consul through Nomad
+- name: Register Service with Consul
+  hosts: localhost
+  gather_facts: false
+  vars:
+    consul_token: >-
+      {{ lookup('community.general.onepassword', 'Consul ACL - doggos-homelab',
+                field='token', vault='DevOps') }}
+    consul_addr: "http://192.168.11.11:8500"
+    service_name: "{{ service.name | mandatory }}"
+    service_port: "{{ service.port | mandatory }}"
+    service_tags: "{{ service.tags | default([]) }}"
+    service_check: "{{ service.check | default({}) }}"
+
+  tasks:
+    - name: Create service definition
+      ansible.builtin.set_fact:
+        consul_service:
+          ID: "{{ service_name }}-{{ ansible_date_time.epoch }}"
+          Name: "{{ service_name }}"
+          Port: "{{ service_port | int }}"
+          Tags: "{{ service_tags }}"
+          Check: "{{ service_check }}"
+
+    - name: Register service with Consul
+      ansible.builtin.uri:
+        url: "{{ consul_addr }}/v1/agent/service/register"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ consul_token }}"
+        body_format: json
+        body: "{{ consul_service }}"
+        status_code: 200
+      register: register_result
+
+    - name: Verify service registration
+      ansible.builtin.uri:
+        url: "{{ consul_addr }}/v1/catalog/service/{{ service_name }}"
+        method: GET
+        headers:
+          X-Consul-Token: "{{ consul_token }}"
+      register: verify_result
+
+    - name: Display registration result
+      ansible.builtin.debug:
+        msg:
+          - "Service '{{ service_name }}' registered successfully!"
+          - "Service ID: {{ consul_service.ID }}"
+          - "Instances: {{ verify_result.json | length }}"
+
+# Usage:
+# ansible-playbook playbooks/nomad/register-service.yml \
+#   -e '{"service": {"name": "web", "port": 8080, "tags": ["primary", "v1"]}}'
