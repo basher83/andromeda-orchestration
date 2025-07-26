@@ -105,7 +105,7 @@ Based on the audit, the current DNS resolution flow appears to be:
 {% endfor %}
 {% endfor %}
    - Primary nameservers in use: {{ unique_nameservers | join(', ') }}
-   
+
 2. **Local DNS Services**:
 {% if 'pihole' in services_summary %}
    - Pi-hole providing filtering and local DNS
