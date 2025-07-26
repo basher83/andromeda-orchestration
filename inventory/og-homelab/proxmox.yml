@@ -30,5 +30,5 @@ keyed_groups:
 compose:
 #  ansible_host: proxmox_name + ".mydomain.com"
   ansible_host: >-
-    {{ proxmox_net0["ip"].split('/')[0] if 'ip' in proxmox_net0
-       else proxmox_agent_interfaces[1]["ip-addresses"][0].split('/')[0] }}
+    {{ proxmox_ipconfig0.ip | default(proxmox_net0.ip) | default(proxmox_name) |
+       regex_replace('/\d+$', '') }}
