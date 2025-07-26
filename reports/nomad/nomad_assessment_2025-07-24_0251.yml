@@ -1,0 +1,26 @@
+nomad_assessment:
+  timestamp: "2025-07-24T06:51:00Z"
+  cluster:
+    servers: 3
+    clients: 3
+    leader: "192.168.11.12:4647"
+  servers:
+    - name: "nomad-server-1"
+      ip: "192.168.11.11"
+      reachable: true
+    - name: "nomad-server-2"
+      ip: "192.168.11.12"
+      reachable: true
+    - name: "nomad-server-3"
+      ip: "192.168.11.13"
+      reachable: true
+  clients:
+    - name: "nomad-client-1"
+      ip: "192.168.10.11"
+      reachable: true
+    - name: "nomad-client-2"
+      ip: "192.168.10.12"
+      reachable: true
+    - name: "nomad-client-3"
+      ip: "192.168.10.22"
+      reachable: true
