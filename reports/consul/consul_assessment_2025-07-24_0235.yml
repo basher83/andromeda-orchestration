@@ -1,0 +1,34 @@
+consul_assessment:
+  timestamp: "2025-07-24T06:35:50Z"
+  cluster:
+    total_nodes: 6
+    servers: 3
+    clients: 3
+  nodes:
+    - name: "nomad-server-1"
+      ip: "192.168.11.11"
+      role: "server"
+      reachable: true
+    - name: "nomad-server-2"
+      ip: "192.168.11.12"
+      role: "server"
+      reachable: true
+    - name: "nomad-server-3"
+      ip: "192.168.11.13"
+      role: "server"
+      reachable: true
+    - name: "nomad-client-1"
+      ip: "192.168.10.11"
+      role: "client"
+      reachable: true
+    - name: "nomad-client-2"
+      ip: "192.168.10.12"
+      role: "client"
+      reachable: true
+    - name: "nomad-client-3"
+      ip: "192.168.10.22"
+      role: "client"
+      reachable: true
+  acl_enabled: true
+  encryption_enabled: true
+  dns_port: 8600
