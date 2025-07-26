@@ -28,13 +28,16 @@ ansible-navigator run <playbook.yml> \
 ### Working with Dynamic Inventory
 
 ```bash
-# Test Proxmox inventory with 1Password integration
-./bin/ansible-connect inventory -i inventory/og-homelab/proxmox.yml --list
-./bin/ansible-connect inventory -i inventory/doggos-homelab/proxmox.yml --list
+# Test inventory with Infisical (recommended)
+uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
+uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --list
+
+# Test inventory with 1Password (legacy)
+./bin/ansible-connect inventory -i inventory/og-homelab/1password.proxmox.yml --list
+./bin/ansible-connect inventory -i inventory/doggos-homelab/1password.proxmox.yml --list
 
 # Graph inventory structure
-./bin/ansible-connect inventory -i inventory/og-homelab/proxmox.yml --graph
-./bin/ansible-connect inventory -i inventory/doggos-homelab/proxmox.yml --graph
+uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --graph
 ```
 
 ### Running Assessment Playbooks
@@ -54,9 +57,14 @@ ansible-navigator run <playbook.yml> \
 - **Current Implementation**:
   - Proxmox dynamic inventory using `community.general.proxmox` plugin
   - Two clusters configured: `og-homelab` and `doggos-homelab`
+  - Dual inventory files per cluster:
+    - `infisical.proxmox.yml` - Uses Infisical for secrets (recommended)
+    - `1password.proxmox.yml` - Uses 1Password for secrets (legacy)
 - **In Progress**: DNS & IPAM infrastructure deployment (see `docs/dns-ipam-implementation-plan.md`)
 - **Planned**: NetBox dynamic inventory integration (see `docs/netbox.md` for patterns)
-- **Authentication**: Uses API tokens stored in 1Password, accessed via environment variables
+- **Authentication**: 
+  - Infisical: Machine identity credentials via environment variables
+  - 1Password: API tokens via Connect server (legacy)
 
 ### Execution Environment
 
@@ -78,6 +86,12 @@ ansible-navigator run <playbook.yml> \
   - Runtime data queries with `netbox.netbox.nb_lookup`
   - Event-driven automation patterns
 
+- `docs/infisical-setup-and-migration.md`: Infisical secrets management guide:
+  - Accurate explanation of projects, environments, folders, and secrets
+  - Current state with secrets at `/apollo-13/`
+  - Migration plan to organized folder structure
+  - Ansible collection usage patterns
+
 - `docs/1password-integration.md`: 1Password Connect integration for secrets management:
   - Vault item lookups using `community.general.onepassword`
   - Secret injection patterns
@@ -98,8 +112,9 @@ ansible-navigator run <playbook.yml> \
 
 3. **Secret Management**
    - Never hardcode credentials
-   - Use 1Password Connect for secret retrieval
-   - Environment variables for API tokens
+   - Use Infisical for secret retrieval (recommended)
+   - 1Password Connect still available during transition
+   - Environment variables for authentication
 
 ## Current Infrastructure State
 
