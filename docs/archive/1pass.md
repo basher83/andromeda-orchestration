@@ -1,5 +1,7 @@
 # 1Password Connect Ansible Collection
 
+> **⚠️ DEPRECATED**: This project has migrated to Infisical for secrets management. See [infisical-setup-and-migration.md](infisical-setup-and-migration.md) for current documentation. This guide is retained for reference during the migration period.
+
 ## Overview
 
 The `onepassword.connect` Ansible collection (v2.3.0) provides enterprise-grade secret management integration between
