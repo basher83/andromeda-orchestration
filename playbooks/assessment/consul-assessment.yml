@@ -2,7 +2,7 @@
 # Consul Health Assessment using Infisical for ACL token
 #
 # This playbook performs a comprehensive health assessment of the Consul cluster
-# 
+#
 # Usage:
 #   uv run ansible-playbook playbooks/assessment/consul-assessment.yml -i inventory/og-homelab/infisical.proxmox.yml
 #   uv run ansible-playbook playbooks/assessment/consul-assessment.yml -i inventory/doggos-homelab/infisical.proxmox.yml
@@ -23,7 +23,7 @@
     # doggos-homelab nodes end with -lloyd, -holly, or -mable
     # og-homelab nodes have different patterns
     is_doggos_cluster: "{{ inventory_hostname.endswith(('-lloyd', '-holly', '-mable')) }}"
-    
+
     # Retrieve Consul ACL token from Infisical
     # Following the same pattern as inventory files
     # Using conditional to select appropriate secret name based on cluster

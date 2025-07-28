@@ -3,7 +3,8 @@
 # This playbook demonstrates improved connectivity testing that handles DNS issues gracefully
 #
 # Usage:
-#   uv run ansible-playbook playbooks/assessment/robust-connectivity-test.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+#   uv run ansible-playbook playbooks/assessment/robust-connectivity-test.yml \
+#     -i inventory/doggos-homelab/infisical.proxmox.yml
 
 - name: Robust Connectivity Testing
   hosts: all
@@ -33,7 +34,8 @@
           {% set targets = [] %}
           {% for host in groups['all'] %}
           {% if host != inventory_hostname %}
-          {% if hostvars[host]['ansible_default_ipv4'] is defined and hostvars[host]['ansible_default_ipv4']['address'] is defined %}
+          {% if hostvars[host]['ansible_default_ipv4'] is defined and
+          hostvars[host]['ansible_default_ipv4']['address'] is defined %}
           {% set host_ip = hostvars[host]['ansible_default_ipv4']['address'] %}
           {% set _ = targets.append({
             'hostname': host,
@@ -85,8 +87,13 @@
           source:
             hostname: "{{ ansible_hostname }}"
             fqdn: "{{ ansible_fqdn }}"
-            ip: "{{ ansible_default_ipv4.address | default('N/A') if ansible_default_ipv4 is defined else 'N/A' }}"
-            network_segment: "{{ ansible_default_ipv4.address.split('.')[0:3] | join('.') if ansible_default_ipv4 is defined and ansible_default_ipv4.address is defined else 'N/A' }}"
+            ip: >-
+              {{ ansible_default_ipv4.address | default('N/A')
+              if ansible_default_ipv4 is defined else 'N/A' }}
+            network_segment: >-
+              {{ ansible_default_ipv4.address.split('.')[0:3] | join('.')
+              if ansible_default_ipv4 is defined and ansible_default_ipv4.address is defined
+              else 'N/A' }}
           tests: |
             {% set test_results = [] %}
             {% for i in range(connectivity_targets | length) %}
@@ -99,9 +106,13 @@
               'target_hostname': target.hostname,
               'target_ip': target.ip,
               'target_network': target.network,
-              'same_network': target.network == ansible_default_ipv4.address.split('.')[0:3] | join('.') if ansible_default_ipv4 is defined and ansible_default_ipv4.address is defined else false,
+              'same_network': target.network == ansible_default_ipv4.address.split('.')[0:3] | join('.')
+                if ansible_default_ipv4 is defined and ansible_default_ipv4.address is defined
+                else false,
               'icmp_success': ping_test.rc == 0,
-              'icmp_rtt': ping_test.stdout | regex_findall('time=([0-9.]+)') | map('float') | list | sum / (ping_test.stdout | regex_findall('time=([0-9.]+)') | length) if ping_test.stdout | regex_findall('time=([0-9.]+)') | length > 0 else 'N/A',
+              'icmp_rtt': ping_test.stdout | regex_findall('time=([0-9.]+)') | map('float') | list | sum
+                / (ping_test.stdout | regex_findall('time=([0-9.]+)') | length)
+                if ping_test.stdout | regex_findall('time=([0-9.]+)') | length > 0 else 'N/A',
               'ssh_reachable': ssh_test.state is defined and ssh_test.state == 'started',
               'dns_resolves': dns_test.rc == 0 and target.ip in dns_test.stdout,
               'reverse_dns': rdns_test.rc == 0 and 'name =' in rdns_test.stdout
@@ -140,32 +151,32 @@
       ansible.builtin.copy:
         content: |
           # Network Connectivity Assessment Report
-          
+
           Generated: {{ timestamp }}
-          
+
           ## Summary
-          
+
           This report provides a comprehensive view of network connectivity between all nodes.
-          
+
           ## Key Findings
-          
+
           {% set total_nodes = connectivity_reports.files | length %}
           - Total nodes assessed: {{ total_nodes }}
           - Assessment includes: ICMP, SSH, DNS forward/reverse lookups
-          
+
           ## Network Segments Identified
-          
+
           - 192.168.10.x: 2.5G network
           - 192.168.11.x: 10G high-speed network
-          
+
           ## Recommendations
-          
+
           1. **DNS Resolution**: Configure proper DNS entries for all nodes
           2. **Network Segmentation**: Ensure critical services are on the 10G network
           3. **Firewall Rules**: Verify all required ports are open between nodes
-          
+
           ## Detailed Results
-          
+
           See individual YAML reports in: `{{ connectivity_report_dir }}`
         dest: "{{ connectivity_report_dir }}/connectivity_summary_{{ timestamp }}.md"
         mode: '0644'

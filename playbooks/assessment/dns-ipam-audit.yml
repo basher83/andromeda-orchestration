@@ -248,7 +248,9 @@
           # Network Configuration
           network:
             interfaces: "{{ interface_details }}"
-            default_gateway: "{{ ansible_default_ipv4.gateway | default('N/A') if ansible_default_ipv4 is defined else 'N/A' }}"
+            default_gateway: >-
+              {{ ansible_default_ipv4.gateway | default('N/A')
+              if ansible_default_ipv4 is defined else 'N/A' }}
             dns_servers_via_dhcp: "{{ 'dhcp' in resolv_data | lower }}"
           # IPAM Data
           ipam:
@@ -265,7 +267,8 @@
           raw_data:
             resolv_conf: "{{ resolv_data }}"
             hosts_file_sample: >-
-              {% set hosts_entries = hosts_file.content | b64decode | regex_findall('^(?!#).*', multiline=True) | select | list %}
+              {% set hosts_entries = hosts_file.content | b64decode |
+              regex_findall('^(?!#).*', multiline=True) | select | list %}
               {% if hosts_entries | length > 10 %}
               {{ hosts_entries[:10] }}
               {% elif hosts_entries | length > 0 %}
