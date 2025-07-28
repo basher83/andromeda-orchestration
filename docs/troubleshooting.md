@@ -34,6 +34,7 @@ without explicit permission.
    ```
 
    Enable permissions for:
+
    - Terminal
    - Python / Python3
    - Your code editor (VS Code, etc.)
@@ -51,76 +52,6 @@ without explicit permission.
 
 - Always grant Local Network permissions before running Ansible on macOS Sequoia
 - Consider adding a pre-flight check to your scripts
-
-## 1Password Connection Issues
-
-### Problem: "Server hostname or auth token not defined"
-
-#### Check environment variables
-
-```bash
-echo $OP_CONNECT_HOST
-echo $OP_CONNECT_TOKEN
-```
-
-#### 1Password Solution
-
-```bash
-source scripts/set-1password-env.sh
-```
-
-### Problem: "No route to host" when connecting to Connect server
-
-#### Test connectivity
-
-```bash
-curl -I $OP_CONNECT_HOST/health
-```
-
-#### Connect Common causes
-
-- Firewall blocking the connection
-- Docker container not running
-- Incorrect hostname/port
-
-### Problem: CLI authentication prompts
-
-#### For automation, use Connect instead of CLI
-
-#### Or export session token
-
-```bash
-export OP_SESSION=$(op signin --raw)
-```
-
-## Ansible Inventory Errors
-
-### Problem: "Failed to parse inventory with auto plugin"
-
-#### Inventory Common causes
-
-1. **Missing Python dependencies:**
-
-   ```bash
-   uv pip install proxmoxer requests
-   ```
-
-2. **Invalid YAML syntax:**
-
-   ```bash
-   yamllint inventory/og-homelab/proxmox.yml
-   ```
-
-3. **Credential issues:**
-   - Verify token is being retrieved correctly
-   - Test with hardcoded token temporarily
-
-### Problem: "vault is required with 1Password Connect"
-
-This error occurs when using the wrong lookup plugin.
-
-- Use `community.general.onepassword` for CLI
-- Use `onepassword_connect` (custom) for Connect
 
 ## Python Environment Issues
 
@@ -193,28 +124,28 @@ ANSIBLE_DEBUG=1 ansible-playbook -vvvv playbook.yml
 
 ### Test individual components
 
-1. **Test 1Password lookup:**
+1. **Test Infisical lookup:**
 
    ```bash
-   ansible localhost -m debug -a "msg={{ lookup('community.general.onepassword', 'Test Item') }}"
+   ansible localhost -m debug -a "msg={{ lookup('infisical', 'Test Item') }}"
    ```
 
 2. **Test inventory plugin:**
 
    ```bash
-   ansible-inventory -i inventory/og-homelab/proxmox.yml --list
+   ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
    ```
 
 3. **Test connectivity:**
 
    ```bash
-   ansible all -i inventory/og-homelab/proxmox.yml -m ping
+   ansible all -i inventory/og-homelab/infisical.proxmox.yml -m ping
    ```
 
 ### Common log locations
 
 - Ansible: `~/.ansible/ansible.log` (if configured)
-- 1Password CLI: `~/.config/op/logs/`
+- Infisical CLI: `~/.config/infisical/logs/`
 - System logs: `/var/log/system.log` (macOS)
 
 ## Getting Help
@@ -222,10 +153,18 @@ ANSIBLE_DEBUG=1 ansible-playbook -vvvv playbook.yml
 If you're still experiencing issues:
 
 1. Check the [Ansible documentation](https://docs.ansible.com)
-2. Review [1Password developer docs](https://developer.1password.com)
+2. Review [Infisical developer docs](https://infisical.com/docs)
 3. Search existing issues in the repository
 4. Create a new issue with:
    - Error messages
    - Steps to reproduce
    - Environment details (OS, versions)
    - Debug output
+
+## Related Documentation
+
+- [Infisical Setup and Migration](infisical-setup-and-migration.md) - Complete secret management guide
+- [NetBox Integration](netbox.md) - NetBox connectivity troubleshooting
+- [DNS & IPAM Implementation Plan](dns-ipam-implementation-plan.md) - Infrastructure assessment procedures
+- [Pre-commit Setup](pre-commit-setup.md) - Development environment configuration
+- [Assessment Playbook Fixes](assessment-playbook-fixes.md) - Specific assessment playbook issues

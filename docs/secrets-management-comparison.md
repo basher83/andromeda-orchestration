@@ -406,10 +406,10 @@ services:
    - Implement RBAC policies
    - Set up backup procedures
 
-2. **Update Automation Scripts**
-   - Modify `bin/ansible-connect` wrapper
-   - Update environment setup scripts
-   - Create migration utilities
+2. **Update Automation Scripts** ✅ **COMPLETED**
+   - ~~Replace `bin/ansible-connect` usage with `uv run` commands~~ ✅
+   - Updated environment setup for Infisical
+   - Migration to Infisical inventory files complete
 
 3. **Documentation Updates**
    - Create Infisical integration guide

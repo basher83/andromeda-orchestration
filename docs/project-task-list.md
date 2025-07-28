@@ -6,7 +6,7 @@ This document tracks all project management tasks for the NetBox-focused Ansible
 
 **Project Phase**: Pre-implementation Planning  
 **Current Focus**: DNS & IPAM infrastructure overhaul preparation  
-**Last Updated**: 2025-07-26  
+**Last Updated**: 2025-07-27  
 **Status**: Initial assessment and planning phase
 
 ### Key Objectives
@@ -27,26 +27,28 @@ These tasks must be completed before any implementation work begins.
 **Description**: Run all assessment playbooks to understand current state  
 **Status**: Not Started  
 **Blockers**: None  
-**Related**: `/docs/dns-ipam-implementation-plan.md` - Phase 0
+**Related**: `dns-ipam-implementation-plan.md` - Phase 0
 
 Tasks:
-- [ ] Execute `consul-health-check.yml` playbook
-- [ ] Execute `dns-ipam-audit.yml` playbook  
-- [ ] Execute `infrastructure-readiness.yml` playbook
-- [ ] Document all findings in assessment reports
+
+- [x] Execute `consul-health-check.yml` playbook
+- [x] Execute `dns-ipam-audit.yml` playbook
+- [x] Execute `infrastructure-readiness.yml` playbook
+- [x] Document all findings in assessment reports
 
 #### 2. Finalize Infisical Migration
 
 **Description**: Complete transition from 1Password to Infisical for secrets management  
 **Status**: In Progress  
 **Blockers**: Secrets currently at flat `/apollo-13/` structure  
-**Related**: `/docs/infisical-setup-and-migration.md`
+**Related**: `infisical-setup-and-migration.md`
 
 Tasks:
-- [ ] Implement organized folder structure in Infisical
-- [ ] Migrate all remaining 1Password secrets
-- [ ] Update all playbooks to use Infisical inventory files
-- [ ] Archive 1Password configuration files
+
+- [x] Implement organized folder structure in Infisical
+- [x] Migrate all remaining 1Password secrets
+- [x] Update all playbooks to use Infisical inventory files
+- [x] Archive 1Password configuration files
 
 #### 3. Document Current Network State
 
@@ -56,6 +58,7 @@ Tasks:
 **Related**: Assessment playbook outputs
 
 Tasks:
+
 - [ ] Document all DNS zones and records
 - [ ] Map current IP allocations
 - [ ] Identify all DHCP scopes
@@ -69,6 +72,7 @@ Tasks:
 **Related**: Risk mitigation strategy
 
 Tasks:
+
 - [ ] Backup Pi-hole configurations
 - [ ] Backup Unbound configurations
 - [ ] Backup DHCP reservations
@@ -83,9 +87,10 @@ These tasks support the implementation but aren't immediate blockers.
 **Description**: Set up isolated testing environment for DNS/IPAM changes  
 **Status**: Not Started  
 **Blockers**: Infrastructure assessment needed first  
-**Related**: `/docs/dns-ipam-implementation-plan.md` - Phase 1
+**Related**: `dns-ipam-implementation-plan.md` - Phase 1
 
 Tasks:
+
 - [ ] Deploy test VMs for Consul/PowerDNS
 - [ ] Configure isolated network segment
 - [ ] Set up test clients
@@ -99,6 +104,7 @@ Tasks:
 **Related**: NetBox IPAM configuration
 
 Tasks:
+
 - [ ] Define network segments
 - [ ] Allocate service ranges
 - [ ] Plan for growth
@@ -112,6 +118,7 @@ Tasks:
 **Related**: Implementation phases
 
 Tasks:
+
 - [ ] Consul configuration templates
 - [ ] PowerDNS zone templates
 - [ ] NetBox custom fields
@@ -125,6 +132,7 @@ Tasks:
 **Related**: Phase 2 implementation
 
 Tasks:
+
 - [ ] Define key metrics
 - [ ] Set up Prometheus exporters
 - [ ] Create Grafana dashboards
@@ -138,6 +146,7 @@ Tasks:
 **Related**: All implementation phases
 
 Tasks:
+
 - [ ] Phase 1 deployment procedures
 - [ ] Phase 2 integration steps
 - [ ] Phase 3 migration checklist
@@ -151,6 +160,7 @@ Tasks:
 **Related**: Project governance
 
 Tasks:
+
 - [ ] Create change request template
 - [ ] Define approval workflow
 - [ ] Set up change tracking
@@ -168,6 +178,7 @@ These tasks are important but can wait until implementation begins.
 **Related**: Phase 4 expansion
 
 Tasks:
+
 - [ ] Assess og-homelab requirements
 - [ ] Design cross-site replication
 - [ ] Plan zone delegation
@@ -181,6 +192,7 @@ Tasks:
 **Related**: Phase 5 optimization
 
 Tasks:
+
 - [ ] NetBox webhook configuration
 - [ ] Ansible AWX/Tower integration
 - [ ] Auto-provisioning workflows
@@ -194,6 +206,7 @@ Tasks:
 **Related**: Phase 3 migration
 
 Tasks:
+
 - [ ] DNS query troubleshooting
 - [ ] Service discovery guides
 - [ ] IPAM request procedures
@@ -207,6 +220,7 @@ Tasks:
 **Related**: Production readiness
 
 Tasks:
+
 - [ ] Define RTO/RPO objectives
 - [ ] Create DR procedures
 - [ ] Test failover scenarios
@@ -220,6 +234,7 @@ Tasks:
 **Related**: Production readiness
 
 Tasks:
+
 - [ ] DNSSEC implementation
 - [ ] mTLS for Consul
 - [ ] API authentication
@@ -233,6 +248,7 @@ Tasks:
 **Related**: Phase 5 optimization
 
 Tasks:
+
 - [ ] DNS query optimization
 - [ ] Consul performance tuning
 - [ ] Database optimization
@@ -246,6 +262,7 @@ Tasks:
 **Related**: Long-term planning
 
 Tasks:
+
 - [ ] Growth projections
 - [ ] Resource requirements
 - [ ] Scaling strategies
@@ -259,6 +276,7 @@ Tasks:
 **Related**: Phase 2-3 validation
 
 Tasks:
+
 - [ ] NetBox-Consul integration
 - [ ] PowerDNS-NetBox sync
 - [ ] Ansible automation tests
@@ -272,6 +290,7 @@ Tasks:
 **Related**: Phase 2 implementation
 
 Tasks:
+
 - [ ] Service health dashboards
 - [ ] Query analytics
 - [ ] IPAM utilization
@@ -285,6 +304,7 @@ Tasks:
 **Related**: Operational readiness
 
 Tasks:
+
 - [ ] Daily checks
 - [ ] Incident response
 - [ ] Maintenance procedures
@@ -298,6 +318,7 @@ Tasks:
 **Related**: Production readiness
 
 Tasks:
+
 - [ ] Backup scheduling
 - [ ] Retention policies
 - [ ] Off-site storage
@@ -311,6 +332,7 @@ Tasks:
 **Related**: Governance
 
 Tasks:
+
 - [ ] Identify requirements
 - [ ] Implement controls
 - [ ] Audit procedures
@@ -324,6 +346,7 @@ Tasks:
 **Related**: Operational readiness
 
 Tasks:
+
 - [ ] Training materials
 - [ ] Hands-on workshops
 - [ ] Documentation review
@@ -384,14 +407,16 @@ Tasks:
 
 ## Related Documentation
 
-- [DNS & IPAM Implementation Plan](/docs/dns-ipam-implementation-plan.md) - Master implementation roadmap
-- [NetBox Integration Patterns](/docs/netbox.md) - NetBox configuration and usage
-- [Infisical Setup and Migration](/docs/infisical-setup-and-migration.md) - Secret management transition
-- [1Password Integration](/docs/1password-integration.md) - Legacy secret management (being replaced)
+- [DNS & IPAM Implementation Plan](dns-ipam-implementation-plan.md) - Master implementation roadmap
+- [NetBox Integration Patterns](netbox.md) - NetBox configuration and usage
+- [Infisical Setup and Migration](infisical-setup-and-migration.md) - Secret management transition
+- [Troubleshooting Guide](troubleshooting.md) - Common issues and solutions
+- [1Password Integration (Archived)](archive/1password-integration.md) - Legacy secret management (being replaced)
 
 ## Maintenance Notes
 
 This document should be updated:
+
 - Weekly during active implementation
 - After each task completion
 - When new tasks are identified

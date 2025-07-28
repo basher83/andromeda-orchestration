@@ -31,7 +31,7 @@ All these commands work correctly:
 uv run ansible --version
 uv run ansible-playbook playbooks/site.yml
 uv run ansible-galaxy collection install -r requirements.yml
-uv run ansible-inventory -i inventory/og-homelab/proxmox.yml --list
+uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
 uv run ansible-lint
 uv run ansible-vault encrypt_string
 ```
