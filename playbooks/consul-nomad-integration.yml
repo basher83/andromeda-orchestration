@@ -4,10 +4,14 @@
 # and automated service registration
 #
 # Usage:
-#   uv run ansible-playbook playbooks/consul-nomad-integration.yml -i inventory/doggos-homelab/infisical.proxmox.yml
-#   uv run ansible-playbook playbooks/consul-nomad-integration.yml -i inventory/doggos-homelab/infisical.proxmox.yml --check
-#   uv run ansible-playbook playbooks/consul-nomad-integration.yml -i inventory/doggos-homelab/infisical.proxmox.yml --tags backup
-#   uv run ansible-playbook playbooks/consul-nomad-integration.yml -i inventory/doggos-homelab/infisical.proxmox.yml --tags verify
+#   uv run ansible-playbook playbooks/consul-nomad-integration.yml \
+#     -i inventory/doggos-homelab/infisical.proxmox.yml
+#   uv run ansible-playbook playbooks/consul-nomad-integration.yml \
+#     -i inventory/doggos-homelab/infisical.proxmox.yml --check
+#   uv run ansible-playbook playbooks/consul-nomad-integration.yml \
+#     -i inventory/doggos-homelab/infisical.proxmox.yml --tags backup
+#   uv run ansible-playbook playbooks/consul-nomad-integration.yml \
+#     -i inventory/doggos-homelab/infisical.proxmox.yml --tags verify
 
 - name: Enable Consul-Nomad Integration
   hosts: tag_nomad
@@ -107,26 +111,26 @@
               consul {
                 # The address to the Consul agent
                 address = "{{ consul_address }}"
-                
+
                 # Automatically register Nomad services with Consul
                 auto_advertise = true
-                
+
                 # Automatically register server with Consul
                 server_auto_join = true
-                
+
                 # Automatically register client with Consul
                 client_auto_join = true
-                
+
                 # Service name for Nomad servers in Consul
                 {% if node_type.stdout == 'server' %}
                 server_service_name = "nomad"
                 {% endif %}
-                
+
                 # Service name for Nomad clients in Consul
                 {% if node_type.stdout == 'client' %}
                 client_service_name = "nomad-client"
                 {% endif %}
-                
+
                 # Check name for Nomad services in Consul
                 checks_use_advertise = true
               }
@@ -185,14 +189,19 @@
         - name: Check if Nomad services are registered
           ansible.builtin.set_fact:
             nomad_in_consul: "{{ 'nomad' in consul_services.json }}"
-            nomad_client_in_consul: "{{ 'nomad-client' in consul_services.json }}"
+            nomad_client_in_consul: >-
+              {{ 'nomad-client' in consul_services.json }}
 
         - name: Get Nomad service details from Consul
           ansible.builtin.uri:
-            url: "http://{{ consul_address }}/v1/catalog/service/{{ 'nomad' if node_type.stdout == 'server' else 'nomad-client' }}"
+            url: >-
+              http://{{ consul_address }}/v1/catalog/service/{{
+              'nomad' if node_type.stdout == 'server' else 'nomad-client' }}
             method: GET
           register: nomad_service_details
-          when: (node_type.stdout == 'server' and nomad_in_consul) or (node_type.stdout == 'client' and nomad_client_in_consul)
+          when: >-
+            (node_type.stdout == 'server' and nomad_in_consul) or
+            (node_type.stdout == 'client' and nomad_client_in_consul)
 
         - name: Compile node integration status
           ansible.builtin.set_fact:
@@ -200,15 +209,19 @@
               hostname: "{{ ansible_hostname }}"
               node_type: "{{ node_type.stdout }}"
               consul_stanza_configured: true
-              nomad_service_registered: "{{ nomad_in_consul if node_type.stdout == 'server' else nomad_client_in_consul }}"
-              service_details: "{{ nomad_service_details.json | default([]) }}"
+              nomad_service_registered: >-
+                {{ nomad_in_consul if node_type.stdout == 'server'
+                else nomad_client_in_consul }}
+              service_details: >-
+                {{ nomad_service_details.json | default([]) }}
               timestamp: "{{ ansible_date_time.iso8601 }}"
 
         - name: Display integration status
           ansible.builtin.debug:
             msg:
               - "Node: {{ ansible_hostname }} ({{ node_type.stdout }})"
-              - "Consul integration: {{ 'Enabled' if integration_status.consul_stanza_configured else 'Not configured' }}"
+              - "Consul integration: {{ 'Enabled'
+                if integration_status.consul_stanza_configured else 'Not configured' }}"
               - "Service registered in Consul: {{ 'Yes' if integration_status.nomad_service_registered else 'No' }}"
               - "Service instances: {{ integration_status.service_details | length }}"
 
@@ -284,15 +297,15 @@
           ```bash
           # Check Nomad services in Consul
           consul catalog services
-          
+
           # Check specific service details
           consul catalog nodes -service=nomad
           consul catalog nodes -service=nomad-client
-          
+
           # Test DNS resolution
           dig @127.0.0.1 -p 8600 nomad.service.consul
           dig @127.0.0.1 -p 8600 nomad-client.service.consul
-          
+
           # Check from Nomad side
           nomad server members
           nomad node status
