@@ -1,0 +1,98 @@
+container_runtime:
+    containerd: false
+    docker: false
+    podman: false
+fqdn: holly.production.net
+hostname: holly
+kernel: 6.8.12-8-pve
+network:
+    connectivity_tests:
+    -   success: true
+        target: nomad-server-1-lloyd
+    -   success: true
+        target: mable
+    -   success: true
+        target: lloyd
+    default_gateway: 192.168.10.1
+    firewall:
+        firewalld_active: false
+        iptables_active: true
+        ufw_active: false
+orchestration:
+    kubernetes: false
+    nomad:
+        consul_integrated: false
+        installed: false
+        version: ''
+os: Debian 12.11
+persistent_storage:
+    paths_available: []
+port_availability:
+    consul:
+    - 8300
+    - 8301
+    - 8301
+    - 8302
+    - 8302
+    - 8500
+    - 8600
+    - 8600
+    nomad:
+    - 4646
+    - 4647
+    - 4648
+    powerdns:
+    - 53
+    - 53
+    - 8081
+readiness_scores:
+    can_run_databases: true
+    can_run_netbox: true
+    can_run_powerdns: true
+resources:
+    cpu:
+        cores: 14
+        model: 13th Gen Intel(R) Core(TM) i9-13900H
+    memory:
+        free_mb: 5279
+        swap_mb: 8191
+        total_mb: 31826
+        used_percent: 83.41
+    storage:
+    -   available_gb: 83
+        filesystem: /dev/mapper/pve-root
+        mount: /
+        total_gb: 94
+        use_percent: 8
+        used_gb: 7
+    -   available_gb: 1
+        filesystem: efivarfs
+        mount: /sys/firmware/efi/efivars
+        total_gb: 1
+        use_percent: 68
+        used_gb: 1
+    -   available_gb: 1
+        filesystem: /dev/nvme0n1p2
+        mount: /boot/efi
+        total_gb: 1
+        use_percent: 2
+        used_gb: 1
+    -   available_gb: 0
+        filesystem: 192.168.30.6
+        mount: 0%
+        total_gb: 0
+        use_percent: 0
+        used_gb: 10889
+    -   available_gb: 1
+        filesystem: 192.168.30.6
+        mount: 1%
+        total_gb: 0
+        use_percent: 0
+        used_gb: 10889
+    -   available_gb: 1
+        filesystem: /dev/fuse
+        mount: /etc/pve
+        total_gb: 1
+        use_percent: 1
+        used_gb: 1
+virtualization: kvm

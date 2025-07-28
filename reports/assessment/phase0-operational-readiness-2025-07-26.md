@@ -34,10 +34,10 @@ Current Status: Assessment Phase
 #### Day 1-2: Consul Assessment
 ```bash
 # Run on both clusters
-./bin/ansible-connect playbook playbooks/assessment/consul-assessment.yml \
+uv run ansible-playbook playbooks/assessment/consul-assessment.yml \
   -i inventory/og-homelab/infisical.proxmox.yml
 
-./bin/ansible-connect playbook playbooks/assessment/consul-assessment.yml \
+uv run ansible-playbook playbooks/assessment/consul-assessment.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml
 ```
 
@@ -50,7 +50,8 @@ Current Status: Assessment Phase
 #### Day 3-4: DNS/IPAM Audit
 ```bash
 # Comprehensive DNS audit
-./bin/ansible-connect playbook playbooks/assessment/dns-ipam-audit.yml \
+uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml \
+  -i inventory/og-homelab/infisical.proxmox.yml \
   -e "enable_deep_scan=true"
 ```
 
@@ -64,7 +65,8 @@ Current Status: Assessment Phase
 #### Day 5: Network Assessment
 ```bash
 # Create and run network connectivity tests
-./bin/ansible-connect playbook playbooks/assessment/network-connectivity.yml
+uv run ansible-playbook playbooks/assessment/network-connectivity.yml \
+  -i inventory/og-homelab/infisical.proxmox.yml
 ```
 
 **Tests to Perform:**

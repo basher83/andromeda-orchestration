@@ -1,0 +1,131 @@
+dns:
+    custom_hosts_entries: 10
+    nameservers:
+    - 192.168.30.100
+    pihole:
+        custom_entries: 0
+        installed: false
+    ports_open: []
+    search_domains: '  [''lab.spaceships.work''] '
+    services_running:
+        bind: false
+        dnsmasq: true
+        pdns: false
+        pihole: false
+        systemd_resolved: false
+        unbound: false
+    zone_files_found: 0
+domain: '   '
+fqdn: holly.production.net
+hostname: holly
+ipam:
+    arp_entries: -1
+    subnets:
+    - 192.168.10.0/24
+    - 192.168.11.0/24
+network:
+    default_gateway: 192.168.10.1
+    dns_servers_via_dhcp: false
+    interfaces:
+        enp2s0f0np0:
+            ipv4: {}
+            ipv6: []
+            mac: 58:47:ca:79:7a:34
+            mtu: 1500
+        enp2s0f1np1:
+            ipv4: {}
+            ipv6: []
+            mac: 58:47:ca:79:7a:35
+            mtu: 1500
+        enp87s0:
+            ipv4: {}
+            ipv6: []
+            mac: 58:47:ca:79:7a:36
+            mtu: 1500
+        enp88s0:
+            ipv4: {}
+            ipv6: []
+            mac: 58:47:ca:79:7a:37
+            mtu: 1500
+        tailscale0:
+            ipv4:
+                address: 100.116.176.16
+                broadcast: ''
+                netmask: 255.255.255.255
+                network: 100.116.176.16
+                prefix: '32'
+            ipv6:
+            -   address: fd7a:115c:a1e0::c001:b011
+                prefix: '128'
+                scope: global
+            -   address: fe80::7acc:fb26:43da:a6fb
+                prefix: '64'
+                scope: link
+            mac: ''
+            mtu: 1280
+        tap3102i0:
+            ipv4: {}
+            ipv6: []
+            mac: 9e:08:87:f1:38:a7
+            mtu: 1500
+        tap3102i1:
+            ipv4: {}
+            ipv6: []
+            mac: 0a:9c:0b:60:33:34
+            mtu: 9000
+        tap3511i0:
+            ipv4: {}
+            ipv6: []
+            mac: 36:a1:dc:92:23:8e
+            mtu: 1500
+        tap3511i1:
+            ipv4: {}
+            ipv6: []
+            mac: 92:76:bb:0b:b6:f3
+            mtu: 9000
+        vmbr0:
+            ipv4:
+                address: 192.168.10.3
+                broadcast: ''
+                netmask: 255.255.255.0
+                network: 192.168.10.0
+                prefix: '24'
+            ipv6:
+            -   address: fe80::5a47:caff:fe79:7a36
+                prefix: '64'
+                scope: link
+            mac: 58:47:ca:79:7a:36
+            mtu: 1500
+        vmbr1:
+            ipv4:
+                address: 192.168.11.3
+                broadcast: ''
+                netmask: 255.255.255.0
+                network: 192.168.11.0
+                prefix: '24'
+            ipv6:
+            -   address: fe80::5a47:caff:fe79:7a34
+                prefix: '64'
+                scope: link
+            mac: 58:47:ca:79:7a:34
+            mtu: 9000
+        wlp89s0:
+            ipv4: {}
+            ipv6: []
+            mac: dc:97:ba:3f:5c:55
+            mtu: 1500
+raw_data:
+    hosts_file_sample: '  [''127.0.0.1 localhost.localdomain localhost'', ''192.168.10.4
+        mable.production.net mable'', ''192.168.10.3 holly.production.net holly'',
+        ''192.168.10.2 lloyd.production.net lloyd'', ''::1     ip6-localhost ip6-loopback'',
+        ''fe00::0 ip6-localnet'', ''ff00::0 ip6-mcastprefix'', ''ff02::1 ip6-allnodes'',
+        ''ff02::2 ip6-allrouters'', ''ff02::3 ip6-allhosts''] '
+    resolv_conf: 'nameserver 192.168.30.100
+
+        search lab.spaceships.work
+
+        '
+    routing_table:
+    - 'default via 192.168.10.1 dev vmbr0 proto kernel onlink '
+    - '192.168.10.0/24 dev vmbr0 proto kernel scope link src 192.168.10.3 '
+    - '192.168.11.0/24 dev vmbr1 proto kernel scope link src 192.168.11.3 '

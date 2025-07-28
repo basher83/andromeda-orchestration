@@ -1,0 +1,3 @@
+---
+ansible_host: nomad-client-3.lab.spaceships.work
+EOF < /dev/null

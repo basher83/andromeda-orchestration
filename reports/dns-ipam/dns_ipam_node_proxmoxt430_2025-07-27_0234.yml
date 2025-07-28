@@ -1,0 +1,396 @@
+dns:
+    custom_hosts_entries: 9
+    nameservers:
+    - 192.168.30.100
+    - 192.168.30.1
+    - 1.1.1.1
+    pihole:
+        custom_entries: 0
+        installed: false
+    ports_open: []
+    search_domains: '  [''lab.spaceships.work''] '
+    services_running:
+        bind: false
+        dnsmasq: false
+        pdns: false
+        pihole: false
+        systemd_resolved: false
+        unbound: false
+    zone_files_found: 0
+domain: '   '
+fqdn: proxmoxt430.homelab.local
+hostname: proxmoxt430
+ipam:
+    arp_entries: 14
+    subnets:
+    - 192.168.1.0/24
+    - 192.168.30.0/24
+network:
+    default_gateway: 192.168.30.1
+    dns_servers_via_dhcp: false
+    interfaces:
+        eno1:
+            ipv4: {}
+            ipv6: []
+            mac: d0:94:66:36:c5:a8
+            mtu: 1500
+        eno2:
+            ipv4: {}
+            ipv6: []
+            mac: d0:94:66:36:c5:a9
+            mtu: 1500
+        enp130s0f0:
+            ipv4: {}
+            ipv6: []
+            mac: a0:36:9f:f5:f5:c0
+            mtu: 1500
+        enp130s0f1:
+            ipv4: {}
+            ipv6: []
+            mac: a0:36:9f:f5:f5:c1
+            mtu: 1500
+        fwbr106i0:
+            ipv4: {}
+            ipv6: []
+            mac: 22:d2:c2:e4:e8:e4
+            mtu: 1500
+        fwbr123i0:
+            ipv4: {}
+            ipv6: []
+            mac: 2e:e4:e6:6b:0a:77
+            mtu: 1500
+        fwbr124i0:
+            ipv4: {}
+            ipv6: []
+            mac: fa:53:4b:92:d7:06
+            mtu: 1500
+        fwbr125i0:
+            ipv4: {}
+            ipv6: []
+            mac: e2:02:4d:c2:1b:ac
+            mtu: 1500
+        fwbr134i0:
+            ipv4: {}
+            ipv6: []
+            mac: aa:69:36:ec:d7:31
+            mtu: 1500
+        fwbr137i0:
+            ipv4: {}
+            ipv6: []
+            mac: ee:b7:c2:36:5c:4d
+            mtu: 1500
+        fwbr138i0:
+            ipv4: {}
+            ipv6: []
+            mac: 72:a5:e7:46:b8:74
+            mtu: 1500
+        fwbr145i0:
+            ipv4: {}
+            ipv6: []
+            mac: 7e:1a:93:d2:06:0f
+            mtu: 1500
+        fwln106i0:
+            ipv4: {}
+            ipv6: []
+            mac: 22:d2:c2:e4:e8:e4
+            mtu: 1500
+        fwln123i0:
+            ipv4: {}
+            ipv6: []
+            mac: 2e:e4:e6:6b:0a:77
+            mtu: 1500
+        fwln124i0:
+            ipv4: {}
+            ipv6: []
+            mac: fa:53:4b:92:d7:06
+            mtu: 1500
+        fwln125i0:
+            ipv4: {}
+            ipv6: []
+            mac: e2:02:4d:c2:1b:ac
+            mtu: 1500
+        fwln134i0:
+            ipv4: {}
+            ipv6: []
+            mac: aa:69:36:ec:d7:31
+            mtu: 1500
+        fwln137i0:
+            ipv4: {}
+            ipv6: []
+            mac: ee:b7:c2:36:5c:4d
+            mtu: 1500
+        fwln138i0:
+            ipv4: {}
+            ipv6: []
+            mac: 72:a5:e7:46:b8:74
+            mtu: 1500
+        fwln145i0:
+            ipv4: {}
+            ipv6: []
+            mac: 7e:1a:93:d2:06:0f
+            mtu: 1500
+        fwpr106p0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:bc:1d:6b:fe:f5
+            mtu: 1500
+        fwpr123p0:
+            ipv4: {}
+            ipv6: []
+            mac: 82:07:71:b9:c3:2f
+            mtu: 1500
+        fwpr124p0:
+            ipv4: {}
+            ipv6: []
+            mac: 7e:12:4f:26:44:a4
+            mtu: 1500
+        fwpr125p0:
+            ipv4: {}
+            ipv6: []
+            mac: 5a:a4:5b:d3:54:68
+            mtu: 1500
+        fwpr134p0:
+            ipv4: {}
+            ipv6: []
+            mac: 5e:f4:6a:7c:42:ec
+            mtu: 1500
+        fwpr137p0:
+            ipv4: {}
+            ipv6: []
+            mac: ce:cd:a9:07:1e:29
+            mtu: 1500
+        fwpr138p0:
+            ipv4: {}
+            ipv6: []
+            mac: 06:84:ac:c8:ba:04
+            mtu: 1500
+        fwpr145p0:
+            ipv4: {}
+            ipv6: []
+            mac: da:e7:01:93:7f:95
+            mtu: 1500
+        tailscale0:
+            ipv4:
+                address: 100.92.18.15
+                broadcast: ''
+                netmask: 255.255.255.255
+                network: 100.92.18.15
+                prefix: '32'
+            ipv6:
+            -   address: fd7a:115c:a1e0::2d01:120f
+                prefix: '128'
+                scope: global
+            -   address: fe80::9114:c855:bd4f:c22b
+                prefix: '64'
+                scope: link
+            mac: ''
+            mtu: 1280
+        tap125i0:
+            ipv4: {}
+            ipv6: []
+            mac: da:d2:8b:e1:05:a4
+            mtu: 1500
+        tap143i0:
+            ipv4: {}
+            ipv6: []
+            mac: aa:c0:22:e4:3b:86
+            mtu: 1500
+        tap145i0:
+            ipv4: {}
+            ipv6: []
+            mac: 3e:e1:7a:63:97:c3
+            mtu: 1500
+        veth101i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:c3:51:d8:1f:6d
+            mtu: 1500
+        veth102i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:c0:38:e9:e1:ba
+            mtu: 1500
+        veth103i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:ae:46:a8:de:b3
+            mtu: 1500
+        veth104i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:e8:38:8b:6a:b0
+            mtu: 1500
+        veth105i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:6d:be:b7:59:cd
+            mtu: 1500
+        veth106i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:32:8f:df:40:e0
+            mtu: 1500
+        veth107i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:bc:c1:4f:09:06
+            mtu: 1500
+        veth109i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:f8:17:1f:61:3c
+            mtu: 1500
+        veth110i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:36:13:e5:2c:76
+            mtu: 1500
+        veth111i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:08:bf:0d:12:5c
+            mtu: 1500
+        veth112i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:c3:fd:66:b1:95
+            mtu: 1500
+        veth113i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:f6:f7:3c:dc:7a
+            mtu: 1500
+        veth114i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:02:bc:19:33:6f
+            mtu: 1500
+        veth115i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:79:28:6e:8c:c0
+            mtu: 1500
+        veth115i1:
+            ipv4: {}
+            ipv6: []
+            mac: fe:ee:ef:ec:3d:ac
+            mtu: 1500
+        veth116i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:7f:fe:4f:e1:de
+            mtu: 1500
+        veth118i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:e2:d5:b4:e0:d2
+            mtu: 1500
+        veth120i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:f8:25:91:85:6f
+            mtu: 1500
+        veth121i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:98:d6:92:32:6d
+            mtu: 1500
+        veth123i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:bb:7a:6e:cb:91
+            mtu: 1500
+        veth124i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:f9:0b:45:8c:ff
+            mtu: 1500
+        veth132i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:1e:28:a5:fe:81
+            mtu: 1500
+        veth134i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:00:6c:7f:11:5d
+            mtu: 1500
+        veth137i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:da:cc:b6:2c:ad
+            mtu: 1500
+        veth138i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:58:03:b3:c0:55
+            mtu: 1500
+        veth140i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:fc:3d:63:ef:39
+            mtu: 1500
+        veth141i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:49:d5:6e:b6:15
+            mtu: 1500
+        veth142i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:08:b0:bb:58:8b
+            mtu: 1500
+        veth146i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:cd:e8:e0:69:0c
+            mtu: 1500
+        veth155i0:
+            ipv4: {}
+            ipv6: []
+            mac: fe:f6:ee:46:19:65
+            mtu: 1500
+        vmbr0:
+            ipv4:
+                address: 192.168.30.30
+                broadcast: ''
+                netmask: 255.255.255.0
+                network: 192.168.30.0
+                prefix: '24'
+            ipv6:
+            -   address: fe80::a236:9fff:fef5:f5c1
+                prefix: '64'
+                scope: link
+            mac: a0:36:9f:f5:f5:c1
+            mtu: 1500
+        vmbr1:
+            ipv4:
+                address: 192.168.1.25
+                broadcast: ''
+                netmask: 255.255.255.0
+                network: 192.168.1.0
+                prefix: '24'
+            ipv6:
+            -   address: fe80::a236:9fff:fef5:f5c0
+                prefix: '64'
+                scope: link
+            mac: a0:36:9f:f5:f5:c0
+            mtu: 1500
+raw_data:
+    hosts_file_sample: '  [''127.0.0.1 localhost.localdomain localhost'', ''192.168.30.30
+        proxmoxt430.homelab.local proxmoxt430'', ''::1     ip6-localhost ip6-loopback'',
+        ''fe00::0 ip6-localnet'', ''ff00::0 ip6-mcastprefix'', ''ff02::1 ip6-allnodes'',
+        ''ff02::2 ip6-allrouters'', ''ff02::3 ip6-allhosts'', ''100.90.251.32 idp.tailfb3ea.ts.net''] '
+    resolv_conf: 'search lab.spaceships.work
+
+        nameserver 192.168.30.100
+
+        nameserver 192.168.30.1
+
+        nameserver 1.1.1.1
+
+        '
+    routing_table:
+    - 'default via 192.168.30.1 dev vmbr0 proto kernel onlink '
+    - '192.168.1.0/24 dev vmbr1 proto kernel scope link src 192.168.1.25 '
+    - '192.168.30.0/24 dev vmbr0 proto kernel scope link src 192.168.30.30 '

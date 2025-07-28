@@ -155,7 +155,7 @@ Based on doggos-homelab assessment:
 
 1. **Complete DNS/IPAM Audit**
    ```bash
-   ./bin/ansible-connect playbook playbooks/assessment/dns-ipam-audit.yml
+   uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml -i inventory/og-homelab/infisical.proxmox.yml
    ```
    - Document all DNS zones
    - Map IP allocations
@@ -163,7 +163,7 @@ Based on doggos-homelab assessment:
 
 2. **Verify Inter-Cluster Connectivity**
    ```bash
-   ./bin/ansible-connect playbook playbooks/assessment/network-connectivity.yml
+   uv run ansible-playbook playbooks/assessment/network-connectivity.yml -i inventory/og-homelab/infisical.proxmox.yml
    ```
    - Test routing between clusters
    - Document firewall rules

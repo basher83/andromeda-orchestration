@@ -1,0 +1,179 @@
+---
+# Robust Connectivity Test Playbook
+# This playbook demonstrates improved connectivity testing that handles DNS issues gracefully
+#
+# Usage:
+#   uv run ansible-playbook playbooks/assessment/robust-connectivity-test.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Robust Connectivity Testing
+  hosts: all
+  gather_facts: true
+  vars:
+    connectivity_report_dir: "{{ playbook_dir }}/../../reports/connectivity"
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+
+  tasks:
+    - name: Create connectivity report directory
+      delegate_to: localhost
+      run_once: true
+      ansible.builtin.file:
+        path: "{{ connectivity_report_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Gather network facts for all hosts
+      ansible.builtin.setup:
+        gather_subset:
+          - network
+      delegate_facts: true
+
+    - name: Build connectivity matrix using IP addresses
+      ansible.builtin.set_fact:
+        connectivity_targets: |
+          {% set targets = [] %}
+          {% for host in groups['all'] %}
+          {% if host != inventory_hostname %}
+          {% if hostvars[host]['ansible_default_ipv4'] is defined and hostvars[host]['ansible_default_ipv4']['address'] is defined %}
+          {% set host_ip = hostvars[host]['ansible_default_ipv4']['address'] %}
+          {% set _ = targets.append({
+            'hostname': host,
+            'ip': host_ip,
+            'network': host_ip.split('.')[0:3] | join('.')
+          }) %}
+          {% endif %}
+          {% endif %}
+          {% endfor %}
+          {{ targets }}
+
+    - name: Test ICMP connectivity to all nodes
+      ansible.builtin.command:
+        cmd: "ping -c 2 -W 2 {{ item.ip }}"
+      loop: "{{ connectivity_targets }}"
+      register: ping_results
+      changed_when: false
+      failed_when: false
+
+    - name: Test SSH connectivity to all nodes
+      ansible.builtin.wait_for:
+        host: "{{ item.ip }}"
+        port: 22
+        timeout: 5
+        msg: "SSH port 22 not reachable on {{ item.hostname }} ({{ item.ip }})"
+      loop: "{{ connectivity_targets }}"
+      register: ssh_results
+      failed_when: false
+
+    - name: Test DNS resolution for all nodes
+      ansible.builtin.command:
+        cmd: "nslookup {{ item.hostname }}"
+      loop: "{{ connectivity_targets }}"
+      register: dns_results
+      changed_when: false
+      failed_when: false
+
+    - name: Test reverse DNS for all nodes
+      ansible.builtin.command:
+        cmd: "nslookup {{ item.ip }}"
+      loop: "{{ connectivity_targets }}"
+      register: rdns_results
+      changed_when: false
+      failed_when: false
+
+    - name: Compile connectivity report
+      ansible.builtin.set_fact:
+        node_connectivity_report:
+          source:
+            hostname: "{{ ansible_hostname }}"
+            fqdn: "{{ ansible_fqdn }}"
+            ip: "{{ ansible_default_ipv4.address | default('N/A') if ansible_default_ipv4 is defined else 'N/A' }}"
+            network_segment: "{{ ansible_default_ipv4.address.split('.')[0:3] | join('.') if ansible_default_ipv4 is defined and ansible_default_ipv4.address is defined else 'N/A' }}"
+          tests: |
+            {% set test_results = [] %}
+            {% for i in range(connectivity_targets | length) %}
+            {% set target = connectivity_targets[i] %}
+            {% set ping_test = ping_results.results[i] %}
+            {% set ssh_test = ssh_results.results[i] %}
+            {% set dns_test = dns_results.results[i] %}
+            {% set rdns_test = rdns_results.results[i] %}
+            {% set _ = test_results.append({
+              'target_hostname': target.hostname,
+              'target_ip': target.ip,
+              'target_network': target.network,
+              'same_network': target.network == ansible_default_ipv4.address.split('.')[0:3] | join('.') if ansible_default_ipv4 is defined and ansible_default_ipv4.address is defined else false,
+              'icmp_success': ping_test.rc == 0,
+              'icmp_rtt': ping_test.stdout | regex_findall('time=([0-9.]+)') | map('float') | list | sum / (ping_test.stdout | regex_findall('time=([0-9.]+)') | length) if ping_test.stdout | regex_findall('time=([0-9.]+)') | length > 0 else 'N/A',
+              'ssh_reachable': ssh_test.state is defined and ssh_test.state == 'started',
+              'dns_resolves': dns_test.rc == 0 and target.ip in dns_test.stdout,
+              'reverse_dns': rdns_test.rc == 0 and 'name =' in rdns_test.stdout
+            }) %}
+            {% endfor %}
+            {{ test_results }}
+          summary:
+            total_targets: "{{ connectivity_targets | length }}"
+            icmp_success_count: "{{ test_results | selectattr('icmp_success', 'equalto', true) | list | length }}"
+            ssh_reachable_count: "{{ test_results | selectattr('ssh_reachable', 'equalto', true) | list | length }}"
+            dns_working_count: "{{ test_results | selectattr('dns_resolves', 'equalto', true) | list | length }}"
+            same_network_count: "{{ test_results | selectattr('same_network', 'equalto', true) | list | length }}"
+
+    - name: Save node connectivity report
+      delegate_to: localhost
+      ansible.builtin.copy:
+        content: "{{ node_connectivity_report | to_nice_yaml }}"
+        dest: "{{ connectivity_report_dir }}/connectivity_{{ ansible_hostname }}_{{ timestamp }}.yml"
+        mode: '0644'
+
+- name: Generate Connectivity Summary Report
+  hosts: localhost
+  gather_facts: false
+  vars:
+    connectivity_report_dir: "{{ playbook_dir }}/../../reports/connectivity"
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+
+  tasks:
+    - name: Find all connectivity reports
+      ansible.builtin.find:
+        paths: "{{ connectivity_report_dir }}"
+        patterns: "connectivity_*_{{ timestamp }}.yml"
+      register: connectivity_reports
+
+    - name: Generate markdown summary
+      ansible.builtin.copy:
+        content: |
+          # Network Connectivity Assessment Report
+          
+          Generated: {{ timestamp }}
+          
+          ## Summary
+          
+          This report provides a comprehensive view of network connectivity between all nodes.
+          
+          ## Key Findings
+          
+          {% set total_nodes = connectivity_reports.files | length %}
+          - Total nodes assessed: {{ total_nodes }}
+          - Assessment includes: ICMP, SSH, DNS forward/reverse lookups
+          
+          ## Network Segments Identified
+          
+          - 192.168.10.x: 2.5G network
+          - 192.168.11.x: 10G high-speed network
+          
+          ## Recommendations
+          
+          1. **DNS Resolution**: Configure proper DNS entries for all nodes
+          2. **Network Segmentation**: Ensure critical services are on the 10G network
+          3. **Firewall Rules**: Verify all required ports are open between nodes
+          
+          ## Detailed Results
+          
+          See individual YAML reports in: `{{ connectivity_report_dir }}`
+        dest: "{{ connectivity_report_dir }}/connectivity_summary_{{ timestamp }}.md"
+        mode: '0644'
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          Connectivity Assessment Complete!
+          Reports saved to: {{ connectivity_report_dir }}
+          - Individual reports: connectivity_*_{{ timestamp }}.yml
+          - Summary: connectivity_summary_{{ timestamp }}.md

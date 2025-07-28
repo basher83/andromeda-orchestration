@@ -1,0 +1,2 @@
+---
+ansible_host: nomad-server-1.lab.spaceships.work

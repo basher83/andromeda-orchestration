@@ -1,0 +1,100 @@
+container_runtime:
+    containerd: false
+    docker: false
+    podman: false
+fqdn: proxmoxt430.homelab.local
+hostname: proxmoxt430
+kernel: 6.8.12-11-pve
+network:
+    connectivity_tests:
+    -   success: true
+        target: pve1
+    default_gateway: 192.168.30.1
+    firewall:
+        firewalld_active: false
+        iptables_active: true
+        ufw_active: false
+orchestration:
+    kubernetes: false
+    nomad:
+        consul_integrated: false
+        installed: false
+        version: ''
+os: Debian 12.11
+persistent_storage:
+    paths_available: []
+port_availability:
+    consul:
+    - 8300
+    - 8301
+    - 8301
+    - 8302
+    - 8302
+    - 8500
+    - 8600
+    - 8600
+    nomad:
+    - 4646
+    - 4647
+    - 4648
+    powerdns:
+    - 53
+    - 53
+    - 8081
+readiness_scores:
+    can_run_databases: true
+    can_run_netbox: true
+    can_run_powerdns: true
+resources:
+    cpu:
+        cores: 56
+        model: Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz
+    memory:
+        free_mb: 46867
+        swap_mb: 8191
+        total_mb: 257824
+        used_percent: 81.82
+    storage:
+    -   available_gb: 54
+        filesystem: /dev/mapper/pve-root
+        mount: /
+        total_gb: 94
+        use_percent: 41
+        used_gb: 37
+    -   available_gb: 1
+        filesystem: efivarfs
+        mount: /sys/firmware/efi/efivars
+        total_gb: 1
+        use_percent: 21
+        used_gb: 1
+    -   available_gb: 1
+        filesystem: /dev/sda2
+        mount: /boot/efi
+        total_gb: 1
+        use_percent: 2
+        used_gb: 1
+    -   available_gb: 2238
+        filesystem: 192.168.30.6
+        mount: 18%
+        total_gb: 0
+        use_percent: 0
+        used_gb: 13126
+    -   available_gb: 0
+        filesystem: 192.168.30.6
+        mount: 0%
+        total_gb: 0
+        use_percent: 0
+        used_gb: 10888
+    -   available_gb: 333
+        filesystem: 192.168.30.6
+        mount: 3%
+        total_gb: 0
+        use_percent: 0
+        used_gb: 11221
+    -   available_gb: 1
+        filesystem: /dev/fuse
+        mount: /etc/pve
+        total_gb: 1
+        use_percent: 1
+        used_gb: 1
+virtualization: kvm
