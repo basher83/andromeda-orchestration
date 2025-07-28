@@ -4,13 +4,13 @@
 # and automated service registration
 #
 # Usage:
-#   uv run ansible-playbook playbooks/consul-nomad-integration.yml \
+#   uv run ansible-playbook playbooks/infrastructure/consul-nomad/consul-nomad-integration.yml \
 #     -i inventory/doggos-homelab/infisical.proxmox.yml
-#   uv run ansible-playbook playbooks/consul-nomad-integration.yml \
+#   uv run ansible-playbook playbooks/infrastructure/consul-nomad/consul-nomad-integration.yml \
 #     -i inventory/doggos-homelab/infisical.proxmox.yml --check
-#   uv run ansible-playbook playbooks/consul-nomad-integration.yml \
+#   uv run ansible-playbook playbooks/infrastructure/consul-nomad/consul-nomad-integration.yml \
 #     -i inventory/doggos-homelab/infisical.proxmox.yml --tags backup
-#   uv run ansible-playbook playbooks/consul-nomad-integration.yml \
+#   uv run ansible-playbook playbooks/infrastructure/consul-nomad/consul-nomad-integration.yml \
 #     -i inventory/doggos-homelab/infisical.proxmox.yml --tags verify
 
 - name: Enable Consul-Nomad Integration
