@@ -7,8 +7,10 @@
 # storage, networking, and integration points.
 #
 # Usage:
-#   uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inventory/og-homelab/infisical.proxmox.yml
-#   uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+#   uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml \
+#     -i inventory/og-homelab/infisical.proxmox.yml
+#   uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml \
+#     -i inventory/doggos-homelab/infisical.proxmox.yml
 
 - name: Infrastructure Readiness Assessment
   hosts: all
@@ -72,7 +74,9 @@
         system_resources:
           total_ram_mb: "{{ ansible_memtotal_mb | default(0) }}"
           free_ram_mb: "{{ ansible_memfree_mb | default(0) }}"
-          used_ram_percent: "{{ ((ansible_memtotal_mb | default(1) - ansible_memfree_mb | default(0)) / ansible_memtotal_mb | default(1) * 100) | round(2) }}"
+          used_ram_percent: >-
+            {{ ((ansible_memtotal_mb | default(1) - ansible_memfree_mb | default(0))
+            / ansible_memtotal_mb | default(1) * 100) | round(2) }}
           total_swap_mb: "{{ ansible_swaptotal_mb | default(0) }}"
           cpu_cores: "{{ ansible_processor_vcpus | default(ansible_processor_cores | default(1)) }}"
           cpu_model: "{{ ansible_processor[2] | default('Unknown') if ansible_processor is defined else 'Unknown' }}"
@@ -83,15 +87,15 @@
           python3 -c "
           import subprocess
           import sys
-          
+
           try:
               if '{{ ansible_system }}' == 'Darwin':
                   cmd = \"df -g | grep -vE '^Filesystem|tmpfs|cdrom|udev|devfs|map'\"
               else:
                   cmd = \"df -BG | grep -vE '^Filesystem|tmpfs|cdrom|udev'\"
-              
+
               result = subprocess.run(cmd, shell=True, capture_output=True, text=True, errors='replace')
-              
+
               for line in result.stdout.strip().split('\n'):
                   if line:
                       parts = line.split()
@@ -112,11 +116,11 @@
                               avail = parts[3]
                               use_pct = parts[4]
                               mount = parts[5]
-                          
+
                           # Clean up any non-ASCII characters
                           fs = ''.join(c if ord(c) < 128 else '?' for c in fs)
                           mount = ''.join(c if ord(c) < 128 else '?' for c in mount)
-                          
+
                           print(f'{fs}:{total}:{used}:{avail}:{use_pct}:{mount}')
           except Exception as e:
               sys.stderr.write(f'Error: {e}\n')
@@ -200,7 +204,7 @@
       ansible.builtin.command:
         cmd: "ping -c 2 -W 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
       loop: "{{ groups['all'] }}"
-      when: 
+      when:
         - item != inventory_hostname
         - hostvars[item]['ansible_default_ipv4'] is defined
         - hostvars[item]['ansible_default_ipv4']['address'] is defined
@@ -317,8 +321,11 @@
           orchestration:
             nomad:
               installed: "{{ nomad_check.rc == 0 }}"
-              version: "{{ nomad_check.stdout | default('Not installed') }}"
-              consul_integrated: "{{ consul_nomad_integration.stdout is defined and 'consul' in consul_nomad_integration.stdout | lower }}"
+              version: >-
+                {{ nomad_check.stdout | default('Not installed') }}
+              consul_integrated: >-
+                {{ consul_nomad_integration.stdout is defined and
+                'consul' in consul_nomad_integration.stdout | lower }}
             kubernetes: "{{ k8s_check.rc == 0 }}"
           # Network
           network:
@@ -333,11 +340,19 @@
               {% endif %}
               {% endfor %}
               {{ results }}
-            default_gateway: "{{ ansible_default_ipv4.gateway | default('N/A') if ansible_default_ipv4 is defined else 'N/A' }}"
+            default_gateway: >-
+              {{ ansible_default_ipv4.gateway | default('N/A')
+              if ansible_default_ipv4 is defined else 'N/A' }}
             firewall:
-              iptables_active: "{{ iptables_status.rc == 0 and iptables_status.stdout is defined and 'ACCEPT' in iptables_status.stdout }}"
-              firewalld_active: "{{ firewalld_status.status.ActiveState | default('inactive') == 'active' if firewalld_status.status is defined else false }}"
-              ufw_active: "{{ ufw_status.rc == 0 and ufw_status.stdout is defined and 'active' in ufw_status.stdout | lower }}"
+              iptables_active: >-
+                {{ iptables_status.rc == 0 and iptables_status.stdout is defined
+                and 'ACCEPT' in iptables_status.stdout }}
+              firewalld_active: >-
+                {{ firewalld_status.status.ActiveState | default('inactive') == 'active'
+                if firewalld_status.status is defined else false }}
+              ufw_active: >-
+                {{ ufw_status.rc == 0 and ufw_status.stdout is defined
+                and 'active' in ufw_status.stdout | lower }}
           # Port availability
           port_availability:
             consul: |
