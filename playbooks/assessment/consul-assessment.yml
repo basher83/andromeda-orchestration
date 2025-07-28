@@ -1,12 +1,40 @@
 ---
-# Consul Health Assessment using 1Password for ACL token
+# Consul Health Assessment using Infisical for ACL token
+#
+# This playbook performs a comprehensive health assessment of the Consul cluster
+# 
+# Usage:
+#   uv run ansible-playbook playbooks/assessment/consul-assessment.yml -i inventory/og-homelab/infisical.proxmox.yml
+#   uv run ansible-playbook playbooks/assessment/consul-assessment.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+#
+# Note: Requires INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET environment variables
+#
+# Prerequisites:
+#   1. Ensure Consul ACL token is stored in Infisical at path: /apollo-13/consul/
+#   2. Secret name should be: CONSUL_ACL_TOKEN_DOGGOS (for doggos-homelab)
+#                        or: CONSUL_ACL_TOKEN_OG (for og-homelab)
+#   3. Adjust the secret_name variable below based on your target cluster
+
 - name: Consul Cluster Health Assessment
   hosts: all
   gather_facts: true
   vars:
+    # Determine cluster based on inventory hostname patterns
+    # doggos-homelab nodes end with -lloyd, -holly, or -mable
+    # og-homelab nodes have different patterns
+    is_doggos_cluster: "{{ inventory_hostname.endswith(('-lloyd', '-holly', '-mable')) }}"
+    
+    # Retrieve Consul ACL token from Infisical
+    # Following the same pattern as inventory files
+    # Using conditional to select appropriate secret name based on cluster
     consul_acl_token: >-
-      {{ lookup('community.general.onepassword', 'Consul ACL - doggos-homelab',
-                field='token', vault='DevOps') }}
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_ACL_TOKEN_DOGGOS' if is_doggos_cluster else 'CONSUL_ACL_TOKEN_OG')).value }}
     consul_dns_port: 8600
     consul_api_port: 8500
     report_dir: "{{ playbook_dir }}/../../reports/consul"

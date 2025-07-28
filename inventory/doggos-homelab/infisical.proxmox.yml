@@ -8,7 +8,7 @@ want_facts: true
 user: ansible@pve
 token_id: service
 
-# Using Infisical lookup instead of 1Password
+
 # Expects INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET environment variables
 token_secret: >-
   {{ (lookup('infisical.vault.read_secrets',
@@ -16,7 +16,7 @@ token_secret: >-
              universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
              project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
              env_slug='prod',
-             path='/apollo-13',
+             path='/apollo-13/proxmox/doggos-homelab',
              secret_name='ANSIBLE_TOKEN_SECRET_DOGGOS')).value }}
 
 # Group vms by tags for reference in playbooks.
@@ -26,6 +26,6 @@ keyed_groups:
     prefix: tag_
 
 compose:
-  ansible_host: >-
-    {{ proxmox_ipconfig0.ip | default(proxmox_net0.ip) | default(proxmox_name) |
-       regex_replace('/\d+$', '') }}
+  # Use the clean hostname with proper domain
+  ansible_host: "{{ proxmox_name | regex_replace('-(lloyd|holly|mable)$', '') }}.lab.spaceships.work"
+  ansible_user: ansible
