@@ -1,0 +1,91 @@
+---
+- name: Setup Ansible User on All Hosts
+  hosts: all
+  gather_facts: true
+  become: false
+  vars:
+    # Use root for initial setup, then switch to ansible user
+    ansible_user: "{{ 'root' if ansible_user_setup | default(true) else 'ansible' }}"
+    ansible_password: "{{ 'bluegatofeline' if inventory_hostname in groups.get('all', []) and ansible_user == 'root' else omit }}"
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+  tasks:
+    - name: Get staging SSH public key from doggos-homelab host
+      delegate_to: localhost
+      ansible.builtin.command: >
+        ssh ansible@192.168.10.12
+        'cat ~/.ssh/authorized_keys | head -1'
+      register: staging_key
+      changed_when: false
+      run_once: true
+
+    - name: Create ansible user
+      ansible.builtin.user:
+        name: ansible
+        shell: /bin/bash
+        create_home: true
+        state: present
+        comment: "Ansible automation user"
+
+    - name: Create SSH directory for ansible user
+      ansible.builtin.file:
+        path: /home/ansible/.ssh
+        state: directory
+        owner: ansible
+        group: ansible
+        mode: '0700'
+
+    - name: Deploy SSH key to ansible user
+      ansible.posix.authorized_key:
+        user: ansible
+        key: "{{ staging_key.stdout }}"
+        state: present
+        exclusive: true
+
+    - name: Add ansible user to sudoers
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/ansible
+        line: 'ansible ALL=(ALL) NOPASSWD:ALL'
+        create: true
+        validate: 'visudo -cf %s'
+        mode: '0440'
+
+    - name: Configure SSH settings for ansible user
+      ansible.builtin.blockinfile:
+        path: /etc/ssh/sshd_config
+        block: |
+          # Ansible user SSH settings
+          Match User ansible
+              PasswordAuthentication no
+              PubkeyAuthentication yes
+        marker: "# {mark} ANSIBLE USER SSH CONFIG"
+      notify: restart sshd
+
+    - name: Set Python interpreter for better Ansible performance
+      ansible.builtin.lineinfile:
+        path: /home/ansible/.bashrc
+        line: 'export ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3'
+        create: true
+        owner: ansible
+        group: ansible
+        mode: '0644'
+
+  handlers:
+    - name: restart sshd
+      ansible.builtin.service:
+        name: "{{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}"
+        state: restarted
+
+- name: Verify Ansible User Setup
+  hosts: all
+  gather_facts: false
+  vars:
+    ansible_user: ansible
+  tasks:
+    - name: Test ansible user connectivity
+      ansible.builtin.ping:
+      register: ping_result
+
+    - name: Report connectivity status
+      ansible.builtin.debug:
+        msg: "Ansible user setup successful on {{ inventory_hostname }}"
+      when: ping_result is succeeded
