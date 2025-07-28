@@ -71,3 +71,6 @@ molecule/**/.molecule/
 # Infisical scan results
 infisical-scan-results.sarif
 .infisical-scan-baseline.json
+
+# KICS scan results
+kics-results/

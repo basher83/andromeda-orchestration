@@ -91,11 +91,7 @@ tasks:
     cmd: |
       echo "Running KICS security scan..."
       mkdir -p kics-results
-      docker run -t -v "$(pwd)":/path checkmarx/kics scan \
-        -p /path \
-        --output-path /path/kics-results \
-        --output-name results \
-        --report-formats json,sarif
+      docker run -t -v "$(pwd)":/path checkmarx/kics scan -p /path
       echo "KICS scan complete! Results saved to kics-results/"
 
   hooks:
