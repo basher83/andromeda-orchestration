@@ -9,7 +9,13 @@
     # Infisical configuration
     infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
     infisical_environment: "prod"
-    infisical_path: "/apollo-13"
+    # Organized paths for different secret types
+    proxmox_shared_path: "/apollo-13/proxmox"
+    proxmox_og_path: "/apollo-13/proxmox/og-homelab"
+    proxmox_doggos_path: "/apollo-13/proxmox/doggos-homelab"
+    consul_path: "/apollo-13/consul"
+    nomad_path: "/apollo-13/nomad"
+    services_path: "/services"
 
     # These should be set as environment variables:
     # INFISICAL_UNIVERSAL_AUTH_CLIENT_ID
@@ -17,30 +23,41 @@
     # Or passed directly (not recommended for production)
 
   tasks:
-    - name: Retrieve all secrets from apollo-13 folder
+    - name: Retrieve shared Proxmox secrets
       set_fact:
-        all_secrets: "{{ lookup('infisical.vault.read_secrets',
-                         universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                         universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                         project_id=infisical_project_id,
-                         env_slug=infisical_environment,
-                         path=infisical_path) }}"
-      # no_log: true  # Temporarily disabled for debugging
-
-    - name: Display available secret keys (for demo only)
-      debug:
-        msg: "Available secrets: {{ all_secrets | map(attribute='key') | list }}"
-
-    - name: Retrieve specific Proxmox token secret
-      set_fact:
-        proxmox_token: "{{ lookup('infisical.vault.read_secrets',
+        proxmox_shared: "{{ lookup('infisical.vault.read_secrets',
                            universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
                            universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
                            project_id=infisical_project_id,
                            env_slug=infisical_environment,
-                           path=infisical_path,
-                           secret_name='ANSIBLE_TOKEN_SECRET_DOGGOS') }}"
-      # no_log: true  # Temporarily disabled for debugging
+                           path=proxmox_shared_path) }}"
+      no_log: true
+
+    - name: Display shared Proxmox secrets (demo only)
+      debug:
+        msg: "Shared secrets: {{ proxmox_shared | map(attribute='key') | list }}"
+
+    - name: Retrieve cluster-specific Proxmox token
+      set_fact:
+        doggos_token: "{{ (lookup('infisical.vault.read_secrets',
+                          universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                          universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                          project_id=infisical_project_id,
+                          env_slug=infisical_environment,
+                          path=proxmox_doggos_path,
+                          secret_name='ANSIBLE_TOKEN_SECRET_DOGGOS')).value }}"
+      no_log: true
+
+    - name: Retrieve Consul master token
+      set_fact:
+        consul_token: "{{ (lookup('infisical.vault.read_secrets',
+                          universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                          universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                          project_id=infisical_project_id,
+                          env_slug=infisical_environment,
+                          path=consul_path,
+                          secret_name='CONSUL_MASTER_TOKEN')).value }}"
+      no_log: true
 
     - name: Use the secret (example)
       debug:
