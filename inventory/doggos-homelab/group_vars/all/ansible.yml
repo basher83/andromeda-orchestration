@@ -1,0 +1,8 @@
+---
+# Default ansible user for all hosts
+ansible_user: ansible
+ansible_become: true
+ansible_become_method: sudo
+
+# Python interpreter settings to avoid warnings
+ansible_python_interpreter: /usr/bin/python3
