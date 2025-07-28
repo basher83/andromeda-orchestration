@@ -1,12 +1,33 @@
 ---
 plugin: community.proxmox.proxmox
-url: https://192.168.30.30:8006
+url: >-
+  {{ (lookup('infisical.vault.read_secrets',
+             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+             env_slug='prod',
+             path='/apollo-13/proxmox/og-homelab',
+             secret_name='API_URL')).value }}
 validate_certs: false
 want_facts: true
 
 # Instead of login with password, proxmox supports api token authentication since release 6.2.
-user: ansible@pve
-token_id: service
+user: >-
+  {{ (lookup('infisical.vault.read_secrets',
+             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+             env_slug='prod',
+             path='/apollo-13/proxmox',
+             secret_name='ANSIBLE_USERNAME')).value }}
+token_id: >-
+  {{ (lookup('infisical.vault.read_secrets',
+             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+             env_slug='prod',
+             path='/apollo-13/proxmox',
+             secret_name='ANSIBLE_TOKEN_ID')).value }}
 
 # Expects INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET environment variables
 token_secret: >-
