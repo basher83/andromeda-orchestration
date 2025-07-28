@@ -1,0 +1,10 @@
+consul_dns_listening: true
+consul_dns_working: false
+consul_installed: false
+consul_leader: []
+consul_members: []
+consul_service_active: false
+consul_services: []
+consul_version: Not installed
+hostname: proxmoxt430
+timestamp: '2025-07-27T06:34:26Z'

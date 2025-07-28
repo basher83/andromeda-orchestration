@@ -1,0 +1,111 @@
+---
+# Simple playbook to enable Consul-Nomad integration
+# Updates existing Nomad configuration to add missing Consul parameters
+
+- name: Enable Consul-Nomad Integration
+  hosts: tag_nomad
+  become: true
+  vars:
+    nomad_config_file: /etc/nomad.d/nomad.hcl
+    
+  tasks:
+    - name: Backup Nomad configuration
+      ansible.builtin.copy:
+        src: "{{ nomad_config_file }}"
+        dest: "{{ nomad_config_file }}.backup.{{ ansible_date_time.epoch }}"
+        remote_src: true
+        
+    - name: Check if Consul stanza exists
+      ansible.builtin.shell: |
+        grep -q "^consul {" {{ nomad_config_file }}
+      register: consul_stanza_exists
+      changed_when: false
+      failed_when: false
+      
+    - name: Update Consul configuration in Nomad
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_file }}"
+        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG"
+        block: |
+          # Updated Consul integration
+          consul {
+            address = "127.0.0.1:8500"
+            
+            # Service registration
+            server_service_name = "nomad"
+            client_service_name = "nomad-client"
+            auto_advertise      = true
+            
+            # Cluster join
+            server_auto_join = true
+            client_auto_join = true
+            
+            # Keep existing identity settings
+            service_identity {
+              enabled = true
+              auto    = true
+            }
+            
+            task_identity {
+              enabled = true
+            }
+          }
+        state: present
+      when: not consul_stanza_exists.rc == 0
+      
+    - name: Add missing Consul parameters if stanza exists
+      ansible.builtin.lineinfile:
+        path: "{{ nomad_config_file }}"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        insertafter: "^consul {"
+        state: present
+      loop:
+        - { regexp: '^\s*server_service_name\s*=', line: '  server_service_name = "nomad"' }
+        - { regexp: '^\s*client_service_name\s*=', line: '  client_service_name = "nomad-client"' }
+        - { regexp: '^\s*auto_advertise\s*=', line: '  auto_advertise = true' }
+        - { regexp: '^\s*server_auto_join\s*=', line: '  server_auto_join = true' }
+        - { regexp: '^\s*client_auto_join\s*=', line: '  client_auto_join = true' }
+      when: consul_stanza_exists.rc == 0
+      
+    - name: Restart Nomad service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      register: nomad_restart
+      
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 30
+        
+    - name: Verify Nomad is running
+      ansible.builtin.command: nomad status
+      register: nomad_status
+      changed_when: false
+      retries: 3
+      delay: 5
+      until: nomad_status.rc == 0
+
+- name: Verify Consul Integration
+  hosts: localhost
+  tasks:
+    - name: Wait for services to register
+      ansible.builtin.pause:
+        seconds: 10
+        
+    - name: Check Consul for Nomad services
+      ansible.builtin.command: consul catalog services
+      register: consul_services
+      changed_when: false
+      
+    - name: Display registered services
+      ansible.builtin.debug:
+        msg: "Consul services: {{ consul_services.stdout_lines }}"
+        
+    - name: Check for Nomad service
+      ansible.builtin.debug:
+        msg: "Consul-Nomad integration {{ 'SUCCESSFUL' if 'nomad' in consul_services.stdout else 'FAILED' }}"

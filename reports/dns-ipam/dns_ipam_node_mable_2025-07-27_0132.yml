@@ -1,0 +1,137 @@
+dns:
+    custom_hosts_entries: 10
+    nameservers:
+    - 192.168.30.100
+    - 1.1.1.1
+    - 8.8.8.8
+    pihole:
+        custom_entries: 0
+        installed: false
+    ports_open: []
+    search_domains: '  [''lab.spaceships.work''] '
+    services_running:
+        bind: false
+        dnsmasq: true
+        pdns: false
+        pihole: false
+        systemd_resolved: false
+        unbound: false
+    zone_files_found: 0
+domain: '   '
+fqdn: mable.production.net
+hostname: mable
+ipam:
+    arp_entries: -1
+    subnets:
+    - 192.168.10.0/24
+    - 192.168.11.0/24
+network:
+    default_gateway: 192.168.10.1
+    dns_servers_via_dhcp: false
+    interfaces:
+        enp2s0f0np0:
+            ipv4: {}
+            ipv6: []
+            mac: 58:47:ca:79:78:64
+            mtu: 1500
+        enp2s0f1np1:
+            ipv4: {}
+            ipv6: []
+            mac: 58:47:ca:79:78:65
+            mtu: 1500
+        enp87s0:
+            ipv4: {}
+            ipv6: []
+            mac: 58:47:ca:79:78:66
+            mtu: 1500
+        enp88s0:
+            ipv4: {}
+            ipv6: []
+            mac: 58:47:ca:79:78:67
+            mtu: 1500
+        tailscale0:
+            ipv4:
+                address: 100.88.69.94
+                broadcast: ''
+                netmask: 255.255.255.255
+                network: 100.88.69.94
+                prefix: '32'
+            ipv6:
+            -   address: fd7a:115c:a1e0::e901:4560
+                prefix: '128'
+                scope: global
+            -   address: fe80::2b23:4f21:b9c4:241a
+                prefix: '64'
+                scope: link
+            mac: ''
+            mtu: 1280
+        tap3103i0:
+            ipv4: {}
+            ipv6: []
+            mac: 1a:28:7c:83:cd:9f
+            mtu: 1500
+        tap3103i1:
+            ipv4: {}
+            ipv6: []
+            mac: ce:cb:ce:e2:01:5c
+            mtu: 9000
+        tap3512i0:
+            ipv4: {}
+            ipv6: []
+            mac: 16:e5:5b:51:b1:7b
+            mtu: 1500
+        tap3512i1:
+            ipv4: {}
+            ipv6: []
+            mac: 2a:57:ba:01:d3:12
+            mtu: 9000
+        vmbr0:
+            ipv4:
+                address: 192.168.10.4
+                broadcast: ''
+                netmask: 255.255.255.0
+                network: 192.168.10.0
+                prefix: '24'
+            ipv6:
+            -   address: fe80::5a47:caff:fe79:7866
+                prefix: '64'
+                scope: link
+            mac: 58:47:ca:79:78:66
+            mtu: 1500
+        vmbr1:
+            ipv4:
+                address: 192.168.11.4
+                broadcast: ''
+                netmask: 255.255.255.0
+                network: 192.168.11.0
+                prefix: '24'
+            ipv6:
+            -   address: fe80::5a47:caff:fe79:7864
+                prefix: '64'
+                scope: link
+            mac: 58:47:ca:79:78:64
+            mtu: 9000
+        wlp89s0:
+            ipv4: {}
+            ipv6: []
+            mac: dc:97:ba:5a:72:56
+            mtu: 1500
+raw_data:
+    hosts_file_sample: '  [''127.0.0.1 localhost.localdomain localhost'', ''192.168.10.4
+        mable.production.net mable'', ''192.168.10.3 holly.production.net holly'',
+        ''192.168.10.2 lloyd.production.net lloyd'', ''::1     ip6-localhost ip6-loopback'',
+        ''fe00::0 ip6-localnet'', ''ff00::0 ip6-mcastprefix'', ''ff02::1 ip6-allnodes'',
+        ''ff02::2 ip6-allrouters'', ''ff02::3 ip6-allhosts''] '
+    resolv_conf: 'search lab.spaceships.work
+
+        nameserver 192.168.30.100
+
+        nameserver 1.1.1.1
+
+        nameserver 8.8.8.8
+
+        '
+    routing_table:
+    - 'default via 192.168.10.1 dev vmbr0 proto kernel onlink '
+    - '192.168.10.0/24 dev vmbr0 proto kernel scope link src 192.168.10.4 '
+    - '192.168.11.0/24 dev vmbr1 proto kernel scope link src 192.168.11.4 '
