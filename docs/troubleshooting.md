@@ -9,6 +9,7 @@ This guide covers common issues and their solutions when working with this Ansib
 3. [Ansible Inventory Errors](#ansible-inventory-errors)
 4. [Python Environment Issues](#python-environment-issues)
 5. [Network Connectivity](#network-connectivity)
+6. [Ansible Playbook Common Issues](#ansible-playbook-common-issues)
 
 ## macOS Sequoia Local Network Permissions
 
@@ -161,10 +162,121 @@ If you're still experiencing issues:
    - Environment details (OS, versions)
    - Debug output
 
+## Ansible Playbook Common Issues
+
+### Problem: Jinja2 filter errors with empty results
+
+When using filters like `first` with `default()`, you may encounter errors if the result is empty.
+
+#### Solution
+
+Use conditional logic instead of chaining filters:
+
+```yaml
+# INCORRECT:
+search_domains: >-
+  {{ content | regex_findall('search\s+(.*)') | first | default('') | split }}
+
+# CORRECT:
+search_domains: >-
+  {% set search_line = content | regex_findall('search\s+(.*)') %}
+  {% if search_line | length > 0 %}
+  {{ search_line[0] | split }}
+  {% else %}
+  []
+  {% endif %}
+```
+
+### Problem: Accessing attributes on undefined variables
+
+Attempting to access `.stdout` or other attributes on skipped/failed task results causes errors.
+
+#### Solution
+
+Always check if variables and attributes are defined:
+
+```yaml
+# INCORRECT:
+consul_integrated: "{{ 'consul' in consul_nomad_integration.stdout | lower }}"
+
+# CORRECT:
+consul_integrated: >-
+  {% if consul_nomad_integration is defined and consul_nomad_integration.stdout is defined %}
+  {{ 'consul' in consul_nomad_integration.stdout | lower }}
+  {% else %}
+  false
+  {% endif %}
+```
+
+### Problem: DNS resolution failures during assessment
+
+VM names may not resolve, causing connectivity tests to fail.
+
+#### Solutions
+
+1. **Use IP addresses directly (recommended for assessments):**
+   ```yaml
+   - name: Test connectivity
+     ansible.builtin.command:
+       cmd: "ping -c 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
+     when: 
+       - hostvars[item]['ansible_default_ipv4'] is defined
+       - hostvars[item]['ansible_default_ipv4']['address'] is defined
+   ```
+
+2. **Add temporary hosts entries:**
+   ```yaml
+   - name: Add temporary hosts entries
+     ansible.builtin.lineinfile:
+       path: /etc/hosts
+       line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{ item }}"
+     loop: "{{ groups['all'] }}"
+     when: item != inventory_hostname
+     become: true
+   ```
+
+### Best Practices for Robust Playbooks
+
+1. **Use `failed_when: false` for discovery tasks:**
+   ```yaml
+   - name: Check service status
+     ansible.builtin.command:
+       cmd: systemctl status service
+     register: result
+     changed_when: false
+     failed_when: false
+   ```
+
+2. **Implement error handling blocks:**
+   ```yaml
+   - name: Task with fallback
+     block:
+       - name: Primary method
+         ansible.builtin.command: primary-tool
+     rescue:
+       - name: Fallback method
+         ansible.builtin.command: fallback-tool
+     always:
+       - name: Cleanup
+         ansible.builtin.file:
+           path: /tmp/temp-file
+           state: absent
+   ```
+
+3. **Validate connectivity before tests:**
+   ```yaml
+   - name: Ensure target is reachable
+     ansible.builtin.wait_for:
+       host: "{{ target_host }}"
+       port: 22
+       timeout: 5
+     register: host_reachable
+     failed_when: false
+   ```
+
 ## Related Documentation
 
 - [Infisical Setup and Migration](infisical-setup-and-migration.md) - Complete secret management guide
 - [NetBox Integration](netbox.md) - NetBox connectivity troubleshooting
 - [DNS & IPAM Implementation Plan](dns-ipam-implementation-plan.md) - Infrastructure assessment procedures
 - [Pre-commit Setup](pre-commit-setup.md) - Development environment configuration
-- [Assessment Playbook Fixes](assessment-playbook-fixes.md) - Specific assessment playbook issues

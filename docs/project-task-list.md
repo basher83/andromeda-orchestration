@@ -166,11 +166,25 @@ Tasks:
 - [ ] Set up change tracking
 - [ ] Document in project wiki
 
+#### 11. Bootstrap NetBox with Essential Records
+
+**Description**: Seed NetBox with critical DNS records to enable early PowerDNS sync  
+**Status**: Not Started  
+**Blockers**: NetBox deployment required  
+**Related**: Phase 3 bootstrap strategy per ROADMAP.md
+
+Tasks:
+
+- [ ] Identify critical DNS records (proxmox hosts, core services)
+- [ ] Create minimal NetBox data model
+- [ ] Test PowerDNS sync with limited dataset
+- [ ] Plan incremental data migration approach
+
 ### Low Priority - Future Phases
 
 These tasks are important but can wait until implementation begins.
 
-#### 11. Plan Multi-Site DNS Strategy
+#### 12. Plan Multi-Site DNS Strategy
 
 **Description**: Design DNS architecture for og-homelab integration  
 **Status**: Not Started  
@@ -184,7 +198,7 @@ Tasks:
 - [ ] Plan zone delegation
 - [ ] Document architecture
 
-#### 12. Develop Automation Workflows
+#### 13. Develop Automation Workflows
 
 **Description**: Create event-driven automation for DNS/IPAM  
 **Status**: Not Started  
@@ -198,7 +212,7 @@ Tasks:
 - [ ] Auto-provisioning workflows
 - [ ] Self-service portals
 
-#### 13. Create User Documentation
+#### 14. Create User Documentation
 
 **Description**: End-user guides for new DNS/IPAM services  
 **Status**: Not Started  
@@ -212,7 +226,7 @@ Tasks:
 - [ ] IPAM request procedures
 - [ ] FAQ documentation
 
-#### 14. Design Disaster Recovery Plan
+#### 15. Design Disaster Recovery Plan
 
 **Description**: Comprehensive DR strategy for DNS/IPAM  
 **Status**: Not Started  
@@ -226,21 +240,27 @@ Tasks:
 - [ ] Test failover scenarios
 - [ ] Document recovery steps
 
-#### 15. Implement Security Hardening
+#### 16. Implement Security Hardening
 
 **Description**: Security improvements for all components  
 **Status**: Not Started  
 **Blockers**: Base implementation required  
-**Related**: Production readiness
+**Related**: Production readiness, Phase 5 TLS/SSL management
 
 Tasks:
 
-- [ ] DNSSEC implementation
-- [ ] mTLS for Consul
-- [ ] API authentication
-- [ ] Audit logging
+- [ ] DNSSEC implementation for authoritative zones
+- [ ] mTLS for Consul service mesh
+- [ ] API authentication for PowerDNS and NetBox
+- [ ] Audit logging for all services
+- [ ] DNS-01 ACME challenge setup via PowerDNS API
+- [ ] Let's Encrypt wildcard certificates for *.lab.example.com
+- [ ] Vault PKI integration for internal service certificates
+- [ ] Consul Connect mTLS for service-to-service encryption
+- [ ] Nomad periodic jobs for certificate renewal
+- [ ] Certificate storage strategy (host volumes, Consul KV, or Vault)
 
-#### 16. Performance Optimization
+#### 17. Performance Optimization
 
 **Description**: Tune services for optimal performance  
 **Status**: Not Started  
@@ -254,7 +274,7 @@ Tasks:
 - [ ] Database optimization
 - [ ] Cache configuration
 
-#### 17. Capacity Planning
+#### 18. Capacity Planning
 
 **Description**: Plan for future growth and scaling  
 **Status**: Not Started  
@@ -268,7 +288,7 @@ Tasks:
 - [ ] Scaling strategies
 - [ ] Budget planning
 
-#### 18. Integration Testing
+#### 19. Integration Testing
 
 **Description**: Comprehensive testing of all integrations  
 **Status**: Not Started  
@@ -282,7 +302,7 @@ Tasks:
 - [ ] Ansible automation tests
 - [ ] End-to-end scenarios
 
-#### 19. Create Operational Dashboards
+#### 20. Create Operational Dashboards
 
 **Description**: Real-time visibility into DNS/IPAM operations  
 **Status**: Not Started  
@@ -296,7 +316,7 @@ Tasks:
 - [ ] IPAM utilization
 - [ ] Trend analysis
 
-#### 20. Develop SOP Documentation
+#### 21. Develop SOP Documentation
 
 **Description**: Standard operating procedures for common tasks  
 **Status**: Not Started  
@@ -310,7 +330,7 @@ Tasks:
 - [ ] Maintenance procedures
 - [ ] Escalation paths
 
-#### 21. Configure Automated Backups
+#### 22. Configure Automated Backups
 
 **Description**: Automated backup solutions for all services  
 **Status**: Not Started  
@@ -324,7 +344,7 @@ Tasks:
 - [ ] Off-site storage
 - [ ] Recovery testing
 
-#### 22. Implement Compliance Controls
+#### 23. Implement Compliance Controls
 
 **Description**: Ensure compliance with relevant standards  
 **Status**: Not Started  
@@ -338,7 +358,7 @@ Tasks:
 - [ ] Audit procedures
 - [ ] Compliance reporting
 
-#### 23. Plan Knowledge Transfer
+#### 24. Plan Knowledge Transfer
 
 **Description**: Ensure team has necessary skills  
 **Status**: Not Started  
@@ -356,14 +376,14 @@ Tasks:
 
 ### Overall Progress
 
-- **Completed**: 0/23 tasks (0%)
-- **In Progress**: 1/23 tasks (4%)
-- **Not Started**: 22/23 tasks (96%)
+- **Completed**: 0/24 tasks (0%)
+- **In Progress**: 1/24 tasks (4%)
+- **Not Started**: 23/24 tasks (96%)
 
 ### Phase Breakdown
 
 - **High Priority**: 0/4 completed
-- **Medium Priority**: 0/6 completed
+- **Medium Priority**: 0/7 completed
 - **Low Priority**: 0/13 completed
 
 ## Risk Items and Blockers

@@ -10,6 +10,7 @@ archive/
 ├── 1pass.md                              # Deprecated 1Password Connect collection guide
 ├── 1password-connect-troubleshooting.md  # Legacy 1Password troubleshooting
 ├── 1password-integration.md              # Deprecated 1Password integration guide
+├── assessment-playbook-fixes.md          # Completed assessment playbook fixes (2025-07-28)
 ├── consul-1password-setup.md             # Deprecated Consul ACL with 1Password
 ├── documentation-review-findings.md      # Completed documentation review (2025-07-27)
 ├── bin/                                  # Archived utility scripts
@@ -39,6 +40,11 @@ These files document the legacy 1Password Connect integration that has been repl
   - Documents the migration from 1Password to Infisical
   - Lists all inconsistencies found and resolved
   - Serves as a reference for documentation standards
+
+- **assessment-playbook-fixes.md** - Specific fixes for assessment playbooks completed on 2025-07-28
+  - Documents Jinja2 filter errors and their solutions
+  - Provides defensive coding patterns for robust playbooks
+  - All fixes have been implemented and content migrated to troubleshooting.md
 
 ### 3. Archived Utility Scripts
 
