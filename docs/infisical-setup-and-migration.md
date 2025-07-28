@@ -203,17 +203,20 @@ Note: Certificates will be managed in a separate `cert-manager` type project for
 
 ### Current Usage
 
-Example from inventory file:
+All inventory files now use the organized folder structure with shared and cluster-specific secrets:
 
 ```yaml
-token_secret: >-
+# Shared secrets from /apollo-13/proxmox/
+user: >-
   {{ (lookup('infisical.vault.read_secrets',
-             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-             env_slug='prod',
+             path='/apollo-13/proxmox',
+             secret_name='ANSIBLE_USERNAME')).value }}
+
+# Cluster-specific secrets from /apollo-13/proxmox/{cluster-name}/
+url: >-
+  {{ (lookup('infisical.vault.read_secrets',
              path='/apollo-13/proxmox/doggos-homelab',
-             secret_name='ANSIBLE_TOKEN_SECRET_DOGGOS')).value }}
+             secret_name='API_URL')).value }}
 ```
 
 ## Migration Status
@@ -259,7 +262,7 @@ Secrets have been organized into folders and replicated across environments:
 | NETBOX_API_KEY              | /services/netbox/                  | dev, prod, staging | ✅     | Created folder          |
 | POWERDNS_API_KEY            | /services/powerdns/                | dev, prod, staging | ❌     | Need to add             |
 
-### Phase 3: Update Ansible Code (IN PROGRESS)
+### ✅ Phase 3: Update Ansible Code (COMPLETED)
 
 Update inventory files to use the new organized folder structure:
 
@@ -417,28 +420,29 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 - [x] Replicate secrets across all environments (dev, prod, staging)
 - [x] Create `/services/` structure with netbox and powerdns folders
 
-### 🔄 In Progress
+### ✅ Recently Completed (Phase 3)
 
-- [ ] Update inventory files with new paths
-  - [ ] `inventory/og-homelab/infisical.proxmox.yml`
-  - [ ] `inventory/doggos-homelab/infisical.proxmox.yml`
-- [ ] Update playbooks to use new paths
-  - [ ] Consul playbooks
-  - [ ] Nomad playbooks
-  - [ ] Infrastructure playbooks
-
-### 📋 To Do
-
+- [x] Update inventory files with new paths
+  - [x] `inventory/og-homelab/infisical.proxmox.yml` - Now uses organized paths
+  - [x] `inventory/doggos-homelab/infisical.proxmox.yml` - Now uses organized paths
+- [x] Test inventory connections with new paths - Both clusters working correctly
 - [x] Add missing secrets:
   - [x] API_URL for each Proxmox cluster (in all environments)
   - [x] Create `/apollo-13/nomad/` folder and add MANAGEMENT_TOKEN
 - [x] Add service secrets:
   - [x] NetBox API credentials in `/services/netbox/`
-  - [ ] PowerDNS credentials in `/services/powerdns/`
-- [ ] Test inventory connections with new paths
-- [ ] Implement environment-aware lookups
+- [x] Update playbooks to use new paths
+  - [x] Consul playbooks - `service-register.yml` migrated from 1Password
+  - [x] Nomad playbooks - `register-service.yml` migrated from 1Password
+  - [x] Infrastructure playbooks - Updated demo to show organized structure
+
+### 📋 To Do (Phase 4 and Beyond)
+
+- [ ] PowerDNS credentials in `/services/powerdns/` (when PowerDNS is deployed)
+- [ ] Implement environment-aware lookups (dev/staging/prod separation)
 - [ ] Create separate `cert-manager` project for PKI/certificates
 - [ ] Consider renaming secrets for consistency (optional future task)
+- [ ] Archive 1Password configuration files once fully migrated
 
 ## Troubleshooting
 
