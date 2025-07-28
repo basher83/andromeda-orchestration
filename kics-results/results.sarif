@@ -1,0 +1,931 @@
+{
+	"$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+	"version": "2.1.0",
+	"runs": [
+		{
+			"tool": {
+				"driver": {
+					"name": "KICS",
+					"version": "v2.1.11",
+					"fullName": "Keeping Infrastructure as Code Secure",
+					"informationUri": "https://www.kics.io/",
+					"rules": [
+						{
+							"id": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+							"name": "Apt Get Install Pin Version Not Defined",
+							"shortDescription": {
+								"text": "Apt Get Install Pin Version Not Defined"
+							},
+							"fullDescription": {
+								"text": "When installing a package, its pin version should be defined"
+							},
+							"defaultConfiguration": {
+								"level": "warning"
+							},
+							"helpUri": "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/",
+							"relationships": [
+								{
+									"target": {
+										"id": "CAT013",
+										"index": 6,
+										"toolComponent": {
+											"name": "Categories",
+											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
+										}
+									}
+								},
+								{
+									"target": {
+										"id": "1357",
+										"guid": "64f01d0a-ff34-4583-b387-b1ebfb5ab24b",
+										"toolComponent": {
+											"name": "CWE",
+											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
+										}
+									}
+								}
+							]
+						},
+						{
+							"id": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+							"name": "Communication Over HTTP",
+							"shortDescription": {
+								"text": "Communication Over HTTP"
+							},
+							"fullDescription": {
+								"text": "Using HTTP URLs (without encryption) could lead to security vulnerabilities and risks"
+							},
+							"defaultConfiguration": {
+								"level": "warning"
+							},
+							"helpUri": "https://docs.ansible.com/ansible/latest/collections/ansible/builtin/uri_module.html#parameter-url",
+							"relationships": [
+								{
+									"target": {
+										"id": "CAT007",
+										"index": 10,
+										"toolComponent": {
+											"name": "Categories",
+											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
+										}
+									}
+								},
+								{
+									"target": {
+										"id": "319",
+										"guid": "603fbabb-6462-4ed2-99cc-e6f4bca213c9",
+										"toolComponent": {
+											"name": "CWE",
+											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
+										}
+									}
+								}
+							]
+						},
+						{
+							"id": "c6473dae-8477-4119-88b7-b909b435ce7b",
+							"name": "Logging of Sensitive Data In Defaults",
+							"shortDescription": {
+								"text": "Logging of Sensitive Data In Defaults"
+							},
+							"fullDescription": {
+								"text": "To keep sensitive values out of logs, tasks that expose them need to be marked defining 'no_log' and setting to True"
+							},
+							"defaultConfiguration": {
+								"level": "note"
+							},
+							"helpUri": "https://docs.ansible.com/ansible/latest/reference_appendices/logging.html#protecting-sensitive-data-with-no-log",
+							"relationships": [
+								{
+									"target": {
+										"id": "CAT004",
+										"index": 9,
+										"toolComponent": {
+											"name": "Categories",
+											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
+										}
+									}
+								},
+								{
+									"target": {
+										"id": "532",
+										"guid": "b6196058-90e8-432f-91f7-32ca40cab541",
+										"toolComponent": {
+											"name": "CWE",
+											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
+										}
+									}
+								}
+							]
+						},
+						{
+							"id": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+							"name": "Unpinned Actions Full Length Commit SHA",
+							"shortDescription": {
+								"text": "Unpinned Actions Full Length Commit SHA"
+							},
+							"fullDescription": {
+								"text": "Pinning an action to a full length commit SHA is currently the only way to use an action as an immutable release. Pinning to a particular SHA helps mitigate the risk of a bad actor adding a backdoor to the action's repository, as they would need to generate a SHA-1 collision for a valid Git object payload. When selecting a SHA, you should verify it is from the action's repository and not a repository fork."
+							},
+							"defaultConfiguration": {
+								"level": "note"
+							},
+							"helpUri": "https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions",
+							"relationships": [
+								{
+									"target": {
+										"id": "CAT013",
+										"index": 6,
+										"toolComponent": {
+											"name": "Categories",
+											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
+										}
+									}
+								},
+								{
+									"target": {
+										"id": "829",
+										"guid": "4df6b0d6-48e8-4408-a904-a7df92ae2b8e",
+										"toolComponent": {
+											"name": "CWE",
+											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
+										}
+									}
+								}
+							]
+						},
+						{
+							"id": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+							"name": "Risky File Permissions",
+							"shortDescription": {
+								"text": "Risky File Permissions"
+							},
+							"fullDescription": {
+								"text": "Some modules could end up creating new files on disk with permissions that might be too open or unpredictable"
+							},
+							"defaultConfiguration": {
+								"level": "none"
+							},
+							"helpUri": "https://ansible.readthedocs.io/projects/lint/rules/risky-file-permissions/",
+							"relationships": [
+								{
+									"target": {
+										"id": "CAT013",
+										"index": 6,
+										"toolComponent": {
+											"name": "Categories",
+											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
+										}
+									}
+								},
+								{
+									"target": {
+										"id": "732",
+										"guid": "4ddb885a-0b4e-4c2c-80db-085195a5d6ec",
+										"toolComponent": {
+											"name": "CWE",
+											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			"results": [
+				{
+					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Package 'ca-certificates' does not have version defined",
+						"properties": {
+							"platform": "Dockerfile"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/molecule/default/Dockerfile"
+								},
+								"region": {
+									"startLine": 3
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Package 'python3-pip' does not have version defined",
+						"properties": {
+							"platform": "Dockerfile"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/molecule/default/Dockerfile"
+								},
+								"region": {
+									"startLine": 3
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Package 'sudo' does not have version defined",
+						"properties": {
+							"platform": "Dockerfile"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/molecule/default/Dockerfile"
+								},
+								"region": {
+									"startLine": 3
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Package 'python3-apt' does not have version defined",
+						"properties": {
+							"platform": "Dockerfile"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/molecule/default/Dockerfile"
+								},
+								"region": {
+									"startLine": 3
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Package 'systemd-sysv' does not have version defined",
+						"properties": {
+							"platform": "Dockerfile"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/molecule/default/Dockerfile"
+								},
+								"region": {
+									"startLine": 3
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Package 'python3' does not have version defined",
+						"properties": {
+							"platform": "Dockerfile"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/molecule/default/Dockerfile"
+								},
+								"region": {
+									"startLine": 3
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Package 'systemd' does not have version defined",
+						"properties": {
+							"platform": "Dockerfile"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/molecule/default/Dockerfile"
+								},
+								"region": {
+									"startLine": 3
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/consul/service-register.yml"
+								},
+								"region": {
+									"startLine": 43
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/consul-nomad-integration.yml"
+								},
+								"region": {
+									"startLine": 44
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/consul-nomad-integration.yml"
+								},
+								"region": {
+									"startLine": 180
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/consul-nomad-integration.yml"
+								},
+								"region": {
+									"startLine": 192
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "c6473dae-8477-4119-88b7-b909b435ce7b",
+					"ruleIndex": 2,
+					"kind": "fail",
+					"message": {
+						"text": "no_log is not defined",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/ansible.cfg"
+								},
+								"region": {
+									"startLine": 1
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "Action is not pinned to a full length commit SHA.",
+						"properties": {
+							"platform": "CICD"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/.github/workflows/ci.yml"
+								},
+								"region": {
+									"startLine": 19
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "Action is not pinned to a full length commit SHA.",
+						"properties": {
+							"platform": "CICD"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/.github/workflows/release.yml"
+								},
+								"region": {
+									"startLine": 39
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "Action is not pinned to a full length commit SHA.",
+						"properties": {
+							"platform": "CICD"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/.github/workflows/ci.yml"
+								},
+								"region": {
+									"startLine": 101
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "Action is not pinned to a full length commit SHA.",
+						"properties": {
+							"platform": "CICD"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/.github/workflows/security-scan.yml"
+								},
+								"region": {
+									"startLine": 37
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "Action is not pinned to a full length commit SHA.",
+						"properties": {
+							"platform": "CICD"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/.github/workflows/ci.yml"
+								},
+								"region": {
+									"startLine": 73
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "Action is not pinned to a full length commit SHA.",
+						"properties": {
+							"platform": "CICD"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/.github/workflows/ci.yml"
+								},
+								"region": {
+									"startLine": 155
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "Action is not pinned to a full length commit SHA.",
+						"properties": {
+							"platform": "CICD"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/.github/workflows/ci.yml"
+								},
+								"region": {
+									"startLine": 138
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "Action is not pinned to a full length commit SHA.",
+						"properties": {
+							"platform": "CICD"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/.github/workflows/ci.yml"
+								},
+								"region": {
+									"startLine": 130
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+					"ruleIndex": 4,
+					"kind": "informational",
+					"message": {
+						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/enable-consul-nomad-simple.yml"
+								},
+								"region": {
+									"startLine": 13
+								}
+							}
+						}
+					]
+				}
+			],
+			"taxonomies": [
+				{
+					"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f",
+					"name": "Categories",
+					"fullDescription": {
+						"text": "This taxonomy contains the types an issue can assume"
+					},
+					"shortDescription": {
+						"text": "Vulnerabilities categories"
+					},
+					"taxa": [
+						{
+							"name": "Undefined Category",
+							"id": "CAT000",
+							"shortDescription": {
+								"text": "Category is not defined"
+							},
+							"fullDescription": {
+								"text": "Category is not defined"
+							}
+						},
+						{
+							"name": "Access Control",
+							"id": "CAT001",
+							"shortDescription": {
+								"text": "Service permission and identity management"
+							},
+							"fullDescription": {
+								"text": "Service permission and identity management"
+							}
+						},
+						{
+							"name": "Secret Management",
+							"id": "CAT012",
+							"shortDescription": {
+								"text": "Secret and Key management"
+							},
+							"fullDescription": {
+								"text": "Secret and Key management"
+							}
+						},
+						{
+							"name": "Bill Of Materials",
+							"id": "CAT015",
+							"shortDescription": {
+								"text": "List of resources provisioned"
+							},
+							"fullDescription": {
+								"text": "List of resources provisioned"
+							}
+						},
+						{
+							"name": "Encryption",
+							"id": "CAT006",
+							"shortDescription": {
+								"text": "Data Security and Encryption configuration"
+							},
+							"fullDescription": {
+								"text": "Data Security and Encryption configuration"
+							}
+						},
+						{
+							"name": "Networking and Firewall",
+							"id": "CAT009",
+							"shortDescription": {
+								"text": "Network port exposure and firewall configuration"
+							},
+							"fullDescription": {
+								"text": "Network port exposure and firewall configuration"
+							}
+						},
+						{
+							"name": "Supply-Chain",
+							"id": "CAT013",
+							"shortDescription": {
+								"text": "Dependency version management"
+							},
+							"fullDescription": {
+								"text": "Dependency version management"
+							}
+						},
+						{
+							"name": "Structure and Semantics",
+							"id": "CAT014",
+							"shortDescription": {
+								"text": "Malformed document structure or inadequate semantics"
+							},
+							"fullDescription": {
+								"text": "Malformed document structure or inadequate semantics"
+							}
+						},
+						{
+							"name": "Availability",
+							"id": "CAT002",
+							"shortDescription": {
+								"text": "Reliability and Scalability"
+							},
+							"fullDescription": {
+								"text": "Reliability and Scalability"
+							}
+						},
+						{
+							"name": "Best Practices",
+							"id": "CAT004",
+							"shortDescription": {
+								"text": "Metadata management"
+							},
+							"fullDescription": {
+								"text": "Metadata management"
+							}
+						},
+						{
+							"name": "Insecure Configurations",
+							"id": "CAT007",
+							"shortDescription": {
+								"text": "Configurations which expose the application unnecessarily"
+							},
+							"fullDescription": {
+								"text": "Configurations which expose the application unnecessarily"
+							}
+						},
+						{
+							"name": "Backup",
+							"id": "CAT003",
+							"shortDescription": {
+								"text": "Survivability and Recovery"
+							},
+							"fullDescription": {
+								"text": "Survivability and Recovery"
+							}
+						},
+						{
+							"name": "Build Process",
+							"id": "CAT005",
+							"shortDescription": {
+								"text": "Insecure configurations when building/deploying"
+							},
+							"fullDescription": {
+								"text": "Insecure configurations when building/deploying"
+							}
+						},
+						{
+							"name": "Insecure Defaults",
+							"id": "CAT008",
+							"shortDescription": {
+								"text": "Configurations that are insecure by default"
+							},
+							"fullDescription": {
+								"text": "Configurations that are insecure by default"
+							}
+						},
+						{
+							"name": "Observability",
+							"id": "CAT010",
+							"shortDescription": {
+								"text": "Logging and Monitoring"
+							},
+							"fullDescription": {
+								"text": "Logging and Monitoring"
+							}
+						},
+						{
+							"name": "Resource Management",
+							"id": "CAT011",
+							"shortDescription": {
+								"text": "Resource and privilege limit configuration"
+							},
+							"fullDescription": {
+								"text": "Resource and privilege limit configuration"
+							}
+						}
+					]
+				},
+				{
+					"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3",
+					"name": "CWE",
+					"fullDescription": {
+						"text": "The MITRE Common Weakness Enumeration"
+					},
+					"shortDescription": {
+						"text": "The MITRE Common Weakness Enumeration"
+					},
+					"downloadUri": "https://cwe.mitre.org/data/xml/cwec_v4.13.xml.zip",
+					"informationUri": "https://cwe.mitre.org/data/published/cwe_v4.13.pdf",
+					"isComprehensive": true,
+					"language": "en",
+					"minimumRequiredLocalizedDataSemanticVersion": "4.13",
+					"organization": "MITRE",
+					"releaseDateUtc": "2023-10-26",
+					"taxa": [
+						{
+							"guid": "64f01d0a-ff34-4583-b387-b1ebfb5ab24b",
+							"id": "1357",
+							"shortDescription": {
+								"text": "The product is built from multiple separate components, but it uses a component that is not sufficiently trusted to meet expectations for security, reliability, updateability, and maintainability."
+							},
+							"fullDescription": {
+								"text": "Many modern hardware and software products are built by combining multiple smaller components together into one larger entity, often during the design or architecture phase. For example, a hardware component might be built by a separate supplier, or the product might use an open-source software library from a third party. Regardless of the source, each component should be sufficiently trusted to ensure correct, secure operation of the product. If a component is not trustworthy, it can produce significant risks for the overall product, such as vulnerabilities that cannot be patched fast enough (if at all); hidden functionality such as malware; inability to update or replace the component if needed for security purposes; hardware components built from parts that do not meet specifications in ways that can lead to weaknesses; etc. Note that a component might not be trustworthy even if it is owned by the product vendor, such as a software component whose source code is lost and was built by developers who left the company, or a component that was developed by a separate company that was acquired and brought into the product's own company. Note that there can be disagreement as to whether a component is sufficiently trustworthy, since trust is ultimately subjective. Different stakeholders (e.g., customers, vendors, governments) have various threat models and ways to assess trust, and design/architecture choices might make tradeoffs between security, reliability, safety, privacy, cost, and other characteristics."
+							},
+							"helpUri": "https://cwe.mitre.org/data/definitions/1357.html"
+						},
+						{
+							"guid": "603fbabb-6462-4ed2-99cc-e6f4bca213c9",
+							"id": "319",
+							"shortDescription": {
+								"text": "The product transmits sensitive or security-critical data in cleartext in a communication channel that can be sniffed by unauthorized actors."
+							},
+							"fullDescription": {
+								"text": "Many communication channels can be sniffed (monitored) by adversaries during data transmission. For example, in networking, packets can traverse many intermediary nodes from the source to the destination, whether across the internet, an internal network, the cloud, etc. Some actors might have privileged access to a network interface or any link along the channel, such as a router, but they might not be authorized to collect the underlying data. As a result, network traffic could be sniffed by adversaries, spilling security-critical data. Applicable communication channels are not limited to software products. Applicable channels include hardware-specific technologies such as internal hardware networks and external debug channels, supporting remote JTAG debugging. When mitigations are not applied to combat adversaries within the product's threat model, this weakness significantly lowers the difficulty of exploitation by such adversaries. When full communications are recorded or logged, such as with a packet dump, an adversary could attempt to obtain the dump long after the transmission has occurred and try to sniff the cleartext from the recorded communications in the dump itself. Even if the information is encoded in a way that is not human-readable, certain techniques could determine which encoding is being used, then decode the information."
+							},
+							"helpUri": "https://cwe.mitre.org/data/definitions/319.html"
+						},
+						{
+							"guid": "b6196058-90e8-432f-91f7-32ca40cab541",
+							"id": "532",
+							"shortDescription": {
+								"text": "Information written to log files can be of a sensitive nature and give valuable guidance to an attacker or expose sensitive user information."
+							},
+							"fullDescription": {
+								"text": "While logging all information may be helpful during development stages, it is important that logging levels be set appropriately before a product ships so that sensitive user data and system information are not accidentally exposed to potential attackers. Different log files may be produced and stored for: Server log files (e.g. server.log). This can give information on whatever application left the file. Usually this can give full path names and system information, and sometimes usernames and passwords. log files that are used for debugging"
+							},
+							"helpUri": "https://cwe.mitre.org/data/definitions/532.html"
+						},
+						{
+							"guid": "4df6b0d6-48e8-4408-a904-a7df92ae2b8e",
+							"id": "829",
+							"shortDescription": {
+								"text": "The product imports, requires, or includes executable functionality (such as a library) from a source that is outside of the intended control sphere."
+							},
+							"fullDescription": {
+								"text": "When including third-party functionality, such as a web widget, library, or other source of functionality, the product must effectively trust that functionality. Without sufficient protection mechanisms, the functionality could be malicious in nature (either by coming from an untrusted source, being spoofed, or being modified in transit from a trusted source). The functionality might also contain its own weaknesses, or grant access to additional functionality and state information that should be kept private to the base system, such as system state information, sensitive application data, or the DOM of a web application. This might lead to many different consequences depending on the included functionality, but some examples include injection of malware, information exposure by granting excessive privileges or permissions to the untrusted functionality, DOM-based XSS vulnerabilities, stealing user's cookies, or open redirect to malware (CWE-601)."
+							},
+							"helpUri": "https://cwe.mitre.org/data/definitions/829.html"
+						},
+						{
+							"guid": "4ddb885a-0b4e-4c2c-80db-085195a5d6ec",
+							"id": "732",
+							"shortDescription": {
+								"text": "The product specifies permissions for a security-critical resource in a way that allows that resource to be read or modified by unintended actors."
+							},
+							"fullDescription": {
+								"text": "When a resource is given a permission setting that provides access to a wider range of actors than required, it could lead to the exposure of sensitive information, or the modification of that resource by unintended parties. This is especially dangerous when the resource is related to program configuration, execution, or sensitive user data. For example, consider a misconfigured storage account for the cloud that can be read or written by a public or anonymous user."
+							},
+							"helpUri": "https://cwe.mitre.org/data/definitions/732.html"
+						}
+					]
+				}
+			]
+		}
+	]
+}

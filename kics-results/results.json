@@ -1,0 +1,347 @@
+{
+	"kics_version": "v2.1.11",
+	"files_scanned": 34,
+	"lines_scanned": 3061,
+	"files_parsed": 33,
+	"lines_parsed": 2929,
+	"lines_ignored": 129,
+	"files_failed_to_scan": 0,
+	"queries_total": 355,
+	"queries_failed_to_execute": 0,
+	"queries_failed_to_compute_similarity_id": 0,
+	"scan_id": "console",
+	"severity_counters": {
+		"CRITICAL": 0,
+		"HIGH": 0,
+		"INFO": 1,
+		"LOW": 9,
+		"MEDIUM": 11,
+		"TRACE": 0
+	},
+	"total_counter": 21,
+	"total_bom_resources": 0,
+	"start": "2025-07-27T20:18:04.520396637Z",
+	"end": "2025-07-27T20:18:09.040964097Z",
+	"paths": [
+		"/path"
+	],
+	"queries": [
+		{
+			"query_name": "Apt Get Install Pin Version Not Defined",
+			"query_id": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+			"query_url": "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/",
+			"severity": "MEDIUM",
+			"platform": "Dockerfile",
+			"cwe": "1357",
+			"category": "Supply-Chain",
+			"experimental": false,
+			"description": "When installing a package, its pin version should be defined",
+			"description_id": "e0e1edad",
+			"files": [
+				{
+					"file_name": "../../path/molecule/default/Dockerfile",
+					"similarity_id": "995fa94d18a18477259b477f336604736498744e68ecef62c94de2f4bfa613d2",
+					"line": 3,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{${MOLECULE_IMAGE}}}.RUN={{apt-get update \u0026\u0026     apt-get install -y --no-install-recommends     python3     python3-pip     python3-apt     sudo     systemd     systemd-sysv     ca-certificates     \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "ca-certificates",
+					"expected_value": "Package 'ca-certificates' has version defined",
+					"actual_value": "Package 'ca-certificates' does not have version defined"
+				},
+				{
+					"file_name": "../../path/molecule/default/Dockerfile",
+					"similarity_id": "ada47f9e35934146919d9d3d01a20cf76059579ec81cc22aa520e6663b76e2ac",
+					"line": 3,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{${MOLECULE_IMAGE}}}.RUN={{apt-get update \u0026\u0026     apt-get install -y --no-install-recommends     python3     python3-pip     python3-apt     sudo     systemd     systemd-sysv     ca-certificates     \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "python3-pip",
+					"expected_value": "Package 'python3-pip' has version defined",
+					"actual_value": "Package 'python3-pip' does not have version defined"
+				},
+				{
+					"file_name": "../../path/molecule/default/Dockerfile",
+					"similarity_id": "3e4e9850331e92df3bfaa0a0ede6fa8cbd0062d6c46752d10067b0fc5e6c655f",
+					"line": 3,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{${MOLECULE_IMAGE}}}.RUN={{apt-get update \u0026\u0026     apt-get install -y --no-install-recommends     python3     python3-pip     python3-apt     sudo     systemd     systemd-sysv     ca-certificates     \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "sudo",
+					"expected_value": "Package 'sudo' has version defined",
+					"actual_value": "Package 'sudo' does not have version defined"
+				},
+				{
+					"file_name": "../../path/molecule/default/Dockerfile",
+					"similarity_id": "08a404d03eaa3139ba674e61739787f6ff0c06d7f32d7e56408cb32758861f6d",
+					"line": 3,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{${MOLECULE_IMAGE}}}.RUN={{apt-get update \u0026\u0026     apt-get install -y --no-install-recommends     python3     python3-pip     python3-apt     sudo     systemd     systemd-sysv     ca-certificates     \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "python3-apt",
+					"expected_value": "Package 'python3-apt' has version defined",
+					"actual_value": "Package 'python3-apt' does not have version defined"
+				},
+				{
+					"file_name": "../../path/molecule/default/Dockerfile",
+					"similarity_id": "5b73049cb123460c6b3e1a2f38bc48178a2e8b9590cac187d01c3704e47419eb",
+					"line": 3,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{${MOLECULE_IMAGE}}}.RUN={{apt-get update \u0026\u0026     apt-get install -y --no-install-recommends     python3     python3-pip     python3-apt     sudo     systemd     systemd-sysv     ca-certificates     \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "systemd-sysv",
+					"expected_value": "Package 'systemd-sysv' has version defined",
+					"actual_value": "Package 'systemd-sysv' does not have version defined"
+				},
+				{
+					"file_name": "../../path/molecule/default/Dockerfile",
+					"similarity_id": "e132f8cbcbf5a1fa18f32322b01205339206097667a1e782a2762e192193c4b4",
+					"line": 3,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{${MOLECULE_IMAGE}}}.RUN={{apt-get update \u0026\u0026     apt-get install -y --no-install-recommends     python3     python3-pip     python3-apt     sudo     systemd     systemd-sysv     ca-certificates     \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "python3",
+					"expected_value": "Package 'python3' has version defined",
+					"actual_value": "Package 'python3' does not have version defined"
+				},
+				{
+					"file_name": "../../path/molecule/default/Dockerfile",
+					"similarity_id": "966fcab663ea1d2c55a1f2afc95c26407edb2f2ccf90962d05e36336171e2456",
+					"line": 3,
+					"issue_type": "MissingAttribute",
+					"search_key": "FROM={{${MOLECULE_IMAGE}}}.RUN={{apt-get update \u0026\u0026     apt-get install -y --no-install-recommends     python3     python3-pip     python3-apt     sudo     systemd     systemd-sysv     ca-certificates     \u0026\u0026 rm -rf /var/lib/apt/lists/*}}",
+					"search_line": -1,
+					"search_value": "systemd",
+					"expected_value": "Package 'systemd' has version defined",
+					"actual_value": "Package 'systemd' does not have version defined"
+				}
+			]
+		},
+		{
+			"query_name": "Communication Over HTTP",
+			"query_id": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+			"query_url": "https://docs.ansible.com/ansible/latest/collections/ansible/builtin/uri_module.html#parameter-url",
+			"severity": "MEDIUM",
+			"platform": "Ansible",
+			"cwe": "319",
+			"cloud_provider": "COMMON",
+			"category": "Insecure Configurations",
+			"experimental": false,
+			"description": "Using HTTP URLs (without encryption) could lead to security vulnerabilities and risks",
+			"description_id": "04892b9b",
+			"files": [
+				{
+					"file_name": "../../path/playbooks/consul/service-register.yml",
+					"similarity_id": "169b4ba59ebed4a014d9b5c3880963d765f13a611f7179e317cf731beafe5da3",
+					"line": 43,
+					"resource_type": "ansible.builtin.uri",
+					"resource_name": "Query service from catalog",
+					"issue_type": "IncorrectValue",
+					"search_key": "name={{Query service from catalog}}.{{ansible.builtin.uri}}.url",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "ansible.builtin.uri.url should be accessed via the HTTPS protocol",
+					"actual_value": "ansible.builtin.uri.url is accessed via the HTTP protocol'"
+				},
+				{
+					"file_name": "../../path/playbooks/consul-nomad-integration.yml",
+					"similarity_id": "ce31fc1218361f7ea82fc26187d2b0a0be14f9404a5f022f3a4b82b10b314619",
+					"line": 44,
+					"resource_type": "ansible.builtin.uri",
+					"resource_name": "Test Consul API connectivity",
+					"issue_type": "IncorrectValue",
+					"search_key": "name={{Test Consul API connectivity}}.{{ansible.builtin.uri}}.url",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "ansible.builtin.uri.url should be accessed via the HTTPS protocol",
+					"actual_value": "ansible.builtin.uri.url is accessed via the HTTP protocol'"
+				},
+				{
+					"file_name": "../../path/playbooks/consul-nomad-integration.yml",
+					"similarity_id": "1450c5f59714c7d9e3eaef774b9a81f5121a1fac78a7f189e654f2577dbbe5dc",
+					"line": 180,
+					"resource_type": "ansible.builtin.uri",
+					"resource_name": "Query Consul for Nomad services",
+					"issue_type": "IncorrectValue",
+					"search_key": "name={{Query Consul for Nomad services}}.{{ansible.builtin.uri}}.url",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "ansible.builtin.uri.url should be accessed via the HTTPS protocol",
+					"actual_value": "ansible.builtin.uri.url is accessed via the HTTP protocol'"
+				},
+				{
+					"file_name": "../../path/playbooks/consul-nomad-integration.yml",
+					"similarity_id": "af2b77b5fd917ab4b9acfc9486213a65ee1127d6b63843903608183db8f12177",
+					"line": 192,
+					"resource_type": "ansible.builtin.uri",
+					"resource_name": "Get Nomad service details from Consul",
+					"issue_type": "IncorrectValue",
+					"search_key": "name={{Get Nomad service details from Consul}}.{{ansible.builtin.uri}}.url",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "ansible.builtin.uri.url should be accessed via the HTTPS protocol",
+					"actual_value": "ansible.builtin.uri.url is accessed via the HTTP protocol'"
+				}
+			]
+		},
+		{
+			"query_name": "Logging of Sensitive Data In Defaults",
+			"query_id": "c6473dae-8477-4119-88b7-b909b435ce7b",
+			"query_url": "https://docs.ansible.com/ansible/latest/reference_appendices/logging.html#protecting-sensitive-data-with-no-log",
+			"severity": "LOW",
+			"platform": "Ansible",
+			"cwe": "532",
+			"cloud_provider": "COMMON",
+			"category": "Best Practices",
+			"experimental": false,
+			"description": "To keep sensitive values out of logs, tasks that expose them need to be marked defining 'no_log' and setting to True",
+			"description_id": "0eca35f3",
+			"files": [
+				{
+					"file_name": "../../path/ansible.cfg",
+					"similarity_id": "88f433d5f6a38c60258e564cce4d85ccb01dfbc20eaf36d7bb5ab04837624d70",
+					"line": 1,
+					"resource_type": "n/a",
+					"resource_name": "n/a",
+					"issue_type": "IncorrectValue",
+					"search_key": "defaults",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "no_log should be defined and set to 'true'",
+					"actual_value": "no_log is not defined"
+				}
+			]
+		},
+		{
+			"query_name": "Unpinned Actions Full Length Commit SHA",
+			"query_id": "555ab8f9-2001-455e-a077-f2d0f41e2fb9",
+			"query_url": "https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions",
+			"severity": "LOW",
+			"platform": "CICD",
+			"cwe": "829",
+			"cloud_provider": "COMMON",
+			"category": "Supply-Chain",
+			"experimental": false,
+			"description": "Pinning an action to a full length commit SHA is currently the only way to use an action as an immutable release. Pinning to a particular SHA helps mitigate the risk of a bad actor adding a backdoor to the action's repository, as they would need to generate a SHA-1 collision for a valid Git object payload. When selecting a SHA, you should verify it is from the action's repository and not a repository fork.",
+			"description_id": "9cb8402d",
+			"files": [
+				{
+					"file_name": "../../path/.github/workflows/ci.yml",
+					"similarity_id": "2075c0d9da6223aaddab56300a6dc83940050d86906a555cc24fd432dad3211a",
+					"line": 19,
+					"issue_type": "IncorrectValue",
+					"search_key": "uses={{astral-sh/setup-uv@v3}}",
+					"search_line": 19,
+					"search_value": "",
+					"expected_value": "Action pinned to a full length commit SHA.",
+					"actual_value": "Action is not pinned to a full length commit SHA."
+				},
+				{
+					"file_name": "../../path/.github/workflows/release.yml",
+					"similarity_id": "3ff9ddd8f06da0200dcdac6e430afccec82efe0dc20c2e8579c65c6bf67f1f87",
+					"line": 39,
+					"issue_type": "IncorrectValue",
+					"search_key": "uses={{softprops/action-gh-release@v1}}",
+					"search_line": 39,
+					"search_value": "",
+					"expected_value": "Action pinned to a full length commit SHA.",
+					"actual_value": "Action is not pinned to a full length commit SHA."
+				},
+				{
+					"file_name": "../../path/.github/workflows/ci.yml",
+					"similarity_id": "4651c5b8b561af4f257e177d6a852a5841cad770e58068d30b3eca22e930c252",
+					"line": 101,
+					"issue_type": "IncorrectValue",
+					"search_key": "uses={{astral-sh/setup-uv@v3}}",
+					"search_line": 101,
+					"search_value": "",
+					"expected_value": "Action pinned to a full length commit SHA.",
+					"actual_value": "Action is not pinned to a full length commit SHA."
+				},
+				{
+					"file_name": "../../path/.github/workflows/security-scan.yml",
+					"similarity_id": "4228e19b69339049fefb3cf8be5c9514618d5e98945d791a6a7720ad0e1b23fb",
+					"line": 37,
+					"issue_type": "IncorrectValue",
+					"search_key": "uses={{github/codeql-action/upload-sarif@v3}}",
+					"search_line": 37,
+					"search_value": "",
+					"expected_value": "Action pinned to a full length commit SHA.",
+					"actual_value": "Action is not pinned to a full length commit SHA."
+				},
+				{
+					"file_name": "../../path/.github/workflows/ci.yml",
+					"similarity_id": "d7a7a02d1f0cf6cece09c978680de22262d86df30916201f1b803f20368e881a",
+					"line": 73,
+					"issue_type": "IncorrectValue",
+					"search_key": "uses={{astral-sh/setup-uv@v3}}",
+					"search_line": 73,
+					"search_value": "",
+					"expected_value": "Action pinned to a full length commit SHA.",
+					"actual_value": "Action is not pinned to a full length commit SHA."
+				},
+				{
+					"file_name": "../../path/.github/workflows/ci.yml",
+					"similarity_id": "c580eee365700415f82c2355659ceadaa42e2626f852bbd7bcfa2e5c8d148586",
+					"line": 155,
+					"issue_type": "IncorrectValue",
+					"search_key": "uses={{astral-sh/setup-uv@v3}}",
+					"search_line": 155,
+					"search_value": "",
+					"expected_value": "Action pinned to a full length commit SHA.",
+					"actual_value": "Action is not pinned to a full length commit SHA."
+				},
+				{
+					"file_name": "../../path/.github/workflows/ci.yml",
+					"similarity_id": "6574c6f13bbeb7bb32617f03bcaa9e2b930a9fb82202f8f6fc244cdcab550383",
+					"line": 138,
+					"issue_type": "IncorrectValue",
+					"search_key": "uses={{github/codeql-action/upload-sarif@v3}}",
+					"search_line": 138,
+					"search_value": "",
+					"expected_value": "Action pinned to a full length commit SHA.",
+					"actual_value": "Action is not pinned to a full length commit SHA."
+				},
+				{
+					"file_name": "../../path/.github/workflows/ci.yml",
+					"similarity_id": "1c381fa148a38ca04c6e9c902e4a1f2c8bd0a3519830b16e242c865d7ddf694a",
+					"line": 130,
+					"issue_type": "IncorrectValue",
+					"search_key": "uses={{aquasecurity/trivy-action@master}}",
+					"search_line": 130,
+					"search_value": "",
+					"expected_value": "Action pinned to a full length commit SHA.",
+					"actual_value": "Action is not pinned to a full length commit SHA."
+				}
+			]
+		},
+		{
+			"query_name": "Risky File Permissions",
+			"query_id": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+			"query_url": "https://ansible.readthedocs.io/projects/lint/rules/risky-file-permissions/",
+			"severity": "INFO",
+			"platform": "Ansible",
+			"cwe": "732",
+			"cloud_provider": "COMMON",
+			"category": "Supply-Chain",
+			"experimental": false,
+			"description": "Some modules could end up creating new files on disk with permissions that might be too open or unpredictable",
+			"description_id": "1f0e1485",
+			"files": [
+				{
+					"file_name": "../../path/playbooks/enable-consul-nomad-simple.yml",
+					"similarity_id": "ee9d441593c5c6baa2c05aa8893e8c71651067ee86d75db576cc1c6d97155a8b",
+					"line": 13,
+					"resource_type": "ansible.builtin.copy",
+					"resource_name": "Backup Nomad configuration",
+					"issue_type": "MissingAttribute",
+					"search_key": "name={{Backup Nomad configuration}}.{{ansible.builtin.copy}}",
+					"search_line": -1,
+					"search_value": "",
+					"expected_value": "All the permissions set in ansible.builtin.copy about creating files/directories",
+					"actual_value": "There are some permissions missing in ansible.builtin.copy and might create directory/file"
+				}
+			]
+		}
+	]
+}
