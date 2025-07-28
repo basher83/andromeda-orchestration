@@ -1,2 +1,2 @@
 ---
-ansible_host: nomad-client-2.lab.spaceships.work
+ansible_host: 192.168.10.21
