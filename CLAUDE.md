@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a NetBox-focused Ansible automation project that integrates NetBox as a source of truth for network
 infrastructure management. The project uses containerized Ansible execution environments, dynamic inventory management,
-and secure credential management through 1Password.
+and secure credential management through Infisical.
 
 **Current Focus**: Implementing a comprehensive DNS & IPAM overhaul to transition from ad-hoc DNS management to a
 service-aware infrastructure using Consul, PowerDNS, and NetBox. See `docs/dns-ipam-implementation-plan.md` for the
@@ -14,13 +14,13 @@ detailed implementation roadmap.
 
 ## Commands
 
-### Running Playbooks with 1Password Integration
+### Running Playbooks with Infisical
 
 ```bash
-# Using the wrapper script (recommended - handles credential retrieval)
-./bin/ansible-connect playbook playbooks/site.yml
+# Run playbooks using uv with Infisical secrets
+uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
 
-# Direct ansible-navigator usage
+# Direct ansible-navigator usage (optional)
 ansible-navigator run <playbook.yml> \
   --execution-environment-image ghcr.io/ansible-community/community-ee-minimal:latest --mode stdout
 ```
@@ -32,21 +32,21 @@ ansible-navigator run <playbook.yml> \
 uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
 uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --list
 
-# Test inventory with 1Password (legacy)
-./bin/ansible-connect inventory -i inventory/og-homelab/1password.proxmox.yml --list
-./bin/ansible-connect inventory -i inventory/doggos-homelab/1password.proxmox.yml --list
-
 # Graph inventory structure
 uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --graph
+
+# Test inventory with 1Password (deprecated - for migration only)
+# Use ansible-connect wrapper only if still migrating from 1Password
+# ./bin/ansible-connect inventory -i inventory/og-homelab/1password.proxmox.yml --list
 ```
 
 ### Running Assessment Playbooks
 
 ```bash
 # Infrastructure assessment playbooks (Phase 0)
-./bin/ansible-connect playbook playbooks/assessment/consul-health-check.yml
-./bin/ansible-connect playbook playbooks/assessment/dns-ipam-audit.yml
-./bin/ansible-connect playbook playbooks/assessment/infrastructure-readiness.yml
+uv run ansible-playbook playbooks/assessment/consul-health-check.yml -i inventory/og-homelab/infisical.proxmox.yml
+uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml -i inventory/og-homelab/infisical.proxmox.yml
+uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inventory/og-homelab/infisical.proxmox.yml
 ```
 
 ## Architecture
@@ -62,7 +62,7 @@ uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --gra
     - `1password.proxmox.yml` - Uses 1Password for secrets (legacy)
 - **In Progress**: DNS & IPAM infrastructure deployment (see `docs/dns-ipam-implementation-plan.md`)
 - **Planned**: NetBox dynamic inventory integration (see `docs/netbox.md` for patterns)
-- **Authentication**: 
+- **Authentication**:
   - Infisical: Machine identity credentials via environment variables
   - 1Password: API tokens via Connect server (legacy)
 
@@ -75,18 +75,21 @@ uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --gra
 ### Documentation Structure
 
 - `docs/dns-ipam-implementation-plan.md`: Master plan for DNS & IPAM overhaul:
+
   - 5-phase implementation approach
   - Detailed task checklists
   - Risk assessments and mitigation strategies
   - Success criteria for each phase
 
 - `docs/netbox.md`: Comprehensive NetBox integration patterns including:
+
   - Dynamic inventory configuration
   - State management with NetBox modules
   - Runtime data queries with `netbox.netbox.nb_lookup`
   - Event-driven automation patterns
 
 - `docs/infisical-setup-and-migration.md`: Infisical secrets management guide:
+
   - Accurate explanation of projects, environments, folders, and secrets
   - Current state with secrets at `/apollo-13/`
   - Migration plan to organized folder structure
@@ -101,11 +104,13 @@ uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --gra
 ### Key Integration Patterns
 
 1. **NetBox as Source of Truth**
+
    - All network device information should be queried from NetBox
    - Device configurations should be generated based on NetBox data
    - State changes should be reflected back in NetBox
 
 2. **Dynamic Inventory Grouping**
+
    - Devices grouped by NetBox attributes (site, role, platform, tags)
    - Custom grouping via `keyed_groups` and `compose` directives
    - Ansible variables composed from NetBox custom fields
@@ -137,7 +142,7 @@ uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --gra
 
 - The project is actively implementing DNS & IPAM infrastructure changes
 - Follow the implementation plan in `docs/dns-ipam-implementation-plan.md`
-- Always source environment variables before running commands: `source ./scripts/set-1password-env.sh`
+- Ensure Infisical environment variables are set before running commands (see `docs/infisical-setup-and-migration.md`)
 - Use the execution environment for consistency across different systems
 - Always test inventory plugins with `ansible-inventory` before running playbooks
 - NetBox integration should follow the patterns in `docs/netbox.md`
@@ -145,3 +150,32 @@ uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --gra
 ## Recommended Tools
 
 - For enhanced searching via bash commands use eza, fd, and rg
+
+## Working with Specialized Agents
+
+When working on tasks in this project, follow these guidelines:
+
+### 1. Always Check for Specialized Agents First
+
+Before starting any task, review available agents to see if one matches the work:
+
+- **docs-agent**: Documentation updates, markdown fixes, doc organization
+- **netbox-integration-engineer**: NetBox modules, lookups, source-of-truth patterns
+- **ansible-playbook-developer**: Creating/testing playbooks, especially for NetBox/DNS/IPAM
+- **task-master**: Project management, task tracking, priority evaluation
+- **git-commit-organizer**: Creating clean commits from workspace changes
+- **infrastructure-assessment-analyst**: Pre-implementation assessments and audits
+
+### 2. Use Specialized Agents Proactively
+
+Don't wait to be asked - if a task matches an agent's description, use it immediately. The agents are designed to handle specific domains more effectively than general-purpose approaches.
+
+### 3. Avoid Defaulting to Direct Implementation
+
+Resist the urge to jump straight into implementation. Take a moment to:
+
+- Consider which agent best fits the task
+- Use the agent's specialized knowledge and patterns
+- Let agents handle their domains of expertise
+
+This approach ensures better quality, consistency, and adherence to project patterns.
