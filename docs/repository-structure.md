@@ -6,7 +6,7 @@ This document provides a detailed explanation of the repository organization and
 
 ```text
 netbox-ansible/
-├── bin/                        # Executable wrapper scripts
+├── bin/                        # (Archived - see docs/archive/bin/)
 ├── docs/                       # Documentation
 │   └── archive/               # Original documentation files
 ├── inventory/                  # Ansible inventories
@@ -31,17 +31,16 @@ netbox-ansible/
 - **CLAUDE.md** - AI assistant guidance for code changes
 - **.gitignore** - Git ignore patterns for secrets and temp files
 
-### `/bin/`
+### `/bin/` (Archived)
 
-- **ansible-connect** - Universal wrapper script that:
-  - Fetches credentials from 1Password Connect
-  - Sets up environment variables
-  - Handles all ansible commands (playbook, inventory, etc.)
-  - Works around macOS-specific issues
+This directory has been archived to `docs/archive/bin/` as it contained only deprecated scripts:
+- **ansible-connect** - Legacy 1Password wrapper replaced by direct `uv run` commands with Infisical
 
 ### `/docs/`
 
-- **1password-integration.md** - Complete guide for 1Password setup
+- **infisical-setup-and-migration.md** - Primary secrets management guide (Infisical)
+- **1password-integration.md** - Legacy 1Password setup (deprecated)
+- **secrets-management-comparison.md** - Comparison of 1Password vs Infisical
 - **troubleshooting.md** - Common issues and solutions
 - **repository-structure.md** - This file
 - **archive/** - Original documentation preserved for reference
@@ -50,7 +49,12 @@ netbox-ansible/
 
 Organized by environment:
 
-- **og-homelab/proxmox.yml** - Proxmox dynamic inventory configuration
+- **og-homelab/**
+  - `infisical.proxmox.yml` - Proxmox dynamic inventory with Infisical (recommended)
+  - `1password.proxmox.yml` - Proxmox dynamic inventory with 1Password (deprecated)
+- **doggos-homelab/**
+  - `infisical.proxmox.yml` - Proxmox dynamic inventory with Infisical (recommended)
+  - `1password.proxmox.yml` - Proxmox dynamic inventory with 1Password (deprecated)
 
 ### `/playbooks/`
 
@@ -65,9 +69,10 @@ Organized by environment:
 
 ### `/scripts/`
 
-- **get-secret-from-connect.py** - Python script to fetch secrets from Connect
-- **set-1password-env.sh** - Environment configuration (gitignored)
-- **set-1password-env.sh.example** - Template for environment setup
+- **setup.sh** - Quick setup script for new users
+- **get-secret-from-connect.py** - Legacy 1Password Connect script (deprecated)
+- **set-1password-env.sh** - Legacy 1Password environment config (deprecated)
+- **set-1password-env.sh.example** - Legacy template (deprecated)
 
 ### `/tests/`
 
@@ -80,33 +85,45 @@ Organized by environment:
 1. Set up environment:
 
    ```bash
-   cp scripts/set-1password-env.sh.example scripts/set-1password-env.sh
-   # Edit with your values
+   # Install uv and set up Python environment
+   ./scripts/setup.sh
+   
+   # Configure Infisical machine identity
+   export INFISICAL_MACHINE_IDENTITY_CLIENT_ID="your-client-id"
+   export INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET="your-client-secret"
    ```
 
-2. Run commands through wrapper:
+2. Run commands with uv:
 
    ```bash
-   ./bin/ansible-connect playbook playbooks/site.yml
-   ./bin/ansible-connect inventory -i inventory/og-homelab/proxmox.yml --list
+   # Use Infisical inventory files (recommended)
+   uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
+   uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
+   
+   # Legacy 1Password method (deprecated - script archived)
+   # ./bin/ansible-connect playbook playbooks/site.yml
    ```
 
 ### Direct Ansible Usage
 
-If you prefer not to use the wrapper:
+For direct ansible commands without uv:
 
 ```bash
-source scripts/set-1password-env.sh
-export PROXMOX_TOKEN_SECRET=$(scripts/get-secret-from-connect.py "Item Name" "field")
-ansible-playbook playbooks/site.yml
+# Set up Infisical credentials
+export INFISICAL_MACHINE_IDENTITY_CLIENT_ID="your-client-id"
+export INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET="your-client-secret"
+
+# Run ansible directly
+ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
 ```
 
 ## Security Considerations
 
-- Never commit `scripts/set-1password-env.sh`
-- All secrets should be in 1Password
-- Use the wrapper script to avoid credential exposure
+- Never commit Infisical machine identity credentials
+- All secrets should be stored in Infisical
+- Use environment variables for authentication
 - Review `.gitignore` regularly
+- Legacy 1Password files should not be used for new implementations
 
 ## Future Enhancements
 

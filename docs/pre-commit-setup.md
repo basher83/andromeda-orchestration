@@ -49,10 +49,13 @@ Due to compatibility issues, these tools are run via task commands instead of pr
 **Issue**: Module import errors in pre-commit environment
 **Run via**: `task lint:ansible` or `uv run ansible-lint`
 
-### 2. Detect Secrets
+### 2. Security Scanning
 
-**Issue**: Version conflicts between baseline and pre-commit
-**Run via**: `task security` or `uv run detect-secrets`
+**Issue**: Integration complexity with Infisical CLI and KICS Docker containers
+**Run via**: `task security` (runs both Infisical secrets scan and KICS infrastructure scan)
+
+- **Infisical secrets detection**: `task security:secrets`
+- **KICS infrastructure scan**: `task security:kics`
 
 ## Recommended Workflow
 

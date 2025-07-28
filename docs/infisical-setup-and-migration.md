@@ -245,16 +245,19 @@ Project: netbox-ansible-homelab
 
 Secrets have been organized into folders and replicated across environments:
 
-| Secret Name                  | Location                            | Environments      | Status | Notes                   |
-| ---------------------------- | ----------------------------------- | ----------------- | ------ | ----------------------- |
-| ANSIBLE_TOKEN_ID             | /apollo-13/proxmox/                 | dev, prod, staging| ✅     | Shared between clusters |
-| ANSIBLE_USERNAME             | /apollo-13/proxmox/                 | dev, prod, staging| ✅     | Shared between clusters |
-| ANSIBLE_TOKEN_SECRET_OG      | /apollo-13/proxmox/og-homelab/      | dev, prod, staging| ✅     | Cluster-specific        |
-| ANSIBLE_TOKEN_SECRET_DOGGOS  | /apollo-13/proxmox/doggos-homelab/  | dev, prod, staging| ✅     | Cluster-specific        |
-| CONSUL_MASTER_TOKEN          | /apollo-13/consul/                  | dev, prod, staging| ✅     | Kept original name      |
-| API_URL (og-homelab)         | -                                   | -                 | ❌     | Need to add             |
-| API_URL (doggos-homelab)     | -                                   | -                 | ❌     | Need to add             |
-| NOMAD tokens                 | -                                   | -                 | ❌     | Need to create folder   |
+| Secret Name                 | Location                           | Environments       | Status | Notes                   |
+| --------------------------- | ---------------------------------- | ------------------ | ------ | ----------------------- |
+| ANSIBLE_TOKEN_ID            | /apollo-13/proxmox/                | dev, prod, staging | ✅     | Shared between clusters |
+| ANSIBLE_USERNAME            | /apollo-13/proxmox/                | dev, prod, staging | ✅     | Shared between clusters |
+| ANSIBLE_TOKEN_SECRET_OG     | /apollo-13/proxmox/og-homelab/     | dev, prod, staging | ✅     | Cluster-specific        |
+| ANSIBLE_TOKEN_SECRET_DOGGOS | /apollo-13/proxmox/doggos-homelab/ | dev, prod, staging | ✅     | Cluster-specific        |
+| CONSUL_MASTER_TOKEN         | /apollo-13/consul/                 | dev, prod, staging | ✅     | Kept original name      |
+| API_URL (og-homelab)        | /apollo-13/proxmox/og-homelab/     | dev, prod, staging | ✅     | Cluster-specific        |
+| API_URL (doggos-homelab)    | /apollo-13/proxmox/doggos-homelab/ | dev, prod, staging | ✅     | Cluster-specific        |
+| NOMAD tokens                | /apollo-13/nomad/                  | dev, prod, staging | ✅     | Created folder          |
+| NETBOX_USERNAME             | /services/netbox/                  | dev, prod, staging | ✅     | Created folder          |
+| NETBOX_API_KEY              | /services/netbox/                  | dev, prod, staging | ✅     | Created folder          |
+| POWERDNS_API_KEY            | /services/powerdns/                | dev, prod, staging | ❌     | Need to add             |
 
 ### Phase 3: Update Ansible Code (IN PROGRESS)
 
@@ -263,7 +266,14 @@ Update inventory files to use the new organized folder structure:
 ```yaml
 # inventory/doggos-homelab/infisical.proxmox.yml
 plugin: community.general.proxmox
-api_host: "{{ proxmox_api_host }}"
+api_host: >-
+  {{ (lookup('infisical.vault.read_secrets',
+             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+             env_slug='prod',
+             path='/apollo-13/proxmox/doggos-homelab',
+             secret_name='API_URL')).value }}
 api_user: >-
   {{ (lookup('infisical.vault.read_secrets',
              universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
@@ -398,6 +408,7 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 ## Migration Checklist
 
 ### ✅ Completed
+
 - [x] Create folder structure in Infisical UI/API
 - [x] Organize secrets into folders (keeping original names):
   - [x] Proxmox shared credentials in `/apollo-13/proxmox/`
@@ -407,6 +418,7 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 - [x] Create `/services/` structure with netbox and powerdns folders
 
 ### 🔄 In Progress
+
 - [ ] Update inventory files with new paths
   - [ ] `inventory/og-homelab/infisical.proxmox.yml`
   - [ ] `inventory/doggos-homelab/infisical.proxmox.yml`
@@ -416,11 +428,12 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
   - [ ] Infrastructure playbooks
 
 ### 📋 To Do
-- [ ] Add missing secrets:
-  - [ ] API_URL for each Proxmox cluster (in all environments)
-  - [ ] Create `/apollo-13/nomad/` folder and add MANAGEMENT_TOKEN
-- [ ] Add service secrets:
-  - [ ] NetBox API credentials in `/services/netbox/`
+
+- [x] Add missing secrets:
+  - [x] API_URL for each Proxmox cluster (in all environments)
+  - [x] Create `/apollo-13/nomad/` folder and add MANAGEMENT_TOKEN
+- [x] Add service secrets:
+  - [x] NetBox API credentials in `/services/netbox/`
   - [ ] PowerDNS credentials in `/services/powerdns/`
 - [ ] Test inventory connections with new paths
 - [ ] Implement environment-aware lookups
@@ -740,3 +753,51 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
    - Educate team on secure coding practices
    - Regular security awareness sessions
    - Share scanning reports and trends
+
+## KICS Infrastructure Security Integration
+
+In addition to Infisical secrets scanning, this project integrates KICS (Keeping Infrastructure as Code Secure) for infrastructure security scanning.
+
+### KICS Configuration
+
+- **Configuration file**: `kics.config` (YAML format)
+- **Exclusions**: Configured to skip test containers and documentation
+- **Output**: JSON and SARIF formats in `kics-results/` directory
+
+### Running KICS Scans
+
+```bash
+# Run KICS infrastructure scan
+task security:kics
+
+# Run combined security scans (Infisical + KICS)
+task security
+
+# Manual Docker command (if needed)
+docker run -t -v "$(pwd)":/path checkmarx/kics scan \
+  -p /path \
+  --output-path /path/kics-results \
+  --output-name results \
+  --report-formats json,sarif
+```
+
+### KICS Results
+
+Scan results are saved to:
+- `kics-results/results.json` - JSON format for programmatic analysis
+- `kics-results/results.sarif` - SARIF format for IDE/CI integration
+
+### Integration with Taskfile
+
+The `Taskfile.yml` includes:
+- `task security:secrets` - Infisical secrets scanning
+- `task security:kics` - KICS infrastructure scanning
+- `task security` - Combined security scanning
+
+## Related Documentation
+
+- [Secrets Management Comparison](secrets-management-comparison.md) - Detailed comparison of 1Password vs Infisical
+- [1Password Integration (Archived)](archive/1password-integration.md) - Legacy secret management (being replaced)
+- [DNS & IPAM Implementation Plan](dns-ipam-implementation-plan.md) - Uses Infisical for infrastructure secrets
+- [NetBox Integration](netbox.md) - NetBox API tokens managed via Infisical
+- [Troubleshooting Guide](troubleshooting.md) - Secret lookup troubleshooting

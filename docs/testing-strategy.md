@@ -189,11 +189,15 @@ uv run ansible-galaxy collection install -r requirements.yml
    uv run pytest tests/
    ```
 
-3. **Check secrets**:
+3. **Run security scans**:
 
    ```bash
-   # Detect secrets
-   uv run detect-secrets scan --baseline .secrets.baseline
+   # Run all security scans (Infisical + KICS)
+   task security
+   
+   # Or run individually
+   task security:secrets  # Infisical secrets detection
+   task security:kics     # Infrastructure security scan
    ```
 
 ### Writing Tests
@@ -290,17 +294,41 @@ def test_invalid_credentials():
 
 ## Security Testing
 
-1. **Secret Detection**:
+1. **Secrets Detection with Infisical**:
 
    ```bash
-   # Initial baseline
-   uv run detect-secrets scan > .secrets.baseline
-
-   # Audit baseline
-   uv run detect-secrets audit .secrets.baseline
+   # Run full repository scan
+   task security:secrets
+   
+   # Or use Infisical CLI directly
+   ./scripts/scan-secrets.sh full
+   
+   # Scan only staged files (pre-commit)
+   ./scripts/scan-secrets.sh staged
+   
+   # CI mode with SARIF output
+   ./scripts/scan-secrets.sh ci
    ```
 
-2. **Dependency Scanning**:
+2. **Infrastructure Security with KICS**:
+
+   ```bash
+   # Run KICS infrastructure scan
+   task security:kics
+   
+   # Results saved to kics-results/ directory
+   # - results.json (JSON format)
+   # - results.sarif (SARIF format)
+   ```
+
+3. **Combined Security Scanning**:
+
+   ```bash
+   # Run all security scans
+   task security
+   ```
+
+4. **Dependency Scanning**:
 
    ```bash
    # With pip-audit

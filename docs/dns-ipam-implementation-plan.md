@@ -17,7 +17,7 @@ This implementation follows a phased approach designed to:
 ### Known Infrastructure
 
 - **Proxmox Clusters**:
-  - og-homelab (established)
+  - og-homelab (2 nodes: proxmoxt430, pve1)
   - doggos-homelab (3 nodes: lloyd, holly, mable)
 - **Nomad**: Running on doggos-homelab with 3 servers and 3 clients
 - **Consul**: Deployed (state unknown - requires assessment)
@@ -33,7 +33,7 @@ This implementation follows a phased approach designed to:
 
 ## Implementation Phases
 
-### Phase 0: Infrastructure Assessment 🔍
+### Phase 0: Infrastructure Assessment
 
 **Duration**: 1-2 weeks
 **Risk Level**: None (read-only operations)
@@ -73,7 +73,7 @@ This implementation follows a phased approach designed to:
 
 ---
 
-### Phase 1: Consul Foundation 🏗️
+### Phase 1: Consul Foundation
 
 **Duration**: 2-3 weeks
 **Risk Level**: Low
@@ -82,6 +82,7 @@ This implementation follows a phased approach designed to:
 #### 1.1 Consul DNS Configuration
 
 - [ ] Create `playbooks/consul/configure-dns.yml`
+
   - Configure Consul DNS on all nodes
   - Set up systemd-resolved or dnsmasq forwarding
   - Implement `.consul` domain resolution
@@ -95,6 +96,7 @@ This implementation follows a phased approach designed to:
 #### 1.2 Service Registration Framework
 
 - [ ] Create `roles/consul_service/`
+
   - Develop reusable Ansible role for service registration
   - Support for health checks and metadata
   - Templates for common service patterns
@@ -119,7 +121,7 @@ This implementation follows a phased approach designed to:
 
 ---
 
-### Phase 2: PowerDNS Deployment 🚀
+### Phase 2: PowerDNS Deployment
 
 **Duration**: 2-3 weeks
 **Risk Level**: Low-Medium
@@ -128,6 +130,7 @@ This implementation follows a phased approach designed to:
 #### 2.1 Pre-deployment Planning
 
 - [ ] Create `nomad-jobs/powerdns/powerdns.nomad.hcl`
+
   - Multi-instance job specification
   - MariaDB backend configuration
   - Persistent volume setup
@@ -141,6 +144,7 @@ This implementation follows a phased approach designed to:
 #### 2.2 Deployment and Configuration
 
 - [ ] Create `playbooks/powerdns/deploy.yml`
+
   - Deploy PowerDNS via Nomad
   - Initialize database schema
   - Configure API access
@@ -168,7 +172,7 @@ This implementation follows a phased approach designed to:
 
 ---
 
-### Phase 3: NetBox Integration 🔌
+### Phase 3: NetBox Integration
 
 **Duration**: 3-4 weeks
 **Risk Level**: Medium
@@ -177,6 +181,7 @@ This implementation follows a phased approach designed to:
 #### 3.1 NetBox Deployment
 
 - [ ] Create `nomad-jobs/netbox/netbox.nomad.hcl`
+
   - NetBox application job
   - PostgreSQL database job
   - Redis cache job
@@ -191,6 +196,7 @@ This implementation follows a phased approach designed to:
 #### 3.2 Data Migration
 
 - [ ] Create `scripts/dns-ipam-export.py`
+
   - Export current DNS records
   - Export IP allocations
   - Generate NetBox-compatible format
@@ -204,6 +210,7 @@ This implementation follows a phased approach designed to:
 #### 3.3 PowerDNS Synchronization
 
 - [ ] Create `scripts/netbox-powerdns-sync.py`
+
   - NetBox webhook receiver
   - PowerDNS API integration
   - Change validation logic
@@ -224,7 +231,7 @@ This implementation follows a phased approach designed to:
 
 ---
 
-### Phase 4: DNS Cutover 🔄
+### Phase 4: DNS Cutover
 
 **Duration**: 2-3 weeks
 **Risk Level**: High
@@ -241,6 +248,7 @@ This implementation follows a phased approach designed to:
 #### 4.2 Gradual Migration
 
 - [ ] Create `playbooks/cutover/migrate-dns.yml`
+
   - Configure Pi-hole forwarding
   - Update DHCP DNS servers
   - Monitor query patterns
@@ -269,7 +277,7 @@ This implementation follows a phased approach designed to:
 
 ---
 
-### Phase 5: Production Hardening 🛡️
+### Phase 5: Production Hardening
 
 **Duration**: 3-4 weeks
 **Risk Level**: Low
@@ -286,6 +294,7 @@ This implementation follows a phased approach designed to:
 #### 5.2 Security Hardening
 
 - [ ] Create `playbooks/security/harden-dns.yml`
+
   - Implement DNSSEC
   - Configure API authentication
   - Set up query ACLs
@@ -300,6 +309,7 @@ This implementation follows a phased approach designed to:
 #### 5.3 Monitoring and Observability
 
 - [ ] Create `nomad-jobs/monitoring/dns-monitoring.nomad.hcl`
+
   - Prometheus exporters
   - Grafana dashboards
   - Alert rules
@@ -443,7 +453,15 @@ Each phase has detailed checklists above. Additionally:
 3. Begin Phase 0 assessment playbooks
 4. Schedule regular review meetings
 
+## Related Documentation
+
+- [Project Task List](project-task-list.md) - Complete task tracking for all implementation phases
+- [NetBox Integration Patterns](netbox.md) - Detailed NetBox automation guidance
+- [Infisical Setup and Migration](infisical-setup-and-migration.md) - Secret management configuration
+- [Infrastructure Assessment Reports](../reports/assessment/) - Phase 0 assessment results
+- [Troubleshooting Guide](troubleshooting.md) - Common issues and solutions
+
 ---
 
-*Last Updated: [Current Date]*
-*Version: 1.0*
+_Last Updated: [Current Date]_
+_Version: 1.0_
