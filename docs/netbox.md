@@ -639,3 +639,11 @@ ansible-playbook -i netbox_inv.yml playbook.yml -vvv
 This comprehensive guide covers the essential patterns for integrating Ansible with NetBox, from basic dynamic inventory
 to advanced automation workflows. The examples are based on real implementations from the NetBox learning repository and
 demonstrate production-ready patterns for network automation.
+
+## Related Documentation
+
+- [DNS & IPAM Implementation Plan](dns-ipam-implementation-plan.md) - Master plan using NetBox as source of truth
+- [Project Task List](project-task-list.md) - NetBox integration tasks and progress
+- [Infisical Setup and Migration](infisical-setup-and-migration.md) - Secret management for NetBox API tokens
+- [Troubleshooting Guide](troubleshooting.md) - General troubleshooting including API connectivity
+- [Testing Strategy](testing-strategy.md) - Testing approaches for NetBox automation
