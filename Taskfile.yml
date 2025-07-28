@@ -74,14 +74,29 @@ tasks:
       fi
 
   security:
-    desc: Run security scans
+    desc: Run all security scans
+    cmds:
+      - task: security:secrets
+      - task: security:kics
+
+  security:secrets:
+    desc: Run Infisical secrets detection scan
     cmd: |
-      if [ -f .secrets.baseline ]; then
-        uv run detect-secrets scan --baseline .secrets.baseline
-      else
-        echo "Creating secrets baseline..."
-        uv run detect-secrets scan > .secrets.baseline
-      fi
+      echo "Running Infisical secrets scan..."
+      ./scripts/scan-secrets.sh full
+      echo "Infisical secrets scan complete!"
+
+  security:kics:
+    desc: Run KICS infrastructure security scan
+    cmd: |
+      echo "Running KICS security scan..."
+      mkdir -p kics-results
+      docker run -t -v "$(pwd)":/path checkmarx/kics scan \
+        -p /path \
+        --output-path /path/kics-results \
+        --output-name results \
+        --report-formats json,sarif
+      echo "KICS scan complete! Results saved to kics-results/"
 
   hooks:
     desc: Run all pre-commit hooks

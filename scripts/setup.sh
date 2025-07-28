@@ -27,17 +27,17 @@ echo ""
 echo "Installing Ansible collections..."
 ansible-galaxy collection install -r requirements.yml
 
-# Set up environment file
-if [ ! -f scripts/set-1password-env.sh ]; then
-    echo ""
-    echo "Creating 1Password environment configuration..."
-    cp scripts/set-1password-env.sh.example scripts/set-1password-env.sh
-    echo "✅ Created scripts/set-1password-env.sh"
-    echo ""
-    echo "⚠️  Please edit scripts/set-1password-env.sh with your 1Password Connect details"
-else
-    echo "✅ Environment configuration already exists"
+# Check for uv
+if ! command -v uv &> /dev/null; then
+    echo "❌ uv not found. Please install uv first (see docs/uv-ansible-notes.md)"
+    exit 1
 fi
+
+# Set up Python environment with uv
+echo ""
+echo "Setting up Python environment with uv..."
+uv sync
+echo "✅ Python environment configured"
 
 # Create directories
 echo ""
@@ -47,12 +47,11 @@ mkdir -p playbooks/infrastructure roles
 # Final instructions
 echo ""
 echo "Setup complete! Next steps:"
-echo "1. Edit scripts/set-1password-env.sh with your 1Password Connect details"
-echo "2. Store your credentials in 1Password (see docs/1password-integration.md)"
-echo "3. Test the setup:"
-echo "   ./bin/ansible-connect inventory -i inventory/og-homelab/proxmox.yml --list"
+echo "1. Set up Infisical machine identity credentials (see docs/infisical-setup-and-migration.md)"
+echo "2. Test the setup:"
+echo "   uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list"
 echo ""
 echo "For detailed documentation, see:"
 echo "- README.md - Project overview"
-echo "- docs/1password-integration.md - 1Password setup"
+echo "- docs/infisical-setup-and-migration.md - Infisical setup and configuration"
 echo "- docs/troubleshooting.md - Common issues"

@@ -3,14 +3,14 @@
 [![CI](https://github.com/YOUR_USERNAME/netbox-ansible/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/netbox-ansible/actions/workflows/ci.yml)
 
 An Ansible automation project that integrates NetBox as a source of truth for network infrastructure management, with
-secure credential management through 1Password.
+secure credential management through Infisical.
 
 ## Overview
 
 This project provides a framework for managing network infrastructure using Ansible with:
 
 - Dynamic inventory from Proxmox (current) and NetBox (planned)
-- Secure credential management via 1Password (CLI and Connect)
+- Secure credential management via Infisical
 - Containerized execution environments
 - Best practices for Ansible project organization
 
@@ -18,7 +18,7 @@ This project provides a framework for managing network infrastructure using Ansi
 
 - **Ansible** 2.15+ with ansible-core
 - **Python** 3.9+
-- **1Password CLI** or **1Password Connect** server
+- **Infisical** account and machine identity
 - **macOS** users: Local Network permissions for Python (see Troubleshooting)
 - Docker (optional, for execution environments)
 
@@ -39,17 +39,19 @@ This project provides a framework for managing network infrastructure using Ansi
    task setup
    ```
 
-3. **Configure 1Password integration**
+3. **Configure Infisical integration**
 
    ```bash
-   # Edit the environment file created by setup
-   vi scripts/set-1password-env.sh
+   # Set up Infisical machine identity environment variables
+   export INFISICAL_TOKEN="your-machine-identity-token"
+   export INFISICAL_PROJECT_ID="your-project-id"
+   export INFISICAL_ENV="prod"  # or dev/staging
    ```
 
 4. **Test the setup**
 
    ```bash
-   ./bin/ansible-connect inventory -i inventory/og-homelab/proxmox.yml --list
+   uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
    ```
 
 ## Development
@@ -63,6 +65,14 @@ This project uses comprehensive linting and testing:
 - **ruff** - Python linting and formatting
 - **mypy** - Python type checking
 - **pre-commit** - Git hooks for automated checks (see [docs/pre-commit-setup.md](docs/pre-commit-setup.md))
+
+### Security Tools
+
+Integrated security scanning:
+
+- **Infisical** - Secrets detection and management
+- **KICS** - Infrastructure-as-Code security scanning
+- **Pre-commit hooks** - Automated security checks on commit
 
 ### Quick Commands
 
@@ -79,8 +89,12 @@ task fix
 # Run tests
 task test
 
-# Run security scans
+# Run security scans (Infisical + KICS)
 task security
+
+# Run individual security scans
+task security:secrets  # Infisical secrets detection
+task security:kics     # Infrastructure security scan
 
 # Run pre-commit hooks manually
 task hooks
@@ -94,13 +108,16 @@ See [docs/testing-strategy.md](docs/testing-strategy.md) for detailed testing in
 
 ```text
 ├── bin/                    # Executable wrapper scripts
-│   └── ansible-connect     # Main wrapper for 1Password integration
+│   └── ansible-connect     # Legacy 1Password wrapper (deprecated)
 ├── docs/                   # Documentation
-│   ├── 1password-integration.md
+│   ├── infisical-setup-and-migration.md
+│   ├── dns-ipam-implementation-plan.md
 │   └── troubleshooting.md
 ├── inventory/              # Dynamic inventory configurations
-│   └── og-homelab/        # Environment-specific inventories
+│   ├── og-homelab/        # Original homelab cluster inventories
+│   └── doggos-homelab/    # Doggos cluster inventories
 ├── playbooks/              # Ansible playbooks
+│   ├── assessment/        # Infrastructure assessment playbooks
 │   ├── examples/          # Example playbooks
 │   └── infrastructure/    # Infrastructure management
 ├── plugins/               # Custom Ansible plugins
@@ -113,28 +130,28 @@ See [docs/testing-strategy.md](docs/testing-strategy.md) for detailed testing in
 
 ## Usage
 
-### Running Commands with 1Password Integration
+### Running Commands with Infisical
 
-Use the `ansible-connect` wrapper to automatically handle credential retrieval:
+Use `uv run` to execute Ansible commands with Infisical secret management:
 
 ```bash
 # List inventory
-./bin/ansible-connect inventory -i inventory/og-homelab/proxmox.yml --list
+uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
 
 # Run a playbook
-./bin/ansible-connect playbook playbooks/site.yml
+uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
 
 # Ad-hoc command
-./bin/ansible-connect all -i inventory/og-homelab/proxmox.yml -m ping
+uv run ansible all -i inventory/og-homelab/infisical.proxmox.yml -m ping
 ```
 
 ### Managing Secrets
 
-See [docs/1password-integration.md](docs/1password-integration.md) for detailed instructions on:
+See [docs/infisical-setup-and-migration.md](docs/infisical-setup-and-migration.md) for detailed instructions on:
 
-- Setting up 1Password CLI or Connect
-- Storing credentials securely
-- Using credentials in playbooks and inventories
+- Setting up Infisical machine identity
+- Organizing secrets in projects and environments
+- Using secrets in playbooks and inventories
 
 ## Configuration
 
