@@ -7,8 +7,8 @@
 # storage, networking, and integration points.
 #
 # Usage:
-#   ./bin/ansible-connect playbook playbooks/assessment/infrastructure-readiness.yml
-#   ./bin/ansible-connect playbook playbooks/assessment/infrastructure-readiness.yml -e target_inventory=doggos-homelab
+#   uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inventory/og-homelab/infisical.proxmox.yml
+#   uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inventory/doggos-homelab/infisical.proxmox.yml
 
 - name: Infrastructure Readiness Assessment
   hosts: all
@@ -67,29 +67,70 @@
 
     # System Resource Assessment
     - name: Calculate available resources
+      tags: [resources, always]
       ansible.builtin.set_fact:
         system_resources:
-          total_ram_mb: "{{ ansible_memtotal_mb }}"
-          free_ram_mb: "{{ ansible_memfree_mb }}"
-          used_ram_percent: "{{ ((ansible_memtotal_mb - ansible_memfree_mb) / ansible_memtotal_mb * 100) | round(2) }}"
-          total_swap_mb: "{{ ansible_swaptotal_mb }}"
-          cpu_cores: "{{ ansible_processor_vcpus }}"
-          cpu_model: "{{ ansible_processor[2] | default('Unknown') }}"
+          total_ram_mb: "{{ ansible_memtotal_mb | default(0) }}"
+          free_ram_mb: "{{ ansible_memfree_mb | default(0) }}"
+          used_ram_percent: "{{ ((ansible_memtotal_mb | default(1) - ansible_memfree_mb | default(0)) / ansible_memtotal_mb | default(1) * 100) | round(2) }}"
+          total_swap_mb: "{{ ansible_swaptotal_mb | default(0) }}"
+          cpu_cores: "{{ ansible_processor_vcpus | default(ansible_processor_cores | default(1)) }}"
+          cpu_model: "{{ ansible_processor[2] | default('Unknown') if ansible_processor is defined else 'Unknown' }}"
 
     - name: Get disk usage
       ansible.builtin.shell:
         cmd: |
-          set -o pipefail
-          df -BG | grep -vE '^Filesystem|tmpfs|cdrom|udev' | awk '{print $1 ":" $2 ":" $3 ":" $4 ":" $5 ":" $6}'
-      args:
-        executable: /bin/bash
+          python3 -c "
+          import subprocess
+          import sys
+          
+          try:
+              if '{{ ansible_system }}' == 'Darwin':
+                  cmd = \"df -g | grep -vE '^Filesystem|tmpfs|cdrom|udev|devfs|map'\"
+              else:
+                  cmd = \"df -BG | grep -vE '^Filesystem|tmpfs|cdrom|udev'\"
+              
+              result = subprocess.run(cmd, shell=True, capture_output=True, text=True, errors='replace')
+              
+              for line in result.stdout.strip().split('\n'):
+                  if line:
+                      parts = line.split()
+                      if len(parts) >= 6:
+                          if '{{ ansible_system }}' == 'Darwin':
+                              # Darwin format handling
+                              fs = parts[0]
+                              total = parts[1].replace('Gi', '') + 'G'
+                              used = parts[2].replace('Gi', '') + 'G'
+                              avail = parts[3].replace('Gi', '') + 'G'
+                              use_pct = parts[4]
+                              mount = parts[8] if len(parts) > 8 else parts[5]
+                          else:
+                              # Linux format
+                              fs = parts[0]
+                              total = parts[1]
+                              used = parts[2]
+                              avail = parts[3]
+                              use_pct = parts[4]
+                              mount = parts[5]
+                          
+                          # Clean up any non-ASCII characters
+                          fs = ''.join(c if ord(c) < 128 else '?' for c in fs)
+                          mount = ''.join(c if ord(c) < 128 else '?' for c in mount)
+                          
+                          print(f'{fs}:{total}:{used}:{avail}:{use_pct}:{mount}')
+          except Exception as e:
+              sys.stderr.write(f'Error: {e}\n')
+              sys.exit(1)
+          "
       register: disk_usage_raw
       changed_when: false
+      failed_when: false
 
     - name: Parse disk usage
       ansible.builtin.set_fact:
         disk_usage: |
           {% set disks = [] %}
+          {% if disk_usage_raw.stdout_lines is defined %}
           {% for line in disk_usage_raw.stdout_lines %}
           {% set parts = line.split(':') %}
           {% if parts | length >= 6 %}
@@ -103,10 +144,12 @@
           }) %}
           {% endif %}
           {% endfor %}
+          {% endif %}
           {{ disks }}
 
     # Container Runtime Detection
     - name: Check for Docker
+      tags: [container, runtime]
       ansible.builtin.command:
         cmd: docker version --format json
       register: docker_check
@@ -129,6 +172,7 @@
 
     # Orchestration Platform Detection
     - name: Check for Nomad
+      tags: [orchestration, nomad]
       ansible.builtin.command:
         cmd: nomad version
       register: nomad_check
@@ -152,47 +196,56 @@
 
     # Network Connectivity Tests
     - name: Test connectivity between nodes
+      tags: [network, connectivity]
       ansible.builtin.command:
         cmd: "ping -c 2 -W 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
       loop: "{{ groups['all'] }}"
-      when: item != inventory_hostname
+      when: 
+        - item != inventory_hostname
+        - hostvars[item]['ansible_default_ipv4'] is defined
+        - hostvars[item]['ansible_default_ipv4']['address'] is defined
       register: ping_tests
       changed_when: false
       failed_when: false
 
     # Port Availability Checks
     - name: Check required ports for Consul
+      tags: [network, ports, consul]
       ansible.builtin.wait_for:
         port: "{{ item.port }}"
-        host: "{{ ansible_default_ipv4.address }}"
+        host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         state: stopped
         timeout: 2
       loop: "{{ required_ports.consul }}"
       register: consul_ports
       failed_when: false
+      when: ansible_default_ipv4 is defined
 
     - name: Check required ports for Nomad
       ansible.builtin.wait_for:
         port: "{{ item.port }}"
-        host: "{{ ansible_default_ipv4.address }}"
+        host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         state: stopped
         timeout: 2
       loop: "{{ required_ports.nomad }}"
       register: nomad_ports
       failed_when: false
+      when: ansible_default_ipv4 is defined
 
     - name: Check required ports for PowerDNS
       ansible.builtin.wait_for:
         port: "{{ item.port }}"
-        host: "{{ ansible_default_ipv4.address }}"
+        host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         state: stopped
         timeout: 2
       loop: "{{ required_ports.powerdns }}"
       register: powerdns_ports
       failed_when: false
+      when: ansible_default_ipv4 is defined
 
     # Storage Backend Checks
     - name: Check for persistent volume capabilities
+      tags: [storage]
       ansible.builtin.stat:
         path: "{{ item }}"
       loop:
@@ -204,6 +257,7 @@
 
     # Firewall Status
     - name: Check firewall status (iptables)
+      tags: [network, firewall]
       ansible.builtin.command:
         cmd: iptables -L -n
       register: iptables_status
@@ -264,7 +318,7 @@
             nomad:
               installed: "{{ nomad_check.rc == 0 }}"
               version: "{{ nomad_check.stdout | default('Not installed') }}"
-              consul_integrated: "{{ 'consul' in consul_nomad_integration.stdout | lower }}"
+              consul_integrated: "{{ consul_nomad_integration.stdout is defined and 'consul' in consul_nomad_integration.stdout | lower }}"
             kubernetes: "{{ k8s_check.rc == 0 }}"
           # Network
           network:
@@ -279,15 +333,16 @@
               {% endif %}
               {% endfor %}
               {{ results }}
+            default_gateway: "{{ ansible_default_ipv4.gateway | default('N/A') if ansible_default_ipv4 is defined else 'N/A' }}"
             firewall:
-              iptables_active: "{{ iptables_status.rc == 0 and 'ACCEPT' in iptables_status.stdout }}"
-              firewalld_active: "{{ firewalld_status.status.ActiveState | default('inactive') == 'active' }}"
-              ufw_active: "{{ ufw_status.rc == 0 and 'active' in ufw_status.stdout | lower }}"
+              iptables_active: "{{ iptables_status.rc == 0 and iptables_status.stdout is defined and 'ACCEPT' in iptables_status.stdout }}"
+              firewalld_active: "{{ firewalld_status.status.ActiveState | default('inactive') == 'active' if firewalld_status.status is defined else false }}"
+              ufw_active: "{{ ufw_status.rc == 0 and ufw_status.stdout is defined and 'active' in ufw_status.stdout | lower }}"
           # Port availability
           port_availability:
             consul: |
               {% set available = [] %}
-              {% for port in consul_ports.results %}
+              {% for port in consul_ports.results | default([]) %}
               {% if port.state is defined and port.state == 'stopped' %}
               {% set _ = available.append(port.item.port) %}
               {% endif %}
@@ -295,7 +350,7 @@
               {{ available }}
             nomad: |
               {% set available = [] %}
-              {% for port in nomad_ports.results %}
+              {% for port in nomad_ports.results | default([]) %}
               {% if port.state is defined and port.state == 'stopped' %}
               {% set _ = available.append(port.item.port) %}
               {% endif %}
@@ -303,7 +358,7 @@
               {{ available }}
             powerdns: |
               {% set available = [] %}
-              {% for port in powerdns_ports.results %}
+              {% for port in powerdns_ports.results | default([]) %}
               {% if port.state is defined and port.state == 'stopped' %}
               {% set _ = available.append(port.item.port) %}
               {% endif %}

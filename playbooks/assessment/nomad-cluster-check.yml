@@ -147,7 +147,7 @@
           5. Sufficient resources for workload deployment
 
           ## Recommendations
-          1. Store Nomad ACL token in 1Password for automation
+          1. Store Nomad ACL token in Infisical for automation
           2. Create job specifications for core services
           3. Set up Nomad-Consul integration for service discovery
           4. Implement job templates for common workloads
