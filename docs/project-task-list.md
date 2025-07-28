@@ -4,10 +4,10 @@ This document tracks all project management tasks for the NetBox-focused Ansible
 
 ## Project Status Overview
 
-**Project Phase**: Pre-implementation Planning  
-**Current Focus**: DNS & IPAM infrastructure overhaul preparation  
-**Last Updated**: 2025-07-27  
-**Status**: Initial assessment and planning phase
+**Project Phase**: Post-Assessment Phase  
+**Current Focus**: Addressing critical blockers before Phase 1  
+**Last Updated**: 2025-07-28  
+**Status**: Assessment completed, critical issues identified
 
 ### Key Objectives
 
@@ -25,7 +25,7 @@ These tasks must be completed before any implementation work begins.
 #### 1. Complete Infrastructure Assessment (Phase 0)
 
 **Description**: Run all assessment playbooks to understand current state  
-**Status**: Not Started  
+**Status**: ✅ Completed (2025-07-27)  
 **Blockers**: None  
 **Related**: `dns-ipam-implementation-plan.md` - Phase 0
 
@@ -36,7 +36,31 @@ Tasks:
 - [x] Execute `infrastructure-readiness.yml` playbook
 - [x] Document all findings in assessment reports
 
-#### 2. Finalize Infisical Migration
+**Key Findings**:
+- Consul: Healthy 6-node cluster but no Nomad integration
+- DNS: Pi-hole HA cluster with keepalived VIP at 192.168.30.100
+  - LXC 103 (192.168.30.103) on proxmoxt430
+  - LXC 136 (192.168.30.136) on pve1  
+  - LXC 139 (192.168.30.139) on pve1
+  - All accessible via SSH and will be in og-homelab dynamic inventory
+- Networks: 192.168.10.x (2.5G), 192.168.11.x (10G), 192.168.30.x
+- Critical Gap: No service discovery configured
+
+#### 2. Fix Proxmox Inventory Configuration 🚨
+
+**Description**: Proxmox inventory not extracting IP addresses, causing connection failures  
+**Status**: Not Started  
+**Blockers**: Critical - blocking all remote operations  
+**Related**: Inventory configuration files
+
+Tasks:
+
+- [ ] Debug why ansible_host is not being populated with IP addresses
+- [ ] Update inventory configuration to extract IPs from Proxmox API
+- [ ] Create static IP mapping as temporary workaround
+- [ ] Test connectivity with fixed inventory
+
+#### 3. Finalize Infisical Migration
 
 **Description**: Complete transition from 1Password to Infisical for secrets management  
 **Status**: In Progress  
@@ -45,38 +69,43 @@ Tasks:
 
 Tasks:
 
-- [x] Implement organized folder structure in Infisical
-- [x] Migrate all remaining 1Password secrets
-- [x] Update all playbooks to use Infisical inventory files
-- [x] Archive 1Password configuration files
+- [ ] Implement organized folder structure in Infisical
+- [ ] Migrate all remaining 1Password secrets
+- [ ] Update all playbooks to use Infisical inventory files
+- [ ] Archive 1Password configuration files
 
-#### 3. Document Current Network State
+#### 4. Document Current Network State
 
 **Description**: Create comprehensive documentation of existing infrastructure  
-**Status**: Not Started  
-**Blockers**: Requires assessment completion  
+**Status**: Partially Complete  
+**Blockers**: None - Pi-hole HA cluster identified  
 **Related**: Assessment playbook outputs
 
 Tasks:
 
-- [ ] Document all DNS zones and records
-- [ ] Map current IP allocations
+- [x] Identify Pi-hole deployment type (Docker/LXC/VM) and which host it runs on
+  - FOUND: 3x LXC containers in HA configuration with keepalived
+  - LXC 103 on proxmoxt430, LXC 136 & 139 on pve1
+- [ ] Document all DNS zones and records from Pi-hole
+- [x] Map current IP allocations (found 3 networks)
 - [ ] Identify all DHCP scopes
 - [ ] Create network topology diagrams
 
-#### 4. Establish Backup Procedures
+#### 5. Establish Backup Procedures
 
 **Description**: Implement backup strategy for critical configurations  
 **Status**: Not Started  
-**Blockers**: None  
+**Blockers**: None - Pi-hole cluster identified  
 **Related**: Risk mitigation strategy
 
 Tasks:
 
-- [ ] Backup Pi-hole configurations
-- [ ] Backup Unbound configurations
+- [ ] Backup Pi-hole configurations from all 3 LXC containers
+- [ ] Document keepalived configuration for VIP failover
+- [ ] Backup Unbound configurations  
 - [ ] Backup DHCP reservations
-- [ ] Create restoration procedures
+- [ ] Create restoration procedures including HA setup
+- [ ] Test restoration in development environment
 
 ### Medium Priority - Phase 0-1 Preparation
 
@@ -376,13 +405,13 @@ Tasks:
 
 ### Overall Progress
 
-- **Completed**: 0/24 tasks (0%)
-- **In Progress**: 1/24 tasks (4%)
-- **Not Started**: 23/24 tasks (96%)
+- **Completed**: 1/25 tasks (4%)
+- **In Progress**: 1/25 tasks (4%)
+- **Not Started**: 23/25 tasks (92%)
 
 ### Phase Breakdown
 
-- **High Priority**: 0/4 completed
+- **High Priority**: 1/5 completed (Assessment done)
 - **Medium Priority**: 0/7 completed
 - **Low Priority**: 0/13 completed
 
@@ -390,33 +419,34 @@ Tasks:
 
 ### Critical Risks
 
-1. **Incomplete Assessment**: Cannot proceed without understanding current state
-2. **Secret Management Transition**: Infisical migration must be complete
+1. **Proxmox Inventory Broken** 🚨: Cannot connect to any hosts - blocking all operations
+2. **DNS Infrastructure Complexity**: Pi-hole runs as 3-node HA cluster with keepalived - migration more complex than expected
 3. **No Backup Strategy**: Risk of data loss during migration
 4. **Lack of Testing Environment**: Cannot validate changes safely
 
 ### Current Blockers
 
-1. **Assessment Not Started**: Blocking all implementation planning
+1. **Broken Inventory Configuration**: Proxmox not providing IP addresses
 2. **Infisical Flat Structure**: Preventing organized secret management
-3. **Unknown Network State**: Cannot design future architecture
+3. **Pi-hole HA Complexity**: Must coordinate backups across 3 LXC containers and maintain keepalived VIP
 4. **No Development Environment**: Cannot test configurations
+5. **No Consul-Nomad Integration**: Service discovery not configured
 
 ## Recommendations for Task Execution
 
-### Immediate Actions (Next 7 Days)
+### Immediate Actions (Next 3-5 Days)
 
-1. **Run all assessment playbooks** to understand current infrastructure
-2. **Complete Infisical folder restructuring** for proper secret organization
-3. **Document current DNS zones** before any changes
-4. **Create backup scripts** for existing configurations
+1. **Fix Proxmox inventory configuration** - Critical blocker
+2. **Document Pi-hole HA cluster configuration** - Keepalived VIP and sync between 3 nodes
+3. **Create network topology diagram** - Document 3 discovered networks
+4. **Implement emergency backup procedures** for current DNS
 
-### Week 2-3 Focus
+### Week 2 Focus
 
-1. **Design IP addressing schema** based on assessment findings
-2. **Set up development environment** for safe testing
-3. **Create initial service templates** for Consul and PowerDNS
-4. **Draft migration runbooks** for each phase
+1. **Complete Infisical folder reorganization**
+2. **Enable Consul-Nomad integration** on doggos-homelab
+3. **Design IP addressing schema** based on assessment findings
+4. **Set up isolated development environment** for safe testing
 
 ### Month 2 Goals
 
@@ -442,5 +472,19 @@ This document should be updated:
 - When new tasks are identified
 - When priorities change
 
-Last review: 2025-07-26  
-Next review: 2025-08-02
+Last review: 2025-07-28  
+Next review: 2025-08-04
+
+## Change Log
+
+- **2025-07-28**: Updated after task-master analysis
+  - Added critical Proxmox inventory blocker as Task #2
+  - Updated assessment status to completed
+  - Added infrastructure findings from assessment reports
+  - Identified 5 critical blockers requiring immediate attention
+  - Adjusted task priorities based on discovered issues
+- **2025-07-28** (Update 2): Pi-hole infrastructure discovered
+  - Identified Pi-hole as 3-node HA cluster with keepalived VIP
+  - LXC 103 on proxmoxt430, LXC 136 & 139 on pve1
+  - Updated risks to reflect migration complexity of HA setup
+  - Removed blockers related to unknown Pi-hole location
