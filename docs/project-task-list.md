@@ -46,32 +46,37 @@ Tasks:
 - Networks: 192.168.10.x (2.5G), 192.168.11.x (10G), 192.168.30.x
 - Critical Gap: No service discovery configured
 
-#### 2. Fix Proxmox Inventory Configuration 🚨
+#### 2. Fix Proxmox Inventory Configuration ✅
 
 **Description**: Proxmox inventory not extracting IP addresses, causing connection failures  
-**Status**: Not Started  
-**Blockers**: Critical - blocking all remote operations  
-**Related**: Inventory configuration files
+**Status**: Completed (2025-07-28)  
+**Blockers**: None - Resolved with host_vars static IP mapping  
+**Related**: Inventory configuration files, host_vars directories
 
 Tasks:
 
-- [ ] Debug why ansible_host is not being populated with IP addresses
-- [ ] Update inventory configuration to extract IPs from Proxmox API
-- [ ] Create static IP mapping as temporary workaround
-- [ ] Test connectivity with fixed inventory
+- [x] Debug why ansible_host is not being populated with IP addresses
+- [x] Update inventory configuration to extract IPs from Proxmox API
+- [x] Create static IP mapping as temporary workaround
+- [x] Test connectivity with fixed inventory
+- [x] Deploy ansible user with SSH keys across all hosts
 
-#### 3. Finalize Infisical Migration
+#### 3. Finalize Infisical Migration ✅
 
 **Description**: Complete transition from 1Password to Infisical for secrets management  
-**Status**: In Progress  
-**Blockers**: Secrets currently at flat `/apollo-13/` structure  
+**Status**: Phase 3 Completed (2025-07-28)  
+**Blockers**: None - All playbooks migrated  
 **Related**: `infisical-setup-and-migration.md`
 
 Tasks:
 
-- [ ] Implement organized folder structure in Infisical
-- [ ] Migrate all remaining 1Password secrets
-- [ ] Update all playbooks to use Infisical inventory files
+- [x] Implement organized folder structure in Infisical
+- [x] Update all inventory files to use organized paths
+- [x] Add API_URL lookups for each cluster
+- [x] Add shared credential lookups (USERNAME, TOKEN_ID)
+- [x] Update playbooks to use new paths (Consul, Nomad, Infrastructure)
+- [x] Migrate all secrets from 1Password lookups to Infisical
+- [ ] Implement environment-aware lookups (Phase 4 - future)
 - [ ] Archive 1Password configuration files
 
 #### 4. Document Current Network State
