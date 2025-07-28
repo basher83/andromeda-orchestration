@@ -6,8 +6,8 @@
 # the existing setup before implementing NetBox and PowerDNS.
 #
 # Usage:
-#   ./bin/ansible-connect playbook playbooks/assessment/dns-ipam-audit.yml
-#   ./bin/ansible-connect playbook playbooks/assessment/dns-ipam-audit.yml -e target_inventory=doggos-homelab
+#   uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml -i inventory/og-homelab/infisical.proxmox.yml
+#   uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml -i inventory/doggos-homelab/infisical.proxmox.yml
 
 - name: DNS and IPAM Infrastructure Audit
   hosts: all
@@ -31,6 +31,7 @@
 
     # DNS Configuration Discovery
     - name: Read resolv.conf
+      tags: [dns, config]
       ansible.builtin.slurp:
         src: /etc/resolv.conf
       register: resolv_conf
@@ -40,9 +41,19 @@
         resolv_data: "{{ resolv_conf.content | b64decode }}"
         nameservers: "{{ resolv_conf.content | b64decode | regex_findall('nameserver\\s+(.*)') }}"
         search_domains: >-
-          {{ resolv_conf.content | b64decode | regex_findall('search\s+(.*)') |
-             first | default('') | split }}
-        domain: "{{ resolv_conf.content | b64decode | regex_findall('domain\\s+(.*)') | first | default('') }}"
+          {% set search_line = resolv_conf.content | b64decode | regex_findall('search\s+(.*)') %}
+          {% if search_line | length > 0 %}
+          {{ search_line[0] | split }}
+          {% else %}
+          []
+          {% endif %}
+        domain: >-
+          {% set domain_line = resolv_conf.content | b64decode | regex_findall('domain\s+(.*)') %}
+          {% if domain_line | length > 0 %}
+          {{ domain_line[0] }}
+          {% else %}
+          {{ '' }}
+          {% endif %}
 
     - name: Check for systemd-resolved
       ansible.builtin.stat:
@@ -56,6 +67,7 @@
       register: resolved_conf
 
     - name: Check DNS services
+      tags: [dns, services]
       ansible.builtin.service_facts:
 
     - name: Identify DNS servers
@@ -70,6 +82,7 @@
 
     # Network Configuration
     - name: Get network interfaces
+      tags: [network, interfaces]
       ansible.builtin.set_fact:
         network_interfaces: "{{ ansible_interfaces | select('match', '^(?!lo$).*') | list }}"
 
@@ -92,6 +105,7 @@
 
     # DHCP Configuration Discovery
     - name: Check for DHCP client configuration
+      tags: [dhcp, config]
       ansible.builtin.stat:
         path: "{{ item }}"
       loop:
@@ -111,16 +125,19 @@
 
     # DNS Port Scanning
     - name: Check DNS ports
+      tags: [dns, ports]
       ansible.builtin.wait_for:
         port: "{{ item }}"
-        host: "{{ ansible_default_ipv4.address }}"
+        host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         timeout: 3
       loop: "{{ common_dns_ports }}"
       register: dns_port_check
       failed_when: false
+      when: ansible_default_ipv4 is defined
 
     # Zone and Domain Information
     - name: Check hostname configuration
+      tags: [dns, hostname]
       ansible.builtin.command:
         cmd: hostname -f
       register: hostname_fqdn
@@ -151,6 +168,7 @@
 
     # Pi-hole specific checks
     - name: Check for Pi-hole
+      tags: [dns, pihole]
       ansible.builtin.stat:
         path: /etc/pihole
       register: pihole_dir
@@ -189,6 +207,7 @@
 
     # IP allocation discovery
     - name: Get routing table
+      tags: [ipam, network]
       ansible.builtin.command:
         cmd: ip route show
       register: routing_table
@@ -229,7 +248,7 @@
           # Network Configuration
           network:
             interfaces: "{{ interface_details }}"
-            default_gateway: "{{ ansible_default_ipv4.gateway | default('N/A') }}"
+            default_gateway: "{{ ansible_default_ipv4.gateway | default('N/A') if ansible_default_ipv4 is defined else 'N/A' }}"
             dns_servers_via_dhcp: "{{ 'dhcp' in resolv_data | lower }}"
           # IPAM Data
           ipam:
@@ -246,8 +265,14 @@
           raw_data:
             resolv_conf: "{{ resolv_data }}"
             hosts_file_sample: >-
-              {{ hosts_file.content | b64decode |
-                 regex_findall('^(?!#).*', multiline=True) | select | list | first(10) }}
+              {% set hosts_entries = hosts_file.content | b64decode | regex_findall('^(?!#).*', multiline=True) | select | list %}
+              {% if hosts_entries | length > 10 %}
+              {{ hosts_entries[:10] }}
+              {% elif hosts_entries | length > 0 %}
+              {{ hosts_entries }}
+              {% else %}
+              []
+              {% endif %}
             routing_table: "{{ routing_table.stdout_lines[:20] }}"
 
     - name: Save individual node DNS/IPAM report
