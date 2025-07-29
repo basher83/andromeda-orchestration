@@ -1,0 +1,194 @@
+---
+# Fix Consul service on nomad-client-3-mable
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/fix-consul-on-mable.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Fix Consul on nomad-client-3-mable
+  hosts: nomad-client-3-mable
+  become: true
+  vars:
+    consul_config_file: /etc/consul.d/consul.hcl
+    consul_encrypt_key: "6r73CP0icJrap1tsQ17yuqzVguho4/yz+aI/dkVg2Kk="
+    
+  tasks:
+    - name: Check if bind_addr is configured
+      ansible.builtin.shell: |
+        grep -q "bind_addr" {{ consul_config_file }}
+      register: bind_addr_exists
+      changed_when: false
+      failed_when: false
+
+    - name: Add bind_addr to Consul configuration
+      ansible.builtin.lineinfile:
+        path: "{{ consul_config_file }}"
+        line: 'bind_addr = "192.168.11.22"'
+        insertafter: "^datacenter"
+        state: present
+      when: bind_addr_exists.rc != 0
+
+    - name: Check if advertise_addr is configured
+      ansible.builtin.shell: |
+        grep -q "advertise_addr" {{ consul_config_file }}
+      register: advertise_addr_exists
+      changed_when: false
+      failed_when: false
+
+    - name: Add advertise_addr to Consul configuration
+      ansible.builtin.lineinfile:
+        path: "{{ consul_config_file }}"
+        line: 'advertise_addr = "192.168.11.22"'
+        insertafter: "bind_addr"
+        state: present
+      when: advertise_addr_exists.rc != 0
+
+    - name: Update bind_addr if it exists
+      ansible.builtin.replace:
+        path: "{{ consul_config_file }}"
+        regexp: '^bind_addr\s*=.*'
+        replace: 'bind_addr = "192.168.11.22"'
+      when: bind_addr_exists.rc == 0
+
+    - name: Update advertise_addr if it exists
+      ansible.builtin.replace:
+        path: "{{ consul_config_file }}"
+        regexp: '^advertise_addr\s*=.*'
+        replace: 'advertise_addr = "192.168.11.22"'
+      when: advertise_addr_exists.rc == 0
+
+    - name: Create Consul encryption configuration
+      ansible.builtin.copy:
+        content: |
+          encrypt = "{{ consul_encrypt_key }}"
+        dest: /etc/consul.d/05-encrypt.hcl
+        owner: consul
+        group: consul
+        mode: '0640'
+
+    - name: Validate Consul configuration
+      ansible.builtin.command: consul validate /etc/consul.d/
+      changed_when: false
+
+    - name: Start and enable Consul service
+      ansible.builtin.systemd:
+        name: consul
+        state: started
+        enabled: true
+        daemon_reload: true
+
+    - name: Wait for Consul to be ready
+      ansible.builtin.wait_for:
+        port: 8500
+        host: 127.0.0.1
+        delay: 5
+        timeout: 30
+
+    - name: Check Consul members
+      ansible.builtin.command: consul members
+      register: consul_members
+      changed_when: false
+
+    - name: Display Consul members
+      ansible.builtin.debug:
+        msg: "{{ consul_members.stdout_lines }}"
+
+- name: Apply Consul token to Nomad on this node
+  hosts: nomad-client-3-mable
+  become: true
+  vars:
+    nomad_config_file: /etc/nomad.d/nomad.hcl
+    nomad_client_token: "[REDACTED_NOMAD_TOKEN]"
+    
+  tasks:
+    - name: Update Consul stanza with token
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_file }}"
+        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG WITH TOKEN"
+        block: |
+          consul {
+            address = "127.0.0.1:8500"
+            token = "{{ nomad_client_token }}"
+            
+            # Enable service registration
+            auto_advertise = true
+            server_auto_join = true
+            client_auto_join = true
+            
+            # Service names
+            server_service_name = "nomad"
+            client_service_name = "nomad-client"
+            
+            # Enable service checks
+            checks_use_advertise = true
+            
+            # Keep existing identity settings
+            service_identity {
+              enabled = true
+              auto    = true
+            }
+            
+            task_identity {
+              enabled = true
+            }
+          }
+        state: present
+        validate: "nomad config validate %s"
+      register: config_updated
+
+    - name: Restart Nomad if configuration changed
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      when: config_updated.changed
+
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 30
+      when: config_updated.changed
+
+  handlers:
+    - name: restart consul
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted
+        daemon_reload: true
+
+- name: Verify Integration
+  hosts: nomad-server-1-lloyd
+  vars:
+    consul_management_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='dev',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_MASTER_TOKEN')).value }}
+      
+  tasks:
+    - name: Wait for service to register
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Check Consul for nomad-client service
+      ansible.builtin.command: |
+        consul catalog nodes -service=nomad-client -token={{ consul_management_token }}
+      register: nomad_client_nodes
+      changed_when: false
+
+    - name: Display Nomad client nodes in Consul
+      ansible.builtin.debug:
+        msg: 
+          - "Nomad clients registered:"
+          - "{{ nomad_client_nodes.stdout_lines }}"
+
+    - name: Check if mable is registered
+      ansible.builtin.debug:
+        msg: |
+          {% if 'nomad-client-3' in nomad_client_nodes.stdout %}
+          ✅ SUCCESS: nomad-client-3-mable is now registered in Consul!
+          {% else %}
+          ❌ FAILED: nomad-client-3-mable is not found in Consul
+          {% endif %}

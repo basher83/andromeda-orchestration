@@ -1,0 +1,117 @@
+---
+# Fix Consul-Nomad integration by adding missing service registration parameters
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/fix-consul-integration.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Fix Consul Integration in Nomad
+  hosts: tag_nomad
+  become: true
+  vars:
+    nomad_config_file: /etc/nomad.d/nomad.hcl
+  
+  tasks:
+    - name: Check node type
+      ansible.builtin.shell: |
+        grep -q "^server {" {{ nomad_config_file }} && echo "server" || echo "client"
+      register: node_type
+      changed_when: false
+
+    - name: Update Consul configuration for servers
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_file }}"
+        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG"
+        block: |
+          consul {
+            address = "127.0.0.1:8500"
+            
+            # Enable service registration
+            auto_advertise = true
+            server_auto_join = true
+            client_auto_join = true
+            
+            # Service names
+            server_service_name = "nomad"
+            client_service_name = "nomad-client"
+            
+            # Enable service checks
+            checks_use_advertise = true
+            
+            # Keep existing identity settings
+            service_identity {
+              enabled = true
+              auto    = true
+            }
+            
+            task_identity {
+              enabled = true
+            }
+          }
+        state: present
+        validate: "nomad config validate %s"
+      when: node_type.stdout == "server"
+
+    - name: Update Consul configuration for clients
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_file }}"
+        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG"
+        block: |
+          consul {
+            address = "127.0.0.1:8500"
+            
+            # Enable service registration
+            auto_advertise = true
+            server_auto_join = true
+            client_auto_join = true
+            
+            # Service names
+            server_service_name = "nomad"
+            client_service_name = "nomad-client"
+            
+            # Enable service checks
+            checks_use_advertise = true
+            
+            # Keep existing identity settings
+            service_identity {
+              enabled = true
+              auto    = true
+            }
+            
+            task_identity {
+              enabled = true
+            }
+          }
+        state: present
+        validate: "nomad config validate %s"
+      when: node_type.stdout == "client"
+
+    - name: Restart Nomad service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 30
+
+- name: Verify Integration
+  hosts: nomad-server-1-lloyd
+  tasks:
+    - name: Wait for services to register
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Check Consul for Nomad services
+      ansible.builtin.command: consul catalog services
+      register: consul_services
+      changed_when: false
+
+    - name: Show registered services
+      ansible.builtin.debug:
+        msg: "{{ consul_services.stdout_lines }}"
+
+    - name: Check if Nomad is registered
+      ansible.builtin.debug:
+        msg: "Nomad service {{ 'IS' if 'nomad' in consul_services.stdout else 'IS NOT' }} registered in Consul"
