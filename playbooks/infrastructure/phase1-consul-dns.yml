@@ -1,0 +1,19 @@
+---
+# Phase 1: Implement Consul DNS Foundation
+# Uses the consul_dns role to configure DNS resolution and register services
+
+- name: Configure Consul DNS on all nodes
+  hosts: all
+  become: true
+  gather_facts: true
+  
+  roles:
+    - consul_dns
+    
+  post_tasks:
+    - name: Run DNS validation
+      include_role:
+        name: consul_dns
+        tasks_from: validate.yml
+      tags:
+        - always
