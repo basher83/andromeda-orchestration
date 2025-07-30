@@ -1,0 +1,37 @@
+# Production-ready SSHD configuration (sshd_config.j2)
+# All options are driven by system_base_ssh_hardening_options (dict).
+# Hardened for security, parameterized for flexibility.
+
+# --- Core SSH Hardening Options ---
+Port {{ system_base_ssh_hardening_options['Port'] | default(22) }}
+Protocol {{ system_base_ssh_hardening_options['Protocol'] | default(2) }}
+PermitRootLogin {{ system_base_ssh_hardening_options['PermitRootLogin'] | default('no') }}
+PasswordAuthentication {{ system_base_ssh_hardening_options['PasswordAuthentication'] | default('no') }}
+ChallengeResponseAuthentication {{ system_base_ssh_hardening_options['ChallengeResponseAuthentication'] | default('no') }}
+UsePAM {{ system_base_ssh_hardening_options['UsePAM'] | default('yes') }}
+X11Forwarding {{ system_base_ssh_hardening_options['X11Forwarding'] | default('no') }}
+AllowTcpForwarding {{ system_base_ssh_hardening_options['AllowTcpForwarding'] | default('no') }}
+AllowAgentForwarding {{ system_base_ssh_hardening_options['AllowAgentForwarding'] | default('no') }}
+PermitEmptyPasswords {{ system_base_ssh_hardening_options['PermitEmptyPasswords'] | default('no') }}
+PermitUserEnvironment {{ system_base_ssh_hardening_options['PermitUserEnvironment'] | default('no') }}
+LoginGraceTime {{ system_base_ssh_hardening_options['LoginGraceTime'] | default('30s') }}
+MaxAuthTries {{ system_base_ssh_hardening_options['MaxAuthTries'] | default(3) }}
+MaxSessions {{ system_base_ssh_hardening_options['MaxSessions'] | default(2) }}
+ClientAliveInterval {{ system_base_ssh_hardening_options['ClientAliveInterval'] | default(300) }}
+ClientAliveCountMax {{ system_base_ssh_hardening_options['ClientAliveCountMax'] | default(2) }}
+LogLevel {{ system_base_ssh_hardening_options['LogLevel'] | default('VERBOSE') }}
+Ciphers {{ system_base_ssh_hardening_options['Ciphers'] | default('chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes256-ctr') }}
+MACs {{ system_base_ssh_hardening_options['MACs'] | default('hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com') }}
+KexAlgorithms {{ system_base_ssh_hardening_options['KexAlgorithms'] | default('curve25519-sha256,curve25519-sha256@libssh.org') }}
+
+# --- Optional: Additional Custom Options ---
+{% for key, value in system_base_ssh_hardening_options.items() %}
+{% if key not in [
+    'Port', 'Protocol', 'PermitRootLogin', 'PasswordAuthentication', 'ChallengeResponseAuthentication',
+    'UsePAM', 'X11Forwarding', 'AllowTcpForwarding', 'AllowAgentForwarding', 'PermitEmptyPasswords',
+    'PermitUserEnvironment', 'LoginGraceTime', 'MaxAuthTries', 'MaxSessions', 'ClientAliveInterval',
+    'ClientAliveCountMax', 'LogLevel', 'Ciphers', 'MACs', 'KexAlgorithms'
+] %}
+{{ key }} {{ value }}
+{% endif %}
+{% endfor %}

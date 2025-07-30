@@ -1,0 +1,87 @@
+---
+# Docker installation and configuration
+
+- name: Install Docker prerequisites
+  ansible.builtin.package:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  when: ansible_os_family == "Debian"
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+  when: ansible_os_family == "Debian"
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+  when: ansible_os_family == "Debian"
+
+- name: Install Docker Engine
+  ansible.builtin.package:
+    name: docker-ce
+    state: present
+
+- name: Install Docker CLI
+  ansible.builtin.package:
+    name: docker-ce-cli
+    state: present
+
+- name: Install containerd
+  ansible.builtin.package:
+    name: containerd.io
+    state: present
+
+- name: Ensure docker group exists
+  ansible.builtin.group:
+    name: docker
+    state: present
+
+- name: Add users to docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: yes
+  loop: "{{ system_base_docker_users }}"
+  when: system_base_docker_users | length > 0
+
+- name: Deploy Docker daemon.json
+  ansible.builtin.template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart docker
+
+- name: Install Docker Compose (v2, plugin)
+  ansible.builtin.shell: |
+    set -e
+    DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+    mkdir -p $DOCKER_CONFIG/cli-plugins
+    curl -sSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+    chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.docker/cli-plugins/docker-compose"
+
+- name: Ensure Docker service is enabled and started
+  ansible.builtin.service:
+    name: docker
+    enabled: true
+    state: started

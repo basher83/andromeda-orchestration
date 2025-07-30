@@ -1,0 +1,24 @@
+- name: Create Nomad configuration
+  ansible.builtin.template:
+    src: nomad.hcl.j2
+    dest: "{{ nomad_config_dir }}/nomad.hcl"
+    owner: "{{ nomad_user }}"
+    group: "{{ nomad_group }}"
+    mode: "0640"
+  notify:
+    - Validate nomad config
+    - Restart nomad after validation
+
+- name: Validate nomad config
+  ansible.builtin.command: nomad validate /etc/nomad.d/nomad.hcl
+  register: nomad_config_validation
+  changed_when: false
+  failed_when: nomad_config_validation.rc != 0
+  listen: Validate nomad config
+
+- name: Restart nomad (if config is valid)
+  ansible.builtin.service:
+    name: nomad
+    state: restarted
+  when: nomad_config_validation is defined and nomad_config_validation.rc == 0
+  listen: Restart nomad after validation

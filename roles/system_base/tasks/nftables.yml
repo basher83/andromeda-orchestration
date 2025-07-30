@@ -1,0 +1,22 @@
+---
+# nftables installation and configuration
+
+- name: Install nftables
+  ansible.builtin.package:
+    name: "{{ system_base_nftables_package | default('nftables') }}"
+    state: present
+
+- name: Deploy nftables configuration
+  ansible.builtin.template:
+    src: nftables.conf.j2
+    dest: "{{ system_base_nftables_config_path | default('/etc/nftables.conf') }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload nftables
+
+- name: Ensure nftables service is enabled and started
+  ansible.builtin.service:
+    name: "{{ system_base_nftables_service | default('nftables') }}"
+    enabled: true
+    state: started

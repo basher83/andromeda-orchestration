@@ -1,0 +1,8 @@
+---
+# Debian specific variables for Consul
+consul_package_dependencies:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg-agent
+  - software-properties-common

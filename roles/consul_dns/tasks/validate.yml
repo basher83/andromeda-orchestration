@@ -1,0 +1,35 @@
+---
+# Validate Consul DNS resolution
+
+- name: Install dig for DNS testing
+  package:
+    name: "{{ 'bind9-dnsutils' if ansible_os_family == 'Debian' else 'bind-utils' }}"
+    state: present
+
+- name: Test Consul service discovery
+  command: "dig @{{ consul_dns_servers[0] }} -p {{ consul_dns_port }} consul.service.{{ consul_domain }}"
+  register: consul_dns_test
+  changed_when: false
+  failed_when: false
+
+- name: Display Consul DNS test results
+  debug:
+    msg: "{{ consul_dns_test.stdout_lines }}"
+
+- name: Test infrastructure service discovery
+  command: "dig @{{ consul_dns_servers[0] }} -p {{ consul_dns_port }} {{ item }}.service.{{ consul_domain }}"
+  register: service_dns_tests
+  changed_when: false
+  failed_when: false
+  loop:
+    - pihole
+    - pihole-vip
+    - nomad
+    - nomad-client
+
+- name: Display service discovery results
+  debug:
+    msg: "Service {{ item.item }}: {{ 'FOUND' if item.rc == 0 else 'NOT FOUND' }}"
+  loop: "{{ service_dns_tests.results }}"
+  loop_control:
+    label: "{{ item.item }}"

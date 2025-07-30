@@ -1,0 +1,94 @@
+{{ ansible_managed | comment }}
+
+# Consul Configuration File
+# This configuration is tuned for a dual-network environment with
+# management (eth0) and high-speed (eth1) networks.
+
+# Basic configuration
+datacenter = "{{ consul_datacenter | default('dc1') }}"  # Default datacenter name
+data_dir = "{{ consul_data_dir | default('/opt/consul/data') }}"  # Default data directory
+log_level = "{{ consul_log_level | default('INFO') }}"  # Default log level
+client_addr = "{{ consul_client_addr | default('0.0.0.0') }}"  # Default client address
+
+# UI Configuration
+ui_config {
+  enabled = {{ consul_ui | bool | lower }}  # Enable or disable the Consul UI
+}
+
+# Network configuration
+# Only used for servers - clients will override this
+{% if consul_server_enabled %}
+bind_addr = "0.0.0.0"
+{% endif %}
+
+{% if consul_server_enabled %}
+# SERVER MODE CONFIGURATION
+server = true
+bootstrap_expect = {{ consul_bootstrap_expect | default(3) }}  # Default to 3 servers
+
+# Advertise the high-speed network address for server-to-server communication
+{# Use the host-specific inter_device_interface variable for more control #}
+advertise_addr = "{{ inter_device_interface }}"
+
+# Server join configuration for other servers
+retry_join = [
+  "192.168.11.11",
+  "192.168.11.12",
+  "192.168.11.13"
+]
+
+{% else %}
+# CLIENT MODE CONFIGURATION
+server = false
+
+# Advertise the high-speed network address for client-to-server communication
+{# Use the host-specific inter_device_interface variable for more control #}
+advertise_addr = "{{ inter_device_interface }}"
+# Set bind address to specific interface for clients to avoid ambiguity
+bind_addr = "{{ inter_device_interface }}"
+
+# Server join configuration for clients
+retry_join = [
+{% if consul_client_servers is defined and consul_client_servers | length > 0 %}
+{% for server in consul_client_servers %}
+  "{{ server }}"{% if not loop.last %},{% endif %}
+{% endfor %}
+{% else %}
+  # Use the high-speed network IPs for the servers
+  "192.168.11.11",
+  "192.168.11.12",
+  "192.168.11.13"
+{% endif %}
+]
+{% endif %}
+
+# Encryption configuration
+{% if consul_encrypt %}
+encrypt = "{{ consul_encrypt }}"  # Gossip encryption key
+{% endif %}
+
+# Performance tuning
+performance {
+  raft_multiplier = 1  # Default raft multiplier
+}
+
+# Enable Consul Connect
+connect {
+  enabled = true  # Enable service mesh capabilities
+}
+
+# Expose Prometheus endpoint for Netdata
+telemetry {
+  prometheus_retention_time = "{{ consul_prometheus_retention_time | default('360h') }}"
+}
+
+# ACL configuration
+acl {
+  enabled = {{ consul_acl_enabled | default(true) | lower }}  # Enable ACLs by default
+  default_policy = "{{ consul_acl_default_policy | default('deny') }}"  # Deny by default
+
+  # The agent token should be a token with appropriate permissions for this node
+  tokens {
+    agent = "{{ consul_acl_agent_token | default(lookup('env', 'CONSUL_MGMT_TOKEN')) }}"
+  }
+}

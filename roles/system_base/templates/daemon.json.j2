@@ -1,0 +1,13 @@
+{#-
+  Production-ready Docker daemon.json Jinja2 template
+  All options are driven by system_base_docker_options (dict).
+  Supports common options: log-driver, log-opts, storage-driver, data-root, exec-opts, bip, default-address-pools, etc.
+  Usage: set system_base_docker_options in group_vars/host_vars as needed.
+  This template ensures valid JSON output and supports nested structures.
+-#}
+{
+{%- set opts = system_base_docker_options | default({}) %}
+{%- for key, value in opts.items() %}
+  "{{ key }}": {{ value | to_nice_json }}{{ "," if not loop.last else "" }}
+{%- endfor %}
+}

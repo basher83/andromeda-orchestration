@@ -1,0 +1,46 @@
+---
+# Consul ACL Bootstrapping and Token Distribution
+
+- name: Bootstrap Consul ACL and capture management token
+  ansible.builtin.shell: consul acl bootstrap -format=json
+  register: acl_bootstrap_result
+  changed_when: false
+  failed_when: false
+  run_once: true
+  delegate_to: "{{ groups['consul_servers'][0] }}"
+
+- name: Parse management token from bootstrap output
+  ansible.builtin.set_fact:
+    consul_management_token: "{{ (acl_bootstrap_result.stdout | from_json).SecretID | default('') }}"
+  when: acl_bootstrap_result.rc == 0 and (acl_bootstrap_result.stdout | from_json).SecretID is defined
+  run_once: true
+  delegate_to: "{{ groups['consul_servers'][0] }}"
+
+- name: Create Consul agent token with default agent policy
+  ansible.builtin.uri:
+    url: "http://localhost:8500/v1/acl/token"
+    method: POST
+    body_format: json
+    body:
+      Description: "Agent Token"
+      Policies: [ "agent" ]
+    headers:
+      X-Consul-Token: "{{ consul_management_token }}"
+    status_code: [200, 201]
+    return_content: yes
+  register: agent_token_create
+  run_once: true
+  delegate_to: "{{ groups['consul_servers'][0] }}"
+  when: consul_management_token is defined
+
+- name: Set agent token fact
+  ansible.builtin.set_fact:
+    consul_acl_agent_token: "{{ (agent_token_create.json.SecretID | default('')) if agent_token_create is defined else '' }}"
+  when: agent_token_create is defined
+  run_once: true
+  delegate_to: "{{ groups['consul_servers'][0] }}"
+
+- name: Distribute agent token to all Consul nodes
+  ansible.builtin.set_fact:
+    consul_acl_agent_token: "{{ hostvars[groups['consul_servers'][0]].consul_acl_agent_token }}"
+  when: inventory_hostname != groups['consul_servers'][0]

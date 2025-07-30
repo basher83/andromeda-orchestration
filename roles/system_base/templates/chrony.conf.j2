@@ -1,0 +1,13 @@
+server ntp.ubuntu.com iburst
+server 0.pool.ntp.org iburst
+server 1.pool.ntp.org iburst
+server 2.pool.ntp.org iburst
+
+driftfile /var/lib/chrony/drift
+logdir /var/log/chrony
+
+# Enable kernel synchronization
+rtcsync
+
+# Enable kernel time discipline
+maxupdateskew 100

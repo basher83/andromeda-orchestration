@@ -1,0 +1,64 @@
+---
+# defaults file for nomad role
+
+# Installation options
+nomad_install_package: true
+nomad_version: "1.10.0" # Default Nomad version
+cni_version: "1.6.2" # Default CNI plugins version
+consul_cni_version: "1.6.3" # Default Consul CNI plugin version
+cni_arch: "amd64" # Default CNI architecture
+
+# Common configuration
+nomad_user: nomad
+nomad_group: nomad
+nomad_data_dir: "/opt/nomad/data"
+nomad_config_dir: "/etc/nomad.d"
+nomad_cni_path: "/opt/cni/bin"
+nomad_log_level: "INFO"
+nomad_bind_addr: "0.0.0.0"
+nomad_datacenter: "dc1"
+
+# Server configuration
+nomad_server_enabled: false
+nomad_server_bootstrap_expect: 3
+nomad_server_retry_join:
+  - "192.168.11.11"
+  - "192.168.11.12"
+  - "192.168.11.13"
+
+# Client configuration
+nomad_client_enabled: false
+nomad_client_servers:
+  - "192.168.11.11:4647"
+  - "192.168.11.12:4647"
+  - "192.168.11.13:4647"
+nomad_client_network_interface: "eth1"
+nomad_client_volume_path: "/mnt/nomad-volumes"
+nomad_client_bridge_networking: true # Enable bridge networking mode
+nomad_client_host_networking: true # Also enable host networking
+nomad_consul_service_mesh: true # Enable Consul service mesh integration
+
+# Service configuration
+nomad_service_enabled: true
+nomad_service_state: started
+
+# Fabio deployment defaults
+fabio_version: "1.6.5"
+fabio_network_mode: "host"
+fabio_http_port: 9999
+fabio_admin_port: 9998
+fabio_ui_title: "Homelab Load Balancer"
+fabio_cpu: 500
+fabio_memory: 256
+fabio_max_conn: 10000
+fabio_dial_timeout: "30s"
+fabio_read_timeout: "30s"
+fabio_write_timeout: "30s"
+fabio_consul_refresh: "5s"
+fabio_metrics_target: "stdout"
+fabio_metrics_prefix: "fabio"
+fabio_metrics_interval: "30s"
+fabio_proxy_strategy: "rr"
+fabio_tags: "fabio,lb"
+consul_service_name: "consul.service.consul"
+fabio_routes: "" # Default empty, can be populated with custom route definitions

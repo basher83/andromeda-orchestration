@@ -1,0 +1,30 @@
+---
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ ansible_os_family }}.yml"
+  when: ansible_os_family == "Debian" or ansible_os_family == "RedHat"
+
+- name: Include installation steps
+  ansible.builtin.import_tasks: install.yml
+
+- name: Include LXC integration (Nomad client only)
+  ansible.builtin.import_tasks: lxc.yml
+  when: nomad_client_enabled | bool
+
+- name: Include Consul CNI and plugins
+  ansible.builtin.import_tasks: cni.yml
+  when: nomad_client_enabled | bool
+
+- name: Include configuration templating
+  ansible.builtin.import_tasks: config.yml
+
+- name: Include TLS and service checks
+  ansible.builtin.import_tasks: validate.yml
+
+- name: Enable and start Nomad service
+  ansible.builtin.systemd:
+    name: nomad
+    state: "{{ nomad_service_state }}"
+    enabled: "{{ nomad_service_enabled }}"
+    daemon_reload: true
+  become: true

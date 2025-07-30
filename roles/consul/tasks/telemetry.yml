@@ -1,0 +1,35 @@
+---
+# Enable Consul telemetry for monitoring
+# This task file can be included when telemetry needs to be enabled
+
+- name: Check current Consul configuration
+  slurp:
+    src: /etc/consul.d/consul.hcl
+  register: consul_config_content
+
+- name: Parse current configuration
+  set_fact:
+    consul_current_config: "{{ consul_config_content.content | b64decode }}"
+
+- name: Check if telemetry is already configured
+  set_fact:
+    telemetry_configured: "{{ 'telemetry {' in consul_current_config }}"
+
+- name: Enable telemetry in Consul configuration
+  blockinfile:
+    path: /etc/consul.d/consul.hcl
+    marker: "# {mark} ANSIBLE MANAGED TELEMETRY BLOCK"
+    block: |
+      
+      # Expose Prometheus endpoint for monitoring
+      telemetry {
+        prometheus_retention_time = "{{ consul_prometheus_retention_time | default('360h') }}"
+        disable_hostname = false
+        metrics_prefix = "consul"
+      }
+    insertafter: EOF
+  when: not telemetry_configured
+  notify: Reload consul
+
+- name: Ensure Consul service is reloaded if configuration changed
+  meta: flush_handlers

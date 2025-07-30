@@ -1,0 +1,32 @@
+---
+# Consul DNS Configuration Defaults
+
+# Consul DNS settings
+consul_dns_port: 8600
+consul_domain: consul
+consul_dns_servers:
+  - "127.0.0.1"
+
+# DNS resolution method (systemd-resolved, dnsmasq, or resolv)
+consul_dns_method: systemd-resolved
+
+# Service registration defaults
+consul_register_services: true
+consul_service_token: "{{ lookup('community.general.infisical', '/apollo-13/consul/acl-bootstrap-token', env_slug='prod', secret_type='shared') }}"
+
+# Infrastructure services to register
+consul_infrastructure_services:
+  - name: pihole
+    instances:
+      - { id: "pihole-lxc-103", address: "192.168.30.103", tags: ["dns", "lxc-103", "ha-cluster"] }
+      - { id: "pihole-lxc-136", address: "192.168.30.136", tags: ["dns", "lxc-136", "ha-cluster"] }
+      - { id: "pihole-lxc-139", address: "192.168.30.139", tags: ["dns", "lxc-139", "ha-cluster"] }
+    port: 53
+    check_type: tcp
+    check_interval: 10s
+  - name: pihole-vip
+    instances:
+      - { id: "pihole-vip", address: "192.168.30.100", tags: ["dns", "vip", "keepalived"] }
+    port: 53
+    check_type: tcp
+    check_interval: 10s

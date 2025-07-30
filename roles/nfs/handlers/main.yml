@@ -1,0 +1,6 @@
+---
+# Handlers for nfs_client role
+
+- name: Remount NFS shares
+  ansible.builtin.command: mount -a
+  become: true
