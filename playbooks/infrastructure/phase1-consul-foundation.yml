@@ -1,0 +1,135 @@
+---
+# Phase 1: Cement Your Consul Foundation
+# This playbook implements Phase 1 of the DNS & IPAM implementation plan
+
+- name: Phase 1 - Consul DNS Foundation
+  hosts: all
+  become: true
+  gather_facts: true
+  
+  tasks:
+    - name: Ensure Consul DNS port is open (already configured in nftables)
+      debug:
+        msg: "Port 8600/udp is already configured in system_base role nftables template"
+      
+- name: Configure Consul DNS Resolution
+  hosts: all
+  become: true
+  vars:
+    consul_dns_port: 8600
+    consul_domain: consul
+    
+  tasks:
+    - name: Install systemd-resolved if not present
+      package:
+        name: systemd-resolved
+        state: present
+      when: ansible_os_family == "Debian"
+      
+    - name: Create systemd-resolved drop-in directory
+      file:
+        path: /etc/systemd/resolved.conf.d
+        state: directory
+        mode: '0755'
+        
+    - name: Configure systemd-resolved for Consul DNS
+      copy:
+        dest: /etc/systemd/resolved.conf.d/consul.conf
+        content: |
+          # Consul DNS Configuration
+          [Resolve]
+          DNS=127.0.0.1:{{ consul_dns_port }}
+          Domains=~{{ consul_domain }}
+        mode: '0644'
+      notify: restart systemd-resolved
+      
+    - name: Enable and start systemd-resolved
+      systemd:
+        name: systemd-resolved
+        enabled: true
+        state: started
+        
+  handlers:
+    - name: restart systemd-resolved
+      systemd:
+        name: systemd-resolved
+        state: restarted
+
+- name: Register Existing Infrastructure Services
+  hosts: consul_servers[0]
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Register Pi-hole services in Consul
+      uri:
+        url: "http://127.0.0.1:8500/v1/agent/service/register"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ lookup('community.general.infisical', '/apollo-13/consul/acl-bootstrap-token', env_slug='prod', secret_type='shared') }}"
+        body_format: json
+        body:
+          ID: "pihole-{{ item.name }}"
+          Name: "pihole"
+          Tags:
+            - "dns"
+            - "{{ item.name }}"
+            - "ha-cluster"
+          Address: "{{ item.address }}"
+          Port: 53
+          Check:
+            TCP: "{{ item.address }}:53"
+            Interval: "10s"
+      loop:
+        - { name: "lxc-103", address: "192.168.30.103" }
+        - { name: "lxc-136", address: "192.168.30.136" }
+        - { name: "lxc-139", address: "192.168.30.139" }
+      delegate_to: localhost
+      run_once: true
+      
+    - name: Register Pi-hole VIP service
+      uri:
+        url: "http://127.0.0.1:8500/v1/agent/service/register"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ lookup('community.general.infisical', '/apollo-13/consul/acl-bootstrap-token', env_slug='prod', secret_type='shared') }}"
+        body_format: json
+        body:
+          ID: "pihole-vip"
+          Name: "pihole-vip"
+          Tags:
+            - "dns"
+            - "vip"
+            - "keepalived"
+          Address: "192.168.30.100"
+          Port: 53
+          Check:
+            TCP: "192.168.30.100:53"
+            Interval: "10s"
+      delegate_to: localhost
+      run_once: true
+
+- name: Validate Consul DNS Resolution
+  hosts: all
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Test Consul DNS resolution
+      command: dig @127.0.0.1 -p {{ consul_dns_port }} consul.service.consul
+      register: consul_dns_test
+      changed_when: false
+      
+    - name: Display DNS test results
+      debug:
+        var: consul_dns_test.stdout_lines
+        
+    - name: Test service discovery for pihole
+      command: dig @127.0.0.1 -p {{ consul_dns_port }} pihole.service.consul
+      register: pihole_dns_test
+      changed_when: false
+      failed_when: false
+      
+    - name: Display pihole service discovery results
+      debug:
+        var: pihole_dns_test.stdout_lines
