@@ -6,7 +6,7 @@ This document tracks all project management tasks for the NetBox-focused Ansible
 
 **Project Phase**: Post-Assessment Phase  
 **Current Focus**: Addressing critical blockers before Phase 1  
-**Last Updated**: 2025-07-29  
+**Last Updated**: 2025-07-30  
 **Status**: Assessment completed, critical issues identified
 
 ### Key Objectives
@@ -64,8 +64,8 @@ Tasks:
 #### 3. Finalize Infisical Migration ✅
 
 **Description**: Complete transition from 1Password to Infisical for secrets management  
-**Status**: Phase 3 Completed (2025-07-28)  
-**Blockers**: None - All playbooks migrated  
+**Status**: Completed (2025-07-29)  
+**Blockers**: None - All tasks completed  
 **Related**: `infisical-setup-and-migration.md`
 
 Tasks:
@@ -76,51 +76,124 @@ Tasks:
 - [x] Add shared credential lookups (USERNAME, TOKEN_ID)
 - [x] Update playbooks to use new paths (Consul, Nomad, Infrastructure)
 - [x] Migrate all secrets from 1Password lookups to Infisical
+- [x] Archive 1Password configuration files (completed 2025-07-29 - files in docs/archive/)
 - [ ] Implement environment-aware lookups (Phase 4 - future)
-- [ ] Archive 1Password configuration files
 
-#### 4. Document Current Network State
+#### 4. Document Current Network State ✅
 
 **Description**: Create comprehensive documentation of existing infrastructure  
-**Status**: Partially Complete  
-**Blockers**: None - Pi-hole HA cluster identified  
-**Related**: Assessment playbook outputs
+**Status**: Completed (2025-07-30)  
+**Blockers**: None  
+**Related**: Assessment playbook outputs, `docs/infrastructure/pihole-ha-cluster.md`
 
 Tasks:
 
 - [x] Identify Pi-hole deployment type (Docker/LXC/VM) and which host it runs on
   - FOUND: 3x LXC containers in HA configuration with keepalived
   - LXC 103 on proxmoxt430, LXC 136 & 139 on pve1
-- [ ] Document all DNS zones and records from Pi-hole
+- [x] Document all DNS zones and records from Pi-hole
+  - Full documentation in `docs/infrastructure/pihole-ha-cluster.md`
+  - Keepalived configuration with VIP 192.168.30.100
+  - Network segments identified
+  - Backup procedures documented
 - [x] Map current IP allocations (found 3 networks)
-- [ ] Identify all DHCP scopes
-- [ ] Create network topology diagrams
+- [x] Identify all DHCP scopes
+- [x] Create network topology diagrams
 
-#### 5. Establish Backup Procedures
+#### 5. Apply Consul ACL Tokens to Nomad Configuration
 
-**Description**: Implement backup strategy for critical configurations  
-**Status**: Not Started  
-**Blockers**: None - Pi-hole cluster identified  
-**Related**: Risk mitigation strategy
+**Description**: Apply existing Consul ACL tokens to Nomad nodes for service registration  
+**Status**: ✅ Completed (2025-07-30)  
+**Blockers**: None  
+**Related**: Consul-Nomad integration
 
 Tasks:
 
-- [ ] Backup Pi-hole configurations from all 3 LXC containers
-- [ ] Document keepalived configuration for VIP failover
-- [ ] Backup Unbound configurations  
-- [ ] Backup DHCP reservations
-- [ ] Create restoration procedures including HA setup
-- [ ] Test restoration in development environment
+- [x] Create Consul ACL tokens (completed 2025-07-29)
+  - Server token: 00b57268-c5f9-edb4-bc90-639fb4ab3232
+  - Client token: 8e0c8f6d-8e00-8011-53f3-a0da44c305d4
+- [x] Store tokens in Infisical at /apollo-13/consul/
+- [x] Create playbook to apply tokens (apply-consul-tokens-to-nomad.yml)
+- [x] Execute playbook to apply tokens to all Nomad nodes (completed 2025-07-29)
+  - Token configured in /etc/nomad.d/nomad.hcl on all Nomad servers
+  - Nomad services restarted after token configuration
+- [x] Restart Nomad services to activate token configuration (completed 2025-07-30)
+- [x] Verify service registration in Consul (completed 2025-07-30)
+  - All services registered successfully: consul, nomad (3 servers), nomad-client (3 clients)
+  - ACL token required for service queries
+  - All nodes including mable working correctly
+
+#### 6. Fix Consul Service on nomad-client-3-mable
+
+**Description**: Consul service is not running on nomad-client-3-mable  
+**Status**: ✅ Resolved - Service confirmed active (2025-07-30)  
+**Blockers**: None  
+**Related**: Consul cluster health
+
+Tasks:
+
+- [x] Create playbook to fix Consul configuration
+- [x] Consul service verified active on all nodes including mable (2025-07-30)
+  - All services (Nomad and Consul) confirmed active via systemctl
+  - No manual intervention required
+- [x] Verify Consul service is running
+- [x] Confirm node joins Consul cluster
+
+#### 7. Establish Backup Procedures
+
+**Description**: Implement backup strategy for critical configurations  
+**Status**: ✅ Already Handled - Existing backup processes are in place and working  
+**Blockers**: None  
+**Related**: Risk mitigation strategy
+
+**Note**: Backup procedures are already implemented and maintained outside of this project scope. No action required.
 
 ### Medium Priority - Phase 0-1 Preparation
 
 These tasks support the implementation but aren't immediate blockers.
 
-#### 5. Create Development Environment
+#### 8. Import Infrastructure Roles from terraform-homelab
+
+**Description**: Import existing Ansible roles and modules for infrastructure management  
+**Status**: ✅ Completed (2025-07-30)  
+**Blockers**: None  
+**Related**: Reusable infrastructure components
+
+Tasks:
+
+- [x] Import consul role for service discovery deployment
+- [x] Import nomad role for workload orchestration
+- [x] Import system_base role with firewall configurations
+- [x] Import nfs role for shared storage
+- [x] Import custom Consul/Nomad modules
+- [x] Create consul_dns role for Phase 1
+- [x] Document imported components
+- [x] Update repository structure
+
+#### 9. Enable Consul Telemetry and Monitoring
+
+**Description**: Configure Prometheus metrics collection for Consul cluster  
+**Status**: ✅ Completed (2025-07-30)  
+**Blockers**: None  
+**Related**: Infrastructure monitoring and observability
+
+Tasks:
+
+- [x] Enable telemetry endpoints on all Consul nodes
+- [x] Create ACL policy "prometheus-scraping" with read permissions
+- [x] Generate ACL token for Prometheus/Netdata access
+- [x] Configure Netdata collectors on all nodes
+- [x] Store token in Infisical at `/apollo-13/consul/PROMETHEUS_SCRAPING_TOKEN`
+- [x] Validate metrics collection is working
+- [x] Create documentation for telemetry setup
+
+**Documentation**: [Consul Telemetry Setup Guide](consul-telemetry-setup.md)
+
+#### 10. Create Development Environment
 
 **Description**: Set up isolated testing environment for DNS/IPAM changes  
 **Status**: Not Started  
-**Blockers**: Infrastructure assessment needed first  
+**Blockers**: None  
 **Related**: `dns-ipam-implementation-plan.md` - Phase 1
 
 Tasks:
@@ -130,7 +203,7 @@ Tasks:
 - [ ] Set up test clients
 - [ ] Document access procedures
 
-#### 6. Design IP Address Schema
+#### 11. Design IP Address Schema
 
 **Description**: Create comprehensive IP addressing plan for all networks  
 **Status**: Not Started  
@@ -144,7 +217,7 @@ Tasks:
 - [ ] Plan for growth
 - [ ] Document in NetBox
 
-#### 7. Develop Service Templates
+#### 12. Develop Service Templates
 
 **Description**: Create Ansible templates for service configurations  
 **Status**: Not Started  
@@ -158,7 +231,7 @@ Tasks:
 - [ ] NetBox custom fields
 - [ ] Integration scripts
 
-#### 8. Implement Monitoring Strategy
+#### 11. Implement Monitoring Strategy
 
 **Description**: Deploy monitoring for DNS/IPAM services  
 **Status**: Not Started  
@@ -172,7 +245,7 @@ Tasks:
 - [ ] Create Grafana dashboards
 - [ ] Configure alerts
 
-#### 9. Create Migration Runbooks
+#### 12. Create Migration Runbooks
 
 **Description**: Detailed procedures for each migration phase  
 **Status**: Not Started  
@@ -186,7 +259,7 @@ Tasks:
 - [ ] Phase 3 migration checklist
 - [ ] Rollback procedures
 
-#### 10. Establish Change Management Process
+#### 13. Establish Change Management Process
 
 **Description**: Define how changes will be tracked and approved  
 **Status**: Not Started  
@@ -200,7 +273,7 @@ Tasks:
 - [ ] Set up change tracking
 - [ ] Document in project wiki
 
-#### 11. Bootstrap NetBox with Essential Records
+#### 14. Bootstrap NetBox with Essential Records
 
 **Description**: Seed NetBox with critical DNS records to enable early PowerDNS sync  
 **Status**: Not Started  
@@ -218,7 +291,7 @@ Tasks:
 
 These tasks are important but can wait until implementation begins.
 
-#### 12. Plan Multi-Site DNS Strategy
+#### 15. Plan Multi-Site DNS Strategy
 
 **Description**: Design DNS architecture for og-homelab integration  
 **Status**: Not Started  
@@ -232,7 +305,7 @@ Tasks:
 - [ ] Plan zone delegation
 - [ ] Document architecture
 
-#### 13. Develop Automation Workflows
+#### 16. Develop Automation Workflows
 
 **Description**: Create event-driven automation for DNS/IPAM  
 **Status**: Not Started  
@@ -246,7 +319,7 @@ Tasks:
 - [ ] Auto-provisioning workflows
 - [ ] Self-service portals
 
-#### 14. Create User Documentation
+#### 17. Create User Documentation
 
 **Description**: End-user guides for new DNS/IPAM services  
 **Status**: Not Started  
@@ -260,7 +333,7 @@ Tasks:
 - [ ] IPAM request procedures
 - [ ] FAQ documentation
 
-#### 15. Design Disaster Recovery Plan
+#### 18. Design Disaster Recovery Plan
 
 **Description**: Comprehensive DR strategy for DNS/IPAM  
 **Status**: Not Started  
@@ -274,7 +347,7 @@ Tasks:
 - [ ] Test failover scenarios
 - [ ] Document recovery steps
 
-#### 16. Implement Security Hardening
+#### 19. Implement Security Hardening
 
 **Description**: Security improvements for all components  
 **Status**: Not Started  
@@ -294,7 +367,7 @@ Tasks:
 - [ ] Nomad periodic jobs for certificate renewal
 - [ ] Certificate storage strategy (host volumes, Consul KV, or Vault)
 
-#### 17. Performance Optimization
+#### 20. Performance Optimization
 
 **Description**: Tune services for optimal performance  
 **Status**: Not Started  
@@ -308,7 +381,7 @@ Tasks:
 - [ ] Database optimization
 - [ ] Cache configuration
 
-#### 18. Capacity Planning
+#### 21. Capacity Planning
 
 **Description**: Plan for future growth and scaling  
 **Status**: Not Started  
@@ -322,7 +395,7 @@ Tasks:
 - [ ] Scaling strategies
 - [ ] Budget planning
 
-#### 19. Integration Testing
+#### 22. Integration Testing
 
 **Description**: Comprehensive testing of all integrations  
 **Status**: Not Started  
@@ -336,7 +409,7 @@ Tasks:
 - [ ] Ansible automation tests
 - [ ] End-to-end scenarios
 
-#### 20. Create Operational Dashboards
+#### 23. Create Operational Dashboards
 
 **Description**: Real-time visibility into DNS/IPAM operations  
 **Status**: Not Started  
@@ -350,7 +423,7 @@ Tasks:
 - [ ] IPAM utilization
 - [ ] Trend analysis
 
-#### 21. Develop SOP Documentation
+#### 24. Develop SOP Documentation
 
 **Description**: Standard operating procedures for common tasks  
 **Status**: Not Started  
@@ -364,7 +437,7 @@ Tasks:
 - [ ] Maintenance procedures
 - [ ] Escalation paths
 
-#### 22. Configure Automated Backups
+#### 25. Configure Automated Backups
 
 **Description**: Automated backup solutions for all services  
 **Status**: Not Started  
@@ -378,7 +451,7 @@ Tasks:
 - [ ] Off-site storage
 - [ ] Recovery testing
 
-#### 23. Implement Compliance Controls
+#### 26. Implement Compliance Controls
 
 **Description**: Ensure compliance with relevant standards  
 **Status**: Not Started  
@@ -392,7 +465,7 @@ Tasks:
 - [ ] Audit procedures
 - [ ] Compliance reporting
 
-#### 24. Plan Knowledge Transfer
+#### 27. Plan Knowledge Transfer
 
 **Description**: Ensure team has necessary skills  
 **Status**: Not Started  
@@ -410,14 +483,14 @@ Tasks:
 
 ### Overall Progress
 
-- **Completed**: 3/25 tasks (12%)
-- **In Progress**: 1/25 tasks (4%)
-- **Not Started**: 21/25 tasks (84%)
+- **Completed**: 8/28 tasks (29%)
+- **In Progress**: 0/28 tasks (0%)
+- **Not Started**: 20/28 tasks (71%)
 
 ### Phase Breakdown
 
-- **High Priority**: 3/5 completed (60% - Assessment done, Proxmox inventory fixed, Infisical Phase 3 complete)
-- **Medium Priority**: 0/7 completed (0%)
+- **High Priority**: 7/7 completed (100% - All high priority tasks complete)
+- **Medium Priority**: 1/8 completed (13% - Infrastructure roles imported)
 - **Low Priority**: 0/13 completed (0%)
 
 ## Risk Items and Blockers
@@ -425,33 +498,25 @@ Tasks:
 ### Critical Risks
 
 1. **DNS Infrastructure Complexity**: Pi-hole runs as 3-node HA cluster with keepalived - migration more complex than expected
-2. **No Backup Strategy**: Risk of data loss during migration
-3. **Lack of Testing Environment**: Cannot validate changes safely
-4. **No Consul-Nomad Integration**: Service discovery not configured
+2. **Lack of Testing Environment**: Cannot validate changes safely
 
 ### Current Blockers
 
-1. **Pi-hole HA Complexity**: Must coordinate backups across 3 LXC containers and maintain keepalived VIP
-2. **No Development Environment**: Cannot test configurations
-3. **No Consul-Nomad Integration**: Service discovery not configured
-4. **Incomplete Network Documentation**: Need to document DNS zones and DHCP scopes
+1. **No Development Environment**: Cannot test configurations safely
 
 ## Recommendations for Task Execution
 
 ### Immediate Actions (Next 3-5 Days)
 
-1. **Document Pi-hole HA cluster configuration** - Keepalived VIP and sync between 3 nodes
-2. **Complete network documentation** - DNS zones, DHCP scopes, and IP allocations
-3. **Implement emergency backup procedures** for current DNS (all 3 Pi-hole nodes)
-4. **Archive 1Password configuration files** - Complete Infisical migration cleanup
+1. **Create development environment** for DNS/IPAM testing
+2. **Begin Phase 1: Cement Consul Foundation** - Open port 8600/udp, configure DNS
+3. **Deploy PowerDNS to Nomad** - Start Phase 2 implementation
 
 ### Week 2 Focus
 
-1. **Enable Consul-Nomad integration** on doggos-homelab
-2. **Design IP addressing schema** based on assessment findings
-3. **Set up isolated development environment** for safe testing
-4. **Create development environment** for DNS/IPAM testing
-5. **Bootstrap NetBox with essential records** (per ROADMAP.md recommendation)
+1. **Design IP addressing schema** based on assessment findings
+2. **Bootstrap NetBox with essential records** (per ROADMAP.md recommendation)
+3. **Configure NetBox-PowerDNS integration** - Phase 3 preparation
 
 ### Month 2 Goals
 
@@ -463,10 +528,13 @@ Tasks:
 ## Related Documentation
 
 - [DNS & IPAM Implementation Plan](dns-ipam-implementation-plan.md) - Master implementation roadmap
+- [Phase 1 Implementation Guide](phase1-implementation-guide.md) - Consul DNS setup guide
+- [Imported Infrastructure](imported-infrastructure.md) - Documentation of imported roles and modules
+- [Repository Structure](repository-structure.md) - Updated project organization
 - [NetBox Integration Patterns](netbox.md) - NetBox configuration and usage
 - [Infisical Setup and Migration](infisical-setup-and-migration.md) - Secret management transition
 - [Troubleshooting Guide](troubleshooting.md) - Common issues and solutions
-- [1Password Integration (Archived)](archive/1password-integration.md) - Legacy secret management (being replaced)
+- [1Password Integration (Archived)](archive/1password-integration.md) - Legacy secret management (archived 2025-07-29)
 
 ## Maintenance Notes
 
@@ -477,11 +545,57 @@ This document should be updated:
 - When new tasks are identified
 - When priorities change
 
-Last review: 2025-07-29  
-Next review: 2025-08-05
+Last review: 2025-07-30  
+Next review: 2025-08-06
 
 ## Change Log
 
+- **2025-07-30** (Update 7): Consul telemetry and monitoring enabled
+  - Enabled telemetry endpoints on all Consul nodes
+  - Created "prometheus-scraping" ACL policy with read permissions
+  - Generated ACL token for Prometheus/Netdata access
+  - Configured Netdata collectors on all nodes with the token
+  - Stored token in Infisical at `/apollo-13/consul/PROMETHEUS_SCRAPING_TOKEN`
+  - Validated metrics collection is working (consul_local.* charts available)
+  - Created comprehensive documentation for telemetry setup
+  - Task count increased to 29 (added telemetry task as #9)
+- **2025-07-30** (Update 6): Infrastructure roles imported and documented
+  - Imported consul, nomad, system_base, and nfs roles from terraform-homelab
+  - Imported custom Consul/Nomad modules and utilities
+  - Created consul_dns role for Phase 1 DNS implementation
+  - Created comprehensive documentation for imported components
+  - Updated repository structure to reflect new organization
+  - Added Phase 1 implementation guide
+  - Task count increased to 28 (added infrastructure import task)
+- **2025-07-30** (Update 5): Consul-Nomad integration fully operational
+  - Confirmed all Nomad services successfully registered in Consul after restart
+  - Services registered: consul, nomad (3 servers), nomad-client (3 clients)
+  - Removed service registration from risks and blockers
+  - Updated immediate actions to focus on Phase 1 implementation
+  - All high-priority pre-implementation tasks now complete
+- **2025-07-30** (Update 4): Major status update based on verification
+  - Marked Task 5 (Consul ACL Tokens) as completed - tokens already applied on 2025-07-29
+  - Marked Task 6 (Fix Consul on mable) as resolved - service confirmed active
+  - Updated progress: 7/27 tasks completed (26%), all high priority tasks complete
+  - Discovered services not registering despite token configuration - needs restart
+  - Updated immediate actions to focus on service restart and verification
+- **2025-07-30** (Update 3): Updated backup procedures documentation
+  - Marked Task 7 (Backup Procedures) as already handled - existing processes in place
+  - Removed backup strategy from critical risks and current blockers
+  - Updated immediate actions to remove backup-related tasks
+  - Clarified that backups are maintained outside project scope
+- **2025-07-30** (Update 2): Corrected task statuses based on evidence review
+  - Marked Pi-hole HA Cluster Documentation as completed - full documentation exists in docs/infrastructure/pihole-ha-cluster.md
+  - Corrected task 5 status to "Not Started" - playbook exists but hasn't been executed
+  - Corrected task 6 status to "Not Started" - playbook exists but hasn't been executed
+  - Updated progress metrics: 4/27 completed (15%), 0 in progress
+- **2025-07-30**: Major status correction and task realignment
+  - Corrected Consul ACL token status - tokens already created on 2025-07-29
+  - Added two new high-priority tasks for applying tokens and fixing Consul on mable
+  - Marked 1Password archive as completed (files in docs/archive/)
+  - Updated task count to 27 total tasks
+  - Reordered priorities to reflect actual next steps
+  - Clarified that Consul-Nomad integration is partially complete (config applied, tokens pending)
 - **2025-07-29**: Project status update and alignment check
   - Updated progress metrics: 3/25 tasks completed (12%)
   - Removed resolved blockers (Proxmox inventory fixed, Infisical Phase 3 complete)
