@@ -8,20 +8,6 @@
       "type": "http",
       "url": "https://mcp.grep.app"
     },
-    "serena": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena-mcp-server",
-        "--context",
-        "ide-assistant",
-        "--project",
-        "/Users/basher8383/dev/learning/netbox-ansible"
-      ],
-      "env": {}
-    },
     "infisical": {
       "type": "stdio",
       "command": "npx",
@@ -39,6 +25,13 @@
       "command": "npx",
       "args": [
         "firecrawl-mcp"
+      ]
+    },
+    "netdata": {
+      "type": "stdio",
+      "command": "/usr/local/netdata/usr/sbin/nd-mcp",
+      "args": [
+        "ws://192.168.10.02:19999/mcp?api_key=d8d22964-c41e-43ab-bdba-11c063622051"
       ]
     }
   }
