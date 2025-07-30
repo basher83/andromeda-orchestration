@@ -1,0 +1,40 @@
+Netdata Consul Configuration Report
+==================================
+Date: 2025-07-30
+
+Token Used: 73d098e0-3dda-a9d9-e9e2-4756ee1334e4
+
+Configuration Status:
+- nomad-server-1-lloyd: 
+  - Netdata: Installed
+  - Consul API: Accessible
+- nomad-server-2-holly: 
+  - Netdata: Installed
+  - Consul API: Accessible
+- nomad-server-3-mable: 
+  - Netdata: Installed
+  - Consul API: Accessible
+- nomad-client-1-lloyd: 
+  - Netdata: Installed
+  - Consul API: Accessible
+- nomad-client-2-holly: 
+  - Netdata: Installed
+  - Consul API: Accessible
+- nomad-client-3-mable: 
+  - Netdata: Installed
+  - Consul API: Accessible
+- lloyd, holly, mable:
+  - Netdata: Installed
+  - Consul API: Not accessible (no Consul on physical hosts)
+
+Next Steps:
+1. Verify metrics in Netdata dashboard (http://<host>:19999)
+2. Look for consul.* metrics
+3. Store the token in Infisical at /apollo-13/consul/PROMETHEUS_SCRAPING_TOKEN
+
+Summary:
+✅ Telemetry enabled on all Consul nodes
+✅ ACL policy "prometheus-scraping" created
+✅ ACL token generated: 73d098e0-3dda-a9d9-e9e2-4756ee1334e4
+✅ Netdata configured on all nodes with Consul collector
+✅ Consul metrics endpoint accessible with token
