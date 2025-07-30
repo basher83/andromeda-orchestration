@@ -35,6 +35,12 @@ Visual representations of project architecture and workflows:
 - [**Pre-commit Setup**](pre-commit-setup.md) - Configuration guide for pre-commit hooks and code quality tools
 - [**Testing Strategy**](testing-strategy.md) - Framework for testing Ansible playbooks and infrastructure changes
 
+### Infrastructure Configuration
+
+- [**Consul Telemetry Setup**](consul-telemetry-setup.md) - Guide for enabling Consul metrics collection with Netdata
+- [**Imported Infrastructure**](imported-infrastructure.md) - Documentation of Ansible roles and modules imported from terraform-homelab
+- [**Phase 1 Implementation Guide**](phase1-implementation-guide.md) - Step-by-step guide for DNS infrastructure Phase 1
+
 ## Operations
 
 ### Troubleshooting

@@ -8,15 +8,38 @@ This document provides a detailed explanation of the repository organization and
 netbox-ansible/
 ├── bin/                        # (Archived - see docs/archive/bin/)
 ├── docs/                       # Documentation
-│   └── archive/               # Original documentation files
+│   ├── archive/               # Archived documentation files
+│   ├── diagrams/              # Architecture and flow diagrams
+│   ├── infrastructure/        # Infrastructure documentation
+│   └── ai-docs/               # AI assistant documentation
 ├── inventory/                  # Ansible inventories
-│   └── og-homelab/           # Environment-specific inventory
+│   ├── og-homelab/           # Original homelab cluster
+│   └── doggos-homelab/       # Doggos cluster (3-node)
+├── jobs/                       # Nomad job specifications
 ├── playbooks/                  # Ansible playbooks
+│   ├── assessment/           # Infrastructure assessment
+│   ├── consul/               # Consul service management
 │   ├── examples/             # Example/reference playbooks
-│   └── infrastructure/       # Production playbooks
+│   ├── infrastructure/       # Infrastructure management
+│   │   ├── consul-nomad/    # Integration playbooks
+│   │   └── user-management/ # User/SSH management
+│   └── nomad/                # Nomad cluster management
 ├── plugins/                    # Custom Ansible plugins
-│   └── lookup/              # Custom lookup plugins
-├── roles/                      # Ansible roles (future)
+│   ├── lookup/              # Custom lookup plugins
+│   ├── modules/             # Custom Ansible modules
+│   └── module_utils/        # Module helper utilities
+├── reports/                    # Assessment reports
+│   ├── assessment/          # Phase 0 assessments
+│   ├── consul/              # Consul health reports
+│   ├── dns-ipam/            # DNS/IPAM audits
+│   ├── infrastructure/      # Readiness reports
+│   └── nomad/               # Nomad assessments
+├── roles/                      # Ansible roles
+│   ├── consul/              # Consul deployment
+│   ├── consul_dns/          # Consul DNS setup
+│   ├── nomad/               # Nomad deployment
+│   ├── nfs/                 # NFS client setup
+│   └── system_base/         # Base system config
 ├── scripts/                    # Support scripts
 └── tests/                      # Test playbooks
 ```
@@ -65,11 +88,29 @@ Organized by environment:
 
 ### `/plugins/`
 
-- **lookup/onepassword_connect.py** - Custom lookup plugin for 1Password Connect
+- **lookup/** - Legacy lookup plugins (use Infisical instead)
+- **modules/** - Custom Ansible modules for Consul and Nomad
+  - `consul_acl_*` - Consul ACL management
+  - `nomad_job*` - Nomad job deployment
+  - `consul_get_service_detail` - Service discovery
+- **module_utils/** - Shared module utilities
+  - `consul.py` - Consul API client
+  - `nomad.py` - Nomad API client
+  - `utils.py` - Common helpers
+
+### `/roles/`
+
+- **consul/** - HashiCorp Consul deployment and configuration
+- **consul_dns/** - Consul DNS resolution setup (Phase 1)
+- **nomad/** - HashiCorp Nomad deployment and configuration
+- **nfs/** - NFS client configuration for shared storage
+- **system_base/** - Base system configuration (firewall, Docker, SSH)
 
 ### `/scripts/`
 
 - **setup.sh** - Quick setup script for new users
+- **test-assessment-playbooks.sh** - Test assessment playbook execution
+- **scan-secrets.sh** - Infisical secret scanning
 - **get-secret-from-connect.py** - Legacy 1Password Connect script (deprecated)
 - **set-1password-env.sh** - Legacy 1Password environment config (deprecated)
 - **set-1password-env.sh.example** - Legacy template (deprecated)
@@ -125,9 +166,16 @@ ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.ym
 - Review `.gitignore` regularly
 - Legacy 1Password files should not be used for new implementations
 
+## Recent Updates (2025-07-30)
+
+- **Imported Roles**: Brought in consul, nomad, nfs, and system_base roles from terraform-homelab
+- **Custom Modules**: Added Consul and Nomad management modules with utilities
+- **New Role**: Created consul_dns role for Phase 1 DNS implementation
+- **Phase 1 Playbooks**: Added infrastructure playbooks for Consul DNS foundation
+
 ## Future Enhancements
 
 - Add NetBox dynamic inventory alongside Proxmox
-- Create reusable roles for common tasks
-- Add CI/CD integration examples
-- Implement automated testing
+- Create PowerDNS deployment role (Phase 2)
+- Add NetBox integration role (Phase 3)
+- Implement automated testing with Molecule
