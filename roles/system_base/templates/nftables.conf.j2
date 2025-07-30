@@ -1,0 +1,50 @@
+#!/usr/sbin/nft -f
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+
+        # Allow established and related connections
+        ct state established,related accept
+
+        # Allow loopback traffic
+        iif lo accept
+
+        # Allow SSH
+        tcp dport 22 accept
+
+        # Allow Nomad HTTP API
+        tcp dport 4646 accept
+
+        # Allow Consul HTTP API
+        tcp dport 8500 accept
+
+        # Allow Consul communication (all directions)
+        tcp dport { 8300, 8301, 8302, 8600 } accept
+        udp dport { 8301, 8302, 8600 } accept
+        udp sport { 8301, 8302, 8600 } accept
+
+        # Allow Nomad communication (all directions)
+        tcp dport { 4646, 4647, 4648 } accept
+        udp dport { 4647, 4648 } accept
+        udp sport { 4647, 4648 } accept
+
+        # Allow all ICMP (for testing)
+        ip protocol icmp accept
+
+        # Allow Docker API for Nomad
+        tcp dport 2375 accept
+        tcp dport 2376 accept
+
+        # Drop everything else
+        drop
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}

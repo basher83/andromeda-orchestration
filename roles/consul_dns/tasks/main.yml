@@ -1,0 +1,23 @@
+---
+# Main tasks for consul_dns role
+
+- name: Include OS-specific variables
+  include_vars: "{{ ansible_os_family }}.yml"
+  failed_when: false
+
+- name: Configure DNS resolution method
+  include_tasks: "{{ consul_dns_method }}.yml"
+  when: consul_dns_method in ['systemd-resolved', 'dnsmasq', 'resolv']
+
+- name: Register infrastructure services
+  include_tasks: register_services.yml
+  when: 
+    - consul_register_services | bool
+    - inventory_hostname in groups['consul_servers']
+    - inventory_hostname == groups['consul_servers'][0]
+
+- name: Validate DNS resolution
+  include_tasks: validate.yml
+  tags:
+    - validate
+    - never

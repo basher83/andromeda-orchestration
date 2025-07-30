@@ -1,0 +1,26 @@
+---
+# Main entry point for system_base role
+
+- name: Ensure base packages are installed
+  ansible.builtin.package:
+    name: "{{ system_base_packages }}"
+    state: present
+
+- name: Include chrony setup
+  ansible.builtin.include_tasks: chrony.yml
+  when: system_base_chrony_enabled
+
+- name: Include nftables setup
+  ansible.builtin.include_tasks: nftables.yml
+  when: system_base_nftables_enabled
+
+- name: Include SSH hardening
+  ansible.builtin.include_tasks: ssh_hardening.yml
+  when: system_base_ssh_hardening_enabled
+
+- name: Include Docker setup
+  ansible.builtin.include_tasks: docker.yml
+  when: system_base_docker_enabled
+
+- name: Create common directories
+  ansible.builtin.include_tasks: directories.yml

@@ -1,0 +1,15 @@
+---
+# Handlers for consul_dns role
+
+- name: restart systemd-resolved
+  systemd:
+    name: systemd-resolved
+    state: restarted
+    daemon_reload: true
+  become: true
+
+- name: restart dnsmasq
+  systemd:
+    name: dnsmasq
+    state: restarted
+  become: true

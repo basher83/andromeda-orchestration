@@ -1,0 +1,57 @@
+---
+# Handlers for system_base role
+# These handlers restart or reload core system services after configuration changes.
+
+# Chrony
+- name: Restart chrony
+  ansible.builtin.service:
+    name: "{{ system_base_chrony_service | default('chrony') }}"
+    state: restarted
+
+- name: reload chrony
+  ansible.builtin.service:
+    name: "{{ system_base_chrony_service | default('chrony') }}"
+    state: reloaded
+  ignore_errors: true
+
+# nftables
+- name: restart nftables
+  ansible.builtin.service:
+    name: "{{ system_base_nftables_service | default('nftables') }}"
+    state: restarted
+
+- name: reload nftables
+  ansible.builtin.service:
+    name: "{{ system_base_nftables_service | default('nftables') }}"
+    state: reloaded
+  ignore_errors: true
+
+# SSHD
+- name: Restart sshd
+  ansible.builtin.service:
+    name: "{{ system_base_sshd_service | default('sshd') }}"
+    state: restarted
+
+- name: Reload sshd
+  ansible.builtin.service:
+    name: "{{ system_base_sshd_service | default('sshd') }}"
+    state: reloaded
+  ignore_errors: true
+
+# Docker
+- name: Restart docker
+  ansible.builtin.service:
+    name: "{{ system_base_docker_service | default('docker') }}"
+    state: restarted
+
+- name: reload docker
+  ansible.builtin.service:
+    name: "{{ system_base_docker_service | default('docker') }}"
+    state: reloaded
+  ignore_errors: true
+
+# Netdata
+- name: Restart netdata
+  ansible.builtin.service:
+    name: netdata
+    state: restarted

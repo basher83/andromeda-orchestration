@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# Consul DNS Configuration for systemd-resolved
+
+[Resolve]
+# Forward .consul queries to Consul DNS
+DNS={{ consul_dns_servers | join(':' + consul_dns_port|string + ' ') }}:{{ consul_dns_port }}
+Domains=~{{ consul_domain }}
+
+# Keep existing DNS servers for other queries
+FallbackDNS=
+DNSStubListener=yes
+Cache=yes

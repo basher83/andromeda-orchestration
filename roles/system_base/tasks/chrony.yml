@@ -1,0 +1,24 @@
+---
+# Chrony installation and configuration
+
+- name: Install chrony
+  ansible.builtin.package:
+    name: "{{ system_base_chrony_package | default('chrony') }}"
+    state: present
+
+- name: Deploy chrony configuration
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: "{{ system_base_chrony_config_path | default('/etc/chrony/chrony.conf') }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: 
+    - Restart chrony
+    - Restart netdata
+
+- name: Ensure chrony service is enabled and started
+  ansible.builtin.service:
+    name: "{{ system_base_chrony_service | default('chrony') }}"
+    enabled: true
+    state: started

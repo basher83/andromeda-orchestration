@@ -1,0 +1,66 @@
+---
+- name: Validate TLS files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - "{{ nomad_tls_ca_file }}"
+    - "{{ nomad_tls_cert_file }}"
+    - "{{ nomad_tls_key_file }}"
+  register: tls_files
+  when: nomad_tls_enabled | default(false)
+
+- name: Fail if TLS files are missing
+  ansible.builtin.fail:
+    msg: "Required TLS file {{ item.item }} is missing"
+  when:
+    - nomad_tls_enabled | default(false)
+    - not item.stat.exists
+  loop: "{{ tls_files.results }}"
+
+- name: Wait for Consul to be fully bootstrapped
+  ansible.builtin.uri:
+    url: "http://{{ consul_client_addr | default('127.0.0.1') }}:8500/v1/status/leader"
+    method: GET
+  register: consul_leader
+  retries: 10
+  delay: 5
+  until: consul_leader.status == 200 and consul_leader.get('content', '') != '""'
+  when: nomad_consul_integration | default(false)
+
+- block:
+    - name: Validate LXC is installed
+      ansible.builtin.command: which lxc-start
+      register: lxc_installed
+      changed_when: false
+      failed_when: lxc_installed.rc != 0
+
+    - name: Validate Nomad LXC driver is present and executable
+      ansible.builtin.stat:
+        path: /opt/nomad/data/plugins/nomad-driver-lxc
+      register: lxc_driver
+
+    - name: Fail if Nomad LXC driver is missing or not executable
+      ansible.builtin.fail:
+        msg: "Nomad LXC driver is missing or not executable!"
+      when: not lxc_driver.stat.exists or lxc_driver.stat.mode|int is not search('7')
+
+    - name: Validate CNI bridge plugin is present
+      ansible.builtin.stat:
+        path: /opt/cni/bin/bridge
+      register: cni_bridge
+
+    - name: Fail if CNI bridge plugin is missing
+      ansible.builtin.fail:
+        msg: "CNI bridge plugin is missing!"
+      when: not cni_bridge.stat.exists
+
+    - name: Validate sysctl bridge settings
+      ansible.builtin.command: sysctl -n {{ item }}
+      register: sysctl_check
+      changed_when: false
+      failed_when: sysctl_check.stdout != "1"
+      loop:
+        - net.bridge.bridge-nf-call-arptables
+        - net.bridge.bridge-nf-call-ip6tables
+        - net.bridge.bridge-nf-call-iptables
+  when: nomad_client_enabled | bool

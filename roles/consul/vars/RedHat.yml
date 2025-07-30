@@ -1,0 +1,6 @@
+---
+# RedHat specific variables for Consul
+consul_package_dependencies:
+  - yum-utils
+  - ca-certificates
+  - curl

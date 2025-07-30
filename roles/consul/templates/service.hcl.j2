@@ -1,0 +1,31 @@
+{
+  "service": {
+    "name": "{{ item.name }}",  // Service name (required)
+    "port": {{ item.port }},  // Service port (required)
+    {% if item.tags is defined and item.tags | length > 0 %}
+    "tags": [
+      {% for tag in item.tags %}
+      "{{ tag }}"{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ],
+    {% endif %}
+    {% if item.address is defined %}
+    "address": "{{ item.address }}",  // Optional service address
+    {% endif %}
+    {% if item.check is defined %}
+    "check": {
+      "id": "service:{{ item.name }}",  // Health check ID
+      "name": "{{ item.name }} health check",  // Health check name
+      {% if item.check.http is defined %}
+      "http": "{{ item.check.http }}",  // HTTP health check
+      {% elif item.check.tcp is defined %}
+      "tcp": "{{ item.check.tcp }}",  // TCP health check
+      {% elif item.check.script is defined %}
+      "args": {{ item.check.script | to_json }},  // Script-based health check
+      {% endif %}
+      "interval": "{{ item.check.interval | default('10s') }}",  // Check interval
+      "timeout": "{{ item.check.timeout | default('1s') }}"  // Check timeout
+    }
+    {% endif %}
+  }
+}

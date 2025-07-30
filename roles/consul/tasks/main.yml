@@ -1,0 +1,101 @@
+---
+# tasks file for consul
+
+# Consul-specific tasks
+
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ ansible_os_family }}.yml"
+  ignore_errors: true
+
+- name: Install Consul package
+  ansible.builtin.package:
+    name: consul
+    state: present
+  when: consul_version is defined
+
+- name: Create Consul data directory
+  ansible.builtin.file:
+    path: "{{ consul_data_dir }}"
+    state: directory
+    owner: consul
+    group: consul
+    mode: "0750"
+
+- name: Create Consul configuration directory
+  ansible.builtin.file:
+    path: /etc/consul.d
+    state: directory
+    owner: consul
+    group: consul
+    mode: "0750"
+
+- name: Validate TLS files
+  stat:
+    path: "{{ item }}"
+  with_items:
+    - "{{ consul_tls_ca_file }}"
+    - "{{ consul_tls_cert_file }}"
+    - "{{ consul_tls_key_file }}"
+  register: tls_files
+  when: consul_tls_enabled | default(false)
+
+- name: Fail if TLS files are missing
+  fail:
+    msg: "Required TLS file {{ item.item }} is missing"
+  when:
+    - consul_tls_enabled | default(false)
+    - not item.stat.exists
+  with_items: "{{ tls_files.results }}"
+
+- name: Validate bootstrap_expect matches the number of servers
+  assert:
+    that:
+      - consul_bootstrap_expect | int == groups['consul_servers'] | length
+    fail_msg: "The number of Consul servers does not match bootstrap_expect"
+  when: consul_server_enabled | bool
+
+- name: Configure Consul
+  ansible.builtin.template:
+    src: consul.hcl.j2
+    dest: /etc/consul.d/consul.hcl
+    owner: consul
+    group: consul
+    mode: "0640"
+  notify:
+    - Validate consul config
+    - Restart consul after validation
+
+- name: Configure Consul services
+  ansible.builtin.template:
+    src: service.hcl.j2
+    dest: "/etc/consul.d/service-{{ item.name }}-{{ item.port }}.hcl"
+    owner: consul
+    group: consul
+    mode: "0640"
+  loop: "{{ consul_services }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - consul_services | length > 0
+  notify:
+    - Restart consul
+
+- name: Write Consul cloud config if defined
+  ansible.builtin.copy:
+    dest: /etc/consul.d/cloud-config.json
+    content: "{{ consul_cloud_config | to_nice_json }}"
+    owner: consul
+    group: consul
+    mode: "0640"
+  when: consul_cloud_config is defined
+  notify:
+    - Restart consul
+
+- name: Start and enable Consul service
+  ansible.builtin.service:
+    name: consul
+    state: started
+    enabled: true
+
+- name: Bootstrap Consul ACLs
+  ansible.builtin.include_tasks: acl_bootstrap.yml

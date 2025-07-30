@@ -1,0 +1,10 @@
+---
+nfs_client_shares:
+  - server_ip: "192.168.30.6"
+    share_path: "/mnt/DataLake/nomad-volumes"
+    mount_point: "/mnt/nomad-volumes"
+    mount_options: "rw,sync,hard,intr"
+    service_folders: [coder, grafana, prometheus, fabio]
+    directory_owner: "nobody"
+    directory_group: "nogroup"
+    directory_mode: "0755"

@@ -1,0 +1,23 @@
+# Default variables for system_base role
+
+system_base_chrony_enabled: true
+system_base_nftables_enabled: true
+system_base_ssh_hardening_enabled: true
+system_base_docker_enabled: true
+
+system_base_directories:
+  - /opt/data
+  - /srv/shared
+
+system_base_packages:
+  - curl
+  - vim
+  - htop
+
+system_base_chrony_config: {}
+system_base_nftables_config: {}
+system_base_ssh_hardening_options: {}
+system_base_docker_options: {}
+system_base_docker_users: []
+
+system_base_sshd_service: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"

@@ -1,0 +1,92 @@
+---
+# Tasks for setting up NFS client
+
+- name: Validate required variables
+  assert:
+    that:
+      - nfs_client_shares is defined
+    fail_msg: "Required variable (nfs_client_shares) is not defined."
+
+- name: Validate required fields in nfs_client_shares
+  assert:
+    that:
+      - item.server_ip is defined
+      - item.share_path is defined
+      - item.mount_point is defined
+    fail_msg: "Each NFS share must define server_ip, share_path, and mount_point."
+  loop: "{{ nfs_client_shares }}"
+  loop_control:
+    label: "{{ item.mount_point }}"
+
+- name: Validate service folders
+  assert:
+    that:
+      - item.service_folders is defined
+    fail_msg: "Service folders are not defined for {{ item.mount_point }}."
+  loop: "{{ nfs_client_shares }}"
+  loop_control:
+    label: "{{ item.mount_point }}"
+
+- name: Install NFS client packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - nfs-common
+  become: true
+
+- name: Wait for NFS server to be reachable
+  wait_for:
+    host: "{{ item.server_ip }}"
+    port: 2049
+    timeout: 30
+  loop: "{{ nfs_client_shares }}"
+  loop_control:
+    label: "{{ item.server_ip }}"
+  become: true
+
+- name: Ensure NFS shares are mounted
+  block:
+    - name: Ensure mount point directory exists
+      ansible.builtin.file:
+        path: "{{ item.mount_point }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ nfs_client_shares }}"
+      loop_control:
+        label: "{{ item.mount_point }}"
+      become: true
+
+    - name: Mount NFS share
+      ansible.builtin.mount:
+        src: "{{ item.server_ip }}:{{ item.share_path }}"
+        path: "{{ item.mount_point }}"
+        fstype: nfs
+        opts: "{{ item.mount_options }}"
+        state: mounted
+      loop: "{{ nfs_client_shares }}"
+      loop_control:
+        label: "{{ item.mount_point }}"
+      become: true
+
+    - name: Add NFS mount to fstab for persistence
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        line: "{{ item.server_ip }}:{{ item.share_path }} {{ item.mount_point }} nfs {{ item.mount_options }} 0 0"
+        state: present
+      loop: "{{ nfs_client_shares }}"
+      notify: Remount NFS shares
+      become: true
+
+    - name: Create service subfolders
+      ansible.builtin.file:
+        path: "{{ item.0.mount_point }}/{{ item.1 }}"
+        state: directory
+        owner: "{{ item.0.directory_owner }}"
+        group: "{{ item.0.directory_group }}"
+        mode: "{{ item.0.directory_mode }}"
+      with_subelements:
+        - "{{ nfs_client_shares }}"
+        - service_folders
+      become: true

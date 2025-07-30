@@ -1,0 +1,26 @@
+---
+# handlers file for consul
+
+- name: Restart consul
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+
+- name: Reload consul
+  ansible.builtin.service:
+    name: consul
+    state: reloaded
+
+- name: Validate consul config
+  ansible.builtin.command: consul validate /etc/consul.d/consul.hcl
+  register: consul_config_validation
+  changed_when: false
+  failed_when: consul_config_validation.rc != 0
+  listen: Validate consul config
+
+- name: Restart consul (if config is valid)
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+  when: consul_config_validation is defined and consul_config_validation.rc == 0
+  listen: Restart consul after validation

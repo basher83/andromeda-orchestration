@@ -1,0 +1,10 @@
+---
+# Debian specific variables for nomad
+nomad_package_dependencies:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg-agent
+  - software-properties-common
+  - dmidecode  # Required for host metrics
+  - iproute2   # Required for network configuration

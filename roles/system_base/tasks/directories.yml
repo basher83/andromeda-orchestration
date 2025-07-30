@@ -1,0 +1,21 @@
+---
+# Create common directories
+
+- name: Ensure Fabio volume directory exists with 0777
+  ansible.builtin.file:
+    path: /mnt/nomad-volumes/fabio
+    state: directory
+    owner: root
+    group: root
+    mode: '0777'
+  when: "'/mnt/nomad-volumes/fabio' in system_base_directories"
+
+- name: Ensure other common directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop: "{{ system_base_directories }}"
+  when: item != '/mnt/nomad-volumes/fabio'

@@ -1,0 +1,53 @@
+---
+- name: Install LXC and lxc-templates (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - lxc
+      - lxc-templates
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  become: true
+
+- name: Install LXC (RedHat/CentOS)
+  ansible.builtin.yum:
+    name: lxc
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "RedHat"
+  become: true
+
+- name: Create Nomad plugins directory
+  ansible.builtin.file:
+    path: /opt/nomad/data/plugins
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Download Nomad LXC driver binary
+  ansible.builtin.get_url:
+    url: "https://releases.hashicorp.com/nomad-driver-lxc/0.1.0/nomad-driver-lxc_0.1.0_linux_amd64.zip"
+    dest: /tmp/nomad-driver-lxc.zip
+    mode: "0644"
+  become: true
+
+- name: Unarchive Nomad LXC driver binary
+  ansible.builtin.unarchive:
+    src: /tmp/nomad-driver-lxc.zip
+    dest: /opt/nomad/data/plugins
+    remote_src: yes
+    creates: /opt/nomad/data/plugins/nomad-driver-lxc
+  become: true
+
+- name: Ensure Nomad LXC driver binary is executable
+  ansible.builtin.file:
+    path: /opt/nomad/data/plugins/nomad-driver-lxc
+    mode: "0755"
+    state: file
+  become: true
+
+- name: Remove Nomad LXC driver zip file
+  ansible.builtin.file:
+    path: /tmp/nomad-driver-lxc.zip
+    state: absent
+  become: true

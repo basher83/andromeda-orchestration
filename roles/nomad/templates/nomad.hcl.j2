@@ -1,0 +1,158 @@
+# Nomad agent configuration (Jinja2 template)
+
+# Data directory and bind address
+data_dir  = "{{ nomad_data_dir | default('/opt/nomad/data') }}"
+bind_addr = "{{ nomad_bind_addr | default('0.0.0.0') }}"
+
+# Logging and datacenter
+log_level  = "{{ 'DEBUG' if nomad_environment == 'dev' else 'INFO' }}"
+datacenter = "{{ nomad_datacenter | default('dc1') }}"
+
+# Advertise on high-speed interface
+advertise {
+  http = "{{ inter_device_interface }}:4646"
+  rpc  = "{{ inter_device_interface }}:4647"
+  serf = "{{ inter_device_interface }}:4648"
+}
+
+ui {
+  enabled =  true
+}
+
+# RPC and dial timeouts
+limits {
+  rpc_timeout  = "{{ nomad_rpc_timeout  | default('3s') }}"
+  dial_timeout = "{{ nomad_dial_timeout | default('3s') }}"
+}
+
+# Docker plugin (for Docker workloads)
+plugin "docker" {
+  config {
+    endpoint         = "unix:///var/run/docker.sock"
+    allow_privileged = true
+    volumes {
+      enabled = true
+    }
+  }
+}
+
+# LXC plugin (for LXC workloads)
+plugin "lxc" {
+  config {
+    allow_privileged = true
+    volumes {
+      enabled = true
+    }
+  }
+}
+
+{% if nomad_server_enabled | bool %}
+# === Server configuration ===
+server {
+  enabled          = true
+  bootstrap_expect = {{ nomad_server_bootstrap_expect | default(nomad_server_count | default(3)) }}
+
+  # Join peers
+  retry_join = [
+    {% if nomad_server_retry_join is defined and nomad_server_retry_join | length > 0 %}
+    {% for host in nomad_server_retry_join %}  "{{ host }}"{% if not loop.last %},{% endif %}
+    {% endfor %}
+    {% else %}
+    "127.0.0.1"
+    {% endif %}
+  ]
+
+}
+
+{% if nomad_autopilot_enabled | default(true) %}
+# Autopilot for cluster health (must be top-level)
+autopilot {
+  last_contact_threshold     = "{{ nomad_autopilot_last_contact     | default('100ms') }}"
+  cleanup_dead_servers       = {{ nomad_autopilot_cleanup | default(false) | ternary('true', 'false') }}
+}
+{% endif %}
+
+# Server does not run workloads by default
+client {
+  enabled = false
+}
+{% elif nomad_client_enabled | bool %}
+# === Client configuration ===
+client {
+  enabled  = true
+  servers  = [
+    {% if nomad_client_servers is defined and nomad_client_servers | length > 0 %}
+    {% for host in nomad_client_servers %}  "{{ host }}"{% if not loop.last %},{% endif %}
+    {% endfor %}
+    {% else %}
+    "127.0.0.1"
+    {% endif %}
+  ]
+
+  network_interface = "{{ nomad_client_network_interface | default('eth1') }}"
+  cni_path          = "{{ nomad_cni_path             | default('/opt/cni/bin') }}"
+
+  {% if nomad_client_bridge_networking | default(true) %}
+  bridge_network_name   = "nomad"
+  bridge_network_subnet = "172.26.64.0/20"
+  {% if nomad_consul_service_mesh | default(false) %}
+  cni_config_dir        = "/etc/cni/net.d"
+  {% endif %}
+  {% endif %}
+
+  {% if nomad_client_host_networking | default(true) %}
+  host_network "public" {
+    cidr           = "0.0.0.0/0"
+    reserved_ports = "22,80,443"
+  }
+  {% endif %}
+
+  host_volume "nomad-volumes" {
+    path      = "{{ nomad_client_volume_path }}"
+    read_only = false
+  }
+
+  {% if nomad_consul_service_mesh | default(false) %}
+  meta {
+    "consul.grpc" = "8502"
+  }
+  {% endif %}
+}
+{% endif %}
+
+{% if nomad_consul_integration | default(false) %}
+# === Consul integration ===
+consul {
+  address = "{{ nomad_consul_address | default('127.0.0.1:8500') }}"
+  {% if consul_acl_agent_token is defined %}
+  token   = "{{ consul_acl_agent_token }}"
+  {% endif %}
+
+  service_identity {
+    enabled = true
+    {% if nomad_consul_service_mesh | default(false) %}
+    auto      = true
+    {% if consul_namespace is defined %}
+    namespace = "{{ consul_namespace }}"
+    {% endif %}
+    {% endif %}
+  }
+
+  task_identity {
+    enabled = true
+  }
+}
+{% endif %}
+
+{% if nomad_tls_enabled | default(false) %}
+# === TLS configuration ===
+tls {
+  http                   = true
+  rpc                    = true
+  ca_file                = "{{ nomad_tls_ca_file }}"
+  cert_file              = "{{ nomad_tls_cert_file }}"
+  key_file               = "{{ nomad_tls_key_file }}"
+  verify_server_hostname = true
+  verify_https_client    = {{ nomad_tls_verify_client | default(true) }}
+}
+{% endif %}
