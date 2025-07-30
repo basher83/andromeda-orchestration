@@ -1,0 +1,58 @@
+---
+# Simple playbook to enable Consul telemetry on all nodes
+# Just adds the telemetry block to Consul configuration
+
+- name: Enable Consul telemetry on all nodes
+  hosts: all
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Check if telemetry is already configured
+      lineinfile:
+        path: /etc/consul.d/consul.hcl
+        line: "telemetry {"
+        state: absent
+      check_mode: true
+      register: telemetry_check
+      changed_when: false
+      
+    - name: Add telemetry configuration to Consul
+      blockinfile:
+        path: /etc/consul.d/consul.hcl
+        marker: "# {mark} ANSIBLE MANAGED TELEMETRY BLOCK"
+        block: |
+          
+          # Expose Prometheus endpoint for monitoring
+          telemetry {
+            prometheus_retention_time = "360h"
+            disable_hostname = false
+            metrics_prefix = "consul"
+          }
+        insertafter: EOF
+      when: telemetry_check.found | default(0) == 0
+      register: telemetry_added
+      
+    - name: Reload Consul if configuration changed
+      service:
+        name: consul
+        state: reloaded
+      when: telemetry_added is changed
+      
+    - name: Wait for Consul to be ready
+      wait_for:
+        port: 8500
+        delay: 2
+      when: telemetry_added is changed
+      
+    - name: Test telemetry endpoint
+      uri:
+        url: "http://127.0.0.1:8500/v1/agent/metrics?format=prometheus"
+        validate_certs: false
+      register: metrics_test
+      failed_when: false
+      changed_when: false
+      
+    - name: Report telemetry status
+      debug:
+        msg: "Telemetry endpoint is {{ 'accessible' if metrics_test.status == 200 else 'not accessible' }} on {{ inventory_hostname }}"
