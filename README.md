@@ -19,7 +19,7 @@ This project provides a framework for managing network infrastructure using Ansi
 - **Ansible** 2.15+ with ansible-core
 - **Python** 3.9+
 - **Infisical** account and machine identity
-- **macOS** users: Local Network permissions for Python (see Troubleshooting)
+- **macOS** users: Local Network permissions for Python (see [Troubleshooting](docs/getting-started/troubleshooting.md))
 - Docker (optional, for execution environments)
 
 ## Quick Start
@@ -100,9 +100,9 @@ task security:kics     # Infrastructure security scan
 task hooks
 ```
 
-See [docs/testing-strategy.md](docs/testing-strategy.md) for detailed testing information.
+See [docs/implementation/dns-ipam/testing-strategy.md](docs/implementation/dns-ipam/testing-strategy.md) for detailed testing information.
 
-**Note on uv and Ansible**: This project uses `uv pip install` in a virtual environment rather than `uv tool install` to ensure all Ansible executables are available. See [docs/uv-ansible-notes.md](docs/uv-ansible-notes.md) for details.
+**Note on uv and Ansible**: This project uses `uv pip install` in a virtual environment rather than `uv tool install` to ensure all Ansible executables are available. See [docs/getting-started/uv-ansible-notes.md](docs/getting-started/uv-ansible-notes.md) for details.
 
 ## Directory Structure
 
@@ -147,7 +147,7 @@ uv run ansible all -i inventory/og-homelab/infisical.proxmox.yml -m ping
 
 ### Managing Secrets
 
-See [docs/infisical-setup-and-migration.md](docs/infisical-setup-and-migration.md) for detailed instructions on:
+See [docs/implementation/secrets-management/infisical-setup.md](docs/implementation/secrets-management/infisical-setup.md) for detailed instructions on:
 
 - Setting up Infisical machine identity
 - Organizing secrets in projects and environments
@@ -176,7 +176,7 @@ See [docs/infisical-setup-and-migration.md](docs/infisical-setup-and-migration.m
 
 ## Troubleshooting
 
-See [docs/troubleshooting.md](docs/troubleshooting.md) for common issues and solutions.
+See [docs/getting-started/troubleshooting.md](docs/getting-started/troubleshooting.md) for common issues and solutions.
 
 ## License
 

@@ -29,7 +29,7 @@ ansible-galaxy collection install -r requirements.yml
 
 # Check for uv
 if ! command -v uv &> /dev/null; then
-    echo "❌ uv not found. Please install uv first (see docs/uv-ansible-notes.md)"
+    echo "❌ uv not found. Please install uv first (see docs/getting-started/uv-ansible-notes.md)"
     exit 1
 fi
 
@@ -47,11 +47,11 @@ mkdir -p playbooks/infrastructure roles
 # Final instructions
 echo ""
 echo "Setup complete! Next steps:"
-echo "1. Set up Infisical machine identity credentials (see docs/infisical-setup-and-migration.md)"
+echo "1. Set up Infisical machine identity credentials (see docs/implementation/secrets-management/infisical-setup.md)"
 echo "2. Test the setup:"
 echo "   uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list"
 echo ""
 echo "For detailed documentation, see:"
 echo "- README.md - Project overview"
-echo "- docs/infisical-setup-and-migration.md - Infisical setup and configuration"
-echo "- docs/troubleshooting.md - Common issues"
+echo "- docs/implementation/secrets-management/infisical-setup.md - Infisical setup and configuration"
+echo "- docs/getting-started/troubleshooting.md - Common issues"

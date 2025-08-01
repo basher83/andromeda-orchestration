@@ -9,7 +9,7 @@ infrastructure management. The project uses containerized Ansible execution envi
 and secure credential management through Infisical.
 
 **Current Focus**: Implementing a comprehensive DNS & IPAM overhaul to transition from ad-hoc DNS management to a
-service-aware infrastructure using Consul, PowerDNS, and NetBox. See `docs/dns-ipam-implementation-plan.md` for the
+service-aware infrastructure using Consul, PowerDNS, and NetBox. See `docs/implementation/dns-ipam/implementation-plan.md` for the
 detailed implementation roadmap.
 
 ## Commands
@@ -60,8 +60,8 @@ uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inv
   - Dual inventory files per cluster:
     - `infisical.proxmox.yml` - Uses Infisical for secrets (recommended)
     - `1password.proxmox.yml` - Uses 1Password for secrets (legacy)
-- **In Progress**: DNS & IPAM infrastructure deployment (see `docs/dns-ipam-implementation-plan.md`)
-- **Planned**: NetBox dynamic inventory integration (see `docs/netbox.md` for patterns)
+- **In Progress**: DNS & IPAM infrastructure deployment (see `docs/implementation/dns-ipam/implementation-plan.md`)
+- **Planned**: NetBox dynamic inventory integration (see `docs/implementation/netbox-integration.md` for patterns)
 - **Authentication**:
   - Infisical: Machine identity credentials via environment variables
   - 1Password: API tokens via Connect server (legacy)
@@ -74,28 +74,28 @@ uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inv
 
 ### Documentation Structure
 
-- `docs/dns-ipam-implementation-plan.md`: Master plan for DNS & IPAM overhaul:
+- `docs/implementation/dns-ipam/implementation-plan.md`: Master plan for DNS & IPAM overhaul:
 
   - 5-phase implementation approach
   - Detailed task checklists
   - Risk assessments and mitigation strategies
   - Success criteria for each phase
 
-- `docs/netbox.md`: Comprehensive NetBox integration patterns including:
+- `docs/implementation/netbox-integration.md`: Comprehensive NetBox integration patterns including:
 
   - Dynamic inventory configuration
   - State management with NetBox modules
   - Runtime data queries with `netbox.netbox.nb_lookup`
   - Event-driven automation patterns
 
-- `docs/infisical-setup-and-migration.md`: Infisical secrets management guide:
+- `docs/implementation/secrets-management/infisical-setup.md`: Infisical secrets management guide:
 
   - Accurate explanation of projects, environments, folders, and secrets
   - Current state with secrets at `/apollo-13/`
   - Migration plan to organized folder structure
   - Ansible collection usage patterns
 
-- `docs/1password-integration.md`: 1Password Connect integration for secrets management:
+- `docs/archive/1password-integration.md`: 1Password Connect integration for secrets management (deprecated):
   - Vault item lookups using `community.general.onepassword`
   - Secret injection patterns
   - Error handling strategies
@@ -141,11 +141,11 @@ uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inv
 ## Important Considerations
 
 - The project is actively implementing DNS & IPAM infrastructure changes
-- Follow the implementation plan in `docs/dns-ipam-implementation-plan.md`
-- Ensure Infisical environment variables are set before running commands (see `docs/infisical-setup-and-migration.md`)
+- Follow the implementation plan in `docs/implementation/dns-ipam/implementation-plan.md`
+- Ensure Infisical environment variables are set before running commands (see `docs/implementation/secrets-management/infisical-setup.md`)
 - Use the execution environment for consistency across different systems
 - Always test inventory plugins with `ansible-inventory` before running playbooks
-- NetBox integration should follow the patterns in `docs/netbox.md`
+- NetBox integration should follow the patterns in `docs/implementation/netbox-integration.md`
 
 ## Recommended Tools
 
