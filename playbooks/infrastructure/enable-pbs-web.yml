@@ -1,0 +1,68 @@
+---
+# Enable PBS web interface temporarily for debugging
+
+- name: Enable PBS web interface
+  hosts: localhost
+  gather_facts: false
+  
+  tasks:
+    - name: Add PBS to inventory
+      ansible.builtin.add_host:
+        name: pbs
+        ansible_host: 192.168.30.200
+        ansible_user: root
+        ansible_password: bluegatofeline
+
+- name: Enable web interface on PBS
+  hosts: pbs
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Update Netdata configuration to enable web
+      ansible.builtin.lineinfile:
+        path: /etc/netdata/netdata.conf
+        regexp: '^\s*enabled = no'
+        line: '            enabled = yes'
+        state: present
+        backup: true
+      register: config_change
+    
+    - name: Restart Netdata if config changed
+      ansible.builtin.systemd:
+        name: netdata
+        state: restarted
+      when: config_change.changed
+    
+    - name: Wait for web interface
+      ansible.builtin.wait_for:
+        port: 19999
+        host: 192.168.30.200
+        timeout: 30
+      when: config_change.changed
+    
+    - name: Check streaming status via API
+      ansible.builtin.uri:
+        url: "http://192.168.30.200:19999/api/v1/info"
+        method: GET
+      register: netdata_info
+    
+    - name: Display Netdata info
+      ansible.builtin.debug:
+        msg:
+          - "PBS Netdata Version: {{ netdata_info.json.version }}"
+          - "PBS UID: {{ netdata_info.json.uid }}"
+          - "PBS Hostname: {{ netdata_info.json.hostname }}"
+    
+    - name: Check if PBS appears in pve1
+      ansible.builtin.shell: |
+        # Check on pve1 for incoming connections from PBS
+        ssh root@192.168.30.50 "netstat -an | grep '192.168.30.200.*19999' || echo 'No connection from PBS'"
+      delegate_to: localhost
+      register: pve1_check
+      changed_when: false
+      failed_when: false
+    
+    - name: Display pve1 connection status
+      ansible.builtin.debug:
+        msg: "{{ pve1_check.stdout }}"

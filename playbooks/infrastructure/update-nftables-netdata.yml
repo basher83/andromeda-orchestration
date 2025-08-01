@@ -1,0 +1,36 @@
+---
+- name: Update nftables configuration for Netdata on Nomad nodes
+  hosts: tag_nomad
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Apply nftables configuration
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../../roles/system_base/templates/nftables.conf.j2"
+        dest: /etc/nftables.conf
+        mode: '0644'
+        owner: root
+        group: root
+      register: nftables_updated
+
+    - name: Reload nftables if configuration changed
+      ansible.builtin.systemd:
+        name: nftables
+        state: reloaded
+      when: nftables_updated.changed
+
+    - name: Ensure nftables is enabled and running
+      ansible.builtin.systemd:
+        name: nftables
+        enabled: true
+        state: started
+
+    - name: Verify port 19999 is open
+      ansible.builtin.command:
+        cmd: nft list ruleset
+      register: nft_rules
+      changed_when: false
+
+    - name: Check if Netdata port is in rules
+      ansible.builtin.debug:
+        msg: "Netdata port 19999 is {{ 'open' if '19999' in nft_rules.stdout else 'NOT found' }}"

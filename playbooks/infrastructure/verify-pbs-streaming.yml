@@ -1,0 +1,66 @@
+---
+# Verify PBS streaming to pve1
+
+- name: Verify PBS streaming
+  hosts: localhost
+  gather_facts: false
+  
+  tasks:
+    - name: Add PBS to inventory
+      ansible.builtin.add_host:
+        name: pbs
+        ansible_host: 192.168.30.200
+        ansible_user: root
+        ansible_password: bluegatofeline
+
+- name: Check PBS streaming status
+  hosts: pbs
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Restart Netdata on PBS to force reconnection
+      ansible.builtin.systemd:
+        name: netdata
+        state: restarted
+    
+    - name: Wait a moment
+      ansible.builtin.pause:
+        seconds: 5
+    
+    - name: Check PBS connection to pve1
+      ansible.builtin.shell: |
+        echo "=== Active connections ==="
+        ss -tn | grep "192.168.30.50:19999" || echo "No connection to pve1"
+        echo ""
+        echo "=== Recent journal logs ==="
+        journalctl -u netdata -n 20 --no-pager | grep -E "(stream|connect|192.168.30.50)" | tail -10 || echo "No streaming logs"
+      register: pbs_status
+      changed_when: false
+    
+    - name: Display PBS status
+      ansible.builtin.debug:
+        msg: "{{ pbs_status.stdout_lines }}"
+
+- name: Check pve1 for incoming connections
+  hosts: pve1
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Check for PBS connection on pve1
+      ansible.builtin.shell: |
+        echo "=== Checking for PBS connection ==="
+        netstat -an | grep "192.168.30.200.*ESTABLISHED" || echo "No connection from PBS"
+        echo ""
+        echo "=== All incoming connections on port 19999 ==="
+        netstat -an | grep ":19999.*ESTABLISHED" | head -10
+        echo ""
+        echo "=== Recent Netdata logs ==="
+        journalctl -u netdata --since "2 minutes ago" --no-pager | grep -E "(STREAM|accepted|pbs|og-child-key)" | tail -20
+      register: pve1_status
+      changed_when: false
+    
+    - name: Display pve1 status
+      ansible.builtin.debug:
+        msg: "{{ pve1_status.stdout_lines }}"

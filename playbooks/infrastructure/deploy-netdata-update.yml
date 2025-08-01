@@ -1,0 +1,129 @@
+---
+# Deploy updated Netdata configuration with our role
+# This will update existing installations with new streaming config
+
+- name: Set up dynamic groups and variables
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Define netdata parent nodes
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: netdata_parents
+      loop:
+        - lloyd
+        - holly
+        - mable
+
+    - name: Define netdata child nodes
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: netdata_children
+      loop:
+        - nomad-server-1-lloyd
+        - nomad-server-2-holly
+        - nomad-server-3-mable
+        - nomad-client-1-lloyd
+        - nomad-client-2-holly
+        - nomad-client-3-mable
+        
+    - name: Set default API keys if not defined
+      ansible.builtin.set_fact:
+        vault_netdata_parent_api_key: "parent-replication-key"
+        vault_consul_netdata_token: ""  # Empty for now, can be set later
+      delegate_to: localhost
+      delegate_facts: true
+
+- name: Update Netdata configuration on parent nodes
+  hosts: netdata_parents
+  become: true
+  gather_facts: true
+  serial: 1  # One at a time for safety
+  
+  tasks:
+    - name: Display update plan
+      ansible.builtin.debug:
+        msg:
+          - "Updating Netdata on {{ inventory_hostname }}"
+          - "10G IP: {{ netdata_10g_ip }}"
+          - "Replication destinations: {{ netdata_streaming_destination }}"
+          
+    - name: Apply Netdata role configuration
+      ansible.builtin.include_role:
+        name: netdata
+      vars:
+        # Don't reinstall, just update config
+        netdata_install_method: "package"
+        
+    - name: Verify Netdata is running
+      ansible.builtin.systemd:
+        name: netdata
+        state: restarted
+      register: netdata_restart
+      
+    - name: Wait for Netdata to be ready
+      ansible.builtin.wait_for:
+        port: 19999
+        host: "{{ netdata_bind_to }}"
+        delay: 5
+        timeout: 30
+
+- name: Update Netdata configuration on child nodes
+  hosts: netdata_children
+  become: true
+  gather_facts: true
+  
+  tasks:
+    - name: Display update plan
+      ansible.builtin.debug:
+        msg:
+          - "Updating Netdata on {{ inventory_hostname }}"
+          - "Streaming to: {{ netdata_streaming_destination }}"
+          
+    - name: Apply Netdata role configuration
+      ansible.builtin.include_role:
+        name: netdata
+      vars:
+        # Don't reinstall, just update config
+        netdata_install_method: "package"
+        
+    - name: Verify Netdata is running
+      ansible.builtin.systemd:
+        name: netdata
+        state: restarted
+      register: netdata_restart
+      
+    - name: Check streaming status
+      ansible.builtin.shell: |
+        sleep 5
+        grep -i "connected to" /var/log/netdata/error.log | tail -3
+      register: streaming_check
+      changed_when: false
+      failed_when: false
+      
+    - name: Display streaming status
+      ansible.builtin.debug:
+        msg: "{{ streaming_check.stdout_lines | default(['No streaming info yet']) }}"
+
+- name: Verify Netdata deployment
+  hosts: netdata_parents
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Check parent streaming connections
+      ansible.builtin.uri:
+        url: "http://{{ netdata_bind_to | default(ansible_default_ipv4.address) }}:19999/api/v1/info"
+        method: GET
+      register: parent_info
+      
+    - name: Count connected children
+      ansible.builtin.set_fact:
+        connected_children: "{{ parent_info.json | json_query('stream.connected_hosts') | default(0) }}"
+        
+    - name: Display parent status
+      ansible.builtin.debug:
+        msg:
+          - "Parent: {{ inventory_hostname }}"
+          - "Connected children: {{ connected_children }}"
+          - "Expected children: 6"

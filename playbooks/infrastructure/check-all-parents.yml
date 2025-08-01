@@ -1,0 +1,33 @@
+---
+# Check all parent nodes for their view of the mesh
+
+- name: Check all parent nodes
+  hosts: lloyd,pve1
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Get Netdata info via API
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}:19999/api/v1/info"
+        method: GET
+      register: netdata_info
+    
+    - name: Display basic info
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "Version: {{ netdata_info.json.version }}"
+          - "UID: {{ netdata_info.json.uid }}"
+          - "Mirrored hosts: {{ netdata_info.json['mirrored-hosts'] | default([]) | length }}"
+    
+    - name: Check streaming connections
+      ansible.builtin.shell: |
+        echo "=== Streaming connections on {{ inventory_hostname }} ==="
+        ss -tn | grep ":19999" | grep -v "LISTEN" | head -20
+      register: connections
+      changed_when: false
+    
+    - name: Display connections
+      ansible.builtin.debug:
+        msg: "{{ connections.stdout_lines }}"

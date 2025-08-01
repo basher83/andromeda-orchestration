@@ -1,0 +1,132 @@
+---
+# Example: Deploy Netdata with Consul Template for dynamic configuration
+# This allows you to change alarm thresholds via Consul KV store
+
+- name: Deploy Netdata with Consul Template integration
+  hosts: all
+  become: true
+  gather_facts: true
+  
+  vars:
+    # Enable consul-template for dynamic configuration
+    netdata_consul_template_enabled: true
+    netdata_consul_template_cpu_alarms: true
+    
+    # Populate initial KV values
+    netdata_consul_template_populate_kv: true
+    
+    # Custom alarm thresholds for this environment
+    netdata_consul_kv_defaults:
+      - key: "netdata/alarms/cpu/10min_usage_warning_low"
+        value: "70"  # Lower threshold for development
+      - key: "netdata/alarms/cpu/10min_usage_warning_high"
+        value: "80"
+      - key: "netdata/alarms/cpu/10min_usage_critical_low"
+        value: "80"
+      - key: "netdata/alarms/cpu/10min_usage_critical_high"
+        value: "90"
+      - key: "netdata/alarms/cpu/10min_iowait_warning_low"
+        value: "15"  # More sensitive to IO wait
+      - key: "netdata/alarms/cpu/10min_iowait_warning_high"
+        value: "30"
+      - key: "netdata/alarms/cpu/10min_iowait_critical_low"
+        value: "30"
+      - key: "netdata/alarms/cpu/10min_iowait_critical_high"
+        value: "40"
+    
+    # Add custom templates for other alarms
+    netdata_consul_template_configs:
+      - name: "memory.conf.ctmpl"
+        destination: "/etc/netdata/health.d/memory.conf"
+        command: "systemctl restart netdata"
+        wait_min: "5s"
+        wait_max: "30s"
+      - name: "disk.conf.ctmpl"
+        destination: "/etc/netdata/health.d/disk.conf"
+        command: "systemctl restart netdata"
+        wait_min: "5s"
+        wait_max: "30s"
+  
+  tasks:
+    - name: Deploy Netdata with consul-template
+      ansible.builtin.include_role:
+        name: netdata
+
+---
+# Example: Update alarm thresholds dynamically
+- name: Update Netdata alarm thresholds via Consul KV
+  hosts: localhost
+  gather_facts: false
+  
+  vars:
+    consul_url: "http://{{ groups['consul_servers'][0] }}:8500"
+    consul_token: "{{ vault_consul_management_token }}"
+    
+  tasks:
+    - name: Update CPU warning threshold for production
+      ansible.builtin.uri:
+        url: "{{ consul_url }}/v1/kv/netdata/alarms/cpu/10min_usage_warning_low"
+        method: PUT
+        body: "85"  # Increase threshold for production
+        headers:
+          X-Consul-Token: "{{ consul_token }}"
+      when: environment == "production"
+      
+    - name: Update IO wait thresholds based on workload type
+      ansible.builtin.uri:
+        url: "{{ consul_url }}/v1/kv/netdata/alarms/cpu/10min_iowait_warning_high"
+        method: PUT
+        body: "{{ '60' if workload_type == 'database' else '40' }}"
+        headers:
+          X-Consul-Token: "{{ consul_token }}"
+      
+    - name: Disable CPU steal alarms for non-virtualized hosts
+      ansible.builtin.uri:
+        url: "{{ consul_url }}/v1/kv/netdata/alarms/cpu/20min_steal_critical_high"
+        method: PUT
+        body: "999"  # Effectively disable by setting very high threshold
+        headers:
+          X-Consul-Token: "{{ consul_token }}"
+      when: not is_virtualized | default(true)
+
+---
+# Example: Create custom alarm templates
+- name: Create custom Netdata alarm templates
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  
+  tasks:
+    - name: Create memory alarm template
+      ansible.builtin.copy:
+        dest: "./memory.conf.ctmpl"
+        content: |
+          # Memory alarms managed by Consul
+          template: ram_in_use
+                on: system.ram
+               hosts: *
+            lookup: average -1m unaligned of used
+             units: %
+             every: 10s
+              warn: $this > (($status >= $WARNING)  ? ({{ "{{" }} key "netdata/alarms/memory/usage_warning" | parseInt {{ "}}" }}) : ({{ "{{" }} key "netdata/alarms/memory/usage_warning_high" | parseInt {{ "}}" }}))
+              crit: $this > (($status == $CRITICAL) ? ({{ "{{" }} key "netdata/alarms/memory/usage_critical" | parseInt {{ "}}" }}) : ({{ "{{" }} key "netdata/alarms/memory/usage_critical_high" | parseInt {{ "}}" }}))
+             delay: down 15m multiplier 1.5 max 1h
+              info: system RAM used
+                to: sysadmin
+    
+    - name: Create disk alarm template
+      ansible.builtin.copy:
+        dest: "./disk.conf.ctmpl"
+        content: |
+          # Disk space alarms managed by Consul
+          template: disk_space_usage
+                on: disk.space
+               hosts: *
+            lookup: average -1m unaligned of used
+             units: %
+             every: 1m
+              warn: $this > (($status >= $WARNING)  ? ({{ "{{" }} key "netdata/alarms/disk/space_warning" | parseInt {{ "}}" }}) : ({{ "{{" }} key "netdata/alarms/disk/space_warning_high" | parseInt {{ "}}" }}))
+              crit: $this > (($status == $CRITICAL) ? ({{ "{{" }} key "netdata/alarms/disk/space_critical" | parseInt {{ "}}" }}) : ({{ "{{" }} key "netdata/alarms/disk/space_critical_high" | parseInt {{ "}}" }}))
+             delay: down 15m multiplier 1.5 max 1h
+              info: disk space utilization
+                to: sysadmin

@@ -1,0 +1,61 @@
+---
+# Check if PBS is attempting to connect
+
+- name: Check PBS connection attempts
+  hosts: localhost
+  gather_facts: false
+  
+  tasks:
+    - name: Add PBS to inventory
+      ansible.builtin.add_host:
+        name: pbs
+        ansible_host: 192.168.30.200
+        ansible_user: root
+        ansible_password: bluegatofeline
+
+- name: Check PBS side
+  hosts: pbs
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Test connectivity to pve1
+      ansible.builtin.shell: |
+        echo "=== Testing network connectivity ==="
+        ping -c 2 192.168.30.50
+        echo ""
+        echo "=== Testing port connectivity ==="
+        timeout 3 nc -zv 192.168.30.50 19999 2>&1
+      register: connectivity
+      changed_when: false
+      failed_when: false
+    
+    - name: Display connectivity test
+      ansible.builtin.debug:
+        msg: "{{ connectivity.stdout_lines }}"
+    
+    - name: Check Netdata process
+      ansible.builtin.shell: |
+        echo "=== Netdata processes ==="
+        ps aux | grep -E "[n]etdata" | grep -v grep
+        echo ""
+        echo "=== Checking if stream is enabled ==="
+        grep -E "enabled.*=.*yes" /etc/netdata/stream.conf | grep -v "^#"
+      register: netdata_proc
+      changed_when: false
+    
+    - name: Display process info
+      ansible.builtin.debug:
+        msg: "{{ netdata_proc.stdout_lines }}"
+    
+    - name: Run tcpdump briefly to see if PBS is trying to connect
+      ansible.builtin.shell: |
+        echo "=== Capturing outgoing traffic to pve1 port 19999 ==="
+        timeout 5 tcpdump -i any -n host 192.168.30.50 and port 19999 2>&1 | head -20 || echo "Capture complete"
+      register: tcpdump_out
+      changed_when: false
+      failed_when: false
+    
+    - name: Display tcpdump
+      ansible.builtin.debug:
+        msg: "{{ tcpdump_out.stdout_lines }}"

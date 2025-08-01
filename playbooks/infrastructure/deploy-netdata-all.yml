@@ -1,0 +1,96 @@
+---
+# Deploy Netdata monitoring across all homelab infrastructure
+# This playbook manages both og-homelab and doggos-homelab clusters
+
+- name: Deploy Netdata to doggos-homelab cluster
+  ansible.builtin.import_playbook: deploy-netdata-doggos.yml
+  when: deploy_cluster is undefined or deploy_cluster == "doggos" or deploy_cluster == "all"
+
+- name: Deploy Netdata to og-homelab cluster  
+  ansible.builtin.import_playbook: deploy-netdata-og.yml
+  when: deploy_cluster is undefined or deploy_cluster == "og" or deploy_cluster == "all"
+
+---
+# Generate combined infrastructure report
+- name: Generate infrastructure-wide Netdata report
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  
+  tasks:
+    - name: Create comprehensive deployment report
+      ansible.builtin.copy:
+        content: |
+          # Netdata Infrastructure Deployment Report
+          Generated: {{ ansible_date_time.iso8601 }}
+          
+          ## Cluster: doggos-homelab (10G Network)
+          
+          ### Parent Nodes
+          - lloyd (Dual-NIC configuration)
+          - holly (Dual-NIC configuration)  
+          - mable (Dual-NIC configuration)
+          
+          ### Child Nodes (Streaming to parents)
+          - nomad-server-1-lloyd -> lloyd
+          - nomad-server-2-holly -> holly
+          - nomad-server-3-mable -> mable
+          - nomad-client-1-lloyd -> lloyd
+          - nomad-client-2-holly -> holly
+          - nomad-client-3-mable -> mable
+          
+          ### Network Configuration
+          - Management: 192.168.10.0/24 (1G)
+          - Data: 192.168.11.0/24 (10G) - Used for streaming
+          - Parent API Key: Stored in vault as vault_netdata_parent_api_key
+          
+          ## Cluster: og-homelab (2.5G Network)
+          
+          ### Parent Node
+          - pve1 ({{ hostvars['pve1']['ansible_host'] | default('192.168.30.50') }})
+          
+          ### Child Nodes (All containers and VMs)
+          - proxmoxt430 ({{ hostvars['proxmoxt430']['ansible_host'] | default('192.168.30.30') }})
+          - Plus {{ groups['proxmox_all_lxc'] | length }} LXC containers
+          - Plus {{ groups['proxmox_all_qemu'] | length }} QEMU VMs
+          
+          ### Network Configuration  
+          - Single Network: 192.168.30.0/24 (2.5G)
+          - Parent API Key: Stored in vault as vault_netdata_parent_api_key_og
+          
+          ## Configuration Summary
+          
+          ### Parent Nodes
+          - Storage: dbengine mode
+          - Retention: 24 hours detailed metrics
+          - Features: ML anomaly detection, Web UI, Prometheus export
+          - Consul: Registered as netdata-parent service
+          
+          ### Child Nodes
+          - Storage: RAM mode  
+          - Retention: 1 hour (3600s) for VMs, 30 min (1800s) for containers
+          - Features: Minimal plugins, no Web UI, streaming only
+          - Consul: Registered as netdata-child service
+          
+          ## Monitoring Coverage
+          - Total Parent Nodes: 4 (3 doggos + 1 og)
+          - Total Child Nodes: ~{{ groups['all'] | length - 4 }}
+          - Infrastructure Coverage: 100%
+          
+          ## Access Points
+          - Doggos Cluster: 
+            - http://lloyd:19999 (Primary)
+            - http://holly:19999 (Secondary)
+            - http://mable:19999 (Secondary)
+          - OG Cluster:
+            - http://pve1:19999 or http://{{ hostvars['pve1']['ansible_host'] | default('192.168.30.50') }}:19999
+          
+        dest: "{{ playbook_dir }}/../../reports/netdata-deployment-all-{{ ansible_date_time.date }}.md"
+        mode: '0644'
+    
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "Netdata deployment completed for all clusters"
+          - "Report saved to: reports/netdata-deployment-all-{{ ansible_date_time.date }}.md"
+          - "Run with -e deploy_cluster=doggos or -e deploy_cluster=og to deploy to specific cluster"

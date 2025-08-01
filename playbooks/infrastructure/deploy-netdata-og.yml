@@ -1,0 +1,186 @@
+---
+# Deploy Netdata parent-child architecture on og-homelab
+# This sets up monitoring for the container-heavy environment
+
+- name: Create netdata parent and children groups
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Define netdata parent node (pve1 as primary)
+      ansible.builtin.add_host:
+        name: pve1
+        groups: netdata_parents
+    
+    - name: Define netdata child nodes (all other nodes)
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: netdata_children
+      loop: "{{ groups['all'] | difference(['localhost', 'pve1']) }}"
+
+# Deploy Netdata on parent node first
+- name: Deploy Netdata parent node
+  hosts: netdata_parents
+  become: true
+  gather_facts: true
+  
+  pre_tasks:
+    - name: Check available disk space for metrics storage
+      ansible.builtin.shell: df -h /var | tail -1 | awk '{print $4}'
+      register: disk_space
+      changed_when: false
+    
+    - name: Display available disk space
+      ansible.builtin.debug:
+        msg: "Available disk space on {{ inventory_hostname }}: {{ disk_space.stdout }}"
+    
+    - name: Generate parent API key for og-homelab
+      ansible.builtin.set_fact:
+        vault_netdata_parent_api_key_og: "og-parent-replication-key"
+      when: vault_netdata_parent_api_key_og is not defined
+      delegate_to: localhost
+      run_once: true
+
+  tasks:
+    - name: Deploy Netdata parent configuration
+      ansible.builtin.include_role:
+        name: netdata
+      vars:
+        # Ensure parent configuration
+        netdata_parent_enabled: true
+        netdata_streaming_enabled: false
+
+# Deploy Netdata on child nodes (containers and VMs)
+- name: Deploy Netdata child nodes
+  hosts: netdata_children
+  become: true
+  gather_facts: true
+  serial: 10  # Process 10 at a time to avoid overwhelming the network
+  
+  pre_tasks:
+    - name: Check if running in container
+      ansible.builtin.stat:
+        path: /run/systemd/container
+      register: container_check
+    
+    - name: Set container fact
+      ansible.builtin.set_fact:
+        is_container: "{{ container_check.stat.exists }}"
+  
+  tasks:
+    - name: Deploy Netdata child configuration
+      ansible.builtin.include_role:
+        name: netdata
+      vars:
+        # Child-specific settings
+        netdata_parent_enabled: false
+        # Reduce memory usage for containers
+        netdata_history: "{{ 1800 if is_container else 3600 }}"
+        # Disable even more plugins for containers
+        netdata_plugins:
+          apps: "{{ not is_container }}"
+          cgroups: true
+          charts.d: false
+          checks: "{{ not is_container }}"
+          diskspace: true
+          ebpf: false
+          fping: false
+          go.d: false
+          idlejitter: false
+          ioping: false
+          nfacct: false
+          perf: false
+          proc: true
+          python.d: false
+          slabinfo: false
+          statsd: false
+          tc: false
+          timex: false
+
+# Verify deployment
+- name: Verify Netdata deployment on og-homelab
+  hosts: netdata_parents
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Wait for Netdata to start
+      ansible.builtin.wait_for:
+        port: 19999
+        host: "{{ ansible_host }}"
+        timeout: 60
+    
+    - name: Check Netdata API health
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}:19999/api/v1/info"
+        method: GET
+        status_code: 200
+      register: netdata_info
+    
+    - name: Get streaming stats
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}:19999/api/v1/info"
+        method: GET
+      register: streaming_info
+    
+    - name: Display Netdata status
+      ansible.builtin.debug:
+        msg:
+          - "Netdata Version: {{ netdata_info.json.version }}"
+          - "UID: {{ netdata_info.json.uid }}"
+          - "Hostname: {{ netdata_info.json.hostname }}"
+    
+    - name: Check metrics cardinality
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}:19999/api/v1/metric_correlations"
+        method: GET
+      register: metrics_info
+      failed_when: false
+    
+    - name: Count connected children (estimate)
+      ansible.builtin.shell: |
+        netstat -an | grep :19999 | grep ESTABLISHED | wc -l
+      register: connection_count
+      changed_when: false
+    
+    - name: Display connection count
+      ansible.builtin.debug:
+        msg: "Active connections to Netdata: {{ connection_count.stdout }}"
+
+# Optional: Configure firewall rules
+- name: Configure firewall for Netdata on og-homelab
+  hosts: all:!localhost
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Check if ufw is installed
+      ansible.builtin.command: which ufw
+      register: ufw_check
+      changed_when: false
+      failed_when: false
+    
+    - name: Allow Netdata port from local network
+      community.general.ufw:
+        rule: allow
+        port: '19999'
+        src: '192.168.30.0/24'
+        comment: "Netdata monitoring"
+      when: ufw_check.rc == 0
+      
+    - name: Check if iptables is being used
+      ansible.builtin.command: iptables -L -n
+      register: iptables_check
+      changed_when: false
+      failed_when: false
+      
+    - name: Add iptables rule for Netdata
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 19999
+        source: 192.168.30.0/24
+        jump: ACCEPT
+        comment: "Netdata monitoring"
+      when: 
+        - iptables_check.rc == 0
+        - ufw_check.rc != 0
