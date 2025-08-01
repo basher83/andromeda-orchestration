@@ -32,7 +32,7 @@ These files document the legacy 1Password Connect integration that has been repl
 - **consul-1password-setup.md** - How Consul ACL tokens were managed with 1Password
 
 **Status**: Deprecated as of 2025-07-27  
-**Replacement**: See `/docs/infisical-setup-and-migration.md`
+**Replacement**: See `/docs/implementation/secrets-management/infisical-setup.md`
 
 ### 2. Completed Project Artifacts
 
