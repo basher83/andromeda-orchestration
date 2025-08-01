@@ -35,10 +35,10 @@ job "powerdns" {
       # Secrets should be injected via Consul KV or Nomad variables
       template {
         data = <<EOF
-MYSQL_ROOT_PASSWORD={{ key "powerdns/mysql/root_password" }}
+MYSQL_ROOT_PASSWORD={{ keyOrDefault "powerdns/mysql/root_password" "" }}
 MYSQL_DATABASE=powerdns
 MYSQL_USER=powerdns
-MYSQL_PASSWORD={{ key "powerdns/mysql/password" }}
+MYSQL_PASSWORD={{ keyOrDefault "powerdns/mysql/password" "" }}
 EOF
         destination = "secrets/mysql.env"
         env         = true
@@ -85,24 +85,14 @@ EOF
         memory = 512
       }
 
-      service {
-        name = "powerdns-mysql"
-        port = "mysql"
-        
-        check {
-          type     = "tcp"
-          port     = "mysql"
-          interval = "10s"
-          timeout  = "2s"
-        }
-      }
+      # Service registration will be added after deployment
     }
 
     task "powerdns" {
       driver = "docker"
 
       config {
-        image = "powerdns/pdns-auth-46:4.6"
+        image = "powerdns/pdns-auth-48:latest"
         ports = ["dns", "api"]
       }
 
@@ -113,10 +103,10 @@ PDNS_LAUNCH=gmysql
 PDNS_GMYSQL_HOST=${NOMAD_ADDR_mysql}
 PDNS_GMYSQL_PORT=${NOMAD_PORT_mysql}
 PDNS_GMYSQL_USER=powerdns
-PDNS_GMYSQL_PASSWORD={{ key "powerdns/mysql/password" }}
+PDNS_GMYSQL_PASSWORD={{ keyOrDefault "powerdns/mysql/password" "" }}
 PDNS_GMYSQL_DBNAME=powerdns
 PDNS_API=yes
-PDNS_API_KEY={{ key "powerdns/api/key" }}
+PDNS_API_KEY={{ keyOrDefault "powerdns/api/key" "" }}
 PDNS_WEBSERVER=yes
 PDNS_WEBSERVER_ADDRESS=0.0.0.0
 PDNS_WEBSERVER_ALLOW_FROM=0.0.0.0/0
@@ -130,33 +120,7 @@ EOF
         memory = 256
       }
 
-      service {
-        name = "powerdns-dns"
-        port = "dns"
-        tags = ["dns", "primary"]
-        
-        check {
-          type     = "tcp"
-          port     = "dns"
-          interval = "10s"
-          timeout  = "2s"
-        }
-      }
-
-      service {
-        name = "powerdns-api"
-        port = "api"
-        tags = ["api", "admin"]
-        
-        # Health check will use the API key from template
-        check {
-          type     = "http"
-          port     = "api"
-          path     = "/api/v1/servers"
-          interval = "30s"
-          timeout  = "5s"
-        }
-      }
+      # Service registration will be added after deployment
     }
 
     # Volume for MySQL data persistence
