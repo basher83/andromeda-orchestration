@@ -1,0 +1,29 @@
+---
+# Netdata child node configuration
+netdata_streaming_enabled: true
+netdata_streaming_destination: "192.168.11.2:19999 192.168.11.3:19999 192.168.11.4:19999"
+netdata_streaming_api_key: "nomad-cluster-api-key"
+
+# Child-specific settings for resource optimization
+netdata_web_enabled: false  # Disable web UI on children to save resources
+netdata_memory_mode: "ram"  # Use RAM mode for children
+netdata_history: 3600  # 1 hour local retention
+netdata_streaming_mode: "ram"
+netdata_streaming_health_enabled: "auto"
+
+# Buffer settings for children
+netdata_streaming_buffer_size_bytes: 1048576  # 1MB for children
+netdata_streaming_compression_enabled: true
+
+# Consul service registration for children
+netdata_consul_enabled: true
+netdata_consul_service_name: "netdata-child"
+netdata_consul_service_tags:
+  - "monitoring"
+  - "metrics"
+  - "child"
+  - "{{ inventory_hostname_short }}"
+
+# Enable Consul collector on Nomad nodes
+netdata_consul_collector_enabled: true
+netdata_consul_acl_token: "{{ vault_consul_netdata_token | default('') }}"

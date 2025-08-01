@@ -1,0 +1,44 @@
+---
+# Netdata Parent-to-Parent Mesh Streaming Configuration
+# This enables cross-cluster visibility between all parent nodes
+
+# Enable streaming between parent nodes for mesh topology
+netdata_streaming_enabled: true
+
+# Stream to other parent nodes in the mesh
+# Each parent will stream to all other parents
+netdata_streaming_destination: |
+  {% set parents = [] %}
+  {% for host in groups['netdata_parents'] %}
+    {% if host != inventory_hostname %}
+      {% set _ = parents.append(hostvars[host]['ansible_default_ipv4']['address'] + ':19999') %}
+    {% endif %}
+  {% endfor %}
+  {% if hostvars['pve1'] is defined and inventory_hostname != 'pve1' %}
+    {% set _ = parents.append(hostvars['pve1']['ansible_host'] + ':19999') %}
+  {% endif %}
+  {{ parents | join(' ') }}
+
+# Use a mesh-specific API key for parent-to-parent streaming
+netdata_streaming_api_key: "{{ vault_netdata_mesh_api_key }}"
+
+# Parent nodes also accept streams from other parents
+netdata_parent_children:
+  # Accept streams from other doggos parents
+  {% for host in groups['netdata_parents'] | default([]) %}
+  {% if host != inventory_hostname %}
+  - api_key: "{{ vault_netdata_mesh_api_key }}"
+    allow_from: "{{ hostvars[host]['ansible_default_ipv4']['address'] }}"
+    history: 86400
+    memory_mode: "dbengine"
+    health_enabled: "auto"
+    multiple_connections: "allow"
+  {% endif %}
+  {% endfor %}
+  # Accept streams from og-homelab parent
+  - api_key: "{{ vault_netdata_mesh_api_key }}"
+    allow_from: "{{ hostvars['pve1']['ansible_host'] | default('192.168.30.50') }}"
+    history: 86400
+    memory_mode: "dbengine"
+    health_enabled: "auto"
+    multiple_connections: "allow"

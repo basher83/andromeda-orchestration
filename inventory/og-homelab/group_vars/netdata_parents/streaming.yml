@@ -1,0 +1,35 @@
+---
+# Netdata Parent-to-Parent Mesh Streaming Configuration for og-homelab
+# This enables the og-homelab parent to join the mesh with doggos parents
+
+# Enable streaming to doggos-homelab parents
+netdata_streaming_enabled: true
+
+# Stream to all doggos-homelab parent nodes
+# Since og-homelab uses 192.168.30.0/24, it can reach doggos nodes on their 1G network
+netdata_streaming_destination: |
+  {% set parents = [] %}
+  {% if groups['netdata_parents'] is defined %}
+    {% for host in ['lloyd', 'holly', 'mable'] %}
+      {% if hostvars[host] is defined %}
+        {% set _ = parents.append('192.168.10.' + host.split('-')[-1] | default(host) + ':19999') %}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    {# Fallback to known IPs if groups not available #}
+    {% set _ = parents.extend(['192.168.10.11:19999', '192.168.10.12:19999', '192.168.10.13:19999']) %}
+  {% endif %}
+  {{ parents | join(' ') }}
+
+# Use the mesh API key for parent-to-parent streaming
+netdata_streaming_api_key: "netdata-parent-mesh-key"
+
+# Accept streams from doggos parents for bidirectional mesh
+netdata_parent_children:
+  # Accept from doggos parents (mesh replication)
+  - api_key: "netdata-parent-mesh-key"
+    allow_from: "192.168.10.0/24"
+    history: 86400
+    memory_mode: "dbengine"
+    health_enabled: "auto"
+    multiple_connections: "allow"
