@@ -1,0 +1,75 @@
+# Netdata Health Alarm Notifications Configuration
+# {{ ansible_managed }}
+
+# The configuration file for alarm notifications
+# Documentation: https://learn.netdata.cloud/docs/agent/health/notifications
+
+###############################################################################
+# sending emails
+
+# If you don't want to use the system's sendmail, set this to your 
+# mail server. Leave it blank if you want to use the system's sendmail.
+# Example: SMTP="smtp.gmail.com:587"
+SEND_EMAIL="{{ netdata_alarm_email_enabled | default('YES') }}"
+EMAIL_SENDER="{{ netdata_alarm_email_sender | default('netdata') }}"
+DEFAULT_RECIPIENT_EMAIL="{{ netdata_alarm_email_recipients | default('root') }}"
+EMAIL_PLAINTEXT_ONLY="{{ netdata_alarm_email_plaintext_only | default('YES') }}"
+
+###############################################################################
+# sending discord notifications
+
+# enable/disable sending discord notifications
+SEND_DISCORD="{{ netdata_alarm_discord_enabled | default('NO') }}"
+
+# Create a webhook by following the official documentation -
+# https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
+DISCORD_WEBHOOK_URL="{{ netdata_alarm_discord_webhook_url | default('') }}"
+DEFAULT_RECIPIENT_DISCORD="{{ netdata_alarm_discord_recipients | default('') }}"
+
+###############################################################################
+# sending slack notifications
+
+# enable/disable sending slack notifications
+SEND_SLACK="{{ netdata_alarm_slack_enabled | default('NO') }}"
+SLACK_WEBHOOK_URL="{{ netdata_alarm_slack_webhook_url | default('') }}"
+DEFAULT_RECIPIENT_SLACK="{{ netdata_alarm_slack_recipients | default('') }}"
+
+###############################################################################
+# sending telegram messages
+
+# enable/disable sending telegram messages
+SEND_TELEGRAM="{{ netdata_alarm_telegram_enabled | default('NO') }}"
+
+# Contact the bot @BotFather to create a new bot and receive a bot token.
+# Without it, netdata cannot send telegram messages.
+TELEGRAM_BOT_TOKEN="{{ netdata_alarm_telegram_bot_token | default('') }}"
+DEFAULT_RECIPIENT_TELEGRAM="{{ netdata_alarm_telegram_recipients | default('') }}"
+
+###############################################################################
+# sending custom notifications
+
+# enable/disable sending custom notifications
+SEND_CUSTOM="{{ netdata_alarm_custom_enabled | default('NO') }}"
+
+# The custom_sender() is a custom function to do whatever you need to do
+custom_sender() {
+    # custom notification logic goes here
+    {{ netdata_alarm_custom_script | default('# Add custom notification logic here') | indent(4) }}
+}
+
+###############################################################################
+# RECIPIENTS PER NOTIFICATION METHOD
+# -----------------------------------------------------------------------------
+
+# Default recipient list
+role_recipients_email[sysadmin]="${DEFAULT_RECIPIENT_EMAIL}"
+role_recipients_discord[sysadmin]="${DEFAULT_RECIPIENT_DISCORD}"
+role_recipients_slack[sysadmin]="${DEFAULT_RECIPIENT_SLACK}"
+role_recipients_telegram[sysadmin]="${DEFAULT_RECIPIENT_TELEGRAM}"
+
+# Additional role configurations
+{% for role, config in netdata_alarm_notify_configs | groupby('role') %}
+{% for method in config | selectattr('method', 'defined') | map(attribute='method') | unique %}
+role_recipients_{{ method }}[{{ role }}]="{{ config | selectattr('method', 'equalto', method) | map(attribute='recipients') | join(' ') }}"
+{% endfor %}
+{% endfor %}

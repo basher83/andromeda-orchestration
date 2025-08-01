@@ -1,0 +1,51 @@
+# Consul-Template configuration for Netdata
+# {{ ansible_managed }}
+
+# Consul connection settings
+consul {
+  address = "{{ netdata_consul_url | regex_replace('^https?://', '') }}"
+{% if netdata_consul_acl_token is defined %}
+  token = "{{ netdata_consul_acl_token }}"
+{% endif %}
+  
+  retry {
+    enabled = true
+    attempts = 10
+    backoff = "250ms"
+    max_backoff = "1m"
+  }
+}
+
+# Logging
+log_level = "{{ netdata_consul_template_log_level | default('info') }}"
+
+# Template configurations
+{% for template in netdata_consul_template_configs %}
+template {
+  source = "/etc/consul-template.d/templates/{{ template.name }}"
+  destination = "{{ template.destination }}"
+  command = "{{ template.command | default('systemctl restart netdata') }}"
+  perms = {{ template.perms | default('0644') }}
+  
+  # Prevent flapping
+  wait {
+    min = "{{ template.wait_min | default('2s') }}"
+    max = "{{ template.wait_max | default('10s') }}"
+  }
+}
+{% endfor %}
+
+# Default CPU alarm template if enabled
+{% if netdata_consul_template_cpu_alarms | default(false) %}
+template {
+  source = "/etc/consul-template.d/templates/cpu.conf.ctmpl"
+  destination = "/etc/netdata/health.d/cpu.conf"
+  command = "systemctl restart netdata"
+  perms = 0644
+  
+  wait {
+    min = "5s"
+    max = "30s"
+  }
+}
+{% endif %}

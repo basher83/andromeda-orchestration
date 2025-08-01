@@ -1,0 +1,22 @@
+---
+- name: restart netdata
+  ansible.builtin.systemd:
+    name: netdata
+    state: restarted
+    daemon_reload: true
+
+- name: reload consul
+  ansible.builtin.systemd:
+    name: consul
+    state: reloaded
+  failed_when: false  # Don't fail if consul isn't installed
+
+- name: restart consul-template
+  ansible.builtin.systemd:
+    name: consul-template
+    state: restarted
+    daemon_reload: true
+
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true

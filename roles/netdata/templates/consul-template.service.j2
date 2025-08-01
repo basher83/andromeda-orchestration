@@ -1,0 +1,21 @@
+[Unit]
+Description=Consul Template for Netdata
+Documentation=https://github.com/hashicorp/consul-template
+Requires=network-online.target consul.service
+After=network-online.target consul.service
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/consul-template -config=/etc/consul-template.d/netdata.hcl
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+LimitNOFILE=65536
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=consul-template
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

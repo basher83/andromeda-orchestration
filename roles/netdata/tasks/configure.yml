@@ -1,0 +1,31 @@
+---
+- name: Configure Netdata main configuration
+  ansible.builtin.template:
+    src: netdata.conf.j2
+    dest: "{{ netdata_config_dir }}/netdata.conf"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0644'
+    backup: true
+  notify: restart netdata
+
+- name: Configure health alarm notifications
+  ansible.builtin.template:
+    src: health_alarm_notify.conf.j2
+    dest: "{{ netdata_config_dir }}/health_alarm_notify.conf"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0640'
+  when: netdata_alarms_enabled
+  notify: restart netdata
+
+- name: Configure additional plugin configurations
+  ansible.builtin.template:
+    src: "{{ item.template }}"
+    dest: "{{ netdata_config_dir }}/{{ item.dest }}"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0644'
+  loop: "{{ netdata_plugin_configs | default([]) }}"
+  when: netdata_plugin_configs is defined
+  notify: restart netdata

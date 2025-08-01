@@ -1,0 +1,19 @@
+---
+- name: Configure Netdata streaming
+  ansible.builtin.template:
+    src: stream.conf.j2
+    dest: "{{ netdata_config_dir }}/stream.conf"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0640'
+    backup: true
+  notify: restart netdata
+
+- name: Create streaming SSL directory
+  ansible.builtin.file:
+    path: "{{ netdata_config_dir }}/ssl"
+    state: directory
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0700'
+  when: netdata_streaming_ssl_enabled | default(false)

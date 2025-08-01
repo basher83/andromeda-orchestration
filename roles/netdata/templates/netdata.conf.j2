@@ -1,0 +1,98 @@
+# Netdata Configuration
+# {{ ansible_managed }}
+
+[global]
+    run as user = {{ netdata_user }}
+    
+    # web interface
+    bind to = {{ netdata_bind_to }}:{{ netdata_port }}
+    web files owner = {{ netdata_user }}
+    web files group = {{ netdata_group }}
+    
+    # memory mode
+    memory mode = {{ netdata_memory_mode }}
+    page cache size = {{ netdata_page_cache_size | default(32) }}
+    dbengine multihost disk space = {{ netdata_dbengine_disk_space | default(256) }}
+    
+    # history
+    history = {{ netdata_history }}
+    update every = {{ netdata_update_every }}
+    
+    # errors and debugging
+    errors flood protection period = {{ netdata_errors_flood_protection_period | default(1200) }}
+    errors to trigger flood protection = {{ netdata_errors_to_trigger_flood_protection | default(200) }}
+    debug log = {{ netdata_debug_log | default('none') }}
+    error log = {{ netdata_error_log | default('syslog') }}
+    access log = {{ netdata_access_log | default('none') }}
+
+[web]
+    enable gzip compression = {{ netdata_web_gzip_enabled | default('yes') }}
+    gzip compression level = {{ netdata_web_gzip_level | default(3) }}
+{% if not netdata_web_enabled %}
+    mode = none
+{% endif %}
+
+[registry]
+    enabled = {{ netdata_registry_enabled | default('no') }}
+    registry to announce = {{ netdata_registry_to_announce | default('') }}
+
+[health]
+    enabled = {{ 'yes' if netdata_alarms_enabled else 'no' }}
+    default repeat warning = {{ netdata_health_default_repeat_warning | default('never') }}
+    default repeat critical = {{ netdata_health_default_repeat_critical | default('never') }}
+
+{% if netdata_ml_enabled is defined %}
+[ml]
+    enabled = {{ netdata_ml_enabled | default('yes') }}
+    maximum num samples to train = {{ netdata_ml_maximum_num_samples_to_train | default(21600) }}
+    train every = {{ netdata_ml_train_every | default(10800) }}
+    number of models per dimension = {{ netdata_ml_number_of_models_per_dimension | default(9) }}
+    enable statistics charts = {{ netdata_ml_enable_statistics_charts | default('yes') }}
+{% endif %}
+
+{% if netdata_cloud_enabled is defined %}
+[cloud]
+    enabled = {{ netdata_cloud_enabled | default('yes') }}
+    conversation log = {{ netdata_cloud_conversation_log | default('no') }}
+{% endif %}
+
+# Plugins configuration
+[plugins]
+    apps = {{ 'yes' if netdata_plugins.apps else 'no' }}
+    cgroups = {{ 'yes' if netdata_plugins.cgroups else 'no' }}
+    charts.d = {{ 'yes' if netdata_plugins.charts_d | default(netdata_plugins.get('charts.d', true)) else 'no' }}
+    checks = {{ 'yes' if netdata_plugins.checks else 'no' }}
+    diskspace = {{ 'yes' if netdata_plugins.diskspace else 'no' }}
+    ebpf = {{ 'yes' if netdata_plugins.ebpf else 'no' }}
+    fping = {{ 'yes' if netdata_plugins.fping else 'no' }}
+    go.d = {{ 'yes' if netdata_plugins.go_d | default(netdata_plugins.get('go.d', true)) else 'no' }}
+    idlejitter = {{ 'yes' if netdata_plugins.idlejitter else 'no' }}
+    ioping = {{ 'yes' if netdata_plugins.ioping else 'no' }}
+    nfacct = {{ 'yes' if netdata_plugins.nfacct else 'no' }}
+    perf = {{ 'yes' if netdata_plugins.perf else 'no' }}
+    proc = {{ 'yes' if netdata_plugins.proc else 'no' }}
+    python.d = {{ 'yes' if netdata_plugins.python_d | default(netdata_plugins.get('python.d', true)) else 'no' }}
+    slabinfo = {{ 'yes' if netdata_plugins.slabinfo else 'no' }}
+    statsd = {{ 'yes' if netdata_plugins.statsd else 'no' }}
+    tc = {{ 'yes' if netdata_plugins.tc else 'no' }}
+    timex = {{ 'yes' if netdata_plugins.timex else 'no' }}
+
+[statsd]
+    enabled = {{ 'yes' if netdata_plugins.statsd else 'no' }}
+{% if netdata_plugins.statsd %}
+    bind to = {{ netdata_statsd_bind_to | default('udp:localhost:8125 tcp:localhost:8125') }}
+{% endif %}
+
+{% if netdata_telemetry_prometheus_enabled %}
+[prometheus:exporter]
+    enabled = {{ 'yes' if netdata_telemetry_prometheus_enabled else 'no' }}
+    prefix = {{ netdata_telemetry_prometheus_prefix }}
+    send charts matching = {{ netdata_telemetry_prometheus_send_charts | default('*') }}
+{% endif %}
+
+{% for key, value in netdata_additional_config.items() %}
+[{{ key }}]
+{% for option, setting in value.items() %}
+    {{ option }} = {{ setting }}
+{% endfor %}
+{% endfor %}

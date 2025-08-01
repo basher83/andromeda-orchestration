@@ -1,0 +1,38 @@
+---
+- name: Check if Consul is installed
+  ansible.builtin.stat:
+    path: /usr/bin/consul
+  register: consul_binary
+
+- name: Create Consul service configuration directory
+  ansible.builtin.file:
+    path: /etc/consul.d
+    state: directory
+    mode: '0755'
+  when: consul_binary.stat.exists
+
+- name: Register Netdata service with Consul
+  ansible.builtin.template:
+    src: consul-netdata.json.j2
+    dest: /etc/consul.d/netdata.json
+    mode: '0644'
+  notify: reload consul
+  when: consul_binary.stat.exists
+
+- name: Configure Netdata Consul health check endpoint
+  ansible.builtin.lineinfile:
+    path: "{{ netdata_config_dir }}/netdata.conf"
+    regexp: '^(\s*)# bind to = '
+    line: '\1bind to = {{ netdata_bind_to }}:{{ netdata_port }}'
+    backrefs: true
+  notify: restart netdata
+
+- name: Configure Consul collector for Netdata
+  ansible.builtin.template:
+    src: consul.conf.j2
+    dest: "{{ netdata_config_dir }}/go.d/consul.conf"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0640'
+  when: netdata_consul_collector_enabled | default(true)
+  notify: restart netdata

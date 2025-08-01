@@ -1,0 +1,230 @@
+---
+# Netdata installation method
+netdata_install_method: "package"  # package or script
+netdata_version: "latest"
+
+# Netdata user and group
+netdata_user: netdata
+netdata_group: netdata
+
+# Netdata configuration directory
+netdata_config_dir: /etc/netdata
+netdata_lib_dir: /var/lib/netdata
+netdata_cache_dir: /var/cache/netdata
+netdata_log_dir: /var/log/netdata
+
+# Web interface settings
+netdata_bind_to: "0.0.0.0"
+netdata_port: 19999
+netdata_web_enabled: true
+
+# Streaming configuration
+netdata_streaming_enabled: false
+netdata_streaming_destination: ""
+netdata_streaming_api_key: ""
+netdata_streaming_buffer_size_bytes: 10485760
+netdata_streaming_reconnect_delay: 5
+netdata_streaming_initial_clock_resync_iterations: 60
+netdata_streaming_compression_enabled: true
+netdata_streaming_buffer_on_failures: 30
+
+# Parent node configuration
+netdata_parent_enabled: false
+netdata_parent_api_key: ""
+
+# Memory mode
+netdata_memory_mode: "dbengine"  # save, map, ram, none, alloc, dbengine
+
+# History settings
+netdata_history: 3600  # seconds of history to keep
+
+# Update frequency
+netdata_update_every: 1  # seconds between data collection
+
+# Consul integration
+netdata_consul_enabled: false
+netdata_consul_service_name: "netdata"
+netdata_consul_service_port: "{{ netdata_port }}"
+netdata_consul_service_tags:
+  - "monitoring"
+  - "metrics"
+netdata_consul_service_meta: {}
+netdata_consul_health_check_interval: "10s"
+netdata_consul_health_check_timeout: "5s"
+
+# Telemetry export
+netdata_telemetry_enabled: false
+netdata_telemetry_prometheus_enabled: false
+netdata_telemetry_prometheus_prefix: "netdata"
+
+# Alarms and notifications
+netdata_alarms_enabled: true
+netdata_alarm_notify_configs: []
+
+# Plugins to enable/disable
+netdata_plugins:
+  apps: true
+  cgroups: true
+  charts.d: true
+  checks: true
+  diskspace: true
+  ebpf: false
+  fping: true
+  go.d: true
+  idlejitter: true
+  ioping: true
+  nfacct: true
+  perf: false
+  proc: true
+  python.d: true
+  slabinfo: false
+  statsd: true
+  tc: true
+  timex: true
+
+# Additional configuration
+netdata_additional_config: {}
+
+# Machine Learning configuration
+netdata_ml_enabled: true
+netdata_ml_maximum_num_samples_to_train: 21600
+netdata_ml_train_every: 10800
+netdata_ml_number_of_models_per_dimension: 9
+netdata_ml_enable_statistics_charts: true
+
+# Cloud configuration
+netdata_cloud_enabled: false
+netdata_cloud_conversation_log: false
+
+# Registry configuration
+netdata_registry_enabled: false
+netdata_registry_to_announce: ""
+
+# Database engine settings
+netdata_page_cache_size: 32
+netdata_dbengine_disk_space: 256
+
+# Error logging
+netdata_errors_flood_protection_period: 1200
+netdata_errors_to_trigger_flood_protection: 200
+netdata_debug_log: "none"
+netdata_error_log: "syslog"
+netdata_access_log: "none"
+
+# Web compression
+netdata_web_gzip_enabled: true
+netdata_web_gzip_level: 3
+
+# Health monitoring
+netdata_health_default_repeat_warning: "never"
+netdata_health_default_repeat_critical: "never"
+
+# Parent node settings
+netdata_parent_allow_from: "*"
+netdata_parent_default_history: "{{ netdata_history }}"
+netdata_parent_default_memory_mode: "{{ netdata_memory_mode }}"
+netdata_parent_health_enabled: "auto"
+netdata_parent_postpone_alarms: 60
+netdata_parent_children: []
+
+# Streaming SSL settings
+netdata_streaming_ssl_enabled: false
+netdata_streaming_ssl_ca_path: "/etc/ssl/certs/"
+netdata_streaming_ssl_ca_file: ""
+netdata_streaming_timeout: 60
+netdata_streaming_port: 19999
+netdata_streaming_send_charts: "*"
+
+# StatsD settings
+netdata_statsd_bind_to: "udp:localhost:8125 tcp:localhost:8125"
+
+# Prometheus exporter settings
+netdata_telemetry_prometheus_send_charts: "*"
+
+# Alarm notification settings
+netdata_alarm_email_enabled: "YES"
+netdata_alarm_email_sender: "netdata"
+netdata_alarm_email_recipients: "root"
+netdata_alarm_email_plaintext_only: "YES"
+
+netdata_alarm_discord_enabled: "NO"
+netdata_alarm_discord_webhook_url: ""
+netdata_alarm_discord_recipients: ""
+
+netdata_alarm_slack_enabled: "NO"
+netdata_alarm_slack_webhook_url: ""
+netdata_alarm_slack_recipients: ""
+
+netdata_alarm_telegram_enabled: "NO"
+netdata_alarm_telegram_bot_token: ""
+netdata_alarm_telegram_recipients: ""
+
+netdata_alarm_custom_enabled: "NO"
+netdata_alarm_custom_script: "# Add custom notification logic here"
+
+# Consul service registration
+netdata_consul_enable_tag_override: false
+
+# Consul collector configuration
+netdata_consul_collector_enabled: true
+netdata_consul_url: "http://127.0.0.1:8500"
+# netdata_consul_acl_token: "your-consul-token"
+netdata_consul_update_every: 1
+netdata_consul_timeout: 2
+netdata_consul_autodetection_retry: 0
+netdata_consul_collect_node_metadata: true
+netdata_consul_collect_service_metadata: true
+netdata_consul_tls_enabled: false
+netdata_consul_tls_skip_verify: false
+# netdata_consul_tls_ca: "/path/to/ca.pem"
+# netdata_consul_tls_cert: "/path/to/cert.pem"
+# netdata_consul_tls_key: "/path/to/key.pem"
+
+# Netdata Cloud claiming
+# netdata_claim_token: "your-claim-token"
+# netdata_claim_rooms: "your-room-id"
+# netdata_claim_url: "https://app.netdata.cloud"
+
+# Consul Template integration
+netdata_consul_template_enabled: false
+consul_template_version: "0.35.0"
+netdata_consul_template_log_level: "info"
+netdata_consul_template_cpu_alarms: false
+netdata_consul_template_populate_kv: false
+
+# Consul Template configurations
+netdata_consul_template_configs: []
+# Example:
+# netdata_consul_template_configs:
+#   - name: "cpu.conf.ctmpl"
+#     destination: "/etc/netdata/health.d/cpu.conf"
+#     command: "systemctl restart netdata"
+#     wait_min: "5s"
+#     wait_max: "30s"
+
+# Default KV values for alarms
+netdata_consul_kv_defaults:
+  - key: "netdata/alarms/cpu/10min_usage_warning_low"
+    value: "75"
+  - key: "netdata/alarms/cpu/10min_usage_warning_high"
+    value: "85"
+  - key: "netdata/alarms/cpu/10min_usage_critical_low"
+    value: "85"
+  - key: "netdata/alarms/cpu/10min_usage_critical_high"
+    value: "95"
+  - key: "netdata/alarms/cpu/10min_iowait_warning_low"
+    value: "20"
+  - key: "netdata/alarms/cpu/10min_iowait_warning_high"
+    value: "40"
+  - key: "netdata/alarms/cpu/10min_iowait_critical_low"
+    value: "40"
+  - key: "netdata/alarms/cpu/10min_iowait_critical_high"
+    value: "50"
+  - key: "netdata/alarms/cpu/20min_steal_warning"
+    value: "5"
+  - key: "netdata/alarms/cpu/20min_steal_warning_high"
+    value: "10"
+  - key: "netdata/alarms/cpu/20min_steal_critical"
+    value: "20"
+  - key: "netdata/alarms/cpu/20min_steal_critical_high"
+    value: "30"

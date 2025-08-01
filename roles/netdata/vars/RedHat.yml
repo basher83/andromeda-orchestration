@@ -1,0 +1,18 @@
+---
+netdata_dependencies:
+  - curl
+  - bash
+  - iproute
+  - python3
+  - python3-pyyaml
+  - python3-dns
+  - python3-ipaddress
+  - python3-mysqlclient
+  - python3-psycopg2
+  - lm_sensors
+  - libmnl
+  - nc
+  - libuv
+  - json-c
+  - libcap
+  - libyaml
