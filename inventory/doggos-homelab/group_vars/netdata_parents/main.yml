@@ -1,0 +1,47 @@
+---
+# Netdata parent node configuration
+netdata_parent_enabled: true
+netdata_parent_api_key: "{{ vault_netdata_parent_api_key }}"
+
+# Memory and storage for parent nodes
+netdata_memory_mode: "dbengine"
+netdata_dbengine_disk_space: 1024  # 1GB for parent nodes
+netdata_history: 86400  # 24 hours
+netdata_page_cache_size: 64  # More cache for parent nodes
+
+# Bind to 10G network interface for streaming
+netdata_bind_to: "{{ hostvars[inventory_hostname]['netdata_10g_ip'] | default(ansible_default_ipv4.address) }}"
+
+# Accept connections from children and other parents
+netdata_parent_children:
+  - api_key: "nomad-cluster-api-key"
+    allow_from: "192.168.11.11-13 192.168.11.20-22"  # Nomad nodes on 10G
+    history: 86400
+    memory_mode: "dbengine"
+    health_enabled: "yes"
+    postpone_alarms: 60
+  - api_key: "parent-replication-key"
+    allow_from: "192.168.11.2-4"  # Other parents on 10G
+    history: 86400
+    memory_mode: "dbengine"
+    health_enabled: "no"  # Parents handle their own health
+    postpone_alarms: 0
+
+# Enable mutual replication between parents
+netdata_streaming_enabled: true
+netdata_streaming_api_key: "parent-replication-key"
+# Destination will be set per host to exclude self
+
+# Compression and performance for 10G network
+netdata_streaming_buffer_size_bytes: 10485760  # 10MB for 10G network
+netdata_streaming_compression_enabled: true
+netdata_streaming_buffer_on_failures: 30
+
+# Consul service registration for parent
+netdata_consul_enabled: true
+netdata_consul_service_name: "netdata-parent"
+netdata_consul_service_tags:
+  - "monitoring"
+  - "metrics"
+  - "parent"
+  - "api"
