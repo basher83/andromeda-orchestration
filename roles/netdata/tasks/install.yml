@@ -1,0 +1,35 @@
+---
+- name: Install Netdata from package manager
+  ansible.builtin.package:
+    name: netdata
+    state: present
+  when: netdata_install_method == "package"
+
+- name: Install Netdata dependencies for script installation
+  ansible.builtin.package:
+    name: "{{ netdata_dependencies }}"
+    state: present
+  when: netdata_install_method == "script"
+
+- name: Download and run Netdata installation script
+  ansible.builtin.shell: |
+    bash <(curl -Ss https://my-netdata.io/kickstart.sh) \
+      --dont-wait \
+      --disable-telemetry \
+      {{ '--nightly-channel' if netdata_version == 'nightly' else '' }}
+  args:
+    creates: /usr/sbin/netdata
+  when: netdata_install_method == "script"
+
+- name: Create Netdata directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0755'
+  loop:
+    - "{{ netdata_config_dir }}"
+    - "{{ netdata_lib_dir }}"
+    - "{{ netdata_cache_dir }}"
+    - "{{ netdata_log_dir }}"

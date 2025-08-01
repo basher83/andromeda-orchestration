@@ -1,0 +1,17 @@
+{
+  "service": {
+    "name": "{{ netdata_consul_service_name }}",
+    "tags": {{ netdata_consul_service_tags | to_json }},
+    "meta": {{ netdata_consul_service_meta | to_json }},
+    "port": {{ netdata_consul_service_port }},
+    "enable_tag_override": {{ netdata_consul_enable_tag_override | default(false) | lower }},
+    "check": {
+      "id": "{{ netdata_consul_service_name }}-health",
+      "name": "Netdata Health Check",
+      "http": "http://{{ ansible_default_ipv4.address }}:{{ netdata_port }}/api/v1/info",
+      "method": "GET",
+      "interval": "{{ netdata_consul_health_check_interval }}",
+      "timeout": "{{ netdata_consul_health_check_timeout }}"
+    }
+  }
+}

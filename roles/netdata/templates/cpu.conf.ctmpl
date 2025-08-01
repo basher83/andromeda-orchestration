@@ -1,0 +1,41 @@
+# CPU alarms managed by Consul
+# {{ "{{" }} timestamp {{ "}}" }}
+
+template: 10min_cpu_usage
+      on: system.cpu
+      os: linux
+   hosts: *
+  lookup: average -10m unaligned of user,system,softirq,irq,guest
+   units: %
+   every: 1m
+    warn: $this > (($status >= $WARNING)  ? ({{ "{{" }} key "netdata/alarms/cpu/10min_usage_warning_low" | parseInt {{ "}}" }}) : ({{ "{{" }} key "netdata/alarms/cpu/10min_usage_warning_high" | parseInt {{ "}}" }}))
+    crit: $this > (($status == $CRITICAL) ? ({{ "{{" }} key "netdata/alarms/cpu/10min_usage_critical_low" | parseInt {{ "}}" }}) : ({{ "{{" }} key "netdata/alarms/cpu/10min_usage_critical_high" | parseInt {{ "}}" }}))
+   delay: down 15m multiplier 1.5 max 1h
+    info: average cpu utilization for the last 10 minutes (excluding iowait, nice and steal)
+      to: sysadmin
+
+template: 10min_cpu_iowait
+      on: system.cpu
+      os: linux
+   hosts: *
+  lookup: average -10m unaligned of iowait
+   units: %
+   every: 1m
+    warn: $this > (($status >= $WARNING)  ? ({{ "{{" }} key "netdata/alarms/cpu/10min_iowait_warning_low" | parseInt {{ "}}" }}) : ({{ "{{" }} key "netdata/alarms/cpu/10min_iowait_warning_high" | parseInt {{ "}}" }}))
+    crit: $this > (($status == $CRITICAL) ? ({{ "{{" }} key "netdata/alarms/cpu/10min_iowait_critical_low" | parseInt {{ "}}" }}) : ({{ "{{" }} key "netdata/alarms/cpu/10min_iowait_critical_high" | parseInt {{ "}}" }}))
+   delay: down 15m multiplier 1.5 max 1h
+    info: average CPU wait I/O for the last 10 minutes
+      to: sysadmin
+
+template: 20min_steal_cpu
+      on: system.cpu
+      os: linux
+   hosts: *
+  lookup: average -20m unaligned of steal
+   units: %
+   every: 5m
+    warn: $this > (($status >= $WARNING)  ? ({{ "{{" }} key "netdata/alarms/cpu/20min_steal_warning" | parseInt {{ "}}" }})  : ({{ "{{" }} key "netdata/alarms/cpu/20min_steal_warning_high" | parseInt {{ "}}" }}))
+    crit: $this > (($status == $CRITICAL) ? ({{ "{{" }} key "netdata/alarms/cpu/20min_steal_critical" | parseInt {{ "}}" }}) : ({{ "{{" }} key "netdata/alarms/cpu/20min_steal_critical_high" | parseInt {{ "}}" }}))
+   delay: down 1h multiplier 1.5 max 2h
+    info: average CPU steal time for the last 20 minutes
+      to: sysadmin

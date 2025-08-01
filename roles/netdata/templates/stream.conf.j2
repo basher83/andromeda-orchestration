@@ -1,0 +1,59 @@
+# Netdata Streaming Configuration
+# {{ ansible_managed }}
+
+# This file controls streaming of metrics between Netdata agents
+# Documentation: https://learn.netdata.cloud/docs/agent/streaming
+
+{% if netdata_streaming_enabled %}
+# Streaming configuration for sending metrics to parent
+[stream]
+    enabled = yes
+    destination = {{ netdata_streaming_destination }}
+    api key = {{ netdata_streaming_api_key }}
+    timeout seconds = {{ netdata_streaming_timeout | default(60) }}
+    default port = {{ netdata_streaming_port | default(19999) }}
+    send charts matching = {{ netdata_streaming_send_charts | default('*') }}
+    buffer size bytes = {{ netdata_streaming_buffer_size_bytes }}
+    reconnect delay seconds = {{ netdata_streaming_reconnect_delay }}
+    initial clock resync iterations = {{ netdata_streaming_initial_clock_resync_iterations }}
+{% if netdata_streaming_compression_enabled | default(true) %}
+    enable compression = yes
+{% endif %}
+    buffer on failures = {{ netdata_streaming_buffer_on_failures | default(30) }}
+{% if netdata_streaming_ssl_enabled | default(false) %}
+    CApath = {{ netdata_streaming_ssl_ca_path | default('/etc/ssl/certs/') }}
+    CAfile = {{ netdata_streaming_ssl_ca_file | default('') }}
+{% if netdata_streaming_ssl_skip_verify | default(false) %}
+    ssl skip certificate verification = yes
+{% endif %}
+{% endif %}
+{% if netdata_streaming_health_enabled is defined %}
+    health enabled = {{ netdata_streaming_health_enabled }}
+{% endif %}
+{% endif %}
+
+{% if netdata_parent_enabled %}
+# Parent node configuration for receiving metrics
+# API keys for child nodes
+{% for child in netdata_parent_children | default([]) %}
+[{{ child.api_key }}]
+    enabled = yes
+    allow from = {{ child.allow_from | default('*') }}
+    default history = {{ child.history | default(netdata_history) }}
+    default memory mode = {{ child.memory_mode | default(netdata_memory_mode) }}
+    health enabled by default = {{ child.health_enabled | default('auto') }}
+    default postpone alarms on connect seconds = {{ child.postpone_alarms | default(60) }}
+{% if child.hosts_override is defined %}
+    multiple connections = {{ child.multiple_connections | default('allow') }}
+{% endif %}
+{% endfor %}
+
+# Default API key for any child nodes
+[{{ netdata_parent_api_key }}]
+    enabled = yes
+    allow from = {{ netdata_parent_allow_from | default('*') }}
+    default history = {{ netdata_parent_default_history | default(netdata_history) }}
+    default memory mode = {{ netdata_parent_default_memory_mode | default(netdata_memory_mode) }}
+    health enabled by default = {{ netdata_parent_health_enabled | default('auto') }}
+    default postpone alarms on connect seconds = {{ netdata_parent_postpone_alarms | default(60) }}
+{% endif %}

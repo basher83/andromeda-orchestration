@@ -1,0 +1,58 @@
+---
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ ansible_os_family }}.yml"
+  tags:
+    - netdata
+    - netdata-install
+
+- name: Install Netdata
+  ansible.builtin.include_tasks: install.yml
+  tags:
+    - netdata
+    - netdata-install
+
+- name: Configure Netdata
+  ansible.builtin.include_tasks: configure.yml
+  tags:
+    - netdata
+    - netdata-config
+
+- name: Configure streaming
+  ansible.builtin.include_tasks: streaming.yml
+  when: netdata_streaming_enabled or netdata_parent_enabled
+  tags:
+    - netdata
+    - netdata-streaming
+
+- name: Configure Consul integration
+  ansible.builtin.include_tasks: consul.yml
+  when: netdata_consul_enabled
+  tags:
+    - netdata
+    - netdata-consul
+
+- name: Start and enable Netdata
+  ansible.builtin.systemd:
+    name: netdata
+    state: started
+    enabled: true
+    daemon_reload: true
+  tags:
+    - netdata
+    - netdata-service
+
+- name: Claim Netdata to cloud
+  ansible.builtin.include_tasks: claim.yml
+  when: 
+    - netdata_claim_token is defined
+    - netdata_claim_rooms is defined
+  tags:
+    - netdata
+    - netdata-claim
+
+- name: Configure Consul Template for dynamic configuration
+  ansible.builtin.include_tasks: consul-template.yml
+  when: netdata_consul_template_enabled
+  tags:
+    - netdata
+    - netdata-consul-template

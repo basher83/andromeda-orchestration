@@ -1,0 +1,26 @@
+# Netdata Consul collector configuration
+# {{ ansible_managed }}
+# Location: /etc/netdata/go.d/consul.conf
+
+jobs:
+  - name: local
+    url: {{ netdata_consul_url | default('http://127.0.0.1:8500') }}
+{% if netdata_consul_acl_token is defined %}
+    acl_token: "{{ netdata_consul_acl_token }}"
+{% endif %}
+    # Update interval in seconds
+    update_every: {{ netdata_consul_update_every | default(1) }}
+    # Timeout for API requests
+    timeout: {{ netdata_consul_timeout | default(2) }}
+    # Enable autodetection of services
+    autodetection_retry: {{ netdata_consul_autodetection_retry | default(0) }}
+    # Collect additional metrics
+    collect_node_metadata: {{ netdata_consul_collect_node_metadata | default('yes') }}
+    collect_service_metadata: {{ netdata_consul_collect_service_metadata | default('yes') }}
+{% if netdata_consul_tls_enabled | default(false) %}
+    # TLS configuration
+    tls_skip_verify: {{ netdata_consul_tls_skip_verify | default('no') }}
+    tls_ca: {{ netdata_consul_tls_ca | default('') }}
+    tls_cert: {{ netdata_consul_tls_cert | default('') }}
+    tls_key: {{ netdata_consul_tls_key | default('') }}
+{% endif %}

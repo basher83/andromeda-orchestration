@@ -1,0 +1,31 @@
+---
+- name: Check if Netdata is already claimed
+  ansible.builtin.stat:
+    path: /var/lib/netdata/cloud.d/claimed_id
+  register: netdata_claimed
+
+- name: Claim Netdata to cloud
+  ansible.builtin.command:
+    cmd: >
+      netdata-claim.sh
+      -token={{ netdata_claim_token }}
+      -rooms={{ netdata_claim_rooms }}
+      -url={{ netdata_claim_url | default('https://app.netdata.cloud') }}
+    creates: /var/lib/netdata/cloud.d/claimed_id
+  when:
+    - netdata_claim_token is defined
+    - netdata_claim_rooms is defined
+    - not netdata_claimed.stat.exists
+  notify: restart netdata
+
+- name: Verify claim status
+  ansible.builtin.command:
+    cmd: netdatacli aclk-state
+  register: netdata_aclk_state
+  changed_when: false
+  failed_when: false
+
+- name: Display claim status
+  ansible.builtin.debug:
+    msg: "Netdata claim status: {{ netdata_aclk_state.stdout_lines | default(['Not available']) }}"
+  when: netdata_aclk_state is defined
