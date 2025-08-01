@@ -19,6 +19,12 @@ This directory contains Mermaid-based architecture and flow diagrams for the Net
    - Details how secrets move from Infisical to target infrastructure
    - Includes error handling scenarios
 
+4. **[Netdata Mesh Topology](netdata-mesh-topology.md)**
+   - Complete monitoring architecture across clusters
+   - Parent-child streaming relationships
+   - Parent-to-parent mesh replication topology
+   - Network routing and access points
+
 ## Viewing Diagrams
 
 These diagrams use Mermaid syntax and can be viewed in:

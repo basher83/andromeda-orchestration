@@ -37,6 +37,7 @@ Visual representations of project architecture and workflows:
 
 ### Infrastructure Configuration
 
+- [**Netdata Monitoring Architecture**](infrastructure/netdata-architecture.md) - Comprehensive guide to Netdata parent-child streaming and mesh topology
 - [**Consul Telemetry Setup**](consul-telemetry-setup.md) - Guide for enabling Consul metrics collection with Netdata
 - [**Imported Infrastructure**](imported-infrastructure.md) - Documentation of Ansible roles and modules imported from terraform-homelab
 - [**Phase 1 Implementation Guide**](phase1-implementation-guide.md) - Step-by-step guide for DNS infrastructure Phase 1
