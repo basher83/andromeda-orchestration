@@ -1,0 +1,101 @@
+---
+# PowerDNS Consul KV Setup
+# This playbook creates the necessary secrets in Consul KV for PowerDNS deployment
+
+- name: Set up PowerDNS secrets in Consul KV
+  hosts: nomad-server-1
+  gather_facts: no
+  
+  vars:
+    # Get Consul management token from Infisical
+    consul_mgmt_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_MANAGEMENT_TOKEN')).value }}
+    
+    # Generate random passwords
+    mysql_root_password: "{{ lookup('password', '/tmp/powerdns_mysql_root chars=ascii_letters,digits length=32') }}"
+    mysql_user_password: "{{ lookup('password', '/tmp/powerdns_mysql_user chars=ascii_letters,digits length=32') }}"
+    powerdns_api_key: "{{ lookup('password', '/tmp/powerdns_api chars=ascii_letters,digits,hexdigits length=48') }}"
+    
+  tasks:
+    - name: Check if secrets already exist
+      command: consul kv get -token={{ consul_mgmt_token }} powerdns/mysql/root_password
+      register: existing_secret
+      failed_when: false
+      changed_when: false
+      no_log: true
+      
+    - name: Display warning if secrets exist
+      debug:
+        msg: "WARNING: PowerDNS secrets already exist in Consul KV. They will NOT be overwritten."
+      when: existing_secret.rc == 0
+      
+    - name: Create PowerDNS KV folder structure
+      command: "consul kv put -token={{ consul_mgmt_token }} {{ item }} ''"
+      loop:
+        - powerdns/
+      when: existing_secret.rc != 0
+      no_log: true
+      
+    - name: Create PowerDNS secrets in Consul KV
+      command: "consul kv put -token={{ consul_mgmt_token }} {{ item.key }} {{ item.value }}"
+      loop:
+        - { key: "powerdns/mysql/root_password", value: "{{ mysql_root_password }}" }
+        - { key: "powerdns/mysql/password", value: "{{ mysql_user_password }}" }
+        - { key: "powerdns/api/key", value: "{{ powerdns_api_key }}" }
+      when: existing_secret.rc != 0
+      no_log: true
+      
+    - name: Verify secrets were created
+      command: "consul kv get -token={{ consul_mgmt_token }} {{ item }}"
+      loop:
+        - powerdns/mysql/root_password
+        - powerdns/mysql/password
+        - powerdns/api/key
+      register: verify_secrets
+      failed_when: verify_secrets.rc != 0
+      changed_when: false
+      no_log: true
+      
+    - name: Display completion message
+      debug:
+        msg: |
+          PowerDNS secrets have been configured in Consul KV!
+          
+          The following keys are now available:
+          - powerdns/mysql/root_password
+          - powerdns/mysql/password  
+          - powerdns/api/key
+          
+          These will be used by the PowerDNS Nomad job templates.
+          
+          You can now deploy PowerDNS by running:
+          nomad job run jobs/powerdns.nomad
+      when: existing_secret.rc != 0
+      
+    - name: Save generated secrets for reference
+      copy:
+        content: |
+          # PowerDNS Secrets - Generated {{ ansible_date_time.iso8601 | default('now') }}
+          # These have been stored in Consul KV
+          
+          MySQL Root: {{ mysql_root_password }}
+          MySQL User: {{ mysql_user_password }}
+          API Key: {{ powerdns_api_key }}
+        dest: /tmp/powerdns-secrets-reference.txt
+        mode: '0600'
+      when: existing_secret.rc != 0
+      delegate_to: localhost
+      
+    - name: Also store in Infisical for backup
+      debug:
+        msg: |
+          Consider also storing these secrets in Infisical at:
+          /apollo-13/powerdns/MYSQL_ROOT_PASSWORD
+          /apollo-13/powerdns/MYSQL_USER_PASSWORD
+          /apollo-13/powerdns/API_KEY

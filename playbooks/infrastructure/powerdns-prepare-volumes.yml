@@ -1,0 +1,32 @@
+---
+# Prepare host volumes for PowerDNS deployment
+
+- name: Prepare PowerDNS host volumes on Nomad clients
+  hosts: tag_nomad_client:&online
+  become: true
+  
+  tasks:
+    - name: Create Nomad volumes directory
+      file:
+        path: /opt/nomad/volumes
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+        
+    - name: Create PowerDNS MySQL volume directory
+      file:
+        path: /opt/nomad/volumes/powerdns-mysql
+        state: directory
+        owner: 999  # MySQL container user
+        group: 999  # MySQL container group
+        mode: '0755'
+        
+    - name: Verify volume was created
+      stat:
+        path: /opt/nomad/volumes/powerdns-mysql
+      register: volume_stat
+      
+    - name: Display volume status
+      debug:
+        msg: "PowerDNS MySQL volume created: {{ volume_stat.stat.exists }}"
