@@ -1,0 +1,144 @@
+---
+# Deploy Netdata parent-child architecture on doggos-homelab
+# This implements the dual-network streaming architecture from the personal scripts
+
+- name: Create netdata parent and children groups
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Define netdata parent nodes
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: netdata_parents
+      loop:
+        - lloyd
+        - holly
+        - mable
+
+    - name: Define netdata child nodes
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: netdata_children
+      loop:
+        - nomad-server-1-lloyd
+        - nomad-server-2-holly
+        - nomad-server-3-mable
+        - nomad-client-1-lloyd
+        - nomad-client-2-holly
+        - nomad-client-3-mable
+
+---
+# Deploy Netdata on parent nodes first
+- name: Deploy Netdata parent nodes
+  hosts: netdata_parents
+  become: true
+  gather_facts: true
+  serial: 1  # Deploy one at a time to ensure stability
+  
+  pre_tasks:
+    - name: Generate parent replication API key if not exists
+      ansible.builtin.set_fact:
+        vault_netdata_parent_api_key: "parent-replication-key"
+      when: vault_netdata_parent_api_key is not defined
+      run_once: true
+      delegate_to: localhost
+
+  tasks:
+    - name: Deploy Netdata parent configuration
+      ansible.builtin.include_role:
+        name: netdata
+      vars:
+        # Override any conflicting settings for parents
+        netdata_parent_enabled: true
+        netdata_streaming_enabled: true  # For mutual replication
+
+---
+# Deploy Netdata on child nodes
+- name: Deploy Netdata child nodes
+  hosts: netdata_children
+  become: true
+  gather_facts: true
+  
+  tasks:
+    - name: Deploy Netdata child configuration
+      ansible.builtin.include_role:
+        name: netdata
+      vars:
+        # Child-specific overrides handled by group_vars
+        netdata_parent_enabled: false
+        
+    - name: Configure Docker monitoring for Nomad clients
+      ansible.builtin.lineinfile:
+        path: /etc/netdata/netdata.conf
+        regexp: '^\[plugin:cgroups\]'
+        line: |
+          [plugin:cgroups]
+              enable cgroup docker = yes
+              enable cgroup nomad = yes
+        create: true
+      when: "'nomad-client' in inventory_hostname"
+      notify: restart netdata
+
+---
+# Verify deployment
+- name: Verify Netdata deployment
+  hosts: all:!localhost
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Check Netdata service status
+      ansible.builtin.systemd:
+        name: netdata
+        state: started
+      register: netdata_status
+      
+    - name: Verify Netdata is listening on correct interface
+      ansible.builtin.wait_for:
+        host: "{{ netdata_bind_to | default('0.0.0.0') }}"
+        port: 19999
+        timeout: 30
+      
+    - name: Check streaming status on parents
+      ansible.builtin.uri:
+        url: "http://{{ netdata_bind_to | default(ansible_default_ipv4.address) }}:19999/api/v1/info"
+        method: GET
+      register: netdata_info
+      when: inventory_hostname in groups['netdata_parents']
+      
+    - name: Display connected children on parents
+      ansible.builtin.debug:
+        msg: "Connected children: {{ netdata_info.json.stream | default({}) }}"
+      when: 
+        - inventory_hostname in groups['netdata_parents']
+        - netdata_info is defined
+        
+    - name: Check streaming connection on children
+      ansible.builtin.shell: |
+        grep -i "established communication" /var/log/netdata/error.log | tail -5
+      register: streaming_status
+      when: inventory_hostname in groups['netdata_children']
+      changed_when: false
+      failed_when: false
+      
+    - name: Display streaming status on children
+      ansible.builtin.debug:
+        msg: "Streaming status: {{ streaming_status.stdout_lines | default(['No streaming info found']) }}"
+      when: inventory_hostname in groups['netdata_children']
+
+---
+# Optional: Configure firewall rules for Netdata
+- name: Configure firewall rules for Netdata
+  hosts: all:!localhost
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Allow Netdata port from 10G network
+      community.general.ufw:
+        rule: allow
+        port: '19999'
+        src: '192.168.11.0/24'
+        comment: "Netdata streaming on 10G network"
+      when: ansible_facts['os_family'] == "Debian"
+      ignore_errors: true  # In case UFW is not installed

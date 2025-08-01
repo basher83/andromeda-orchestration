@@ -1,0 +1,38 @@
+---
+# Check streaming status
+
+- name: Check streaming status on pve1
+  hosts: pve1
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Check all connections on port 19999
+      ansible.builtin.shell: |
+        echo "=== All connections on port 19999 ==="
+        netstat -an | grep ":19999" | grep -v "LISTEN"
+        echo ""
+        echo "=== Check Netdata API for connected nodes ==="
+        curl -s http://localhost:19999/api/v1/info | jq -r '.["mirrored-hosts"][]' 2>/dev/null || echo "No mirrored hosts via API"
+      register: connections
+      changed_when: false
+    
+    - name: Display connections
+      ansible.builtin.debug:
+        msg: "{{ connections.stdout_lines }}"
+    
+    - name: Check Netdata internal status
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}:19999/api/v1/allmetrics?format=json"
+        method: GET
+      register: metrics
+      failed_when: false
+    
+    - name: Check if PBS metrics are present
+      ansible.builtin.set_fact:
+        pbs_present: "{{ 'pbs' in (metrics.json | default({}) | string) }}"
+      when: metrics.status == 200
+    
+    - name: Display PBS presence
+      ansible.builtin.debug:
+        msg: "PBS metrics present in pve1: {{ pbs_present | default('Unknown') }}"

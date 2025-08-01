@@ -1,0 +1,79 @@
+---
+# Check PBS streaming status
+
+- name: Check PBS streaming
+  hosts: localhost
+  gather_facts: false
+  
+  tasks:
+    - name: Add PBS to inventory
+      ansible.builtin.add_host:
+        name: pbs
+        ansible_host: 192.168.30.200
+        ansible_user: root
+        ansible_password: bluegatofeline
+
+- name: Debug PBS Netdata streaming
+  hosts: pbs
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Check Netdata service status
+      ansible.builtin.systemd:
+        name: netdata
+        state: started
+      register: netdata_status
+    
+    - name: Find Netdata logs
+      ansible.builtin.shell: |
+        # Check various log locations
+        if [ -f /var/log/netdata/error.log ]; then
+          echo "=== Recent error logs ==="
+          tail -30 /var/log/netdata/error.log | grep -E "(stream|connect|api.key|192.168.30.50)" || echo "No streaming entries in error.log"
+        else
+          echo "=== Checking journalctl ==="
+          journalctl -u netdata -n 30 --no-pager | grep -E "(stream|connect|api.key|192.168.30.50)" || echo "No streaming entries in journal"
+        fi
+      register: log_output
+      changed_when: false
+    
+    - name: Display logs
+      ansible.builtin.debug:
+        msg: "{{ log_output.stdout_lines }}"
+    
+    - name: Check current connections
+      ansible.builtin.shell: |
+        echo "=== Current connections to pve1 ==="
+        netstat -an | grep "192.168.30.50:19999" || echo "No connection to pve1:19999"
+        echo ""
+        echo "=== Netdata process ==="
+        ps aux | grep -E "[n]etdata" | head -3
+      register: connection_status
+      changed_when: false
+    
+    - name: Display connection status
+      ansible.builtin.debug:
+        msg: "{{ connection_status.stdout_lines }}"
+    
+    - name: Verify stream.conf
+      ansible.builtin.shell: |
+        echo "=== Stream configuration ==="
+        cat /etc/netdata/stream.conf | grep -A 10 "^\[stream\]"
+      register: stream_conf
+      changed_when: false
+    
+    - name: Display stream config
+      ansible.builtin.debug:
+        msg: "{{ stream_conf.stdout_lines }}"
+    
+    - name: Test connectivity to pve1
+      ansible.builtin.shell: |
+        echo "=== Testing connectivity to pve1 ==="
+        timeout 3 nc -zv 192.168.30.50 19999 2>&1 || echo "Connection test failed"
+      register: nc_test
+      changed_when: false
+    
+    - name: Display connectivity test
+      ansible.builtin.debug:
+        msg: "{{ nc_test.stdout_lines }}"

@@ -1,0 +1,53 @@
+---
+# Debug PBS streaming in detail
+
+- name: Debug PBS streaming
+  hosts: localhost
+  gather_facts: false
+  
+  tasks:
+    - name: Add PBS to inventory
+      ansible.builtin.add_host:
+        name: pbs
+        ansible_host: 192.168.30.200
+        ansible_user: root
+        ansible_password: bluegatofeline
+
+- name: Debug PBS Netdata configuration
+  hosts: pbs
+  become: true
+  gather_facts: false
+  
+  tasks:
+    - name: Stop Netdata
+      ansible.builtin.systemd:
+        name: netdata
+        state: stopped
+    
+    - name: Run Netdata in debug mode
+      ansible.builtin.shell: |
+        # Run with debug to see exact stream connection attempts
+        timeout 15 /usr/sbin/netdata -D -W set2 stream enabled=yes 2>&1 | grep -E "(stream|api.key|connect|192.168.30.50|error|warning|fail)" | head -100
+      register: debug_output
+      changed_when: false
+      failed_when: false
+    
+    - name: Display debug output
+      ansible.builtin.debug:
+        msg: "{{ debug_output.stdout_lines }}"
+    
+    - name: Check actual stream.conf content
+      ansible.builtin.shell: |
+        echo "=== Stream configuration ==="
+        cat /etc/netdata/stream.conf
+      register: stream_conf
+      changed_when: false
+    
+    - name: Display stream config
+      ansible.builtin.debug:
+        msg: "{{ stream_conf.stdout_lines }}"
+    
+    - name: Start Netdata normally
+      ansible.builtin.systemd:
+        name: netdata
+        state: started
