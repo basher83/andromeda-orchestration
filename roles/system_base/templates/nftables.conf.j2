@@ -36,6 +36,9 @@ table inet filter {
         tcp dport 2375 accept
         tcp dport 2376 accept
 
+        # Allow Netdata monitoring
+        tcp dport 19999 accept
+
         # Drop everything else
         drop
     }

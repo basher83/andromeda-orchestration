@@ -1,2 +1,7 @@
 ---
 ansible_host: 192.168.10.3
+
+# Netdata configuration
+netdata_10g_ip: "192.168.11.3"
+# Holly replicates to lloyd and mable
+netdata_streaming_destination: "192.168.11.2:19999 192.168.11.4:19999"
