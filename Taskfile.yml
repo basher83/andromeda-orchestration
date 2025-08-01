@@ -1,7 +1,7 @@
 version: '3'
 
 # NOTE: We use 'uv run' with a virtual environment (not 'uv tool') to ensure
-# all Ansible executables are available. See docs/uv-ansible-notes.md
+# all Ansible executables are available. See docs/getting-started/uv-ansible-notes.md
 
 tasks:
   default:
