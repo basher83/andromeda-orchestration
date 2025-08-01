@@ -34,6 +34,13 @@ This directory contains organized Ansible playbooks for infrastructure managemen
   - `job-deploy.yml` - Deploy jobs to Nomad
   - `register-service.yml` - Register services with Nomad
 
+- **`powerdns/`** - PowerDNS deployment and configuration (Phase 2)
+  - `powerdns-prepare-volumes.yml` - Prepare host volumes on Nomad clients
+  - `powerdns-setup-consul-kv.yml` - Automated secret setup in Consul KV
+  - `powerdns-consul-acl.yml` - Configure Consul ACLs for PowerDNS
+  - `powerdns-setup-manual.yml` - Manual setup instructions
+  - See `powerdns/README.md` for detailed deployment workflow
+
 - **`user-management/`** - User and access management
   - `setup-ansible-user.yml` - Comprehensive ansible user setup with SSH keys and sudo access
   - `deploy-ssh-keys.yml` - Legacy SSH key deployment playbook (use setup-ansible-user.yml instead)
@@ -129,6 +136,21 @@ uv run ansible-playbook playbooks/infrastructure/maintenance/backup-netdata-conf
 # Update Netdata streaming configuration
 uv run ansible-playbook playbooks/infrastructure/maintenance/netdata-update-streaming.yml \
   -i inventory/*/infisical.proxmox.yml
+```
+
+### PowerDNS Deployment
+```bash
+# Prepare volumes for PowerDNS
+uv run ansible-playbook playbooks/infrastructure/powerdns/powerdns-prepare-volumes.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml
+
+# Setup PowerDNS secrets in Consul KV
+uv run ansible-playbook playbooks/infrastructure/powerdns/powerdns-setup-consul-kv.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml
+
+# Configure Consul ACLs for PowerDNS
+uv run ansible-playbook playbooks/infrastructure/powerdns/powerdns-consul-acl.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml
 ```
 
 ## Debugging
