@@ -1,0 +1,41 @@
+---
+# Configure Nomad host volumes for PowerDNS
+
+- name: Configure PowerDNS host volumes in Nomad
+  hosts: tag_nomad_client:&online
+  become: true
+  
+  tasks:
+    - name: Add host volume configuration to Nomad
+      blockinfile:
+        path: /etc/nomad.d/nomad.hcl
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - PowerDNS host volume"
+        insertafter: "^client {"
+        block: |
+          
+            host_volume "powerdns-mysql" {
+              path      = "/opt/nomad/volumes/powerdns-mysql"
+              read_only = false
+            }
+        
+    - name: Restart Nomad service
+      systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+        
+    - name: Wait for Nomad to be ready
+      wait_for:
+        port: 4646
+        host: 127.0.0.1
+        delay: 5
+        timeout: 60
+        
+    - name: Verify Nomad is running
+      command: nomad node status -self
+      register: nomad_status
+      changed_when: false
+      
+    - name: Display Nomad status
+      debug:
+        msg: "Nomad client is {{ 'ready' if nomad_status.rc == 0 else 'not ready' }}"

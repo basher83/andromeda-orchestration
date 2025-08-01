@@ -1,0 +1,37 @@
+---
+# Enable anonymous read access to PowerDNS KV
+
+- name: Configure anonymous Consul ACL for PowerDNS
+  hosts: nomad-server-1
+  gather_facts: no
+  
+  vars:
+    consul_token: "edf460f9-f79a-e0b8-512c-c07f57efc065"
+    
+  tasks:
+    - name: Create anonymous read policy for PowerDNS
+      shell: |
+        cat <<EOF | consul acl policy create -token={{ consul_token }} -name="powerdns-anonymous-read" -description="Anonymous read access to PowerDNS KV" -rules=-
+        key_prefix "powerdns/" {
+          policy = "read"
+        }
+        EOF
+      register: policy_create
+      failed_when: false
+      changed_when: "'Created' in policy_create.stdout or 'Updated' in policy_create.stdout"
+      
+    - name: Get anonymous token info
+      shell: consul acl token read -token={{ consul_token }} -id=anonymous -format=json
+      register: anon_token
+      
+    - name: Update anonymous token with PowerDNS read policy
+      shell: |
+        consul acl token update -token={{ consul_token }} \
+          -id=anonymous \
+          -policy-name=powerdns-anonymous-read
+      register: token_update
+      changed_when: true
+      
+    - name: Display result
+      debug:
+        msg: "PowerDNS KV is now readable anonymously (for testing)"
