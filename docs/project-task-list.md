@@ -4,10 +4,10 @@ This document tracks all project management tasks for the NetBox-focused Ansible
 
 ## Project Status Overview
 
-**Project Phase**: Post-Assessment Phase  
-**Current Focus**: Addressing critical blockers before Phase 1  
-**Last Updated**: 2025-07-30  
-**Status**: Assessment completed, critical issues identified
+**Project Phase**: Phase 2 Implementation Complete  
+**Current Focus**: PowerDNS deployed, ready for Phase 3 (NetBox Integration)  
+**Last Updated**: 2025-08-01  
+**Status**: Phase 1 & 2 completed successfully
 
 ### Key Objectives
 
@@ -189,19 +189,68 @@ Tasks:
 
 **Documentation**: [Consul Telemetry Setup Guide](consul-telemetry-setup.md)
 
-#### 10. Create Development Environment
+#### 10. Phase 1: Cement Consul Foundation ✅
+
+**Description**: Enable Consul DNS on all nodes and configure service discovery  
+**Status**: Completed (2025-08-01)  
+**Blockers**: None  
+**Related**: `phase1-implementation-guide.md`, Phase 1 of ROADMAP
+
+Tasks:
+
+- [x] Deploy systemd-resolved configuration to all doggos-homelab nodes
+- [x] Configure DNS forwarding for .consul domain to port 8600
+- [x] Update /etc/resolv.conf symlinks to use systemd-resolved
+- [x] Verify Consul DNS resolution (consul.service.consul queries)
+- [x] Test service discovery for registered services
+
+**Implementation Details**:
+- Used `phase1-consul-dns.yml` playbook with consul_dns role
+- Configured systemd-resolved on all 9 doggos-homelab nodes
+- DNS forwarding rule: ~consul → 127.0.0.1:8600
+- Service registration deferred (no consul_servers group defined)
+
+#### 11. Phase 2: Deploy PowerDNS to Nomad ✅
+
+**Description**: Deploy PowerDNS as authoritative DNS server in Nomad  
+**Status**: Completed (2025-08-01)  
+**Blockers**: None  
+**Related**: PowerDNS Nomad job, Phase 2 of ROADMAP
+
+Tasks:
+
+- [x] Generate secure passwords for MySQL and API access
+- [x] Store PowerDNS secrets in Consul KV:
+  - powerdns/mysql/root_password
+  - powerdns/mysql/password  
+  - powerdns/api/key
+- [x] Create host volumes on Nomad clients for MySQL persistence
+- [x] Configure Nomad clients with host_volume "powerdns-mysql"
+- [x] Enable anonymous read ACL for PowerDNS KV (temporary for testing)
+- [x] Deploy PowerDNS Nomad job with MariaDB and PowerDNS tasks
+- [x] Verify services are running and healthy
+
+**Deployment Details**:
+- Running on nomad-client-1 (allocation: b87b56bf)
+- DNS service: 192.168.11.20:53
+- API service: 192.168.11.20:8081
+- MySQL with persistent storage at /opt/nomad/volumes/powerdns-mysql
+- Docker image: powerdns/pdns-auth-48:latest
+
+#### 12. Create Development Environment
 
 **Description**: Set up isolated testing environment for DNS/IPAM changes  
-**Status**: Not Started  
+**Status**: Skipped - doggos-homelab cluster is development environment  
 **Blockers**: None  
 **Related**: `dns-ipam-implementation-plan.md` - Phase 1
 
 Tasks:
 
-- [ ] Deploy test VMs for Consul/PowerDNS
-- [ ] Configure isolated network segment
-- [ ] Set up test clients
-- [ ] Document access procedures
+- [x] Decision: Use doggos-homelab as development environment
+- [ ] ~~Deploy test VMs for Consul/PowerDNS~~ (not needed)
+- [ ] ~~Configure isolated network segment~~ (not needed)
+- [ ] ~~Set up test clients~~ (not needed)
+- [ ] ~~Document access procedures~~ (not needed)
 
 #### 11. Design IP Address Schema
 
@@ -483,14 +532,14 @@ Tasks:
 
 ### Overall Progress
 
-- **Completed**: 8/28 tasks (29%)
-- **In Progress**: 0/28 tasks (0%)
-- **Not Started**: 20/28 tasks (71%)
+- **Completed**: 11/29 tasks (38%)
+- **In Progress**: 0/29 tasks (0%)
+- **Not Started**: 18/29 tasks (62%)
 
 ### Phase Breakdown
 
 - **High Priority**: 7/7 completed (100% - All high priority tasks complete)
-- **Medium Priority**: 1/8 completed (13% - Infrastructure roles imported)
+- **Medium Priority**: 4/9 completed (44% - Roles imported, telemetry enabled, Phase 1 & 2 complete)
 - **Low Priority**: 0/13 completed (0%)
 
 ## Risk Items and Blockers
@@ -498,32 +547,31 @@ Tasks:
 ### Critical Risks
 
 1. **DNS Infrastructure Complexity**: Pi-hole runs as 3-node HA cluster with keepalived - migration more complex than expected
-2. **Lack of Testing Environment**: Cannot validate changes safely
 
 ### Current Blockers
 
-1. **No Development Environment**: Cannot test configurations safely
+None - Phase 1 & 2 complete, ready for Phase 3 NetBox integration
 
 ## Recommendations for Task Execution
 
 ### Immediate Actions (Next 3-5 Days)
 
-1. **Create development environment** for DNS/IPAM testing
-2. **Begin Phase 1: Cement Consul Foundation** - Open port 8600/udp, configure DNS
-3. **Deploy PowerDNS to Nomad** - Start Phase 2 implementation
+1. **Bootstrap NetBox with essential DNS records** - Phase 3 priority
+2. **Configure PowerDNS sync with NetBox** - Enable authoritative DNS management
+3. **Design IP addressing schema** for comprehensive IPAM
 
 ### Week 2 Focus
 
-1. **Design IP addressing schema** based on assessment findings
-2. **Bootstrap NetBox with essential records** (per ROADMAP.md recommendation)
-3. **Configure NetBox-PowerDNS integration** - Phase 3 preparation
+1. **Migrate critical DNS records from Pi-hole** to PowerDNS
+2. **Test PowerDNS as authoritative resolver** for lab domains
+3. **Plan cutover strategy** from Pi-hole to PowerDNS
 
 ### Month 2 Goals
 
-1. **Complete Phase 0 and 1** of implementation plan
-2. **Establish monitoring** for new services
-3. **Begin Phase 2 integration** work
-4. **Create operational documentation**
+1. **Complete Phase 3 NetBox integration** - DNS record migration
+2. **Establish monitoring** for PowerDNS performance
+3. **Begin Phase 4** - Multi-site DNS strategy
+4. **Create operational documentation** for DNS management
 
 ## Related Documentation
 
@@ -550,6 +598,19 @@ Next review: 2025-08-06
 
 ## Change Log
 
+- **2025-08-01**: Phase 1 & 2 DNS Infrastructure Implementation Complete
+  - Phase 1: Deployed Consul DNS foundation across doggos-homelab cluster
+    - Configured systemd-resolved on all 9 nodes for .consul domain resolution
+    - DNS forwarding rule: ~consul → 127.0.0.1:8600
+    - All nodes successfully resolving consul.service.consul queries
+  - Phase 2: PowerDNS deployed to Nomad as authoritative DNS server
+    - Generated secure passwords and stored in Consul KV
+    - Created host volumes for MySQL persistence
+    - PowerDNS running on nomad-client-1 at 192.168.11.20:53
+    - API accessible at 192.168.11.20:8081
+    - MySQL data persisted at /opt/nomad/volumes/powerdns-mysql
+  - Updated project status to "Phase 2 Implementation Complete"
+  - Ready for Phase 3: NetBox integration and DNS record migration
 - **2025-07-30** (Update 7): Consul telemetry and monitoring enabled
   - Enabled telemetry endpoints on all Consul nodes
   - Created "prometheus-scraping" ACL policy with read permissions
