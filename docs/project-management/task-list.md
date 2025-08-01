@@ -84,7 +84,7 @@ Tasks:
 **Description**: Create comprehensive documentation of existing infrastructure  
 **Status**: Completed (2025-07-30)  
 **Blockers**: None  
-**Related**: Assessment playbook outputs, `docs/infrastructure/pihole-ha-cluster.md`
+**Related**: Assessment playbook outputs, `docs/operations/pihole-ha-cluster.md`
 
 Tasks:
 
@@ -92,7 +92,7 @@ Tasks:
   - FOUND: 3x LXC containers in HA configuration with keepalived
   - LXC 103 on proxmoxt430, LXC 136 & 139 on pve1
 - [x] Document all DNS zones and records from Pi-hole
-  - Full documentation in `docs/infrastructure/pihole-ha-cluster.md`
+  - Full documentation in `docs/operations/pihole-ha-cluster.md`
   - Keepalived configuration with VIP 192.168.30.100
   - Network segments identified
   - Backup procedures documented
