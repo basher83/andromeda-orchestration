@@ -6,8 +6,14 @@ server 2.pool.ntp.org iburst
 driftfile /var/lib/chrony/drift
 logdir /var/log/chrony
 
-# Enable kernel synchronization
+# Enable kernel synchronization of the real-time clock (RTC)
 rtcsync
 
-# Enable kernel time discipline
-maxupdateskew 100
+# Enable hardware timestamping if available
+hwtimestamp *
+
+# Make steps larger than 1 second
+makestep 1.0 3
+
+# Maximum adjustment of system clock
+maxupdateskew 100.0
