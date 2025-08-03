@@ -29,7 +29,7 @@
     enable gzip compression = {{ netdata_web_gzip_enabled | default('yes') }}
     gzip compression level = {{ netdata_web_gzip_level | default(3) }}
 {% if not netdata_web_enabled %}
-    mode = none
+    mode = static-threaded
 {% endif %}
 
 [registry]
