@@ -1,0 +1,105 @@
+---
+# Repair Nomad client configuration by restoring from backup
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/repair-nomad-client-config.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Repair Nomad Client Configuration
+  hosts: tag_client
+  become: true
+  vars:
+    nomad_config_file: /etc/nomad.d/nomad.hcl
+    nomad_client_token: "8e0c8f6d-8e00-8011-53f3-a0da44c305d4"
+    
+  tasks:
+    - name: Find most recent backup
+      ansible.builtin.shell: |
+        ls -t {{ nomad_config_file }}.backup.* 2>/dev/null | head -1
+      register: backup_file
+      changed_when: false
+      failed_when: false
+
+    - name: Restore from backup if available
+      ansible.builtin.copy:
+        src: "{{ backup_file.stdout }}"
+        dest: "{{ nomad_config_file }}"
+        remote_src: true
+        backup: true
+      when: backup_file.stdout != ""
+
+    - name: Remove all consul blocks and markers from restored file
+      ansible.builtin.shell: |
+        # Remove all existing consul blocks and ansible markers
+        sed -i.tmp '/^# BEGIN ANSIBLE MANAGED CONSUL/,/^# END ANSIBLE MANAGED CONSUL/d' {{ nomad_config_file }}
+        
+        # Also remove any standalone consul blocks
+        perl -i -pe 'BEGIN{undef $/;} s/\nconsul\s*\{[^}]*\}//smg' {{ nomad_config_file }}
+      when: backup_file.stdout != ""
+
+    - name: Add consul configuration at the end of file
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_file }}"
+        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION"
+        block: |
+          consul {
+            address = "127.0.0.1:8500"
+            token = "{{ nomad_client_token }}"
+            
+            # Enable service registration
+            auto_advertise = true
+            server_auto_join = true
+            client_auto_join = true
+            
+            # Service names
+            server_service_name = "nomad"
+            client_service_name = "nomad-client"
+            
+            # Enable service checks
+            checks_use_advertise = true
+            
+            # Service and task identity settings
+            service_identity {
+              enabled = true
+            }
+            
+            task_identity {
+              enabled = true
+            }
+          }
+        state: present
+      register: config_updated
+
+    - name: Validate configuration
+      ansible.builtin.command: nomad config validate {{ nomad_config_file }}
+      register: validation_result
+      failed_when: validation_result.rc != 0
+
+    - name: Restart Nomad client service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 30
+
+- name: Verify All Nodes
+  hosts: nomad-server-1-lloyd
+  
+  tasks:
+    - name: Check all Nomad nodes
+      ansible.builtin.command: nomad node status
+      register: node_status
+      changed_when: false
+      
+    - name: Display node status
+      ansible.builtin.debug:
+        msg:
+          - "Nomad client configuration repaired!"
+          - ""
+          - "All Nomad nodes:"
+          - "{{ node_status.stdout_lines }}"
+          - ""
+          - "Ready to deploy services!"

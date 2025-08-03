@@ -1,0 +1,88 @@
+---
+# Generic Nomad job deployment playbook using Galaxy modules
+- name: Deploy Nomad Job
+  hosts: localhost
+  gather_facts: false
+  become: false
+  vars:
+    nomad_api_endpoint: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646', true) }}"
+    job_path: "{{ job | mandatory }}"
+    force_start: "{{ force | default(false) }}"
+    wait_for_healthy: "{{ wait | default(true) }}"
+  
+  tasks:
+    - name: Validate job file exists
+      become: false
+      ansible.builtin.stat:
+        path: "{{ job_path }}"
+      register: job_file
+      failed_when: not job_file.stat.exists
+
+    - name: Read job specification
+      become: false
+      ansible.builtin.slurp:
+        src: "{{ job_path }}"
+      register: job_spec
+
+    - name: Extract job name from HCL
+      ansible.builtin.set_fact:
+        job_name: "{{ job_spec.content | b64decode | regex_search('job\\s+\"([^\"]+)\"', '\\1') | first }}"
+
+    - name: Display deployment info
+      ansible.builtin.debug:
+        msg:
+          - "Deploying job: {{ job_name }}"
+          - "From file: {{ job_path }}"
+          - "To Nomad: {{ nomad_api_endpoint }}"
+          - "Force start: {{ force_start }}"
+
+    - name: Deploy job
+      community.general.nomad_job:
+        host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
+        port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
+        use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+        content: "{{ job_spec.content | b64decode }}"
+        content_format: hcl
+        state: present
+        force_start: "{{ force_start }}"
+      register: deploy_result
+
+    - name: Show deployment result
+      ansible.builtin.debug:
+        var: deploy_result
+      when: deploy_result is defined
+
+    - name: Get initial job info
+      community.general.nomad_job_info:
+        host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
+        port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
+        use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+        name: "{{ job_name }}"
+      register: job_info
+      
+    - name: Wait for healthy deployment
+      community.general.nomad_job_info:
+        host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
+        port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
+        use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+        name: "{{ job_name }}"
+      register: job_status
+      until: job_status.jobs[0].Status == "running" and job_status.jobs[0].JobSummary.Summary | json_query('*.Running') | sum > 0
+      retries: 60
+      delay: 5
+      when: wait_for_healthy | bool
+
+    - name: Display final job status
+      ansible.builtin.debug:
+        msg:
+          - "Job deployed successfully!"
+          - "Name: {{ job_status.jobs[0].Name }}"
+          - "Status: {{ job_status.jobs[0].Status }}"
+          - "Type: {{ job_status.jobs[0].Type }}"
+          - "Running allocations: {{ job_status.jobs[0].JobSummary.Summary | json_query('*.Running') | sum }}"
+      when: wait_for_healthy | bool
+
+# Usage examples:
+# ansible-playbook deploy-job.yml -e job=nomad-jobs/core-infrastructure/traefik.nomad.hcl
+# ansible-playbook deploy-job.yml -e job=nomad-jobs/platform-services/powerdns.nomad.hcl -e force=true
+# ansible-playbook deploy-job.yml -e job=nomad-jobs/applications/myapp.nomad.hcl -e wait=false

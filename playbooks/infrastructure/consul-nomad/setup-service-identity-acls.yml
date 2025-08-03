@@ -1,0 +1,129 @@
+---
+# Setup Consul ACL policies for Nomad service identities
+# This enables Nomad to automatically derive Consul tokens for services
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/setup-service-identity-acls.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Setup Consul ACL Policies for Nomad Service Identities
+  hosts: nomad-server-1-lloyd
+  vars:
+    consul_management_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_MASTER_TOKEN')).value }}
+    
+  tasks:
+    - name: Create service identity policy template
+      ansible.builtin.copy:
+        content: |
+          # Policy for Nomad to create service tokens
+          node_prefix "" {
+            policy = "read"
+          }
+          
+          service_prefix "" {
+            policy = "write"
+          }
+          
+          # Allow service identity tokens to be created
+          acl = "write"
+        dest: /tmp/nomad-service-identity-policy.hcl
+        mode: '0644'
+
+    - name: Create Nomad service identity policy
+      ansible.builtin.command: |
+        consul acl policy create \
+          -name "nomad-service-identity" \
+          -description "Policy for Nomad to create service identity tokens" \
+          -rules @/tmp/nomad-service-identity-policy.hcl \
+          -token={{ consul_management_token }}
+      register: policy_create
+      failed_when: policy_create.rc != 0 and 'already exists' not in policy_create.stderr
+      changed_when: policy_create.rc == 0
+
+    - name: Update existing policy if needed
+      ansible.builtin.command: |
+        consul acl policy update \
+          -name "nomad-service-identity" \
+          -rules @/tmp/nomad-service-identity-policy.hcl \
+          -token={{ consul_management_token }}
+      when: policy_create.rc != 0 and 'already exists' in policy_create.stderr
+
+    - name: Create role for Nomad servers
+      ansible.builtin.command: |
+        consul acl role create \
+          -name "nomad-server" \
+          -description "Role for Nomad servers to create service tokens" \
+          -policy-name "nomad-service-identity" \
+          -token={{ consul_management_token }}
+      register: role_create
+      failed_when: role_create.rc != 0 and 'already exists' not in role_create.stderr
+      changed_when: role_create.rc == 0
+
+    - name: Update server tokens with new role
+      ansible.builtin.command: |
+        consul acl token update \
+          -id {{ item }} \
+          -role-name=nomad-server \
+          -token={{ consul_management_token }}
+      with_items:
+        - "00b57268-c5f9-edb4-bc90-639fb4ab3232"  # Server token
+      register: token_update
+      failed_when: false  # Don't fail if role already attached
+
+    - name: Create service identity for common services
+      ansible.builtin.shell: |
+        # Create service identities for services that will be deployed
+        for service in traefik powerdns powerdns-api powerdns-mysql consul nomad nomad-client; do
+          echo "Creating service identity for $service..."
+          consul acl policy create \
+            -name "service-identity-${service}" \
+            -description "Service identity for ${service}" \
+            -rules "service \"${service}\" { policy = \"write\" } service_prefix \"\" { policy = \"read\" } node_prefix \"\" { policy = \"read\" }" \
+            -token={{ consul_management_token }} || true
+        done
+      changed_when: false
+
+    - name: Clean up temporary files
+      ansible.builtin.file:
+        path: /tmp/nomad-service-identity-policy.hcl
+        state: absent
+
+- name: Restart Nomad to Apply Changes
+  hosts: tag_nomad
+  become: true
+  
+  tasks:
+    - name: Restart Nomad service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 30
+
+- name: Verify Configuration
+  hosts: nomad-server-1-lloyd
+  
+  tasks:
+    - name: Check Nomad server status
+      ansible.builtin.command: nomad server members
+      register: nomad_status
+      changed_when: false
+      
+    - name: Display status
+      ansible.builtin.debug:
+        msg:
+          - "Nomad server status:"
+          - "{{ nomad_status.stdout_lines }}"
+          - ""
+          - "Service identity ACLs configured!"
+          - "You can now deploy jobs with service identity blocks."

@@ -1,0 +1,131 @@
+---
+# Fix Consul ACL agent tokens on all Nomad servers and clients
+# This applies the correct agent tokens to resolve ACL authentication issues
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/fix-all-consul-tokens.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Fix Consul agent tokens on Nomad servers
+  hosts: nomad-server-1-lloyd,nomad-server-2-holly
+  become: true
+  serial: 1  # Process one at a time
+  vars:
+    consul_agent_token: "00b57268-c5f9-edb4-bc90-639fb4ab3232"  # Server token
+    
+  tasks:
+    - name: "[SERVER] Update agent token in Consul config"
+      ansible.builtin.shell: |
+        sed -i 's/agent = ""/agent = "{{ consul_agent_token }}"/' /etc/consul.d/consul.hcl
+      register: config_update
+
+    - name: "[SERVER] Restart Consul to apply the token"
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted
+
+    - name: "[SERVER] Wait for Consul to be ready"
+      ansible.builtin.wait_for:
+        port: 8500
+        host: 127.0.0.1
+        delay: 5
+        timeout: 30
+
+    - name: "[SERVER] Verify fix worked"
+      ansible.builtin.shell: |
+        journalctl -u consul --since "30 seconds ago" --no-pager | grep -E "Synced node info|Synced service|blocked by ACLs"
+      register: verification
+      changed_when: false
+      failed_when: false
+
+    - name: "[SERVER] Display results"
+      ansible.builtin.debug:
+        msg: 
+          - "Server: {{ inventory_hostname }}"
+          - "Token applied: {{ consul_agent_token }}"
+          - "Status: {{ 'No ACL errors - SUCCESS' if verification.stdout == '' else 'Check output below' }}"
+          - "{{ verification.stdout_lines | default([]) }}"
+
+- name: Fix Consul agent tokens on Nomad clients
+  hosts: nomad-client-1-lloyd,nomad-client-2-holly,nomad-client-3-mable
+  become: true
+  serial: 1  # Process one at a time
+  vars:
+    consul_agent_token: "8e0c8f6d-8e00-8011-53f3-a0da44c305d4"  # Client token
+    
+  tasks:
+    - name: "[CLIENT] Update agent token in Consul config"
+      ansible.builtin.shell: |
+        sed -i 's/agent = ""/agent = "{{ consul_agent_token }}"/' /etc/consul.d/consul.hcl
+      register: config_update
+
+    - name: "[CLIENT] Restart Consul to apply the token"
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted
+
+    - name: "[CLIENT] Wait for Consul to be ready"
+      ansible.builtin.wait_for:
+        port: 8500
+        host: 127.0.0.1
+        delay: 5
+        timeout: 30
+
+    - name: "[CLIENT] Verify fix worked"
+      ansible.builtin.shell: |
+        journalctl -u consul --since "30 seconds ago" --no-pager | grep -E "Synced node info|Synced service|blocked by ACLs"
+      register: verification
+      changed_when: false
+      failed_when: false
+
+    - name: "[CLIENT] Display results"
+      ansible.builtin.debug:
+        msg: 
+          - "Client: {{ inventory_hostname }}"
+          - "Token applied: {{ consul_agent_token }}"
+          - "Status: {{ 'No ACL errors - SUCCESS' if verification.stdout == '' else 'Check output below' }}"
+          - "{{ verification.stdout_lines | default([]) }}"
+
+- name: Final verification from leader
+  hosts: nomad-server-3-mable
+  vars:
+    consul_management_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='dev',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_MASTER_TOKEN')).value }}
+      
+  tasks:
+    - name: Wait for changes to propagate
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Check all Consul nodes
+      ansible.builtin.command: |
+        consul catalog nodes -token={{ consul_management_token }}
+      register: all_nodes
+      changed_when: false
+
+    - name: Check for Nomad services in Consul
+      ansible.builtin.shell: |
+        consul catalog services -token={{ consul_management_token }} | grep -E "nomad|nomad-client" || echo "No Nomad services found"
+      register: nomad_services
+      changed_when: false
+      failed_when: false
+
+    - name: Final summary
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "CONSUL ACL TOKEN FIX COMPLETED"
+          - "=========================================="
+          - "Servers fixed: nomad-server-1, nomad-server-2"
+          - "  Token: 00b57268-c5f9-edb4-bc90-639fb4ab3232"
+          - "Clients fixed: nomad-client-1, nomad-client-2, nomad-client-3"
+          - "  Token: 8e0c8f6d-8e00-8011-53f3-a0da44c305d4"
+          - "=========================================="
+          - "All Consul nodes:"
+          - "{{ all_nodes.stdout_lines }}"
+          - "Nomad services registered:"
+          - "{{ nomad_services.stdout_lines }}"
+          - "=========================================="

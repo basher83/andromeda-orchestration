@@ -1,0 +1,67 @@
+#!/usr/sbin/nft -f
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+
+        # Allow established and related connections
+        ct state established,related accept
+
+        # Allow loopback traffic
+        iif lo accept
+
+        # Allow SSH
+        tcp dport 22 accept
+
+        # Core Infrastructure Services
+        # Nomad HTTP API
+        tcp dport 4646 accept
+
+        # Consul HTTP API
+        tcp dport 8500 accept
+
+        # Consul communication (all directions)
+        tcp dport { 8300, 8301, 8302, 8600 } accept
+        udp dport { 8301, 8302, 8600 } accept
+        udp sport { 8301, 8302, 8600 } accept
+
+        # Nomad communication (all directions)
+        tcp dport { 4646, 4647, 4648 } accept
+        udp dport { 4647, 4648 } accept
+        udp sport { 4647, 4648 } accept
+
+        # Docker API for Nomad
+        tcp dport 2375 accept
+        tcp dport 2376 accept
+
+        # Monitoring
+        tcp dport 19999 accept  # Netdata
+
+        # === NOMAD WORKLOAD PORTS ===
+        # Allow Nomad dynamic port range (default: 20000-32000)
+        # Most services should use dynamic ports and be accessed via load balancer
+        tcp dport 20000-32000 accept
+        udp dport 20000-32000 accept
+
+        # Well-known service ports (for static port allocations)
+        tcp dport 53 accept                # DNS (must be on standard port)
+        udp dport 53 accept                # DNS
+        
+        # Service-specific static ports (only when absolutely necessary)
+        tcp dport 8081 accept              # PowerDNS API (currently using static allocation)
+
+        # Allow all ICMP
+        ip protocol icmp accept
+
+        # Drop everything else
+        drop
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}

@@ -1,0 +1,71 @@
+existing_volumes:
+- /opt/nomad/volumes/powerdns-mysql
+filesystem:
+    devices:
+    - /dev/sda1,65G,7.3G,58G,12%,/
+    - /dev/sda16,881M,113M,707M,14%,/boot
+    - /dev/sda15,105M,6.2M,99M,6%,/boot/efi
+    mounts:
+    - 192.168.30.6:/mnt/DataLake/nomad-volumes on /mnt/nomad-volumes type nfs4 (rw,relatime,sync,vers=4.2,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=192.168.10.22,local_lock=none,addr=192.168.30.6)
+host_volumes:
+    config_file:
+    - host_volume "powerdns-mysql" {
+    - '  path      = "/opt/nomad/volumes/powerdns-mysql"'
+    - '  read_only = false'
+    - '  host_volume "nomad-volumes" {'
+    - '    path      = "/mnt/nomad-volumes"'
+    - '    read_only = false'
+    configured:
+        nomad-volumes:
+            ID: ''
+            Name: nomad-volumes
+            Path: /mnt/nomad-volumes
+            ReadOnly: false
+        powerdns-mysql:
+            ID: ''
+            Name: powerdns-mysql
+            Path: /opt/nomad/volumes/powerdns-mysql
+            ReadOnly: false
+node_name: nomad-client-3-mable
+nomad_client:
+    datacenter: unknown
+    node_id: e943bdc9-d285-949f-60e8-06d639842c84
+    status: healthy
+storage_types:
+    csi_volumes:
+        configured: false
+        plugins: []
+    dynamic_host_volumes:
+        loop_devices:
+        - No loop devices for Nomad volumes
+        plugins_installed:
+            cleanup-orphaned-volumes.sh: false
+            ext4-volume: false
+            xfs-volume: false
+    ephemeral_disk:
+        available: true
+        notes: Always available in Nomad
+        path: /alloc/data
+    static_host_volumes:
+        configured: true
+        count: 2
+        volumes:
+        - nomad-volumes
+        - powerdns-mysql
+timestamp: 2025-08-02_0157
+volume_directories:
+    base_paths:
+    - /opt/nomad/volumes
+    - /opt/nomad/volumes/dynamic
+    - /alloc
+    existing_paths:
+    -   exists: true
+        path: null
+    -   exists: false
+        path: null
+    -   exists: false
+        path: null
+volume_usage:
+-   - "4.0K\t/opt/nomad/volumes/powerdns-mysql"
+-   - Directory does not exist
+-   - Directory does not exist

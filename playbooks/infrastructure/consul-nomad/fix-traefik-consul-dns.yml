@@ -1,0 +1,277 @@
+---
+# Fix Traefik's Consul DNS resolution
+# Configures Docker to use Consul DNS for .consul domains
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/fix-traefik-consul-dns.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Fix Consul DNS for Docker containers
+  hosts: ~nomad-client.*
+  become: true
+  vars:
+    docker_daemon_config: /etc/docker/daemon.json
+    
+  tasks:
+    - name: Ensure Consul DNS is accessible on all interfaces
+      ansible.builtin.lineinfile:
+        path: /etc/consul.d/consul.hcl
+        regexp: '^client_addr\s*='
+        line: 'client_addr = "0.0.0.0"'
+        backup: true
+      register: consul_config_changed
+
+    - name: Ensure Consul DNS ports are in addresses block
+      ansible.builtin.blockinfile:
+        path: /etc/consul.d/consul.hcl
+        marker: "# {mark} ANSIBLE MANAGED - DNS CONFIG"
+        block: |
+          addresses {
+            dns = "0.0.0.0"
+            http = "0.0.0.0"
+          }
+          
+          ports {
+            dns = 8600
+          }
+          
+          recursors = ["8.8.8.8", "1.1.1.1"]
+        insertafter: "^datacenter"
+      register: consul_dns_config
+
+    - name: Reload Consul if configuration changed
+      ansible.builtin.systemd:
+        name: consul
+        state: reloaded
+      when: consul_config_changed.changed or consul_dns_config.changed
+
+    - name: Configure Docker daemon to use host DNS
+      ansible.builtin.copy:
+        content: |
+          {
+            "bip": "172.17.0.1/16",
+            "default-address-pools": [
+              {
+                "base": "172.17.0.0/16",
+                "size": 24
+              }
+            ],
+            "dns": ["{{ ansible_default_ipv4.address }}"],
+            "dns-opts": ["ndots:0"],
+            "dns-search": ["service.consul", "node.consul"]
+          }
+        dest: "{{ docker_daemon_config }}"
+        backup: true
+        mode: '0644'
+      register: docker_config_changed
+
+    - name: Add dnsmasq configuration for Consul forwarding
+      ansible.builtin.copy:
+        content: |
+          # Forward .consul queries to Consul DNS
+          server=/consul/{{ ansible_default_ipv4.address }}#8600
+          
+          # Don't read /etc/resolv.conf
+          no-resolv
+          
+          # Upstream DNS servers
+          server=8.8.8.8
+          server=1.1.1.1
+          
+          # Listen on Docker bridge
+          listen-address=172.17.0.1
+          bind-interfaces
+        dest: /etc/dnsmasq.d/consul
+        mode: '0644'
+      register: dnsmasq_config
+      when: false  # Disable for now - not all systems have dnsmasq
+
+    - name: Restart Docker if configuration changed
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted
+        daemon_reload: true
+      when: docker_config_changed.changed
+
+    - name: Wait for Docker to be ready
+      ansible.builtin.wait_for:
+        path: /var/run/docker.sock
+        state: present
+        timeout: 30
+      when: docker_config_changed.changed
+
+    - name: Test DNS resolution
+      ansible.builtin.shell: |
+        dig @{{ ansible_default_ipv4.address }} -p 8600 consul.service.consul +short
+      register: dns_test
+      changed_when: false
+
+    - name: Display DNS test results
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "Consul DNS test:"
+          - "{{ dns_test.stdout_lines }}"
+
+- name: Update Traefik job to use explicit Consul endpoint
+  hosts: nomad-server-1-lloyd
+  tasks:
+    - name: Check current Traefik configuration
+      ansible.builtin.shell: |
+        nomad job inspect traefik | jq -r '.Job.TaskGroups[0].Tasks[0].Config.args' 2>/dev/null || echo "No args found"
+      register: traefik_config
+
+    - name: Create updated Traefik job with explicit Consul endpoint
+      ansible.builtin.copy:
+        content: |
+          job "traefik" {
+            datacenters = ["dc1"]
+            type = "service"
+
+            group "traefik" {
+              count = 1
+
+              network {
+                port "http" {
+                  static = 80
+                }
+                port "https" {
+                  static = 443
+                }
+                port "api" {
+                  static = 8080
+                }
+              }
+
+              task "traefik" {
+                driver = "docker"
+
+                config {
+                  image = "traefik:v3.0"
+                  ports = ["http", "https", "api"]
+                  
+                  args = [
+                    "--api.insecure=true",
+                    "--api.dashboard=true",
+                    "--entrypoints.web.address=:80",
+                    "--entrypoints.websecure.address=:443",
+                    "--providers.consulcatalog=true",
+                    "--providers.consulcatalog.endpoint.address=192.168.11.11:8500",
+                    "--providers.consulcatalog.exposedByDefault=false",
+                    "--providers.consulcatalog.prefix=traefik",
+                    "--log.level=INFO"
+                  ]
+                }
+
+                resources {
+                  cpu    = 100
+                  memory = 128
+                }
+
+                service {
+                  name = "traefik"
+                  port = "http"
+                  
+                  tags = [
+                    "traefik.enable=true",
+                    "traefik.http.routers.api.rule=Host(`traefik.local`)",
+                    "traefik.http.routers.api.service=api@internal"
+                  ]
+                  
+                  check {
+                    type     = "http"
+                    path     = "/ping"
+                    port     = "api"
+                    interval = "10s"
+                    timeout  = "2s"
+                  }
+                }
+              }
+            }
+          }
+        dest: /tmp/traefik-fixed.nomad
+      delegate_to: localhost
+
+    - name: Update Traefik job
+      ansible.builtin.shell: |
+        cat > /tmp/traefik-fixed.nomad << 'EOF'
+        job "traefik" {
+          datacenters = ["dc1"]
+          type = "service"
+
+          group "traefik" {
+            count = 1
+
+            network {
+              port "http" {
+                static = 80
+              }
+              port "https" {
+                static = 443
+              }
+              port "api" {
+                static = 8080
+              }
+            }
+
+            task "traefik" {
+              driver = "docker"
+
+              config {
+                image = "traefik:v3.0"
+                ports = ["http", "https", "api"]
+                
+                args = [
+                  "--api.insecure=true",
+                  "--api.dashboard=true",
+                  "--entrypoints.web.address=:80",
+                  "--entrypoints.websecure.address=:443",
+                  "--providers.consulcatalog=true",
+                  "--providers.consulcatalog.endpoint.address=192.168.11.11:8500",
+                  "--providers.consulcatalog.exposedByDefault=false",
+                  "--providers.consulcatalog.prefix=traefik",
+                  "--log.level=INFO"
+                ]
+              }
+
+              resources {
+                cpu    = 100
+                memory = 128
+              }
+
+              service {
+                name = "traefik"
+                port = "http"
+                
+                tags = [
+                  "traefik.enable=true"
+                ]
+                
+                check {
+                  type     = "http"
+                  path     = "/ping"
+                  port     = "api"
+                  interval = "10s"
+                  timeout  = "2s"
+                }
+              }
+            }
+          }
+        }
+        EOF
+        nomad job run /tmp/traefik-fixed.nomad
+      register: traefik_update
+
+    - name: Wait for Traefik to stabilize
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Check Traefik logs
+      ansible.builtin.shell: |
+        nomad alloc logs -tail -n 20 $(nomad job allocs traefik | grep running | awk '{print $1}' | head -1) traefik 2>&1 | grep -E "consul|Provider|Starting" || echo "No relevant logs"
+      register: traefik_logs
+      changed_when: false
+
+    - name: Display Traefik status
+      ansible.builtin.debug:
+        msg:
+          - "Traefik updated: {{ traefik_update.changed | default(false) }}"
+          - "Recent logs:"
+          - "{{ traefik_logs.stdout_lines | default(['Check logs manually']) }}"

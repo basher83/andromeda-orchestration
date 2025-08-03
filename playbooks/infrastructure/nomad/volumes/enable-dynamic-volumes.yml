@@ -1,0 +1,374 @@
+---
+# Enable dynamic host volumes on Nomad clients
+# This playbook configures Nomad clients to support dynamic volume provisioning
+#
+# Usage:
+# ansible-playbook enable-dynamic-volumes.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Enable Dynamic Host Volumes on Nomad Clients
+  hosts: tag_client
+  become: true
+  
+  vars:
+    dynamic_volumes_base: /opt/nomad/volumes/dynamic
+    plugin_scripts_dir: /opt/nomad/plugins
+    
+  tasks:
+    - name: Install required packages for volume management
+      package:
+        name:
+          - lvm2
+          - xfsprogs
+          - e2fsprogs
+          - util-linux
+        state: present
+    
+    - name: Create directories for dynamic volumes
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - "{{ dynamic_volumes_base }}"
+        - "{{ plugin_scripts_dir }}"
+        - "{{ dynamic_volumes_base }}/volumes"
+        - "{{ dynamic_volumes_base }}/images"
+    
+    - name: Create ext4 volume plugin script
+      copy:
+        content: |
+          #!/bin/bash
+          # Nomad dynamic volume plugin for ext4 volumes
+          # This plugin creates loop-backed ext4 volumes
+          
+          set -euo pipefail
+          
+          VOLUMES_BASE="{{ dynamic_volumes_base }}"
+          IMAGES_DIR="${VOLUMES_BASE}/images"
+          MOUNTS_DIR="${VOLUMES_BASE}/volumes"
+          
+          log() {
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
+          }
+          
+          case "${1:-}" in
+              create)
+                  VOLUME_ID="${2:-}"
+                  SIZE_GB="${3:-10}"  # Default 10GB
+                  
+                  if [ -z "$VOLUME_ID" ]; then
+                      log "ERROR: Volume ID required"
+                      exit 1
+                  fi
+                  
+                  IMAGE_FILE="${IMAGES_DIR}/${VOLUME_ID}.img"
+                  MOUNT_POINT="${MOUNTS_DIR}/${VOLUME_ID}"
+                  
+                  log "Creating volume ${VOLUME_ID} with size ${SIZE_GB}GB"
+                  
+                  # Create sparse file
+                  truncate -s "${SIZE_GB}G" "$IMAGE_FILE"
+                  
+                  # Create filesystem
+                  mkfs.ext4 -F "$IMAGE_FILE" >/dev/null 2>&1
+                  
+                  # Create mount point
+                  mkdir -p "$MOUNT_POINT"
+                  
+                  # Mount the volume
+                  mount -o loop "$IMAGE_FILE" "$MOUNT_POINT"
+                  
+                  # Set permissions (Nomad will handle ownership)
+                  chmod 755 "$MOUNT_POINT"
+                  
+                  # Output the mount path for Nomad
+                  echo "$MOUNT_POINT"
+                  
+                  log "Volume ${VOLUME_ID} created successfully at ${MOUNT_POINT}"
+                  ;;
+                  
+              delete)
+                  VOLUME_ID="${2:-}"
+                  
+                  if [ -z "$VOLUME_ID" ]; then
+                      log "ERROR: Volume ID required"
+                      exit 1
+                  fi
+                  
+                  IMAGE_FILE="${IMAGES_DIR}/${VOLUME_ID}.img"
+                  MOUNT_POINT="${MOUNTS_DIR}/${VOLUME_ID}"
+                  
+                  log "Deleting volume ${VOLUME_ID}"
+                  
+                  # Unmount if mounted
+                  if mountpoint -q "$MOUNT_POINT"; then
+                      umount "$MOUNT_POINT" || {
+                          log "ERROR: Failed to unmount ${MOUNT_POINT}"
+                          exit 1
+                      }
+                  fi
+                  
+                  # Remove mount point
+                  rm -rf "$MOUNT_POINT"
+                  
+                  # Remove image file
+                  rm -f "$IMAGE_FILE"
+                  
+                  log "Volume ${VOLUME_ID} deleted successfully"
+                  ;;
+                  
+              stats)
+                  VOLUME_ID="${2:-}"
+                  
+                  if [ -z "$VOLUME_ID" ]; then
+                      # List all volumes
+                      find "$MOUNTS_DIR" -maxdepth 1 -mindepth 1 -type d -printf '%f\n'
+                  else
+                      # Stats for specific volume
+                      MOUNT_POINT="${MOUNTS_DIR}/${VOLUME_ID}"
+                      if [ -d "$MOUNT_POINT" ]; then
+                          df -h "$MOUNT_POINT" | tail -1
+                      else
+                          log "ERROR: Volume ${VOLUME_ID} not found"
+                          exit 1
+                      fi
+                  fi
+                  ;;
+                  
+              *)
+                  echo "Usage: $0 {create|delete|stats} <volume-id> [size-gb]"
+                  exit 1
+                  ;;
+          esac
+        dest: "{{ plugin_scripts_dir }}/ext4-volume"
+        owner: root
+        group: root
+        mode: '0755'
+    
+    - name: Create XFS volume plugin script
+      copy:
+        content: |
+          #!/bin/bash
+          # Nomad dynamic volume plugin for XFS volumes
+          # This plugin creates loop-backed XFS volumes
+          
+          set -euo pipefail
+          
+          VOLUMES_BASE="{{ dynamic_volumes_base }}"
+          IMAGES_DIR="${VOLUMES_BASE}/images"
+          MOUNTS_DIR="${VOLUMES_BASE}/volumes"
+          
+          log() {
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
+          }
+          
+          case "${1:-}" in
+              create)
+                  VOLUME_ID="${2:-}"
+                  SIZE_GB="${3:-10}"  # Default 10GB
+                  
+                  if [ -z "$VOLUME_ID" ]; then
+                      log "ERROR: Volume ID required"
+                      exit 1
+                  fi
+                  
+                  IMAGE_FILE="${IMAGES_DIR}/${VOLUME_ID}.img"
+                  MOUNT_POINT="${MOUNTS_DIR}/${VOLUME_ID}"
+                  
+                  log "Creating XFS volume ${VOLUME_ID} with size ${SIZE_GB}GB"
+                  
+                  # Create file
+                  dd if=/dev/zero of="$IMAGE_FILE" bs=1G count="${SIZE_GB}" status=none
+                  
+                  # Create XFS filesystem
+                  mkfs.xfs -f "$IMAGE_FILE" >/dev/null 2>&1
+                  
+                  # Create mount point
+                  mkdir -p "$MOUNT_POINT"
+                  
+                  # Mount the volume
+                  mount -o loop "$IMAGE_FILE" "$MOUNT_POINT"
+                  
+                  # Set permissions
+                  chmod 755 "$MOUNT_POINT"
+                  
+                  # Output the mount path for Nomad
+                  echo "$MOUNT_POINT"
+                  
+                  log "XFS volume ${VOLUME_ID} created successfully at ${MOUNT_POINT}"
+                  ;;
+                  
+              delete)
+                  VOLUME_ID="${2:-}"
+                  
+                  if [ -z "$VOLUME_ID" ]; then
+                      log "ERROR: Volume ID required"
+                      exit 1
+                  fi
+                  
+                  IMAGE_FILE="${IMAGES_DIR}/${VOLUME_ID}.img"
+                  MOUNT_POINT="${MOUNTS_DIR}/${VOLUME_ID}"
+                  
+                  log "Deleting XFS volume ${VOLUME_ID}"
+                  
+                  # Unmount if mounted
+                  if mountpoint -q "$MOUNT_POINT"; then
+                      umount "$MOUNT_POINT"
+                  fi
+                  
+                  # Remove mount point and image
+                  rm -rf "$MOUNT_POINT"
+                  rm -f "$IMAGE_FILE"
+                  
+                  log "XFS volume ${VOLUME_ID} deleted successfully"
+                  ;;
+                  
+              *)
+                  echo "Usage: $0 {create|delete} <volume-id> [size-gb]"
+                  exit 1
+                  ;;
+          esac
+        dest: "{{ plugin_scripts_dir }}/xfs-volume"
+        owner: root
+        group: root
+        mode: '0755'
+    
+    - name: Create systemd service for volume cleanup
+      copy:
+        content: |
+          [Unit]
+          Description=Cleanup orphaned Nomad dynamic volumes
+          After=nomad.service
+          
+          [Service]
+          Type=oneshot
+          ExecStart=/opt/nomad/plugins/cleanup-orphaned-volumes.sh
+          
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/nomad-volume-cleanup.service
+        owner: root
+        group: root
+        mode: '0644'
+    
+    - name: Create cleanup script
+      copy:
+        content: |
+          #!/bin/bash
+          # Cleanup orphaned dynamic volumes
+          
+          VOLUMES_BASE="{{ dynamic_volumes_base }}"
+          MOUNTS_DIR="${VOLUMES_BASE}/volumes"
+          IMAGES_DIR="${VOLUMES_BASE}/images"
+          
+          # Find mounted volumes without running allocations
+          for mount in $(ls -1 "$MOUNTS_DIR" 2>/dev/null); do
+              # Check if any Nomad allocation is using this mount
+              if ! nomad alloc status -json | jq -r '.[].ID' | grep -q "$mount"; then
+                  echo "Found orphaned volume: $mount"
+                  
+                  # Unmount if still mounted
+                  if mountpoint -q "$MOUNTS_DIR/$mount"; then
+                      umount "$MOUNTS_DIR/$mount"
+                  fi
+                  
+                  # Remove mount point and image
+                  rm -rf "$MOUNTS_DIR/$mount"
+                  rm -f "$IMAGES_DIR/$mount.img"
+                  
+                  echo "Cleaned up orphaned volume: $mount"
+              fi
+          done
+        dest: "{{ plugin_scripts_dir }}/cleanup-orphaned-volumes.sh"
+        owner: root
+        group: root
+        mode: '0755'
+    
+    - name: Create example Nomad client config snippet
+      copy:
+        content: |
+          # Add this to your Nomad client configuration
+          
+          client {
+            # Enable dynamic host volumes
+            host_volume "ext4-dynamic" {
+              path = "{{ dynamic_volumes_base }}/volumes"
+              
+              # Mark as dynamic
+              dynamic = true
+              
+              # Plugin to use for provisioning
+              dynamic_plugin = "ext4-volume"
+              
+              # Plugin executable path
+              plugin_path = "{{ plugin_scripts_dir }}/ext4-volume"
+              
+              # Default size if not specified
+              parameters {
+                size = "10G"
+              }
+            }
+            
+            host_volume "xfs-dynamic" {
+              path = "{{ dynamic_volumes_base }}/volumes"
+              dynamic = true
+              dynamic_plugin = "xfs-volume"
+              plugin_path = "{{ plugin_scripts_dir }}/xfs-volume"
+              
+              parameters {
+                size = "10G"
+                type = "xfs"
+              }
+            }
+          }
+        dest: /etc/nomad.d/dynamic-volumes.hcl.example
+        owner: root
+        group: root
+        mode: '0644'
+    
+    - name: Test volume plugins
+      shell: |
+        # Test ext4 plugin
+        {{ plugin_scripts_dir }}/ext4-volume create test-volume 1
+        {{ plugin_scripts_dir }}/ext4-volume stats test-volume
+        {{ plugin_scripts_dir }}/ext4-volume delete test-volume
+        
+        echo "Volume plugins tested successfully"
+      register: plugin_test
+      changed_when: false
+    
+    - name: Display test results
+      debug:
+        var: plugin_test.stdout_lines
+    
+  post_tasks:
+    - name: Summary
+      debug:
+        msg: |
+          Dynamic volume support has been configured!
+          
+          Plugin scripts installed:
+          - {{ plugin_scripts_dir }}/ext4-volume
+          - {{ plugin_scripts_dir }}/xfs-volume
+          
+          Next steps:
+          1. Review the example configuration in /etc/nomad.d/dynamic-volumes.hcl.example
+          2. Add the dynamic volume configuration to your Nomad client config
+          3. Restart Nomad clients
+          4. Use dynamic volumes in your jobs:
+          
+          Example job usage:
+          
+          volume "app-data" {
+            type   = "host"
+            source = "ext4-dynamic"
+            
+            # Request specific size
+            parameters {
+              size = "20G"
+            }
+          }
+          
+          Note: Each allocation will get its own isolated volume!
