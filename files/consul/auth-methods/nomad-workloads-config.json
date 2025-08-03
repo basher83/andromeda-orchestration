@@ -1,0 +1,13 @@
+{
+  "JWTValidationPubKeys": [],
+  "JWKSURL": "http://127.0.0.1:4646/.well-known/jwks.json",
+  "ClaimMappings": {
+    "nomad_namespace": "nomad_namespace",
+    "nomad_job_id": "nomad_job_id",
+    "nomad_task": "nomad_task"
+  },
+  "ListClaimMappings": {
+    "nomad_service": "nomad_service"
+  },
+  "BoundAudiences": ["consul.io"]
+}

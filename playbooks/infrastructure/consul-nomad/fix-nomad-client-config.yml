@@ -1,0 +1,100 @@
+---
+# Fix Nomad client configuration after cleanup issue
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/fix-nomad-client-config.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Fix Nomad Client Configuration
+  hosts: tag_client
+  become: true
+  vars:
+    nomad_config_file: /etc/nomad.d/nomad.hcl
+    nomad_client_token: "[REDACTED_NOMAD_TOKEN]"
+    
+  tasks:
+    - name: Check if client block is incomplete
+      ansible.builtin.shell: |
+        # Count opening and closing braces
+        open_braces=$(grep -c "^client {" {{ nomad_config_file }} || echo 0)
+        # Look for the closing brace after client block
+        if grep -A50 "^client {" {{ nomad_config_file }} | grep -q "^}"; then
+          echo "complete"
+        else
+          echo "incomplete"
+        fi
+      register: client_block_status
+      changed_when: false
+
+    - name: Fix incomplete client block
+      ansible.builtin.lineinfile:
+        path: "{{ nomad_config_file }}"
+        line: "}"
+        insertbefore: "^# === Consul integration ==="
+        state: present
+      when: client_block_status.stdout == "incomplete"
+
+    - name: Add consul configuration for clients
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_file }}"
+        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION"
+        block: |
+          consul {
+            address = "127.0.0.1:8500"
+            token = "{{ nomad_client_token }}"
+            
+            # Enable service registration
+            auto_advertise = true
+            server_auto_join = true
+            client_auto_join = true
+            
+            # Service names
+            server_service_name = "nomad"
+            client_service_name = "nomad-client"
+            
+            # Enable service checks
+            checks_use_advertise = true
+            
+            # Service and task identity settings
+            service_identity {
+              enabled = true
+            }
+            
+            task_identity {
+              enabled = true
+            }
+          }
+        state: present
+        validate: "nomad config validate %s"
+      register: config_updated
+
+    - name: Restart Nomad client service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      when: config_updated.changed or client_block_status.stdout == "incomplete"
+
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 30
+      when: config_updated.changed or client_block_status.stdout == "incomplete"
+
+- name: Verify All Nodes
+  hosts: nomad-server-1-lloyd
+  
+  tasks:
+    - name: Check all Nomad nodes
+      ansible.builtin.command: nomad node status
+      register: node_status
+      changed_when: false
+      
+    - name: Display node status
+      ansible.builtin.debug:
+        msg:
+          - "Nomad client configuration fixed!"
+          - ""
+          - "All Nomad nodes:"
+          - "{{ node_status.stdout_lines }}"
+          - ""
+          - "Configuration is now ready for deployments!"

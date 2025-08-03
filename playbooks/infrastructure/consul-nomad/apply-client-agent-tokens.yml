@@ -1,0 +1,45 @@
+---
+# Apply Consul agent tokens to nomad-client-1, nomad-client-2, and nomad-client-3
+# This fixes ACL authentication issues by setting the correct Nomad CLIENT agent token
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/apply-client-agent-tokens.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Apply Consul agent tokens to Nomad clients
+  hosts: nomad-client-1-lloyd,nomad-client-2-holly,nomad-client-3-mable
+  become: true
+  serial: 1  # Process one at a time to minimize disruption
+  vars:
+    consul_agent_token: "[REDACTED_NOMAD_TOKEN]"  # Nomad CLIENT token
+    
+  tasks:
+    - name: Update agent token in Consul config
+      ansible.builtin.shell: |
+        sed -i 's/agent = ""/agent = "{{ consul_agent_token }}"/' /etc/consul.d/consul.hcl
+      register: config_update
+
+    - name: Restart Consul to apply the token
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted
+      register: consul_restart
+
+    - name: Wait for Consul to be ready
+      ansible.builtin.wait_for:
+        port: 8500
+        host: 127.0.0.1
+        delay: 5
+        timeout: 30
+
+    - name: Verify fix worked
+      ansible.builtin.shell: |
+        journalctl -u consul --since "30 seconds ago" --no-pager | grep -E "Synced node info|Synced service|blocked by ACLs"
+      register: verification
+      changed_when: false
+      failed_when: false
+
+    - name: Display verification results
+      ansible.builtin.debug:
+        msg: 
+          - "Host: {{ inventory_hostname }}"
+          - "Token applied: {{ consul_agent_token }} (Nomad CLIENT token)"
+          - "Verification output:"
+          - "{{ verification.stdout_lines | default(['No ACL errors found - looks good!']) }}"

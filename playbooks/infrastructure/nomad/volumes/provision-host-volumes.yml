@@ -1,0 +1,192 @@
+---
+# Provision static host volumes on Nomad clients
+# This playbook creates and configures host volumes for Nomad jobs
+#
+# Usage:
+# ansible-playbook provision-host-volumes.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+# ansible-playbook provision-host-volumes.yml -i inventory/doggos-homelab/infisical.proxmox.yml -e volume_name=myapp-data -e volume_owner=1000
+
+- name: Provision Nomad Static Host Volumes
+  hosts: tag_client
+  become: true
+  
+  vars:
+    nomad_volumes_base: /opt/nomad/volumes
+    
+    # Default volumes to create
+    default_volumes:
+      - name: powerdns-mysql
+        owner: 999      # MySQL container user
+        group: 999      # MySQL container group
+        mode: '0755'
+        
+      - name: traefik-certs
+        owner: root
+        group: root
+        mode: '0755'
+        
+      - name: prometheus-data
+        owner: 65534    # nobody user (Prometheus default)
+        group: 65534    # nogroup
+        mode: '0755'
+        
+      - name: grafana-data
+        owner: 472      # Grafana container user
+        group: 472      # Grafana container group
+        mode: '0755'
+        
+      - name: postgres-data
+        owner: 999      # Postgres container user
+        group: 999      # Postgres container group
+        mode: '0700'    # Postgres requires 0700
+        
+      - name: mysql-backup
+        owner: root
+        group: root
+        mode: '0755'
+    
+    # Allow single volume creation via extra vars
+    single_volume:
+      - name: "{{ volume_name | default('') }}"
+        owner: "{{ volume_owner | default('root') }}"
+        group: "{{ volume_group | default('root') }}"
+        mode: "{{ volume_mode | default('0755') }}"
+    
+    # Determine which volumes to create
+    volumes_to_create: "{{ single_volume if volume_name is defined else default_volumes }}"
+  
+  tasks:
+    - name: Ensure Nomad volumes base directory exists
+      file:
+        path: "{{ nomad_volumes_base }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+    
+    - name: Create volume directories
+      file:
+        path: "{{ nomad_volumes_base }}/{{ item.name }}"
+        state: directory
+        owner: "{{ item.owner }}"
+        group: "{{ item.group }}"
+        mode: "{{ item.mode }}"
+      loop: "{{ volumes_to_create }}"
+      when: item.name != ''
+      
+    - name: Set SELinux context if enabled
+      command: |
+        chcon -Rt svirt_sandbox_file_t {{ nomad_volumes_base }}/{{ item.name }}
+      loop: "{{ volumes_to_create }}"
+      when: 
+        - item.name != ''
+        - ansible_selinux.status == "enabled"
+      failed_when: false
+      changed_when: true
+    
+    - name: Create volume documentation
+      copy:
+        content: |
+          # Volume: {{ item.name }}
+          Created: {{ ansible_date_time.iso8601 }}
+          Owner: {{ item.owner }}:{{ item.group }}
+          Mode: {{ item.mode }}
+          Purpose: {{ item.purpose | default('General purpose storage') }}
+        dest: "{{ nomad_volumes_base }}/{{ item.name }}/.volume-info"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ volumes_to_create }}"
+      when: item.name != ''
+    
+    - name: Verify volumes were created
+      stat:
+        path: "{{ nomad_volumes_base }}/{{ item.name }}"
+      register: volume_stats
+      loop: "{{ volumes_to_create }}"
+      when: item.name != ''
+    
+    - name: Display volume creation results
+      debug:
+        msg: |
+          Volume: {{ item.item.name }}
+          Path: {{ nomad_volumes_base }}/{{ item.item.name }}
+          Exists: {{ item.stat.exists }}
+          Owner: {{ item.stat.uid if item.stat.exists else 'N/A' }}
+          Mode: {{ item.stat.mode if item.stat.exists else 'N/A' }}
+      loop: "{{ volume_stats.results }}"
+      when: item.item.name is defined and item.item.name != ''
+    
+    - name: Check Nomad client configuration
+      slurp:
+        src: /etc/nomad.d/nomad.hcl
+      register: nomad_config
+      
+    - name: Verify volumes in Nomad configuration
+      debug:
+        msg: |
+          WARNING: The following volumes exist on disk but may not be configured in Nomad:
+          {{ volumes_to_create | map(attribute='name') | list }}
+          
+          Please ensure these volumes are added to the Nomad client configuration:
+          
+          client {
+            host_volume "{{ item.name }}" {
+              path = "{{ nomad_volumes_base }}/{{ item.name }}"
+              read_only = false
+            }
+          }
+      loop: "{{ volumes_to_create }}"
+      when: 
+        - item.name != ''
+        - item.name not in nomad_config.content | b64decode
+    
+    - name: Create example backup script
+      copy:
+        content: |
+          #!/bin/bash
+          # Backup script for Nomad host volumes
+          # Usage: ./backup-volumes.sh [volume-name]
+          
+          BACKUP_BASE="/backup/nomad-volumes"
+          VOLUME_BASE="{{ nomad_volumes_base }}"
+          DATE=$(date +%Y%m%d-%H%M%S)
+          
+          if [ -z "$1" ]; then
+            echo "Backing up all volumes..."
+            for volume in $(ls -1 $VOLUME_BASE); do
+              echo "Backing up $volume..."
+              tar -czf "$BACKUP_BASE/$volume-$DATE.tar.gz" -C "$VOLUME_BASE" "$volume"
+            done
+          else
+            echo "Backing up $1..."
+            tar -czf "$BACKUP_BASE/$1-$DATE.tar.gz" -C "$VOLUME_BASE" "$1"
+          fi
+          
+          # Cleanup old backups (keep last 7 days)
+          find "$BACKUP_BASE" -name "*.tar.gz" -mtime +7 -delete
+        dest: "{{ nomad_volumes_base }}/backup-volumes.sh"
+        owner: root
+        group: root
+        mode: '0755'
+    
+  post_tasks:
+    - name: Summary
+      debug:
+        msg: |
+          Volume provisioning complete!
+          
+          Created {{ volumes_to_create | length }} volumes in {{ nomad_volumes_base }}
+          
+          Next steps:
+          1. Update Nomad client configuration to include these volumes
+          2. Restart Nomad clients if configuration was changed
+          3. Use volumes in your job specifications
+          
+          Example job volume usage:
+          
+          volume "{{ volumes_to_create[0].name if volumes_to_create else 'myapp-data' }}" {
+            type      = "host"
+            source    = "{{ volumes_to_create[0].name if volumes_to_create else 'myapp-data' }}"
+            read_only = false
+          }

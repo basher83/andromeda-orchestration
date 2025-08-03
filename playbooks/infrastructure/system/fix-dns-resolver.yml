@@ -1,0 +1,81 @@
+---
+# Fix DNS resolver for external queries while keeping Consul DNS working
+# This adds fallback DNS servers to systemd-resolved
+# Usage: uv run ansible-playbook playbooks/infrastructure/system/fix-dns-resolver.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Fix DNS resolver configuration
+  hosts: all
+  become: true
+  
+  tasks:
+    - name: Check current systemd-resolved status
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: started
+        enabled: true
+      register: resolved_status
+      failed_when: false
+
+    - name: Create systemd-resolved configuration directory
+      ansible.builtin.file:
+        path: /etc/systemd/resolved.conf.d
+        state: directory
+        mode: '0755'
+
+    - name: Configure fallback DNS servers for external resolution
+      ansible.builtin.copy:
+        content: |
+          # Fix external DNS resolution while keeping Consul DNS
+          [Resolve]
+          DNS=8.8.8.8 1.1.1.1
+          FallbackDNS=8.8.4.4 1.0.0.1
+          Domains=~consul
+          DNSSEC=no
+          DNSOverTLS=no
+          MulticastDNS=no
+          LLMNR=no
+          Cache=yes
+          DNSStubListener=yes
+        dest: /etc/systemd/resolved.conf.d/10-fallback-dns.conf
+        mode: '0644'
+      register: dns_config
+
+    - name: Restart systemd-resolved if configuration changed
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: restarted
+        daemon_reload: true
+      when: dns_config.changed
+
+    - name: Wait for systemd-resolved to stabilize
+      ansible.builtin.pause:
+        seconds: 3
+      when: dns_config.changed
+
+    - name: Test external DNS resolution
+      ansible.builtin.shell: |
+        nslookup app.netdata.cloud 2>&1 | head -10
+      register: dns_test
+      changed_when: false
+
+    - name: Test Consul DNS resolution
+      ansible.builtin.shell: |
+        dig @127.0.0.1 -p 8600 consul.service.consul +short 2>&1 | head -5
+      register: consul_dns_test
+      changed_when: false
+      failed_when: false
+
+    - name: Display DNS test results
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "External DNS test:"
+          - "{{ dns_test.stdout_lines }}"
+          - "Consul DNS test:"
+          - "{{ consul_dns_test.stdout_lines | default(['Not available']) }}"
+
+    - name: Restart Netdata to reconnect to cloud
+      ansible.builtin.systemd:
+        name: netdata
+        state: restarted
+      when: dns_config.changed

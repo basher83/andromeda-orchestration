@@ -1,0 +1,74 @@
+---
+# Deploy updated chrony configuration to Nomad nodes
+# Usage: uv run ansible-playbook playbooks/infrastructure/system/deploy-chrony-config.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Deploy chrony configuration to Nomad nodes
+  hosts: ~nomad.*
+  become: true
+  
+  tasks:
+    - name: Ensure chrony is installed
+      ansible.builtin.package:
+        name: chrony
+        state: present
+      register: chrony_installed
+
+    - name: Deploy chrony configuration
+      ansible.builtin.template:
+        src: ../../../roles/system_base/templates/chrony.conf.j2
+        dest: /etc/chrony/chrony.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: true
+      register: chrony_config_updated
+
+    - name: Ensure chrony service is enabled
+      ansible.builtin.systemd:
+        name: chronyd
+        enabled: true
+        state: started
+      failed_when: false
+      register: chronyd_service
+
+    - name: Try chrony service (alternative name)
+      ansible.builtin.systemd:
+        name: chrony
+        enabled: true
+        state: started
+      when: chronyd_service.failed | default(false)
+      register: chrony_service
+
+    - name: Restart chrony if configuration changed
+      ansible.builtin.systemd:
+        name: "{{ 'chronyd' if not chronyd_service.failed | default(false) else 'chrony' }}"
+        state: restarted
+      when: chrony_config_updated.changed
+
+    - name: Wait for chrony to stabilize
+      ansible.builtin.pause:
+        seconds: 5
+      when: chrony_config_updated.changed
+
+    - name: Check chrony sources
+      ansible.builtin.command: chronyc sources
+      register: chrony_sources
+      changed_when: false
+      failed_when: false
+
+    - name: Check chrony tracking
+      ansible.builtin.command: chronyc tracking
+      register: chrony_tracking
+      changed_when: false
+      failed_when: false
+
+    - name: Display chrony status
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "Config updated: {{ chrony_config_updated.changed }}"
+          - "Service: {{ 'chronyd' if not chronyd_service.failed | default(false) else 'chrony' }}"
+          - "Sources:"
+          - "{{ chrony_sources.stdout_lines | default(['Unable to get sources']) }}"
+          - "Tracking:"
+          - "{{ chrony_tracking.stdout_lines | default(['Unable to get tracking']) | first }}"

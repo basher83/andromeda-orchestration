@@ -1,0 +1,66 @@
+---
+# Fix ACL configuration on Consul clients
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul/fix-client-acls.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Fix ACL Configuration on Consul Clients
+  hosts: tag_client
+  become: true
+  vars:
+    consul_client_token: "[REDACTED_NOMAD_TOKEN]"
+    
+  tasks:
+    - name: Remove duplicate ACL blocks
+      ansible.builtin.shell: |
+        # Remove ANSIBLE MANAGED ACL blocks
+        sed -i '/^# BEGIN ANSIBLE MANAGED ACL CONFIGURATION/,/^# END ANSIBLE MANAGED ACL CONFIGURATION/d' /etc/consul.d/consul.hcl
+        
+        # Update the existing ACL block with token
+        sed -i '/^acl {/,/^}/ {
+          /agent = ""/ s/""/"{{ consul_client_token }}"/
+          /default_policy = "deny"/ s/"deny"/"allow"/
+        }' /etc/consul.d/consul.hcl
+        
+        # Add default token if not present
+        if ! grep -q 'default =' /etc/consul.d/consul.hcl; then
+          sed -i '/agent =/ a\    default = "{{ consul_client_token }}"' /etc/consul.d/consul.hcl
+        fi
+      register: config_fixed
+
+    - name: Validate Consul configuration
+      ansible.builtin.command: consul validate /etc/consul.d/
+      register: validation_result
+      failed_when: validation_result.rc != 0
+
+    - name: Restart Consul service
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted
+        daemon_reload: true
+
+    - name: Wait for Consul to be ready
+      ansible.builtin.wait_for:
+        port: 8500
+        host: "127.0.0.1"
+        delay: 5
+        timeout: 30
+
+- name: Verify Configuration
+  hosts: nomad-server-1-lloyd
+  
+  tasks:
+    - name: Wait for agents to reconnect
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Check Consul members
+      ansible.builtin.command: consul members
+      register: members_status
+      changed_when: false
+      
+    - name: Display status
+      ansible.builtin.debug:
+        msg:
+          - "Consul client ACLs fixed!"
+          - ""
+          - "Consul members:"
+          - "{{ members_status.stdout_lines }}"

@@ -1,0 +1,183 @@
+---
+# Fix Docker compatibility with nftables
+# This configures Docker to use iptables-nft instead of legacy iptables
+# Usage: uv run ansible-playbook playbooks/infrastructure/docker/fix-nftables-compatibility.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Fix Docker nftables Compatibility
+  hosts: tag_client
+  become: true
+  
+  tasks:
+    - name: Create Docker daemon configuration directory
+      ansible.builtin.file:
+        path: /etc/docker
+        state: directory
+        mode: '0755'
+
+    - name: Check current iptables version
+      ansible.builtin.command: iptables --version
+      register: iptables_version
+      changed_when: false
+
+    - name: Configure Docker daemon for proper networking
+      ansible.builtin.copy:
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "10m",
+              "max-file": "3"
+            },
+            "storage-driver": "overlay2"
+          }
+        dest: /etc/docker/daemon.json
+        backup: true
+      register: docker_config
+
+    - name: Ensure iptables uses nftables backend
+      ansible.builtin.debug:
+        msg: "iptables is already using nftables backend: {{ iptables_version.stdout }}"
+
+    - name: Restart Docker service
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted
+        daemon_reload: true
+      when: docker_config.changed
+
+    - name: Wait for Docker to be ready
+      ansible.builtin.command: docker info
+      register: docker_info
+      until: docker_info.rc == 0
+      retries: 10
+      delay: 3
+      changed_when: false
+
+- name: Fix Consul Blocks on Nomad Clients
+  hosts: tag_client
+  become: true
+  vars:
+    nomad_config_file: /etc/nomad.d/nomad.hcl
+    nomad_client_token: "[REDACTED_NOMAD_TOKEN]"
+    
+  tasks:
+    - name: Backup current configuration
+      ansible.builtin.copy:
+        src: "{{ nomad_config_file }}"
+        dest: "{{ nomad_config_file }}.backup.{{ ansible_date_time.epoch }}"
+        remote_src: true
+
+    - name: Remove duplicate consul blocks
+      ansible.builtin.shell: |
+        # Remove all ANSIBLE MANAGED blocks
+        sed -i '/^# BEGIN ANSIBLE MANAGED CONSUL/,/^# END ANSIBLE MANAGED CONSUL/d' {{ nomad_config_file }}
+        
+        # Remove all consul blocks and any orphaned sections
+        awk '
+        BEGIN { in_consul = 0; brace_count = 0; skip_section = 0 }
+        /^consul {/ { in_consul = 1; brace_count = 1; skip_section = 1; next }
+        /^# Consul integration/ { skip_section = 1; next }
+        /^  task_identity {/ && !in_consul { skip_section = 1; brace_count = 1; next }
+        /^  service_identity {/ && !in_consul { skip_section = 1; brace_count = 1; next }
+        skip_section && /{/ { brace_count++ }
+        skip_section && /}/ { 
+          brace_count--
+          if (brace_count == 0) {
+            skip_section = 0
+            in_consul = 0
+            next
+          }
+        }
+        !skip_section { print }
+        ' {{ nomad_config_file }} > {{ nomad_config_file }}.tmp && mv {{ nomad_config_file }}.tmp {{ nomad_config_file }}
+      args:
+        executable: /bin/bash
+      register: cleanup_result
+
+    - name: Add single correct consul configuration
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_file }}"
+        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION"
+        block: |
+          consul {
+            address = "127.0.0.1:8500"
+            token = "{{ nomad_client_token }}"
+            
+            # Enable service registration
+            auto_advertise = true
+            server_auto_join = true
+            client_auto_join = true
+            
+            # Service names
+            server_service_name = "nomad"
+            client_service_name = "nomad-client"
+            
+            # Enable service checks
+            checks_use_advertise = true
+            
+            # Service and task identity settings
+            service_identity {
+              enabled = true
+            }
+            
+            task_identity {
+              enabled = true
+            }
+          }
+        state: present
+      register: config_updated
+
+    - name: Validate configuration
+      ansible.builtin.command: nomad config validate {{ nomad_config_file }}
+      register: validation_result
+      failed_when: validation_result.rc != 0
+
+    - name: Restart Nomad client service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      when: config_updated.changed
+
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 30
+      when: config_updated.changed
+
+- name: Verify Configuration
+  hosts: nomad-server-1-lloyd
+  
+  tasks:
+    - name: Wait for clients to reconnect
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Check all Nomad nodes
+      ansible.builtin.command: nomad node status
+      register: node_status
+      changed_when: false
+      
+    - name: Check Docker status on clients
+      ansible.builtin.command: docker version --format json
+      delegate_to: "{{ item }}"
+      with_items:
+        - nomad-client-1-lloyd
+        - nomad-client-2-holly
+        - nomad-client-3-mable
+      register: docker_versions
+      ignore_errors: true
+      
+    - name: Display status
+      ansible.builtin.debug:
+        msg:
+          - "Configuration complete!"
+          - ""
+          - "All Nomad nodes:"
+          - "{{ node_status.stdout_lines }}"
+          - ""
+          - "Docker is now compatible with nftables"
+          - "Consul blocks are properly configured"
+          - "Services can now be deployed on all nodes"

@@ -1,0 +1,163 @@
+---
+# Fix Docker DNS resolution for Consul services
+# This allows containers to resolve .consul domains
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/fix-docker-consul-dns.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Configure Docker to use Consul DNS
+  hosts: ~nomad-client.*
+  become: true
+  vars:
+    docker_daemon_config: /etc/docker/daemon.json
+    
+  tasks:
+    - name: Check current Docker daemon configuration
+      ansible.builtin.stat:
+        path: "{{ docker_daemon_config }}"
+      register: docker_config_file
+
+    - name: Read existing Docker daemon config
+      ansible.builtin.slurp:
+        src: "{{ docker_daemon_config }}"
+      register: docker_config_content
+      when: docker_config_file.stat.exists
+
+    - name: Parse existing config or create new
+      ansible.builtin.set_fact:
+        docker_config: "{{ (docker_config_content.content | b64decode | from_json) if docker_config_file.stat.exists else {} }}"
+
+    - name: Update Docker daemon config with Consul DNS
+      ansible.builtin.set_fact:
+        docker_config_updated: "{{ docker_config | combine({'dns': ['127.0.0.1'], 'dns-search': ['service.consul', 'node.consul']}) }}"
+
+    - name: Write updated Docker daemon configuration
+      ansible.builtin.copy:
+        content: "{{ docker_config_updated | to_nice_json }}"
+        dest: "{{ docker_daemon_config }}"
+        backup: true
+        mode: '0644'
+      register: docker_config_changed
+
+    - name: Configure systemd-resolved for Consul DNS (if using systemd-resolved)
+      ansible.builtin.blockinfile:
+        path: /etc/systemd/resolved.conf
+        marker: "# {mark} ANSIBLE MANAGED - CONSUL DNS"
+        block: |
+          [Resolve]
+          DNS=127.0.0.1:8600
+          Domains=~consul
+        backup: true
+      register: resolved_config_changed
+      failed_when: false
+
+    - name: Add iptables rule for DNS redirection from Docker
+      ansible.builtin.iptables:
+        table: nat
+        chain: PREROUTING
+        source: 172.17.0.0/16
+        protocol: udp
+        destination_port: 53
+        jump: DNAT
+        to_destination: "{{ ansible_default_ipv4.address }}:8600"
+        comment: "Redirect Docker DNS queries to Consul"
+      register: iptables_rule_added
+
+    - name: Also redirect TCP DNS queries
+      ansible.builtin.iptables:
+        table: nat
+        chain: PREROUTING
+        source: 172.17.0.0/16
+        protocol: tcp
+        destination_port: 53
+        jump: DNAT
+        to_destination: "{{ ansible_default_ipv4.address }}:8600"
+        comment: "Redirect Docker DNS TCP queries to Consul"
+
+    - name: Save iptables rules
+      ansible.builtin.shell: |
+        iptables-save > /etc/iptables/rules.v4
+      when: iptables_rule_added.changed
+
+    - name: Create Consul DNS forward configuration
+      ansible.builtin.copy:
+        dest: /etc/consul.d/dns-forward.json
+        content: |
+          {
+            "recursors": ["8.8.8.8", "1.1.1.1"],
+            "dns_config": {
+              "allow_stale": true,
+              "max_stale": "5s",
+              "node_ttl": "30s",
+              "service_ttl": {
+                "*": "5s"
+              }
+            }
+          }
+        mode: '0644'
+        owner: consul
+        group: consul
+      register: consul_dns_config
+
+    - name: Restart systemd-resolved if configured
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: restarted
+      when: resolved_config_changed.changed
+      failed_when: false
+
+    - name: Reload Consul if DNS config changed
+      ansible.builtin.systemd:
+        name: consul
+        state: reloaded
+      when: consul_dns_config.changed
+
+    - name: Restart Docker daemon if config changed
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted
+        daemon_reload: true
+      when: docker_config_changed.changed
+
+    - name: Wait for Docker to be ready
+      ansible.builtin.wait_for:
+        path: /var/run/docker.sock
+        state: present
+        timeout: 30
+      when: docker_config_changed.changed
+
+    - name: Test DNS resolution from Docker container
+      ansible.builtin.shell: |
+        docker run --rm alpine:latest nslookup consul.service.consul || echo "DNS resolution test failed"
+      register: dns_test
+      changed_when: false
+
+    - name: Display DNS test results
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "Docker DNS configured: {{ docker_config_changed.changed }}"
+          - "DNS test result:"
+          - "{{ dns_test.stdout_lines }}"
+
+- name: Restart Traefik to pick up DNS changes
+  hosts: nomad-server-1-lloyd
+  tasks:
+    - name: Restart Traefik allocation
+      ansible.builtin.shell: |
+        nomad alloc restart c596ab41
+      register: traefik_restart
+
+    - name: Wait for Traefik to be healthy
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Check Traefik logs for Consul connection
+      ansible.builtin.shell: |
+        nomad alloc logs -tail -n 10 c596ab41 traefik 2>&1 | grep -E "consul|Provider" || echo "No recent Consul logs"
+      register: traefik_logs
+
+    - name: Display Traefik status
+      ansible.builtin.debug:
+        msg:
+          - "Traefik restarted: {{ traefik_restart.changed }}"
+          - "Recent logs:"
+          - "{{ traefik_logs.stdout_lines }}"

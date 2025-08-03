@@ -1,0 +1,137 @@
+---
+# Fix multiple Consul blocks in Nomad configuration
+# This playbook removes duplicate consul blocks and ensures only one properly configured block exists
+# Usage: uv run ansible-playbook playbooks/infrastructure/consul-nomad/fix-nomad-consul-config.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Fix Nomad Consul Configuration
+  hosts: tag_nomad
+  become: true
+  vars:
+    nomad_config_file: /etc/nomad.d/nomad.hcl
+    nomad_server_token: "00b57268-c5f9-edb4-bc90-639fb4ab3232"
+    nomad_client_token: "[REDACTED_NOMAD_TOKEN]"
+    
+  tasks:
+    - name: Get node type
+      ansible.builtin.shell: |
+        grep -q "^server {" {{ nomad_config_file }} && echo "server" || echo "client"
+      register: node_type
+      changed_when: false
+
+    - name: Set appropriate token
+      ansible.builtin.set_fact:
+        consul_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"
+
+    - name: Backup current configuration
+      ansible.builtin.copy:
+        src: "{{ nomad_config_file }}"
+        dest: "{{ nomad_config_file }}.backup.{{ ansible_date_time.epoch }}"
+        remote_src: true
+      
+    - name: Remove all existing consul blocks and ansible markers
+      ansible.builtin.shell: |
+        # Create a temporary file
+        temp_file=$(mktemp)
+        
+        # Remove all consul blocks and ansible markers
+        awk '
+        BEGIN { in_consul = 0; in_ansible = 0 }
+        /^# BEGIN ANSIBLE MANAGED/ { in_ansible = 1; next }
+        /^# END ANSIBLE MANAGED/ { in_ansible = 1; next }
+        /^consul {/ { 
+          if (!in_ansible) {
+            in_consul = 1
+          }
+          next
+        }
+        /^}/ { 
+          if (in_consul && !in_ansible) {
+            in_consul = 0
+            next
+          }
+        }
+        !in_consul && !in_ansible { print }
+        in_ansible && /^}/ { in_ansible = 0; next }
+        ' {{ nomad_config_file }} > "$temp_file"
+        
+        # Move the cleaned file back
+        mv "$temp_file" {{ nomad_config_file }}
+      register: cleanup_result
+
+    - name: Add single correct consul configuration
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_file }}"
+        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION"
+        block: |
+          consul {
+            address = "127.0.0.1:8500"
+            token = "{{ consul_token }}"
+            
+            # Enable service registration
+            auto_advertise = true
+            server_auto_join = true
+            client_auto_join = true
+            
+            # Service names
+            server_service_name = "nomad"
+            client_service_name = "nomad-client"
+            
+            # Enable service checks
+            checks_use_advertise = true
+            
+            # Service and task identity settings
+            service_identity {
+              enabled = true
+            }
+            
+            task_identity {
+              enabled = true
+            }
+          }
+        state: present
+        validate: "nomad config validate %s"
+      register: config_updated
+
+    - name: Restart Nomad service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      register: nomad_restart
+
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 30
+
+- name: Verify Configuration
+  hosts: nomad-server-1-lloyd
+  
+  tasks:
+    - name: Check Nomad server status
+      ansible.builtin.command: nomad server members
+      register: nomad_status
+      changed_when: false
+      
+    - name: Verify consul configuration
+      ansible.builtin.shell: |
+        grep -c "^consul {" /etc/nomad.d/nomad.hcl
+      register: consul_block_count
+      changed_when: false
+      
+    - name: Display status
+      ansible.builtin.debug:
+        msg:
+          - "Nomad configuration fixed!"
+          - "Number of consul blocks: {{ consul_block_count.stdout }}"
+          - ""
+          - "Nomad server status:"
+          - "{{ nomad_status.stdout_lines }}"
+          - ""
+          - "Next steps:"
+          - "1. Deploy PowerDNS without service identities"
+          - "2. Deploy Traefik without service identities"
+          - "3. Test basic functionality"
+          - "4. Add service identities gradually"

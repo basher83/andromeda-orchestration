@@ -1,0 +1,153 @@
+---
+# Setup MariaDB/MySQL access for Netdata monitoring
+# This creates a netdata user with minimal privileges for monitoring
+# Usage: uv run ansible-playbook playbooks/infrastructure/monitoring/setup-netdata-mariadb-access.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Setup MariaDB access for Netdata monitoring
+  hosts: ~nomad.*
+  become: true
+  vars:
+    # You can override these in group_vars or host_vars
+    netdata_mysql_user: "netdata"
+    netdata_mysql_host: "localhost"  # Use localhost for socket connection
+    # No password for local socket authentication
+    
+  tasks:
+    - name: Check if MariaDB/MySQL is installed
+      ansible.builtin.stat:
+        path: /usr/bin/mysql
+      register: mysql_binary
+
+    - name: Check if MariaDB is running
+      ansible.builtin.systemd:
+        name: mariadb
+      register: mariadb_service
+      failed_when: false
+      when: mysql_binary.stat.exists
+
+    - name: Check if MySQL is running (alternative service name)
+      ansible.builtin.systemd:
+        name: mysql
+      register: mysql_service
+      failed_when: false
+      when: 
+        - mysql_binary.stat.exists
+        - mariadb_service.status.ActiveState is not defined or mariadb_service.status.ActiveState != "active"
+
+    - name: Create netdata database user for monitoring
+      ansible.builtin.shell: |
+        mysql -u root << EOF
+        -- Create netdata user for localhost (socket connection)
+        CREATE USER IF NOT EXISTS '{{ netdata_mysql_user }}'@'localhost';
+        
+        -- Grant minimal privileges needed for monitoring
+        GRANT USAGE, REPLICATION CLIENT, PROCESS ON *.* TO '{{ netdata_mysql_user }}'@'localhost';
+        GRANT SELECT ON performance_schema.* TO '{{ netdata_mysql_user }}'@'localhost';
+        
+        -- Also create for 127.0.0.1 and Docker bridge IPs if needed
+        CREATE USER IF NOT EXISTS '{{ netdata_mysql_user }}'@'127.0.0.1';
+        GRANT USAGE, REPLICATION CLIENT, PROCESS ON *.* TO '{{ netdata_mysql_user }}'@'127.0.0.1';
+        GRANT SELECT ON performance_schema.* TO '{{ netdata_mysql_user }}'@'127.0.0.1';
+        
+        -- For Docker containers (172.17.0.1)
+        CREATE USER IF NOT EXISTS '{{ netdata_mysql_user }}'@'172.17.0.1';
+        GRANT USAGE, REPLICATION CLIENT, PROCESS ON *.* TO '{{ netdata_mysql_user }}'@'172.17.0.1';
+        GRANT SELECT ON performance_schema.* TO '{{ netdata_mysql_user }}'@'172.17.0.1';
+        
+        -- For any Docker subnet
+        CREATE USER IF NOT EXISTS '{{ netdata_mysql_user }}'@'172.17.%';
+        GRANT USAGE, REPLICATION CLIENT, PROCESS ON *.* TO '{{ netdata_mysql_user }}'@'172.17.%';
+        GRANT SELECT ON performance_schema.* TO '{{ netdata_mysql_user }}'@'172.17.%';
+        
+        FLUSH PRIVILEGES;
+        
+        -- Show created users
+        SELECT User, Host FROM mysql.user WHERE User = '{{ netdata_mysql_user }}';
+        EOF
+      register: mysql_user_creation
+      when: 
+        - mysql_binary.stat.exists
+        - mariadb_service.status.ActiveState is defined and mariadb_service.status.ActiveState == "active" or mysql_service.status.ActiveState is defined and mysql_service.status.ActiveState == "active"
+      changed_when: "'CREATE USER' in mysql_user_creation.stdout"
+
+    - name: Create Netdata MySQL configuration file
+      ansible.builtin.copy:
+        dest: /etc/netdata/go.d/mysql.conf
+        content: |
+          jobs:
+            - name: local
+              dsn: {{ netdata_mysql_user }}@unix(/run/mysqld/mysqld.sock)/
+              # Alternative socket paths to try
+              # dsn: {{ netdata_mysql_user }}@unix(/var/run/mysqld/mysqld.sock)/
+              # dsn: {{ netdata_mysql_user }}@unix(/tmp/mysql.sock)/
+              
+            - name: tcp_local
+              dsn: {{ netdata_mysql_user }}@tcp(127.0.0.1:3306)/
+              
+            - name: docker_bridge
+              dsn: {{ netdata_mysql_user }}@tcp(172.17.0.1:3306)/
+        mode: '0644'
+        owner: netdata
+        group: netdata
+        backup: true
+      when: mysql_binary.stat.exists
+      register: mysql_config_created
+
+    - name: Test MySQL connection as netdata user
+      ansible.builtin.shell: |
+        mysql -u {{ netdata_mysql_user }} -e "SELECT VERSION(); SHOW STATUS LIKE 'Uptime';" 2>&1
+      register: mysql_test
+      changed_when: false
+      failed_when: false
+      when: mysql_binary.stat.exists
+
+    - name: Display test results
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "MariaDB/MySQL installed: {{ mysql_binary.stat.exists }}"
+          - "Service active: {{ (mariadb_service.status.ActiveState | default(mysql_service.status.ActiveState | default('not found'))) }}"
+          - "User created: {{ 'SUCCESS' if mysql_user_creation.changed | default(false) else 'Already exists' }}"
+          - "Connection test: {{ 'SUCCESS' if mysql_test.rc == 0 else 'FAILED' }}"
+          - "Test output: {{ mysql_test.stdout_lines | default(['No output']) }}"
+      when: mysql_binary.stat.exists
+
+    - name: Restart Netdata to pick up MySQL monitoring
+      ansible.builtin.systemd:
+        name: netdata
+        state: restarted
+      when: 
+        - mysql_config_created.changed | default(false)
+        - mysql_binary.stat.exists
+
+- name: Verify MySQL monitoring in Netdata
+  hosts: ~nomad.*
+  tasks:
+    - name: Wait for Netdata to start collecting MySQL metrics
+      ansible.builtin.pause:
+        seconds: 10
+      when: mysql_binary.stat.exists | default(false)
+
+    - name: Check if MySQL metrics are being collected
+      ansible.builtin.uri:
+        url: "http://{{ ansible_all_ipv4_addresses | select('match', '^192\\.168\\.11\\.') | first }}:19999/api/v1/charts"
+        method: GET
+      register: netdata_charts
+      failed_when: false
+      when: mysql_binary.stat.exists | default(false)
+
+    - name: Check for MySQL charts
+      ansible.builtin.debug:
+        msg: |
+          MySQL monitoring status:
+          {% if netdata_charts.json is defined %}
+            {% set mysql_charts = netdata_charts.json | dict2items | selectattr('key', 'match', '.*mysql.*') | list %}
+            {% if mysql_charts | length > 0 %}
+          ✅ MySQL monitoring is active! Found {{ mysql_charts | length }} MySQL charts
+            {% else %}
+          ⚠️  No MySQL charts found - check configuration
+            {% endif %}
+          {% else %}
+          ❌ Could not retrieve Netdata charts
+          {% endif %}
+      when: mysql_binary.stat.exists | default(false)
