@@ -25,6 +25,7 @@ Consul telemetry exposes Prometheus-compatible metrics that can be collected by 
 The telemetry configuration needs to be added to each Consul node's configuration file.
 
 **Configuration Block:**
+
 ```hcl
 # Expose Prometheus endpoint for monitoring
 telemetry {
@@ -35,12 +36,14 @@ telemetry {
 ```
 
 **Playbook: `playbooks/infrastructure/simple-telemetry-enable.yml`**
+
 ```bash
 uv run ansible-playbook playbooks/infrastructure/simple-telemetry-enable.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml
 ```
 
 This playbook:
+
 - Checks if telemetry is already configured
 - Adds the telemetry block to `/etc/consul.d/consul.hcl`
 - Reloads Consul service
@@ -51,6 +54,7 @@ This playbook:
 Consul's ACL system requires a token with appropriate permissions to access metrics.
 
 **ACL Policy: `prometheus-scraping`**
+
 ```hcl
 # Policy for Prometheus/Netdata scraping
 operator = "read"
@@ -69,12 +73,14 @@ service_prefix "" {
 ```
 
 **Playbook: `playbooks/infrastructure/create-prometheus-acl.yml`**
+
 ```bash
 uv run ansible-playbook playbooks/infrastructure/create-prometheus-acl.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml
 ```
 
 This creates:
+
 - ACL policy named "prometheus-scraping"
 - ACL token with the policy attached
 - Tests the token against the metrics endpoint
@@ -84,6 +90,7 @@ This creates:
 Netdata needs to be configured with the ACL token to collect Consul metrics.
 
 **Netdata Configuration: `/etc/netdata/go.d/consul.conf`**
+
 ```yaml
 jobs:
   - name: local
@@ -97,6 +104,7 @@ jobs:
 ```
 
 **Playbook: `playbooks/infrastructure/configure-netdata-consul.yml`**
+
 ```bash
 uv run ansible-playbook playbooks/infrastructure/configure-netdata-consul.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml
@@ -107,6 +115,7 @@ uv run ansible-playbook playbooks/infrastructure/configure-netdata-consul.yml \
 The ACL token should be stored securely in Infisical for future use.
 
 **Using Infisical MCP Tool:**
+
 ```python
 mcp__infisical__create-secret(
     projectId="7b832220-24c0-45bc-a5f1-ce9794a31259",
@@ -124,6 +133,7 @@ mcp__infisical__create-secret(
 ### Check Telemetry Endpoint
 
 With ACL token:
+
 ```bash
 curl -H "X-Consul-Token: <token>" \
   http://<consul-node>:8500/v1/agent/metrics?format=prometheus
@@ -145,18 +155,22 @@ curl "http://<node>:19999/api/v1/data?chart=consul_local.autopilot_health_status
 Once configured, the following Consul metrics are available:
 
 - **Autopilot Metrics**
+
   - `consul_local.autopilot_failure_tolerance`
   - `consul_local.autopilot_health_status`
 
 - **Client RPC Metrics**
+
   - `consul_local.client_rpc_requests_rate`
   - `consul_local.client_rpc_requests_failed_rate`
   - `consul_local.client_rpc_requests_exceeded_rate`
 
 - **KV Store Metrics**
+
   - `consul_local.kvs_apply_operations_rate`
 
 - **Health Check Metrics**
+
   - `consul_local.health_check_*_status`
 
 - **Performance Metrics**
@@ -169,6 +183,7 @@ Once configured, the following Consul metrics are available:
 ### Telemetry Endpoint Returns 403 Forbidden
 
 This indicates ACLs are enabled but no token was provided. Ensure:
+
 1. The ACL token is valid
 2. The token has the correct policy attached
 3. Include the token in the request header

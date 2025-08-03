@@ -7,18 +7,21 @@ This document describes the Netdata monitoring architecture deployed across the 
 ## Architecture Components
 
 ### 1. Child Nodes (Metrics Collectors)
+
 - All VMs, containers, and physical hosts
 - Minimal resource usage (RAM storage, 1 hour retention)
 - Stream metrics to designated parent nodes
 - No web interface to save resources
 
 ### 2. Parent Nodes (Metrics Aggregators)
+
 - Store long-term metrics (24 hours detailed)
 - Run ML anomaly detection
 - Provide web UI for visualization
 - Participate in mesh replication
 
 ### 3. Mesh Topology (Cross-Cluster Replication)
+
 - Parents replicate to each other
 - Provides unified infrastructure view
 - Automatic failover and redundancy
@@ -28,32 +31,38 @@ This document describes the Netdata monitoring architecture deployed across the 
 ### doggos-homelab Cluster
 
 **Network Configuration:**
+
 - Management Network: 192.168.10.0/24 (1G)
 - Data Network: 192.168.11.0/24 (10G)
 - Streaming occurs over 10G network
 
 **Parent Nodes:**
-- lloyd (192.168.10.11 / 192.168.11.11)
-- holly (192.168.10.12 / 192.168.11.12)
-- mable (192.168.10.13 / 192.168.11.13)
+
+- lloyd (192.168.10.02 / 192.168.11.02)
+- holly (192.168.10.03 / 192.168.11.03)
+- mable (192.168.10.04 / 192.168.11.04)
 
 **Child Nodes:**
-- nomad-server-1-lloyd → lloyd
-- nomad-server-2-holly → holly
-- nomad-server-3-mable → mable
-- nomad-client-1-lloyd → lloyd
-- nomad-client-2-holly → holly
-- nomad-client-3-mable → mable
+
+- nomad-server-1-lloyd → lloyd, holly, mable
+- nomad-server-2-holly → lloyd, holly, mable
+- nomad-server-3-mable → lloyd, holly, mable
+- nomad-client-1-lloyd → lloyd, holly, mable
+- nomad-client-2-holly → lloyd, holly, mable
+- nomad-client-3-mable → lloyd, holly, mable
 
 ### og-homelab Cluster
 
 **Network Configuration:**
+
 - Single Network: 192.168.30.0/24 (2.5G)
 
 **Parent Node:**
+
 - pve1 (192.168.30.50)
 
 **Child Nodes:**
+
 - proxmoxt430 (192.168.30.30)
 - pbs (192.168.30.200) - Proxmox Backup Server
 - ~50+ LXC containers
@@ -65,15 +74,15 @@ This document describes the Netdata monitoring architecture deployed across the 
 doggos-homelab                           og-homelab
 ==============                           ==========
 
-lloyd (10.11) <----+---+---+-----------> pve1 (30.50)
+lloyd (11.2) <----+---+---+-----------> pve1 (30.50)
     ^              |   |   |               ^
     |              |   |   |               |
     v              |   |   |               |
-holly (10.12) <----+   |   +---------------+
+holly (11.3) <----+   |   +---------------+
     ^                  |                   |
     |                  |                   |
     v                  |                   |
-mable (10.13) <--------+-------------------+
+mable (11.4) <--------+-------------------+
 
 Legend:
 - Each parent streams to all other parents
@@ -85,12 +94,14 @@ Legend:
 ## Data Flow
 
 ### Child → Parent Streaming
+
 1. Child nodes collect local metrics
 2. Stream to designated parent via API key authentication
 3. Parent stores in dbengine for long-term retention
 4. Parent runs ML anomaly detection on received metrics
 
 ### Parent ↔ Parent Replication
+
 1. Parents exchange metrics using mesh API key
 2. Each parent maintains full copy of all metrics
 3. Automatic reconnection on network issues
@@ -99,16 +110,19 @@ Legend:
 ## Configuration Management
 
 ### API Keys
+
 - `vault_netdata_parent_api_key`: Child → Parent streaming (doggos cluster)
-- `vault_netdata_parent_api_key_og`: Child → Parent streaming (og cluster) 
+- `vault_netdata_parent_api_key_og`: Child → Parent streaming (og cluster)
 - `vault_netdata_mesh_api_key`: Parent ↔ Parent mesh replication (cross-cluster)
 
 **Important:** In the actual deployment, these keys were simplified to:
+
 - `doggos-child-key`: For doggos-homelab children
-- `og-child-key`: For og-homelab children  
+- `og-child-key`: For og-homelab children
 - `netdata-parent-mesh-key`: For parent mesh replication
 
 ### Group Variables Structure
+
 ```
 inventory/
 ├── doggos-homelab/
@@ -130,6 +144,7 @@ inventory/
 ## Resource Allocation
 
 ### Parent Nodes
+
 - Memory Mode: dbengine
 - Storage: 1-2GB per parent
 - History: 24 hours detailed
@@ -137,6 +152,7 @@ inventory/
 - Network: ~1-5 Mbps per child stream
 
 ### Child Nodes
+
 - Memory Mode: RAM
 - Storage: Minimal (in-memory)
 - History: 1 hour (30 min for containers)
@@ -146,24 +162,28 @@ inventory/
 ## Access Points
 
 ### Web Interfaces (Parents Only)
+
 - **doggos-homelab:**
-  - http://lloyd:19999 or http://192.168.10.11:19999
-  - http://holly:19999 or http://192.168.10.12:19999
-  - http://mable:19999 or http://192.168.10.13:19999
+  - http://lloyd:19999 or http://192.168.11.2:19999
+  - http://holly:19999 or http://192.168.11.3:19999
+  - http://mable:19999 or http://192.168.11.4:19999
 - **og-homelab:**
   - http://pve1:19999 or http://192.168.30.50:19999
 
 ### Consul Service Discovery
+
 - Parent nodes: `netdata-parent.service.consul`
 - Child nodes: `netdata-child.service.consul`
 
 ## High Availability Features
 
 1. **Multiple Parents per Cluster**
+
    - doggos: 3 parents for redundancy
    - og: 1 parent (can be expanded)
 
 2. **Mesh Replication**
+
    - All parents have complete data
    - Automatic failover on parent failure
    - Query any parent for all metrics
@@ -186,6 +206,7 @@ inventory/
 ## Deployment Playbooks
 
 1. **Individual Cluster Deployment:**
+
    ```bash
    # Deploy to doggos-homelab
    ansible-playbook -i inventory/doggos-homelab/infisical.proxmox.yml \
@@ -197,6 +218,7 @@ inventory/
    ```
 
 2. **All Clusters Deployment:**
+
    ```bash
    ansible-playbook -i inventory/*/infisical.proxmox.yml \
      playbooks/infrastructure/deploy-netdata-all.yml
@@ -213,18 +235,21 @@ inventory/
 ### Common Issues
 
 1. **Child Not Streaming:**
+
    - Check network connectivity to parent
    - Verify API key matches parent configuration
    - Check firewall rules (port 19999)
    - Review `/var/log/netdata/error.log`
 
 2. **Parent Mesh Not Replicating:**
+
    - Verify cross-network routing
    - Check mesh API key configuration
    - Ensure firewall allows inter-cluster traffic
    - Use `ss -tan | grep 19999` to check connections
 
 3. **API Key Authentication Failures:**
+
    - **Issue**: "API key is not allowed from this IP (DENIED)"
    - **Solution**: Set `allow from = *` in stream.conf API key sections
    - **Note**: Do NOT use `type = api` directive - it's not needed
@@ -266,14 +291,17 @@ nc -zv <parent-ip> 19999
 ## Future Enhancements
 
 1. **Prometheus Integration**
+
    - Export metrics to long-term storage
    - Create Grafana dashboards
 
 2. **Alert Routing**
+
    - Configure email/webhook notifications
    - Integrate with existing alerting systems
 
-3. **Cloud Integration**
+3. **Cloud Integration** (Already active)
+
    - Optional Netdata Cloud connection
    - Centralized configuration management
 

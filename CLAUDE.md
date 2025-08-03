@@ -49,6 +49,19 @@ uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml -i inventory/og-
 uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inventory/og-homelab/infisical.proxmox.yml
 ```
 
+### Deploying Nomad Jobs
+
+```bash
+# Deploy any Nomad job
+uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml \
+  -e job=nomad-jobs/core-infrastructure/traefik.nomad.hcl
+
+# Deploy Traefik with validation
+uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml
+```
+
 ## Architecture
 
 ### Inventory Management
@@ -65,6 +78,16 @@ uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inv
 - **Authentication**:
   - Infisical: Machine identity credentials via environment variables
   - 1Password: API tokens via Connect server (legacy)
+
+### Nomad Job Management
+
+- **Directory**: `nomad-jobs/` contains all Nomad job specifications
+- **Structure**:
+  - `core-infrastructure/` - Essential services (Traefik load balancer)
+  - `platform-services/` - Infrastructure services (PowerDNS, future NetBox)
+  - `applications/` - User-facing applications
+- **Deployment**: Using `community.general.nomad_job` Galaxy module via playbooks
+- **Port Strategy**: Dynamic ports by default (20000-32000), static only for DNS (53) and load balancer (80/443)
 
 ### Execution Environment
 
