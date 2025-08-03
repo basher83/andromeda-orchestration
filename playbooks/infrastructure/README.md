@@ -27,11 +27,13 @@ This directory contains organized Ansible playbooks for infrastructure managemen
 
 - **`network/`** - Network configuration
   - `update-nftables-netdata.yml` - Firewall rules for Netdata
+  - `update-nftables-nomad.yml` - Firewall rules for Nomad dynamic ports
 
 - **`nomad/`** - Nomad cluster management
   - `cluster-manage.yml` - Manage Nomad cluster operations
   - `cluster-status.yml` - Check Nomad cluster status
-  - `job-deploy.yml` - Deploy jobs to Nomad
+  - `deploy-job.yml` - Deploy Nomad jobs using Galaxy modules
+  - `deploy-traefik.yml` - Deploy Traefik with validation checks
   - `register-service.yml` - Register services with Nomad
 
 - **`powerdns/`** - PowerDNS deployment and configuration (Phase 2)
@@ -107,10 +109,14 @@ uv run ansible-playbook playbooks/infrastructure/consul/consul-telemetry-setup.y
 uv run ansible-playbook playbooks/infrastructure/nomad/cluster-status.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml
 
-# Deploy a job to Nomad
-uv run ansible-playbook playbooks/infrastructure/nomad/job-deploy.yml \
+# Deploy a job to Nomad (NEW method with Galaxy modules)
+uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml \
-  -e job_file=path/to/job.hcl
+  -e job=nomad-jobs/platform-services/powerdns.nomad.hcl
+
+# Deploy Traefik with validation
+uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml
 ```
 
 ### Consul-Nomad Integration

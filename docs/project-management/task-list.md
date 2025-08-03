@@ -4,10 +4,10 @@ This document tracks all project management tasks for the NetBox-focused Ansible
 
 ## Project Status Overview
 
-**Project Phase**: Phase 2 Implementation Complete  
-**Current Focus**: PowerDNS deployed, ready for Phase 3 (NetBox Integration)  
-**Last Updated**: 2025-08-01  
-**Status**: Phase 1 & 2 completed successfully
+**Project Phase**: Phase 2 Implementation Complete + Infrastructure Enhancements  
+**Current Focus**: Service mesh infrastructure with Traefik deployed, working on service identity authentication  
+**Last Updated**: 2025-08-02  
+**Status**: Phase 1 & 2 completed, Traefik with service registration working, PowerDNS deployment pending service identity fixes
 
 ### Key Objectives
 
@@ -233,11 +233,79 @@ Tasks:
 **Deployment Details**:
 - Running on nomad-client-1 (allocation: b87b56bf)
 - DNS service: 192.168.11.20:53
-- API service: 192.168.11.20:8081
+- API service: Dynamic port (accessible via Traefik at https://powerdns.lab.local)
 - MySQL with persistent storage at /opt/nomad/volumes/powerdns-mysql
 - Docker image: powerdns/pdns-auth-48:latest
+- Updated to use dynamic port allocation for API (removed static 8081)
 
-#### 12. Create Development Environment
+#### 12. Integrate Nomad Job Management ✅
+
+**Description**: Organize Nomad jobs and implement standardized deployment patterns  
+**Status**: Completed (2025-08-02)  
+**Blockers**: None  
+**Related**: Infrastructure management patterns
+
+Tasks:
+
+- [x] Create nomad-jobs/ directory structure (core-infrastructure, platform-services, applications)
+- [x] Migrate PowerDNS job to new structure with dynamic port allocation
+- [x] Create Traefik load balancer job specification
+- [x] Update deployment playbooks to use community.general.nomad_job Galaxy module
+- [x] Create specialized deployment playbook for Traefik with validation
+- [x] Document port allocation strategy (dynamic by default, static for DNS/LB only)
+- [x] Update CLAUDE.md with Nomad job patterns
+
+**Implementation Details**:
+- Using Galaxy modules instead of custom modules for maintainability
+- Traefik will own ports 80/443 for all HTTP/HTTPS traffic
+- All other services use dynamic ports (20000-32000) with Consul service discovery
+- PowerDNS API now accessible via https://powerdns.lab.local through Traefik
+
+#### 13. Deploy Traefik Load Balancer ✅
+
+**Description**: Deploy Traefik as the primary load balancer for all services  
+**Status**: Completed (2025-08-02)  
+**Blockers**: None  
+**Related**: Network architecture and service routing
+
+Tasks:
+
+- [x] Fixed Docker iptables/nftables compatibility on all nodes
+- [x] Fixed Consul configuration blocks on Nomad servers and clients
+- [x] Enabled ACLs on all Consul agents with proper tokens
+- [x] Created Consul auth method for Nomad workloads
+- [x] Deployed Traefik with service registration in Consul
+- [x] Services registered: traefik, traefik-http, traefik-https
+- [x] Verify ports 80/443 are available and bound
+- [x] Confirm Consul Catalog integration working
+
+**Implementation Details**:
+- Running on nomad-client-1-lloyd (allocation: aa69be4a)
+- HTTP: 192.168.11.20:80
+- HTTPS: 192.168.11.20:443
+- Admin: Dynamic port with Consul service registration
+- All services properly registered in Consul with health checks
+
+#### 14. Deploy HashiCorp Vault
+
+**Description**: Complete the HashiCorp stack with Vault for advanced secrets management  
+**Status**: Not Started  
+**Blockers**: Traefik should be deployed first for HTTPS access  
+**Related**: Secrets management strategy, HashiCorp stack completion
+
+Tasks:
+
+- [ ] Create Vault Nomad job specification (dev mode initially)
+- [ ] Deploy Vault in dev mode for exploration
+- [ ] Configure Consul as storage backend
+- [ ] Set up auto-unseal mechanism
+- [ ] Create basic ACL policies for services
+- [ ] Test Nomad-Vault integration
+- [ ] Migrate PowerDNS secrets from Consul KV to Vault
+- [ ] Document Vault access patterns
+- [ ] Plan production deployment with HA
+
+#### 15. Create Development Environment
 
 **Description**: Set up isolated testing environment for DNS/IPAM changes  
 **Status**: Skipped - doggos-homelab cluster is development environment  
@@ -252,7 +320,7 @@ Tasks:
 - [ ] ~~Set up test clients~~ (not needed)
 - [ ] ~~Document access procedures~~ (not needed)
 
-#### 11. Design IP Address Schema
+#### 16. Design IP Address Schema
 
 **Description**: Create comprehensive IP addressing plan for all networks  
 **Status**: Not Started  
@@ -266,7 +334,7 @@ Tasks:
 - [ ] Plan for growth
 - [ ] Document in NetBox
 
-#### 12. Develop Service Templates
+#### 16. Develop Service Templates
 
 **Description**: Create Ansible templates for service configurations  
 **Status**: Not Started  
@@ -280,7 +348,7 @@ Tasks:
 - [ ] NetBox custom fields
 - [ ] Integration scripts
 
-#### 11. Implement Monitoring Strategy
+#### 17. Implement Monitoring Strategy
 
 **Description**: Deploy monitoring for DNS/IPAM services  
 **Status**: Not Started  
@@ -294,7 +362,7 @@ Tasks:
 - [ ] Create Grafana dashboards
 - [ ] Configure alerts
 
-#### 12. Create Migration Runbooks
+#### 18. Create Migration Runbooks
 
 **Description**: Detailed procedures for each migration phase  
 **Status**: Not Started  
@@ -308,7 +376,7 @@ Tasks:
 - [ ] Phase 3 migration checklist
 - [ ] Rollback procedures
 
-#### 13. Establish Change Management Process
+#### 19. Establish Change Management Process
 
 **Description**: Define how changes will be tracked and approved  
 **Status**: Not Started  
@@ -322,7 +390,7 @@ Tasks:
 - [ ] Set up change tracking
 - [ ] Document in project wiki
 
-#### 14. Bootstrap NetBox with Essential Records
+#### 20. Bootstrap NetBox with Essential Records
 
 **Description**: Seed NetBox with critical DNS records to enable early PowerDNS sync  
 **Status**: Not Started  
@@ -532,14 +600,14 @@ Tasks:
 
 ### Overall Progress
 
-- **Completed**: 11/29 tasks (38%)
-- **In Progress**: 0/29 tasks (0%)
-- **Not Started**: 18/29 tasks (62%)
+- **Completed**: 13/32 tasks (41%)
+- **In Progress**: 0/32 tasks (0%)
+- **Not Started**: 19/32 tasks (59%)
 
 ### Phase Breakdown
 
 - **High Priority**: 7/7 completed (100% - All high priority tasks complete)
-- **Medium Priority**: 4/9 completed (44% - Roles imported, telemetry enabled, Phase 1 & 2 complete)
+- **Medium Priority**: 6/12 completed (50% - Roles imported, telemetry enabled, Phase 1 & 2 complete, Nomad jobs integrated, Traefik deployed)
 - **Low Priority**: 0/13 completed (0%)
 
 ## Risk Items and Blockers
@@ -550,17 +618,42 @@ Tasks:
 
 ### Current Blockers
 
-None - Phase 1 & 2 complete, ready for Phase 3 NetBox integration
+1. **Service Identity Token Derivation**: Nomad workload identity tokens not being properly created for services
+   - Auth method configured but tokens still using Nomad client token instead of workload-specific tokens
+   - PowerDNS deployment blocked due to Consul KV access permissions
+   - Need to investigate Nomad service identity configuration
+   - **Investigation Complete (2025-08-02)**: Confirmed auth method is properly configured but Nomad is not deriving tokens
+   - **Workaround Applied**: Deployed PowerDNS without service blocks to avoid validation errors
+
+### Active Issues
+
+1. **Netdata Streaming Authentication**: Netdata child nodes failing to connect to parent nodes
+   - Error: "remote server denied access, probably we don't have the right API key"
+   - Child nodes trying to connect to 192.168.11.2/3/4:19999 with "nomad-cluster-api-key"
+   - Not blocking main deployment but affecting monitoring capabilities
+
+2. **PowerDNS Deployment**: Currently using minimal deployment without service blocks
+   - Service identity tokens not working for Consul KV access
+   - Templates fail with "Permission denied" when trying to read KV values
+   - Temporary workaround: Deploy without KV lookups using hardcoded values
 
 ## Recommendations for Task Execution
 
 ### Immediate Actions (Next 3-5 Days)
 
-1. **Bootstrap NetBox with essential DNS records** - Phase 3 priority
-2. **Configure PowerDNS sync with NetBox** - Enable authoritative DNS management
-3. **Design IP addressing schema** for comprehensive IPAM
+1. **Provision storage volumes** - Run provision-host-volumes.yml for Traefik
+2. **Deploy Traefik load balancer** - Enable service routing and HTTPS access
+3. **Deploy HashiCorp Vault (dev mode)** - Complete the HashiCorp stack
+4. **Bootstrap NetBox with essential DNS records** - Phase 3 priority
 
 ### Week 2 Focus
+
+1. **Configure Vault production mode** - Consul backend, auto-unseal, basic policies
+2. **Migrate secrets from Consul KV to Vault** - Start with new services
+3. **Configure PowerDNS sync with NetBox** - Enable authoritative DNS management
+4. **Design IP addressing schema** for comprehensive IPAM
+
+### Week 3-4 Focus
 
 1. **Migrate critical DNS records from Pi-hole** to PowerDNS
 2. **Test PowerDNS as authoritative resolver** for lab domains
@@ -598,6 +691,63 @@ Next review: 2025-08-06
 
 ## Change Log
 
+- **2025-08-02** (Update 4): Service Identity Investigation Complete
+  - Investigated service identity token derivation issue using Netdata monitoring
+  - Confirmed Consul auth method `nomad-workloads` is properly configured:
+    - JWKS endpoint accessible from all nodes
+    - Binding rules and roles correctly set up
+    - Policies grant appropriate KV read access
+  - Root cause identified: Nomad not attempting to derive workload tokens
+  - Applied workaround: Deployed PowerDNS without service blocks
+  - Current deployment status:
+    - Traefik: Running with service blocks (working somehow)
+    - PowerDNS: Running without service blocks (workaround)
+  - Updated troubleshooting documentation with investigation findings
+- **2025-08-02** (Update 3): Traefik Deployed with Service Mesh Infrastructure
+  - Successfully deployed Traefik load balancer with full Consul service registration
+  - Fixed multiple infrastructure issues to enable service mesh:
+    - Docker iptables/nftables compatibility resolved on all nodes
+    - Consul ACL configuration fixed on all agents
+    - Multiple Consul configuration blocks cleaned up
+    - Created auth method and policies for Nomad workload identities
+  - Traefik services registered in Consul: traefik, traefik-http, traefik-https
+  - Identified blocking issues for PowerDNS:
+    - Service identity token derivation not working properly
+    - Workloads using Nomad client token instead of derived tokens
+    - PowerDNS templates fail with KV permission errors
+  - Additional issue discovered: Netdata streaming authentication failures
+  - Progress updated: 13/32 tasks completed (41%), Medium priority at 50%
+- **2025-08-02** (Update 2): HashiCorp Vault Added to Deployment Strategy
+  - Added HashiCorp Vault deployment task (#14) to complete the HashiCorp stack
+  - Vault will provide advanced secrets management capabilities:
+    - Dynamic database credentials
+    - PKI/Certificate management
+    - Encryption as a service
+    - Native Nomad integration
+  - Deployment strategy: Start with dev mode, migrate to production with Consul backend
+  - Updated immediate actions to include Vault deployment after Traefik
+  - Adjusted timeline: Week 2 for Vault production config, Week 3-4 for DNS migration
+  - Total task count increased to 32 (was 31)
+  - Rationale: Complete HashiCorp stack expertise > partial implementation
+- **2025-08-02**: Nomad Job Management Integration and Infrastructure Enhancements
+  - Integrated Nomad job management with standardized directory structure
+    - Created nomad-jobs/ with core-infrastructure/, platform-services/, applications/
+    - Migrated PowerDNS job with dynamic port allocation (removed static 8081)
+    - Created Traefik load balancer job specification
+  - Updated deployment patterns to use Galaxy modules
+    - Leveraging community.general.nomad_job module
+    - Created generic deploy-job.yml playbook
+    - Created specialized deploy-traefik.yml with validation
+  - Established port allocation strategy
+    - Dynamic ports (20000-32000) by default
+    - Static ports only for DNS (53) and load balancer (80/443)
+    - All services accessible via Traefik routing
+  - Documentation updates
+    - Updated CLAUDE.md with Nomad patterns
+    - Created comprehensive README files for nomad-jobs
+    - Documented firewall and port strategies
+  - Task count increased to 31 (added Nomad integration and Traefik deployment tasks)
+  - PowerDNS API now accessible via https://powerdns.lab.local through Traefik
 - **2025-08-01**: Phase 1 & 2 DNS Infrastructure Implementation Complete
   - Phase 1: Deployed Consul DNS foundation across doggos-homelab cluster
     - Configured systemd-resolved on all 9 nodes for .consul domain resolution
