@@ -1,0 +1,73 @@
+# Target: 143 (docker-vm)192.168.30.248, 103 (pihole-master) 192.168.30.103, proxmoxt430 192.168.30.30, pve1 192.168.30.50
+---
+- name: Fully purge Checkmk from hosts
+  hosts: all
+  become: yes
+  tasks:
+
+    # --- Check if Checkmk is installed ---
+    - name: Detect existing Checkmk packages
+      shell: dpkg -l | grep check-mk || true
+      register: checkmk_detect
+      changed_when: false
+
+    # --- Run full uninstall script if detected ---
+    - name: Run CheckMK uninstall script from repo
+      shell: |
+        curl -fsSL https://raw.githubusercontent.com/basher83/automation-scripts/main/monitoring/checkmk/uninstall-agent.sh | bash
+      when: checkmk_detect.stdout != ""
+      async: 120
+      poll: 5
+      ignore_errors: yes
+
+    # --- Remove Checkmk packages and configs ---
+    - name: Purge Checkmk agent packages
+      apt:
+        name:
+          - check-mk-agent
+          - check-mk-agent-plugins
+        state: absent
+        purge: yes
+        autoremove: yes
+        update_cache: yes
+      when: checkmk_detect.stdout != ""
+
+    # --- Remove repo files (if any) ---
+    - name: Remove Checkmk apt repository files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/checkmk.list
+        - /etc/apt/sources.list.d/checkmk*.list
+      when: checkmk_detect.stdout != ""
+
+    # --- Clean apt cache ---
+    - name: Clean apt cache
+      apt:
+        update_cache: yes
+        autoclean: yes
+      when: checkmk_detect.stdout != ""
+
+    # --- Remove leftover Checkmk directories ---
+    - name: Delete Checkmk config, logs, and data dirs
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/check_mk
+        - /var/lib/check_mk_agent
+        - /var/lib/check_mk
+        - /var/log/check_mk
+        - /var/log/check_mk_agent
+      when: checkmk_detect.stdout != ""
+
+    # --- Verify removal ---
+    - name: Check for any remaining Checkmk packages
+      shell: dpkg -l | grep check-mk || true
+      register: checkmk_check
+      changed_when: false
+
+    - name: Show Checkmk removal status
+      debug:
+        msg: "{{ checkmk_check.stdout_lines | default(['No Checkmk packages found']) }}"
