@@ -50,6 +50,26 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 - [ ] Test basic secret storage and retrieval
 - [ ] Document access patterns
 
+### 28. Implement Markdown Linting and Enforcement
+
+**Description**: Set up automated markdown linting to enforce documentation standards
+**Status**: Not Started
+**Priority**: P1 (High) - Growing documentation debt
+**Blockers**: None
+**Related**: docs/standards/documentation-standards.md (lines 53-55)
+
+**Sprint Tasks**:
+
+- [ ] Set up markdownlint or similar tool
+- [ ] Create .markdownlint.json configuration enforcing:
+  - Language specification for all code blocks
+  - Blank lines around lists and code blocks
+  - Other standards from documentation-standards.md
+- [ ] Add pre-commit hooks for markdown validation
+- [ ] Configure CI checks for pull requests
+- [ ] Create cleanup script for existing violations
+- [ ] Document linting setup in docs/standards/linting-standards.md
+
 ## 🚧 Blocked Items
 
 ### PowerDNS Service Identity Tokens
@@ -104,7 +124,8 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 - **Completed This Sprint**: 1/1 (Netdata optimization)
 - **In Progress**: 2 (NetBox bootstrap, Vault deployment)
 - **Blocked**: 1 (Service identity tokens)
-- **Overall Project**: 15/33 tasks (45%) - NetBox deployment counted!
+- **Not Started**: 1 (Markdown linting)
+- **Overall Project**: 15/34 tasks (44%) - NetBox deployment counted!
 
 ## 🔗 Quick Links
 
