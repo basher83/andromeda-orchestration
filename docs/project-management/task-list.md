@@ -1,4 +1,4 @@
-# NetBox-Ansible Project Task List
+# andromeda-orchestration Project Task List
 
 This document tracks all project management tasks for the NetBox-focused Ansible automation project, organized by priority and implementation phase.
 
@@ -37,10 +37,11 @@ Tasks:
 - [x] Document all findings in assessment reports
 
 **Key Findings**:
+
 - Consul: Healthy 6-node cluster but no Nomad integration
 - DNS: Pi-hole HA cluster with keepalived VIP at 192.168.30.100
   - LXC 103 (192.168.30.103) on proxmoxt430
-  - LXC 136 (192.168.30.136) on pve1  
+  - LXC 136 (192.168.30.136) on pve1
   - LXC 139 (192.168.30.139) on pve1
   - All accessible via SSH and will be in og-homelab dynamic inventory
 - Networks: 192.168.10.x (2.5G), 192.168.11.x (10G), 192.168.30.x
@@ -205,6 +206,7 @@ Tasks:
 - [x] Test service discovery for registered services
 
 **Implementation Details**:
+
 - Used `phase1-consul-dns.yml` playbook with consul_dns role
 - Configured systemd-resolved on all 9 doggos-homelab nodes
 - DNS forwarding rule: ~consul → 127.0.0.1:8600
@@ -222,7 +224,7 @@ Tasks:
 - [x] Generate secure passwords for MySQL and API access
 - [x] Store PowerDNS secrets in Consul KV:
   - powerdns/mysql/root_password
-  - powerdns/mysql/password  
+  - powerdns/mysql/password
   - powerdns/api/key
 - [x] Create host volumes on Nomad clients for MySQL persistence
 - [x] Configure Nomad clients with host_volume "powerdns-mysql"
@@ -231,6 +233,7 @@ Tasks:
 - [x] Verify services are running and healthy
 
 **Deployment Details**:
+
 - Running on nomad-client-1 (allocation: b87b56bf)
 - DNS service: 192.168.11.20:53
 - API service: Dynamic port (accessible via Traefik at https://powerdns.lab.local)
@@ -256,6 +259,7 @@ Tasks:
 - [x] Update CLAUDE.md with Nomad job patterns
 
 **Implementation Details**:
+
 - Using Galaxy modules instead of custom modules for maintainability
 - Traefik will own ports 80/443 for all HTTP/HTTPS traffic
 - All other services use dynamic ports (20000-32000) with Consul service discovery
@@ -280,6 +284,7 @@ Tasks:
 - [x] Confirm Consul Catalog integration working
 
 **Implementation Details**:
+
 - Running on nomad-client-1-lloyd (allocation: aa69be4a)
 - HTTP: 192.168.11.20:80
 - HTTPS: 192.168.11.20:443
@@ -303,6 +308,7 @@ Tasks:
 - [x] Documented configuration findings and recommendations
 
 **Key Findings**:
+
 - Netdata streaming working correctly (issues were resolved 2025-08-02)
 - Parent nodes: lloyd, holly, mable, pve1 (correctly configured)
 - 192.168.11.x network used for dedicated Netdata streaming
@@ -501,7 +507,7 @@ Tasks:
 - [ ] API authentication for PowerDNS and NetBox
 - [ ] Audit logging for all services
 - [ ] DNS-01 ACME challenge setup via PowerDNS API
-- [ ] Let's Encrypt wildcard certificates for *.lab.example.com
+- [ ] Let's Encrypt wildcard certificates for \*.lab.example.com
 - [ ] Vault PKI integration for internal service certificates
 - [ ] Consul Connect mTLS for service-to-service encryption
 - [ ] Nomad periodic jobs for certificate renewal
@@ -806,7 +812,7 @@ Next review: 2025-08-06
   - Generated ACL token for Prometheus/Netdata access
   - Configured Netdata collectors on all nodes with the token
   - Stored token in Infisical at `/apollo-13/consul/PROMETHEUS_SCRAPING_TOKEN`
-  - Validated metrics collection is working (consul_local.* charts available)
+  - Validated metrics collection is working (consul_local.\* charts available)
   - Created comprehensive documentation for telemetry setup
   - Task count increased to 29 (added telemetry task as #9)
 - **2025-07-30** (Update 6): Infrastructure roles imported and documented
