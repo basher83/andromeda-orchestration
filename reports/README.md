@@ -2,6 +2,10 @@
 
 This directory contains all generated reports from the NetBox-Ansible project, organized by type and purpose.
 
+⚠️ **SECURITY NOTICE**: Reports may contain sensitive infrastructure data. See [SECURITY.md](./SECURITY.md) for handling procedures.
+
+**Important**: Raw reports (`.yml`, `.json`, `.txt`) are automatically excluded from git. Only commit sanitized markdown summaries.
+
 ## Directory Structure
 
 ```
@@ -17,7 +21,9 @@ reports/
 ## Report Types
 
 ### Assessment Reports (`/assessment/`)
+
 Strategic evaluations and quality checks:
+
 - Infrastructure readiness assessments
 - Security posture evaluations
 - Code quality checks
@@ -27,7 +33,9 @@ Strategic evaluations and quality checks:
 **When to use**: For comprehensive evaluations, gap analyses, and strategic planning.
 
 ### Operational Reports (`/{service}/`)
+
 Service-specific runtime data:
+
 - **Consul**: Service discovery health, ACL status, cluster state
 - **DNS-IPAM**: DNS configuration audits, IPAM utilization
 - **Infrastructure**: Resource utilization, capacity planning
@@ -36,7 +44,9 @@ Service-specific runtime data:
 **When to use**: For monitoring operational state and troubleshooting.
 
 ### Test Reports (`/connectivity/`)
+
 Network and service connectivity validation:
+
 - Inter-node connectivity matrices
 - Service endpoint availability
 - DNS resolution tests
@@ -46,16 +56,20 @@ Network and service connectivity validation:
 ## Report Naming Conventions
 
 ### Date-Stamped Reports
+
 Format: `{report_type}_{node/scope}_YYYY-MM-DD_HHMM.{ext}`
 
 Examples:
+
 - `consul_node_holly_2025-07-27_0031.yml`
 - `infrastructure_readiness_2025-07-24_0237.md`
 
 ### Analysis Reports
+
 Format: `{topic}-{type}.md`
 
 Examples:
+
 - `roadmap-alignment-analysis.md`
 - `playbook-fixes-implementation-status.md`
 
@@ -75,18 +89,21 @@ Examples:
 ## Generating Reports
 
 ### Infrastructure Assessment
+
 ```bash
 uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml \
   -i inventory/og-homelab/infisical.proxmox.yml
 ```
 
 ### DNS/IPAM Audit
+
 ```bash
 uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml \
   -i inventory/og-homelab/infisical.proxmox.yml
 ```
 
 ### Consul Health Check
+
 ```bash
 uv run ansible-playbook playbooks/assessment/consul-health-check.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml

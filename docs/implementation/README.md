@@ -20,6 +20,12 @@ Secrets management implementation
 - **infisical-setup.md** - Infisical configuration and migration guide
 - **comparison.md** - Comparison between 1Password and Infisical approaches
 
+### 📦 Nomad Configuration
+- **[nomad-storage-configuration.md](nomad-storage-configuration.md)** - Complete storage configuration guide for Nomad jobs
+- **[nomad-storage-strategy.md](nomad-storage-strategy.md)** - Strategic approach to Nomad storage
+- **[nomad-storage-patterns.md](nomad-storage-patterns.md)** - Common storage implementation patterns
+- **[nomad-port-allocation.md](nomad-port-allocation.md)** - Port allocation best practices
+
 ### 🗄️ [netbox-integration.md](netbox-integration.md)
 NetBox as source of truth - integration patterns and best practices
 

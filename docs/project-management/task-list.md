@@ -4,10 +4,10 @@ This document tracks all project management tasks for the NetBox-focused Ansible
 
 ## Project Status Overview
 
-**Project Phase**: Phase 2 Implementation Complete + Infrastructure Enhancements  
-**Current Focus**: Service mesh infrastructure with Traefik deployed, working on service identity authentication  
-**Last Updated**: 2025-08-02  
-**Status**: Phase 1 & 2 completed, Traefik with service registration working, PowerDNS deployment pending service identity fixes
+**Project Phase**: Phase 2 Implementation Complete + Infrastructure Monitoring  
+**Current Focus**: Service mesh infrastructure operational, monitoring systems optimized  
+**Last Updated**: 2025-08-04  
+**Status**: Phase 1 & 2 completed, Traefik with service registration working, Netdata monitoring optimized
 
 ### Key Objectives
 
@@ -286,7 +286,30 @@ Tasks:
 - Admin: Dynamic port with Consul service registration
 - All services properly registered in Consul with health checks
 
-#### 14. Deploy HashiCorp Vault
+#### 14. Optimize Netdata Monitoring Infrastructure ✅
+
+**Description**: Analyze and optimize Netdata configuration across all nodes  
+**Status**: Completed (2025-08-04)  
+**Blockers**: None  
+**Related**: Infrastructure monitoring and observability
+
+Tasks:
+
+- [x] Collected comprehensive Netdata configurations from all nodes
+- [x] Analyzed streaming architecture and confirmed parent/child relationships
+- [x] Verified Consul integration - all health checks passing
+- [x] Identified and fixed statsd port misconfigurations
+- [x] Disabled unused Statsd collectors on all nodes to save resources
+- [x] Documented configuration findings and recommendations
+
+**Key Findings**:
+- Netdata streaming working correctly (issues were resolved 2025-08-02)
+- Parent nodes: lloyd, holly, mable, pve1 (correctly configured)
+- 192.168.11.x network used for dedicated Netdata streaming
+- No Consul errors, all netdata-child health checks passing
+- Statsd was enabled but completely unused - disabled on all nodes
+
+#### 15. Deploy HashiCorp Vault
 
 **Description**: Complete the HashiCorp stack with Vault for advanced secrets management  
 **Status**: Not Started  
@@ -305,7 +328,7 @@ Tasks:
 - [ ] Document Vault access patterns
 - [ ] Plan production deployment with HA
 
-#### 15. Create Development Environment
+#### 16. Create Development Environment
 
 **Description**: Set up isolated testing environment for DNS/IPAM changes  
 **Status**: Skipped - doggos-homelab cluster is development environment  
@@ -320,7 +343,7 @@ Tasks:
 - [ ] ~~Set up test clients~~ (not needed)
 - [ ] ~~Document access procedures~~ (not needed)
 
-#### 16. Design IP Address Schema
+#### 17. Design IP Address Schema
 
 **Description**: Create comprehensive IP addressing plan for all networks  
 **Status**: Not Started  
@@ -334,7 +357,7 @@ Tasks:
 - [ ] Plan for growth
 - [ ] Document in NetBox
 
-#### 16. Develop Service Templates
+#### 18. Develop Service Templates
 
 **Description**: Create Ansible templates for service configurations  
 **Status**: Not Started  
@@ -600,14 +623,14 @@ Tasks:
 
 ### Overall Progress
 
-- **Completed**: 13/32 tasks (41%)
-- **In Progress**: 0/32 tasks (0%)
-- **Not Started**: 19/32 tasks (59%)
+- **Completed**: 14/33 tasks (42%)
+- **In Progress**: 0/33 tasks (0%)
+- **Not Started**: 19/33 tasks (58%)
 
 ### Phase Breakdown
 
 - **High Priority**: 7/7 completed (100% - All high priority tasks complete)
-- **Medium Priority**: 6/12 completed (50% - Roles imported, telemetry enabled, Phase 1 & 2 complete, Nomad jobs integrated, Traefik deployed)
+- **Medium Priority**: 7/13 completed (54% - Roles imported, telemetry enabled, Phase 1 & 2 complete, Nomad jobs integrated, Traefik deployed, Netdata optimized)
 - **Low Priority**: 0/13 completed (0%)
 
 ## Risk Items and Blockers
@@ -627,12 +650,7 @@ Tasks:
 
 ### Active Issues
 
-1. **Netdata Streaming Authentication**: Netdata child nodes failing to connect to parent nodes
-   - Error: "remote server denied access, probably we don't have the right API key"
-   - Child nodes trying to connect to 192.168.11.2/3/4:19999 with "nomad-cluster-api-key"
-   - Not blocking main deployment but affecting monitoring capabilities
-
-2. **PowerDNS Deployment**: Currently using minimal deployment without service blocks
+1. **PowerDNS Deployment**: Currently using minimal deployment without service blocks
    - Service identity tokens not working for Consul KV access
    - Templates fail with "Permission denied" when trying to read KV values
    - Temporary workaround: Deploy without KV lookups using hardcoded values
@@ -691,6 +709,27 @@ Next review: 2025-08-06
 
 ## Change Log
 
+- **2025-08-04**: Netdata Monitoring Infrastructure Optimized
+  - Completed comprehensive Netdata configuration analysis across all nodes
+  - Confirmed Netdata streaming architecture working correctly:
+    - Parent nodes properly identified: lloyd, holly, mable, pve1
+    - All child nodes streaming successfully to parents
+    - Dedicated 192.168.11.x network for Netdata streaming traffic
+  - Verified Consul integration fully operational:
+    - All netdata-child health checks passing
+    - No active Consul-related alerts
+    - Historical issues from 2025-08-03 have been resolved
+  - Optimized resource usage:
+    - Disabled unused Statsd collectors on all nodes
+    - Fixed statsd port misconfigurations on parent nodes
+    - Created disable-statsd.yml playbook for configuration management
+  - Created comprehensive documentation:
+    - Netdata configuration comparison report
+    - Consul integration analysis report
+    - Stream configuration analysis
+  - Removed resolved issue: Netdata streaming authentication no longer a problem
+  - Progress updated: 14/33 tasks completed (42%), Medium priority at 54%
+  - Note: Check_MK was also purged from 4 nodes as part of cleanup
 - **2025-08-02** (Update 4): Service Identity Investigation Complete
   - Investigated service identity token derivation issue using Netdata monitoring
   - Confirmed Consul auth method `nomad-workloads` is properly configured:

@@ -55,17 +55,40 @@ service {
 }
 ```
 
-## Root Cause Analysis
+## Root Cause Analysis (RESOLVED 2025-08-04)
 
-1. **Token Not Being Derived**: The Nomad workload is using the Nomad client's Consul token (05081fff-66cc-58ba-2bb3-88f9cd4f1780) instead of deriving a new token via the auth method.
+1. **Service Identity Requirement**: When `service_identity { enabled = true }` is set in Nomad's consul configuration, ALL service blocks MUST include an identity block with at least one aud value.
 
-2. **Auth Method Configuration**: While the auth method is properly configured, the token derivation process is not happening during job allocation.
+2. **Validation Failure**: Jobs without identity blocks in their service definitions fail validation with:
+   ```
+   Service identity must provide at least one target aud value
+   ```
 
-3. **Missing Claims**: The auth method expects claims like `nomad_service` which may not be present in the JWT token.
+3. **Why Traefik Works**: The Traefik job must have been deployed before service_identity was enabled, or it includes the required identity blocks.
 
-## Workaround
+## Solution
 
-Currently deploying services without service identity blocks and using hardcoded values instead of Consul KV lookups.
+Add identity blocks to ALL service definitions when service_identity is enabled:
+
+```hcl
+service {
+  name = "myservice"
+  port = "myport"
+  
+  identity {
+    aud = ["consul.io"]
+  }
+  
+  # ... rest of service config
+}
+```
+
+## Current Workaround
+
+For PowerDNS: Deployed without service blocks entirely to avoid validation errors. This means:
+- No automatic service registration in Consul
+- No health checks
+- Manual service discovery required
 
 ## Investigation Steps
 
@@ -74,6 +97,30 @@ Currently deploying services without service identity blocks and using hardcoded
 3. Verify auth method can validate tokens from Nomad
 4. Check Nomad logs for token derivation attempts
 5. Verify Consul can reach Nomad's JWKS endpoint from all nodes
+
+## Resolution (2025-08-04)
+
+**ROOT CAUSE IDENTIFIED**: When `service_identity { enabled = true }` is configured in Nomad, ALL service blocks MUST include an identity block with the `aud` parameter.
+
+**SOLUTION VERIFIED**: Added identity blocks to all service definitions:
+```hcl
+service {
+  name = "service-name"
+  port = "port-name"
+  
+  identity {
+    aud = ["consul.io"]  # REQUIRED when service_identity is enabled
+    ttl = "1h"          # Optional, but recommended for security
+  }
+  
+  # ... rest of service config
+}
+```
+
+**TEST RESULTS**: Successfully deployed PowerDNS test job with:
+- All services registered in Consul
+- Workload-specific tokens created via auth method
+- Health checks functioning properly
 
 ## Investigation Results (2025-08-02)
 
