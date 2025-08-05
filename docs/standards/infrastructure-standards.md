@@ -90,22 +90,51 @@ Application Monitoring (Future Prometheus)
 ### Security Standards
 
 #### Network Segmentation
+
+**doggos-homelab Cluster:**
 ```
-Management Network (10.0.0.0/24)
-├── Proxmox hosts
+Management Network (192.168.10.0/24) - 1G
+├── Proxmox hosts management
 ├── Infrastructure services
 └── Administrative access
 
-Service Network (192.168.x.0/24)
-├── Application services
-├── Internal communication
-└── Service discovery
-
-Storage Network (10.1.0.0/24) [Future]
-├── NFS/iSCSI traffic
-├── Backup traffic
-└── Isolated from service network
+Data Network (192.168.11.0/24) - 10G
+├── High-throughput services
+├── Netdata streaming
+├── Storage traffic
+└── Inter-node communication
 ```
+
+**og-homelab Cluster:**
+```
+Combined Network (192.168.30.0/24) - 2.5G
+├── All services (management + data)
+├── Proxmox hosts
+├── LXC containers
+└── Service discovery
+```
+
+**Future Networks:**
+```
+Storage Network (TBD) [Ready to implement - NICs available]
+├── Dedicated NFS/iSCSI traffic
+├── Backup traffic isolation
+├── Storage systems to migrate:
+│   ├── Proxmox Backup Server (currently 192.168.30.200)
+│   └── TrueNAS (currently 192.168.30.6)
+└── Separate from service networks
+
+DMZ Network (TBD) [Future]
+├── Public-facing services
+├── Reverse proxy endpoints
+└── Isolated from internal networks
+```
+
+**Network Isolation Benefits:**
+- **Performance**: Prevent backup/storage traffic from impacting services
+- **Security**: Isolate storage systems from general network
+- **QoS**: Prioritize different traffic types appropriately
+- **Scalability**: Add storage nodes without network congestion
 
 #### Access Control
 - **Zero Trust**: Authenticate everything
