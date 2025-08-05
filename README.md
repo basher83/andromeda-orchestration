@@ -1,9 +1,12 @@
-# NetBox Ansible Automation
+# Andromeda Orchestration
 
-[![CI](https://github.com/YOUR_USERNAME/netbox-ansible/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/netbox-ansible/actions/workflows/ci.yml)
+[![CI](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml/badge.svg)](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml)
 
-An Ansible automation project that integrates NetBox as a source of truth for network infrastructure management, with
-secure credential management through Infisical.
+An Ansible automation project for comprehensive homelab infrastructure management, with NetBox integration for network
+source-of-truth and secure credential management through Infisical.
+
+> **Project Evolution**: Originally started as `netbox-ansible` for NetBox integration proof-of-concept, this repository
+> has evolved into the primary orchestration system for the entire homelab infrastructure, hence the galaxy-tier name.
 
 ## Overview
 
@@ -13,6 +16,8 @@ This project provides a framework for managing network infrastructure using Ansi
 - Secure credential management via Infisical
 - Containerized execution environments
 - Best practices for Ansible project organization
+
+**Infrastructure Foundation**: The underlying infrastructure (Proxmox clusters, VMs, networking) is provisioned and managed via [terraform-homelab](https://github.com/basher83/terraform-homelab) using Terraform/OpenTofu with Scalr.
 
 ## Prerequisites
 
