@@ -1,0 +1,160 @@
+---
+# Collect Netdata configurations from all hosts and save to reports
+- name: Collect Netdata configurations and generate report
+  hosts: all:!localhost
+  become: true
+  gather_facts: true
+  
+  vars:
+    timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
+    report_dir: "reports/netdata"
+    
+  tasks:
+    - name: Check if Netdata is installed
+      ansible.builtin.stat:
+        path: /usr/sbin/netdata
+      register: netdata_binary
+      
+    - name: Get Netdata version
+      ansible.builtin.command:
+        cmd: netdata -v
+      register: netdata_version
+      when: netdata_binary.stat.exists
+      changed_when: false
+      failed_when: false
+      
+    - name: Check Netdata service status
+      ansible.builtin.systemd:
+        name: netdata
+      register: netdata_service
+      when: netdata_binary.stat.exists
+      failed_when: false
+      
+    - name: Read netdata.conf
+      ansible.builtin.slurp:
+        src: /etc/netdata/netdata.conf
+      register: netdata_conf
+      when: netdata_binary.stat.exists
+      failed_when: false
+      
+    - name: Read stream.conf
+      ansible.builtin.slurp:
+        src: /etc/netdata/stream.conf
+      register: stream_conf
+      when: netdata_binary.stat.exists
+      failed_when: false
+      
+    - name: Read consul.conf for go.d plugin
+      ansible.builtin.slurp:
+        src: /etc/netdata/go.d/consul.conf
+      register: consul_conf
+      when: netdata_binary.stat.exists
+      failed_when: false
+      
+    - name: Check for Consul service registration
+      ansible.builtin.slurp:
+        src: /etc/consul.d/netdata.json
+      register: consul_service_file
+      failed_when: false
+      
+    - name: Get Netdata API info
+      ansible.builtin.uri:
+        url: "http://localhost:19999/api/v1/info"
+        return_content: yes
+      register: netdata_api_info
+      when: 
+        - netdata_binary.stat.exists
+        - netdata_service.status.ActiveState | default('inactive') == 'active'
+      failed_when: false
+      
+    - name: Get streaming status from API
+      ansible.builtin.uri:
+        url: "http://localhost:19999/api/v1/mgmt/streaming"
+        return_content: yes
+      register: streaming_api
+      when:
+        - netdata_binary.stat.exists
+        - netdata_service.status.ActiveState | default('inactive') == 'active'
+      failed_when: false
+      
+    - name: Check listening ports
+      ansible.builtin.shell: |
+        ss -tlnp | grep -E '19999|19998' || echo "No Netdata ports listening"
+      register: listening_ports
+      changed_when: false
+      failed_when: false
+      
+    - name: Get recent Netdata logs
+      ansible.builtin.shell: |
+        journalctl -u netdata --since "1 hour ago" --no-pager | tail -100
+      register: netdata_logs
+      when: netdata_binary.stat.exists
+      changed_when: false
+      failed_when: false
+      
+    - name: Compile host report
+      ansible.builtin.set_fact:
+        host_report:
+          hostname: "{{ inventory_hostname }}"
+          ansible_host: "{{ ansible_host | default('N/A') }}"
+          timestamp: "{{ timestamp }}"
+          netdata_installed: "{{ netdata_binary.stat.exists }}"
+          netdata_version: "{{ netdata_version.stdout | default('Not installed') }}"
+          service_state: "{{ netdata_service.status.ActiveState | default('Unknown') }}"
+          service_enabled: "{{ netdata_service.status.UnitFileState | default('Unknown') }}"
+          listening_ports: "{{ listening_ports.stdout_lines | default([]) }}"
+          role: "{{ 'parent' if inventory_hostname in groups.get('netdata_parents', []) else 'child' if inventory_hostname in groups.get('netdata_children', []) else 'standalone' }}"
+          configurations:
+            netdata_conf: "{{ netdata_conf.content | default('') | b64decode | default('Not found') }}"
+            stream_conf: "{{ stream_conf.content | default('') | b64decode | default('Not found') }}"
+            consul_conf: "{{ consul_conf.content | default('') | b64decode | default('Not found') }}"
+            consul_service: "{{ consul_service_file.content | default('') | b64decode | default('Not registered') }}"
+          api_info: "{{ netdata_api_info.json | default({}) }}"
+          streaming_status: "{{ streaming_api.json | default({}) }}"
+          recent_logs: "{{ netdata_logs.stdout_lines | default([]) }}"
+          
+    - name: Create local report directory
+      ansible.builtin.file:
+        path: "{{ report_dir }}"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+      become: no
+      
+    - name: Save individual host configuration
+      ansible.builtin.copy:
+        content: "{{ host_report | to_nice_yaml }}"
+        dest: "{{ report_dir }}/netdata_{{ inventory_hostname }}_{{ timestamp }}.yml"
+        mode: '0644'
+      delegate_to: localhost
+      become: no
+
+- name: Generate consolidated report
+  hosts: localhost
+  gather_facts: false
+  
+  vars:
+    timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
+    report_dir: "reports/netdata"
+    
+  tasks:
+    - name: Find all host reports
+      ansible.builtin.find:
+        paths: "{{ report_dir }}"
+        patterns: "netdata_*_{{ timestamp }}.yml"
+      register: host_reports
+      
+    - name: Load all host reports
+      ansible.builtin.include_vars:
+        file: "{{ item.path }}"
+        name: "host_{{ item.path | basename | regex_replace('netdata_(.*)_.*\\.yml', '\\1') }}"
+      loop: "{{ host_reports.files }}"
+      
+    - name: Create summary report
+      ansible.builtin.template:
+        src: netdata_summary_report.j2
+        dest: "{{ report_dir }}/netdata_configuration_summary_{{ timestamp }}.md"
+        mode: '0644'
+      vars:
+        all_hosts: "{{ hostvars | dict2items | selectattr('key', 'match', '^host_') | map(attribute='value') | list }}"
