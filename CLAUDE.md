@@ -19,10 +19,6 @@ detailed implementation roadmap.
 ```bash
 # Run playbooks using uv with Infisical secrets
 uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
-
-# Direct ansible-navigator usage (optional)
-ansible-navigator run <playbook.yml> \
-  --execution-environment-image ghcr.io/ansible-community/community-ee-minimal:latest --mode stdout
 ```
 
 ### Working with Dynamic Inventory
@@ -89,11 +85,11 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 - **Deployment**: Using `community.general.nomad_job` Galaxy module via playbooks
 - **Port Strategy**: Dynamic ports by default (20000-32000), static only for DNS (53) and load balancer (80/443)
 
-### Execution Environment
+### Python Environment
 
-- Based on `community-ee-minimal` container image
-- Includes `ansible-core`, `ansible-runner`, and `community.general` collection
-- Configured in `execution-environment.yml`
+- Uses `uv` for Python virtual environment management
+- All Ansible commands run through `uv run` for consistency
+- Dependencies managed in `pyproject.toml`
 
 ### Documentation Structure
 
