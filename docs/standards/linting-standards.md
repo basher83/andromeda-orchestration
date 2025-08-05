@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define automated code quality checks and formatting standards that ensure consistent, reliable, and secure Infrastructure as Code across all Ansible projects.
+Define automated code quality checks and formatting standards that ensure consistent, reliable, and secure Infrastructure as Code and documentation across all Ansible projects.
 
 ## Background
 
@@ -162,6 +162,63 @@ ignore: |
   archive/
 ```
 
+### Markdown Linting
+
+All markdown documentation must pass markdownlint validation to ensure consistency and readability.
+
+**Markdownlint Configuration (.markdownlint.json):**
+
+```json
+{
+  "default": true,
+  "MD003": { "style": "atx" },
+  "MD004": { "style": "dash" },
+  "MD007": { "indent": 2 },
+  "MD013": false,
+  "MD024": { "siblings_only": true },
+  "MD025": { "front_matter_title": "" },
+  "MD033": false,
+  "MD040": true,
+  "MD041": false,
+  "MD046": { "style": "fenced" },
+  "MD048": { "style": "backtick" },
+  "MD049": { "style": "underscore" },
+  "MD050": { "style": "asterisk" },
+  "line-length": false
+}
+```
+
+**Key Rules Explained:**
+
+- **MD040**: Language specification required for all fenced code blocks
+- **MD031/MD032**: Blank lines required around lists and code blocks
+- **MD003**: Use ATX-style headers (# Header)
+- **MD004**: Use dashes for unordered lists
+- **MD007**: 2-space indentation for lists
+- **MD046**: Use fenced code blocks (not indented)
+
+**VS Code Integration:**
+
+```json
+// .vscode/settings.json
+{
+  "markdownlint.config": {
+    "extends": ".markdownlint.json"
+  }
+}
+```
+
+**Pre-commit Hook Addition:**
+
+```yaml
+# Add to .pre-commit-config.yaml
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+```
+
 ### Python Linting
 
 For Python scripts, plugins, and modules within Ansible projects.
@@ -299,6 +356,11 @@ jobs:
       - name: Run mypy
         run: mypy plugins scripts
         continue-on-error: true  # Warning only initially
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v15
+        with:
+          globs: '**/*.md'
 ```
 
 ### Why Specific Rules Are Enabled/Disabled
@@ -573,6 +635,12 @@ ruff check --fix .
 
 # Type checking
 mypy plugins scripts --show-error-codes
+
+# Markdown linting
+markdownlint "**/*.md" --fix
+
+# Check specific markdown file
+markdownlint docs/standards/documentation-standards.md
 ```
 
 ## References
@@ -582,4 +650,6 @@ mypy plugins scripts --show-error-codes
 - [Ruff Documentation](https://docs.astral.sh/ruff/)
 - [MyPy Documentation](https://mypy.readthedocs.io/)
 - [Pre-commit Framework](https://pre-commit.com/)
+- [Markdownlint Documentation](https://github.com/DavidAnson/markdownlint)
+- [Markdownlint Rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md)
 - [Mission Control Standards](https://github.com/basher83/docs/tree/main/mission-control)
