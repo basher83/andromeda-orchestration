@@ -2,7 +2,8 @@
 name: meta-command
 description: Generates a new, complete Claude Code slash command configuration file from a user's description. Use this to create new slash commands. Use this PROACTIVELY when the user asks you to create a new slash command.
 tools: Write, WebFetch, mcp__firecrawl-mcp__firecrawl_scrape, mcp__firecrawl-mcp__firecrawl_search, MultiEdit
-color: Orange
+color: orange
+model: opus
 ---
 
 # Purpose

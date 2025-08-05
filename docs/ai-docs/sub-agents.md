@@ -93,6 +93,8 @@ Each sub agent is defined in a Markdown file with this structure:
 name: your-sub-agent-name
 description: Description of when this sub agent should be invoked
 tools: tool1, tool2, tool3 # Optional - inherits all tools if omitted
+color: red | blue | green | yellow | purple | orange | pink | cyan # Optional - default is cyan
+model: haiku | sonnet | opus <default to opus unless otherwise specified>
 ---
 
 Your sub agent's system prompt goes here. This can be multiple paragraphs

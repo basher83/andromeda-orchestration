@@ -2,7 +2,8 @@
 name: commit-craft
 description: Use proactively after completing coding tasks with 3+ modified files to create clean, logical commits following conventional commit standards. If they say 'create commits' or 'make commits' use this agent.
 tools: TodoWrite, Read, Write, Edit, Grep, Glob, LS, Bash
-color: Green
+color: green
+model: sonnet
 ---
 
 # Purpose

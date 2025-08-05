@@ -4,6 +4,14 @@ This directory contains comprehensive documentation for the NetBox-focused Ansib
 
 ## 📂 Directory Structure
 
+### 📏 [standards/](standards/)
+**START HERE** - Standards and operating procedures that govern this repository:
+- Documentation organization and philosophy
+- Ansible development patterns and why we use them
+- Infrastructure architecture decisions
+- Nomad job development standards
+- The "why" behind our technical choices
+
 ### 🚀 [getting-started/](getting-started/)
 Essential documentation for new users and developers:
 - Repository structure overview
@@ -16,6 +24,7 @@ Detailed implementation guides organized by component:
 - **[dns-ipam/](implementation/dns-ipam/)** - DNS & IPAM overhaul documentation
 - **[consul/](implementation/consul/)** - Consul configuration and integration
 - **[secrets-management/](implementation/secrets-management/)** - Infisical setup and migration
+- **Nomad Configuration** - Storage, patterns, and port allocation guides
 - **[netbox-integration.md](implementation/netbox-integration.md)** - NetBox automation patterns
 
 ### 📋 [project-management/](project-management/)
@@ -52,10 +61,11 @@ Deprecated documentation preserved for reference:
 
 ## 🎯 Quick Start Path
 
-1. **New to the project?** → Start with [`getting-started/`](getting-started/)
-2. **Implementing features?** → Check [`implementation/`](implementation/)
-3. **Managing services?** → See [`operations/`](operations/)
-4. **Tracking progress?** → Visit [`project-management/`](project-management/)
+1. **New to the project?** → Start with [`standards/`](standards/) then [`getting-started/`](getting-started/)
+2. **Want to understand our decisions?** → Read [`standards/`](standards/)
+3. **Implementing features?** → Check [`implementation/`](implementation/)
+4. **Managing services?** → See [`operations/`](operations/)
+5. **Tracking progress?** → Visit [`project-management/`](project-management/)
 
 ## 📍 Current Project Status
 
