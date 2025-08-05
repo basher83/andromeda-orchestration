@@ -1,0 +1,91 @@
+# Target: 143 (docker-vm)192.168.30.248, 103 (pihole-master) 192.168.30.103, proxmoxt430 192.168.30.30, pve1 192.168.30.50
+---
+- name: Simple Checkmk purge from hosts
+  hosts: all
+  become: yes
+  tasks:
+
+    # --- Stop and disable services ---
+    - name: Stop Check_MK services
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: no
+      loop:
+        - check-mk-agent-async
+        - check-mk-agent.socket
+        - cmk-agent-ctl-daemon
+      ignore_errors: yes
+
+    # --- Kill any remaining processes ---
+    - name: Kill remaining Check_MK processes
+      shell: |
+        pkill -f check_mk || true
+        pkill -f cmk-agent || true
+      ignore_errors: yes
+
+    # --- Remove Checkmk packages ---
+    - name: Purge Checkmk agent packages
+      apt:
+        name:
+          - check-mk-agent
+          - check-mk-agent-plugins
+        state: absent
+        purge: yes
+        autoremove: yes
+      ignore_errors: yes
+
+    # --- Remove directories ---
+    - name: Remove Checkmk directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/check_mk
+        - /var/lib/check_mk_agent
+        - /var/lib/check_mk
+        - /var/log/check_mk
+        - /var/log/check_mk_agent
+        - /usr/lib/check_mk_agent
+        - /usr/share/check_mk
+      ignore_errors: yes
+
+    # --- Remove systemd unit files ---
+    - name: Remove systemd unit files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/lib/systemd/system/check-mk-agent-async.service
+        - /usr/lib/systemd/system/check-mk-agent.socket
+        - /usr/lib/systemd/system/check-mk-agent@.service
+        - /etc/systemd/system/check-mk-agent-async.service
+        - /etc/systemd/system/check-mk-agent.socket
+        - /etc/systemd/system/check-mk-agent@.service
+      ignore_errors: yes
+
+    # --- Remove binaries ---
+    - name: Remove Check_MK binaries
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/bin/check_mk_agent
+        - /usr/bin/check_mk_caching_agent
+        - /usr/bin/cmk-agent-ctl
+      ignore_errors: yes
+
+    # --- Reload systemd ---
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    # --- Verify removal ---
+    - name: Verify no Check_MK processes running
+      shell: ps aux | grep -v grep | grep -E 'check_mk|cmk-agent' || echo "No Check_MK processes found"
+      register: process_check
+      changed_when: false
+
+    - name: Show process check results
+      debug:
+        msg: "{{ process_check.stdout }}"

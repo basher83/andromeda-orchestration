@@ -1,0 +1,65 @@
+---
+# Need to target 100.109.215.25, 100.94.200.83, 100.121.233.15, 100.119.207.2 via tailscale inventory, user: root. 
+# And 192.168.30.40, 192.168.30.106 via og-homelab proxmox inventory, user: root.
+# purge_zabbix.yml
+- name: Fully purge Zabbix from hosts
+  hosts: all
+  become: yes
+  tasks:
+
+    # --- Check if Zabbix is installed ---
+    - name: Detect existing Zabbix packages
+      command: dpkg -l | grep zabbix || true
+      register: zabbix_detect
+      changed_when: false
+
+    # --- Remove Zabbix packages and configs ---
+    - name: Purge Zabbix agent packages
+      apt:
+        name:
+          - zabbix-agent
+          - zabbix-agent2
+        state: absent
+        purge: yes
+        autoremove: yes
+        update_cache: yes
+      when: zabbix_detect.stdout != ""
+
+    # --- Remove repo files ---
+    - name: Remove Zabbix apt repository files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/zabbix.list
+        - /etc/apt/sources.list.d/zabbix*.list
+      when: zabbix_detect.stdout != ""
+
+    # --- Clean apt cache ---
+    - name: Clean apt cache
+      apt:
+        update_cache: yes
+        autoclean: yes
+      when: zabbix_detect.stdout != ""
+
+    # --- Remove leftover Zabbix directories ---
+    - name: Delete Zabbix config, logs, and data dirs
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/zabbix
+        - /var/log/zabbix
+        - /var/lib/zabbix
+        - /var/run/zabbix
+      when: zabbix_detect.stdout != ""
+
+    # --- Verify removal ---
+    - name: Check for any remaining Zabbix packages
+      command: dpkg -l | grep zabbix || true
+      register: zabbix_check
+      changed_when: false
+
+    - name: Show Zabbix removal status
+      debug:
+        msg: "{{ zabbix_check.stdout_lines | default(['No Zabbix packages found']) }}"
