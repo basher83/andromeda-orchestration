@@ -5,7 +5,7 @@
 An Ansible automation project for comprehensive homelab infrastructure management, with NetBox integration for network
 source-of-truth and secure credential management through Infisical.
 
-> **Project Evolution**: Originally started as `netbox-ansible` for NetBox integration proof-of-concept, this repository
+> **Project Evolution**: Originally started as `andromeda-orchestration` for NetBox integration proof-of-concept, this repository
 > has evolved into the primary orchestration system for the entire homelab infrastructure, hence the galaxy-tier name.
 
 ## Overview
@@ -33,7 +33,7 @@ This project provides a framework for managing network infrastructure using Ansi
 
    ```bash
    git clone <repository-url>
-   cd netbox-ansible
+   cd andromeda-orchestration
    ```
 
 2. **Run the setup script**
