@@ -1,49 +1,55 @@
 job "powerdns" {
   datacenters = ["dc1"]
   type        = "service"
-  
+
   group "powerdns" {
     count = 1
-    
+
     network {
       port "dns" {
         static = 53
         to     = 53
       }
       port "api" {
-        to = 8081  # PowerDNS API port inside container
+        to = 8081  # Dynamic port allocation
       }
       port "mysql" {
         to = 3306
       }
     }
-    
-    volume "powerdns-mysql" {
-      type      = "host"
-      source    = "powerdns-mysql"
-      read_only = false
-    }
-    
-    task "mysql" {
+
+    task "mariadb" {
       driver = "docker"
-      
+
       config {
-        image = "mariadb:10"
+        image = "mariadb:10.11"
         ports = ["mysql"]
+        
+        volumes = [
+          "local/mysql-init:/docker-entrypoint-initdb.d",
+          "powerdns-mysql:/var/lib/mysql"
+        ]
       }
-      
-      volume_mount {
-        volume      = "powerdns-mysql"
-        destination = "/var/lib/mysql"
+
+      # Service identity for Consul integration
+      identity {
+        name = "consul_default"
+        aud  = ["consul.io"]
+        ttl  = "1h"
       }
-      
-      env {
-        MYSQL_ROOT_PASSWORD = "supersecurepassword123"
-        MYSQL_DATABASE      = "powerdns"
-        MYSQL_USER          = "powerdns"
-        MYSQL_PASSWORD      = "pdnspassword456"
+
+      # Secrets should be injected via Consul KV or Nomad variables
+      template {
+        data = <<EOF
+MYSQL_ROOT_PASSWORD={{ keyOrDefault "powerdns/mysql/root_password" "" }}
+MYSQL_DATABASE=powerdns
+MYSQL_USER=powerdns
+MYSQL_PASSWORD={{ keyOrDefault "powerdns/mysql/password" "" }}
+EOF
+        destination = "secrets/mysql.env"
+        env         = true
       }
-      
+
       template {
         data = <<EOF
 CREATE TABLE IF NOT EXISTS domains (
@@ -79,19 +85,20 @@ CREATE INDEX ordername ON records (ordername);
 EOF
         destination = "local/mysql-init/schema.sql"
       }
-      
+
       resources {
         cpu    = 500
         memory = 512
       }
-      
+
       service {
         name = "powerdns-mysql"
         port = "mysql"
         
         identity {
-          aud = ["consul.io"]
-          ttl = "1h"
+          name = "powerdns-mysql"
+          aud  = ["consul.io"]
+          ttl  = "24h"
         }
         
         check {
@@ -101,67 +108,55 @@ EOF
         }
       }
     }
-    
+
     task "powerdns" {
       driver = "docker"
-      
+
       config {
         image = "powerdns/pdns-auth-48:latest"
         ports = ["dns", "api"]
-        
-        # Pass arguments to PowerDNS
-        args = [
-          "--webserver=yes",
-          "--webserver-address=0.0.0.0",
-          "--webserver-port=8081",
-          "--webserver-allow-from=0.0.0.0/0",
-          "--api=yes",
-          "--api-key=changeme789xyz"
-        ]
       }
-      
-      env {
-        # API Configuration
-        PDNS_api = "yes"
-        PDNS_api_key = "changeme789xyz"
-        
-        # Webserver Configuration
-        PDNS_webserver = "yes"
-        PDNS_webserver_address = "0.0.0.0"
-        PDNS_webserver_port = "${NOMAD_PORT_api}"
-        PDNS_webserver_allow_from = "0.0.0.0/0"
-        
-        # MySQL Backend Configuration
-        PDNS_launch = "gmysql"
-        PDNS_gmysql_host = "${NOMAD_ADDR_mysql}"
-        PDNS_gmysql_port = "${NOMAD_PORT_mysql}"
-        PDNS_gmysql_user = "powerdns"
-        PDNS_gmysql_password = "pdnspassword456"
-        PDNS_gmysql_dbname = "powerdns"
-        
-        # Default SOA
-        PDNS_default_soa_content = "ns1.lab.local hostmaster.lab.local 1 10800 3600 604800 3600"
+
+      # Service identity for Consul integration
+      identity {
+        name = "consul_default"
+        aud  = ["consul.io"]
+        ttl  = "1h"
       }
-      
+
+      # API key and database password from Consul KV
+      template {
+        data = <<EOF
+PDNS_LAUNCH=gmysql
+PDNS_GMYSQL_HOST=${NOMAD_ADDR_mysql}
+PDNS_GMYSQL_PORT=${NOMAD_PORT_mysql}
+PDNS_GMYSQL_USER=powerdns
+PDNS_GMYSQL_PASSWORD={{ keyOrDefault "powerdns/mysql/password" "" }}
+PDNS_GMYSQL_DBNAME=powerdns
+PDNS_API=yes
+PDNS_API_KEY={{ keyOrDefault "powerdns/api/key" "" }}
+PDNS_WEBSERVER=yes
+PDNS_WEBSERVER_ADDRESS=0.0.0.0
+PDNS_WEBSERVER_ALLOW_FROM=0.0.0.0/0
+EOF
+        destination = "secrets/powerdns.env"
+        env         = true
+      }
+
       resources {
         cpu    = 500
         memory = 256
       }
-      
+
       service {
-        name = "powerdns-dns"
+        name = "powerdns"
         port = "dns"
         
         identity {
-          aud = ["consul.io"]
-          ttl = "1h"
+          name = "powerdns"
+          aud  = ["consul.io"]
+          ttl  = "24h"
         }
-        
-        tags = [
-          "dns",
-          "authoritative",
-          "primary"
-        ]
         
         check {
           type     = "tcp"
@@ -175,8 +170,9 @@ EOF
         port = "api"
         
         identity {
-          aud = ["consul.io"]
-          ttl = "1h"
+          name = "powerdns-api"
+          aud  = ["consul.io"]
+          ttl  = "24h"
         }
         
         tags = [
@@ -190,13 +186,20 @@ EOF
         check {
           type     = "http"
           path     = "/api/v1/servers"
+          header {
+            X-API-Key = ["{{ keyOrDefault \"powerdns/api/key\" \"\" }}"]
+          }
           interval = "30s"
           timeout  = "5s"
-          header {
-            X-API-Key = ["changeme789xyz"]
-          }
         }
       }
+    }
+
+    # Volume for MySQL data persistence
+    volume "powerdns-mysql" {
+      type      = "host"
+      read_only = false
+      source    = "powerdns-mysql"
     }
   }
 }
