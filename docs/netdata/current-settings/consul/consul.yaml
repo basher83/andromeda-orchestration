@@ -1,0 +1,16 @@
+# vim: set ft=yaml:
+# -*- mode: yaml -*-
+# /etc/netdata/go.d/consul.conf
+# Netdata Consul collector configuration
+# Ansible managed
+# Location: /etc/netdata/go.d/consul.conf
+
+jobs:
+  - name: local
+    url: http://127.0.0.1:8500
+    acl_token: "consul_api_token"
+    update_every: 1
+    timeout: 2
+    autodetection_retry: 0
+    collect_node_metadata: true
+    collect_service_metadata: true
