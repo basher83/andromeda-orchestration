@@ -1,0 +1,152 @@
+---
+# Collect all Netdata configuration files from parent and child nodes
+- name: Collect Netdata configurations from all nodes
+  hosts: all:!localhost
+  become: true
+  gather_facts: true
+  
+  vars:
+    timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
+    config_files:
+      - /etc/netdata/netdata.conf
+      - /etc/netdata/stream.conf
+      - /etc/netdata/go.d/consul.conf
+      - /etc/consul.d/netdata.json
+    
+  tasks:
+    - name: Determine node role
+      set_fact:
+        node_role: >-
+          {%- if inventory_hostname in ['lloyd', 'holly', 'mable', 'pve1'] -%}
+            parent
+          {%- elif inventory_hostname in groups.get('netdata_parents', []) -%}
+            parent
+          {%- elif inventory_hostname in groups.get('netdata_children', []) -%}
+            child
+          {%- elif 'nomad' in inventory_hostname -%}
+            child
+          {%- elif inventory_hostname == 'proxmoxt430' -%}
+            child
+          {%- elif inventory_hostname == 'pbs' -%}
+            child
+          {%- else -%}
+            unknown
+          {%- endif -%}
+        node_ip: "{{ ansible_host | default(ansible_default_ipv4.address | default('unknown')) }}"
+      
+    - name: Check if Netdata is installed
+      stat:
+        path: /usr/sbin/netdata
+      register: netdata_binary
+      
+    - name: Get Netdata version
+      command:
+        cmd: netdata -v
+      register: netdata_version
+      when: netdata_binary.stat.exists
+      changed_when: false
+      failed_when: false
+      
+    - name: Check Netdata service status
+      systemd:
+        name: netdata
+      register: netdata_service
+      when: netdata_binary.stat.exists
+      failed_when: false
+      
+    - name: Read configuration files
+      slurp:
+        src: "{{ item }}"
+      register: config_contents
+      loop: "{{ config_files }}"
+      when: netdata_binary.stat.exists
+      failed_when: false
+      
+    - name: Get listening ports
+      shell: |
+        ss -tlnp | grep -E '19999|19998' || echo "No Netdata ports listening"
+      register: listening_ports
+      changed_when: false
+      failed_when: false
+      
+    - name: Get recent streaming logs
+      shell: |
+        journalctl -u netdata --since "1 hour ago" --no-pager | grep -i stream | tail -20 || echo "No streaming logs"
+      register: streaming_logs
+      when: netdata_binary.stat.exists
+      changed_when: false
+      failed_when: false
+      
+    - name: Test streaming connectivity (for children)
+      shell: |
+        if [ "{{ node_role }}" = "child" ]; then
+          for dest in 192.168.11.2 192.168.11.3 192.168.11.4; do
+            echo -n "Testing $dest:19999 - "
+            timeout 1 nc -zv $dest 19999 2>&1 || echo "Failed"
+          done
+        else
+          echo "Skipping - this is a parent node"
+        fi
+      register: connectivity_test
+      when: node_role == "child"
+      changed_when: false
+      failed_when: false
+      
+    - name: Create report directory locally
+      file:
+        path: "reports/netdata/configs/{{ timestamp }}"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+      become: no
+      
+    - name: Save individual host report
+      copy:
+        content: |
+          # Netdata Configuration for {{ inventory_hostname }}
+          # Generated: {{ timestamp }}
+          # Role: {{ node_role }}
+          # IP: {{ node_ip }}
+          # Version: {{ netdata_version.stdout | default('Not installed') }}
+          # Service: {{ netdata_service.status.ActiveState | default('Unknown') }}
+          
+          ## Listening Ports
+          {{ listening_ports.stdout }}
+          
+          {% for result in config_contents.results %}
+          ## {{ result.item }}
+          {% if result.content is defined %}
+          ```
+          {{ result.content | b64decode }}
+          ```
+          {% else %}
+          File not found
+          {% endif %}
+          
+          {% endfor %}
+          
+          ## Recent Streaming Logs
+          ```
+          {{ streaming_logs.stdout | default('No logs') }}
+          ```
+          
+          {% if node_role == "child" %}
+          ## Connectivity Test to Parents
+          ```
+          {{ connectivity_test.stdout | default('No test results') }}
+          ```
+          {% endif %}
+        dest: "reports/netdata/configs/{{ timestamp }}/{{ inventory_hostname }}_netdata_config.md"
+        mode: '0644'
+      delegate_to: localhost
+      become: no
+      
+    - name: Display summary
+      debug:
+        msg:
+          - "Host: {{ inventory_hostname }} ({{ node_ip }})"
+          - "Role: {{ node_role }}"
+          - "Netdata: {{ netdata_version.stdout | default('Not installed') }}"
+          - "Service: {{ netdata_service.status.ActiveState | default('Unknown') }}"
+          - "Config saved to: reports/netdata/configs/{{ timestamp }}/{{ inventory_hostname }}_netdata_config.md"

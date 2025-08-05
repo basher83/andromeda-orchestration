@@ -1,0 +1,112 @@
+# Netdata Configuration Report
+Generated: {{ timestamp }}
+
+## Executive Summary
+
+Total Hosts Checked: {{ all_hosts | length }}
+Netdata Installed: {{ all_hosts | selectattr('netdata_installed', 'equalto', true) | list | length }}
+Active Services: {{ all_hosts | selectattr('service_state', 'equalto', 'active') | list | length }}
+
+### Role Distribution
+- Parents: {{ all_hosts | selectattr('role', 'equalto', 'parent') | list | length }}
+- Children: {{ all_hosts | selectattr('role', 'equalto', 'child') | list | length }}
+- Standalone: {{ all_hosts | selectattr('role', 'equalto', 'standalone') | list | length }}
+
+## Host Status Summary
+
+| Hostname | IP Address | Role | Version | Service State | Listening Ports |
+|----------|------------|------|---------|---------------|-----------------|
+{% for host in all_hosts | sort(attribute='hostname') %}
+| {{ host.hostname }} | {{ host.ansible_host }} | {{ host.role }} | {{ host.netdata_version | regex_replace('netdata v', '') | default('N/A') }} | {{ host.service_state }} | {{ host.listening_ports | select('match', '.*19999.*') | list | length > 0 | ternary('✓', '✗') }} |
+{% endfor %}
+
+## Streaming Configuration Issues
+
+{% set streaming_issues = [] %}
+{% for host in all_hosts %}
+{% if host.role == 'child' and 'destination' in host.configurations.stream_conf %}
+### {{ host.hostname }} (Child)
+{% set stream_lines = host.configurations.stream_conf.split('\n') %}
+{% for line in stream_lines %}
+{% if 'destination' in line and not line.strip().startswith('#') %}
+- Configured destination: `{{ line.strip() }}`
+{% endif %}
+{% if 'api key' in line and not line.strip().startswith('#') %}
+- API key configured: Yes
+{% endif %}
+{% endfor %}
+
+Recent streaming errors:
+```
+{% for log_line in host.recent_logs %}
+{% if 'stream' in log_line.lower() and ('error' in log_line.lower() or 'failed' in log_line.lower() or 'denied' in log_line.lower()) %}
+{{ log_line }}
+{% endif %}
+{% endfor %}
+```
+{% endif %}
+{% endfor %}
+
+## Parent Node Streaming Status
+
+{% for host in all_hosts | selectattr('role', 'equalto', 'parent') %}
+### {{ host.hostname }}
+
+{% if host.streaming_status %}
+**API Streaming Info:**
+{{ host.streaming_status | to_nice_yaml }}
+{% endif %}
+
+**Stream Configuration:**
+```
+{% set stream_lines = host.configurations.stream_conf.split('\n') %}
+{% for line in stream_lines %}
+{% if '[' in line or 'enabled' in line or 'allow from' in line %}
+{{ line }}
+{% endif %}
+{% endfor %}
+```
+{% endfor %}
+
+## Configuration Anomalies
+
+{% for host in all_hosts %}
+{% set issues = [] %}
+{% if host.netdata_installed and host.service_state != 'active' %}
+{% set _ = issues.append('Service not active') %}
+{% endif %}
+{% if host.role == 'child' and '19999' in (host.listening_ports | join(' ')) %}
+{% set _ = issues.append('Child listening on parent port 19999') %}
+{% endif %}
+{% if host.role == 'parent' and '19999' not in (host.listening_ports | join(' ')) %}
+{% set _ = issues.append('Parent not listening on port 19999') %}
+{% endif %}
+{% if issues %}
+### {{ host.hostname }}
+{% for issue in issues %}
+- ⚠️ {{ issue }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+## Consul Integration Status
+
+| Hostname | Consul Service Registered | Consul Collector Configured |
+|----------|--------------------------|----------------------------|
+{% for host in all_hosts %}
+| {{ host.hostname }} | {{ 'Not registered' not in host.configurations.consul_service | ternary('✓', '✗') }} | {{ 'Not found' not in host.configurations.consul_conf | ternary('✓', '✗') }} |
+{% endfor %}
+
+## Detailed Configuration Files
+
+Individual host configuration files have been saved to:
+{% for host in all_hosts %}
+- `{{ report_dir }}/netdata_{{ host.hostname }}_{{ timestamp }}.yml`
+{% endfor %}
+
+## Recommendations
+
+1. **Streaming Issues**: Review API key configuration in stream.conf for child nodes
+2. **Service States**: Investigate hosts where Netdata service is not active
+3. **Port Bindings**: Verify correct port assignments for parent/child roles
+4. **Consul Integration**: Complete service registration for monitoring visibility
