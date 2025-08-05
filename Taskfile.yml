@@ -109,3 +109,7 @@ tasks:
       - fd -t d '\.egg-info$' . -x rm -rf {} || true
       - rm -rf build/ dist/
       - echo "Cleanup complete!"
+
+  todos:
+    desc: Find all TODO tags in documentation
+    cmd: ./scripts/find-todos.sh
