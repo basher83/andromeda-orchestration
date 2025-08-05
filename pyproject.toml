@@ -1,5 +1,5 @@
 [project]
-name = "netbox-ansible"
+name = "andromeda-orchestration"
 version = "0.1.0"
 description = "Ansible automation with NetBox integration"
 requires-python = ">=3.10"
