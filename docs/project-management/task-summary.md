@@ -24,11 +24,11 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
 
 ### Overall Metrics
 
-- **Total Tasks**: 33
-- **Completed**: 15 (45%)
+- **Total Tasks**: 34
+- **Completed**: 15 (44%)
 - **In Progress**: 2 (6%)
 - **Blocked**: 1 (3%)
-- **Not Started**: 15 (45%)
+- **Not Started**: 16 (47%)
 
 ## 🎯 Current Focus
 

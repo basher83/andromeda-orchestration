@@ -433,6 +433,25 @@ Tasks:
 - [ ] Test PowerDNS sync with limited dataset
 - [ ] Plan incremental data migration approach
 
+#### 28. Implement Markdown Linting and Enforcement
+
+**Description**: Set up automated markdown linting to enforce documentation standards
+**Status**: Not Started
+**Blockers**: None
+**Related**: docs/standards/documentation-standards.md (lines 53-55)
+
+Tasks:
+
+- [ ] Set up markdownlint or similar tool
+- [ ] Create .markdownlint.json configuration enforcing:
+  - Language specification for all code blocks
+  - Blank lines around lists and code blocks
+  - Other standards from documentation-standards.md
+- [ ] Add pre-commit hooks for markdown validation
+- [ ] Configure CI checks for pull requests
+- [ ] Create cleanup script for existing violations
+- [ ] Document linting setup in docs/standards/linting-standards.md
+
 ### Low Priority - Future Phases
 
 These tasks are important but can wait until implementation begins.
