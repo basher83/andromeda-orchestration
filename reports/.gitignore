@@ -1,0 +1,48 @@
+# Local .gitignore for reports directory
+# This provides an extra layer of protection against accidentally committing sensitive data
+
+# Block all data files by default
+*.yml
+*.yaml
+*.json
+*.txt
+*.log
+*.csv
+*.xml
+*.conf
+*.cfg
+*.ini
+
+# Block all subdirectory contents except markdown
+assessment/*.yml
+assessment/*.json
+assessment/*.txt
+connectivity/*.yml
+connectivity/*.json
+connectivity/*.txt
+consul/*.yml
+consul/*.json
+consul/*.txt
+dns-ipam/*.yml
+dns-ipam/*.json
+dns-ipam/*.txt
+infrastructure/*.yml
+infrastructure/*.json
+infrastructure/*.txt
+nomad/*.yml
+nomad/*.json
+nomad/*.txt
+
+# Netdata directory - always ignore everything
+netdata/
+netdata/**/*
+
+# Allow documentation
+!README.md
+!SECURITY.md
+!**/README.md
+!**/*_sanitized.md
+!**/*_summary.md
+
+# Never ignore security documentation
+!.gitignore
