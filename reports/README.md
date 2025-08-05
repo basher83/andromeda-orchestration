@@ -1,6 +1,6 @@
 # Reports Directory
 
-This directory contains all generated reports from the NetBox-Ansible project, organized by type and purpose.
+This directory contains all generated reports from the andromeda-orchestration project, organized by type and purpose.
 
 ⚠️ **SECURITY NOTICE**: Reports may contain sensitive infrastructure data. See [SECURITY.md](./SECURITY.md) for handling procedures.
 

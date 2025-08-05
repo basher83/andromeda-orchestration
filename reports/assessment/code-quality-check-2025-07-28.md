@@ -4,7 +4,7 @@ Generated: 2025-07-28
 
 ## Summary
 
-Conducted comprehensive linting, testing, and security checks on the NetBox-Ansible codebase using the Taskfile.yml automation.
+Conducted comprehensive linting, testing, and security checks on the andromeda-orchestration codebase using the Taskfile.yml automation.
 
 ## Results
 
@@ -13,6 +13,7 @@ Conducted comprehensive linting, testing, and security checks on the NetBox-Ansi
 **Status**: ⚠️ Warnings Present
 
 **Issues Found**:
+
 - Line length warnings (>120 characters) in several playbooks
 - Syntax error in `nomad-client-3-mable.yml` - **FIXED**
 - Truthy value warning in GitHub workflow - **FIXED**
@@ -21,6 +22,7 @@ Conducted comprehensive linting, testing, and security checks on the NetBox-Ansi
 - Indentation errors in generated report files (not critical)
 
 **Remaining Warnings**:
+
 - Line length warnings fixed ✅
 - Report files have indentation issues (generated files, can be ignored)
 
@@ -29,6 +31,7 @@ Conducted comprehensive linting, testing, and security checks on the NetBox-Ansi
 **Status**: ⚠️ Minor Issues
 
 **Issues Found**:
+
 - Jinja spacing suggestions
 - FQCN recommendations for builtin modules
 - File permissions warnings
@@ -47,6 +50,7 @@ Conducted comprehensive linting, testing, and security checks on the NetBox-Ansi
 **Status**: ✅ All Tests Pass
 
 **Test Results**:
+
 - **Syntax Check**: All 13 playbooks pass syntax validation
 - **Python Tests**: No Python tests found (as expected)
 
@@ -55,13 +59,17 @@ Conducted comprehensive linting, testing, and security checks on the NetBox-Ansi
 ### 5. Security Scanning (`task security`)
 
 #### Infisical Secrets Scan
+
 **Status**: ✅ Passed
+
 - 41 commits scanned
 - No secrets or leaks found
 
 #### KICS Infrastructure Scan
+
 **Status**: ⚠️ Passed with Findings
-- Scan completed successfully 
+
+- Scan completed successfully
 - Files scanned: 28
 - Queries executed: 303
 - Findings:
@@ -84,16 +92,19 @@ Conducted comprehensive linting, testing, and security checks on the NetBox-Ansi
 ## Recommendations
 
 ### High Priority
+
 1. Consider using HTTPS for Consul API communication (4 MEDIUM issues)
    - Acceptable for development/staging environment
    - Should be addressed before production deployment
 
 ### Medium Priority
+
 1. Update playbooks to use FQCN for builtin modules
 2. Add file permissions where flagged by ansible-lint
 3. Consider pinning package versions in Molecule Dockerfile
 
 ### Low Priority
+
 1. Address Ansible deprecation warning when upgrading to 2.23
 2. Consider adding Python tests for custom plugins
 
