@@ -1,9 +1,11 @@
 # Infrastructure Standards
 
 ## Purpose
+
 Define infrastructure architecture standards that ensure scalability, maintainability, and operational excellence.
 
 ## Background
+
 Our infrastructure has evolved from static, manually-configured systems to dynamic, service-discovered, and auto-scaling platforms. These standards codify the patterns that have proven successful.
 
 ## Standard
@@ -19,6 +21,7 @@ Our infrastructure has evolved from static, manually-configured systems to dynam
 5. **DNS Integration**: Everything accessible via DNS names
 
 #### Implementation
+
 ```
 Service Registration → Consul → DNS/API → Service Discovery
                           ↓
@@ -40,6 +43,7 @@ Static Ports (Exceptions only):
 ```
 
 **Why Dynamic Ports?**
+
 - **No Conflicts**: Nomad manages allocation
 - **Security**: Ports change on redeploy
 - **Flexibility**: Services can move nodes
@@ -68,6 +72,7 @@ Core Infrastructure Layer
 ### Monitoring Philosophy
 
 #### Multi-Layer Monitoring
+
 ```
 Infrastructure Monitoring (Netdata)
 ├── Real-time metrics (1-second resolution)
@@ -83,6 +88,7 @@ Application Monitoring (Future Prometheus)
 ```
 
 **Why Both?**
+
 - **Netdata**: Instant visibility, no configuration
 - **Prometheus**: Application insights, custom metrics
 - **Complementary**: Different use cases, not redundant
@@ -92,6 +98,7 @@ Application Monitoring (Future Prometheus)
 #### Network Segmentation
 
 **doggos-homelab Cluster:**
+
 ```
 Management Network (192.168.10.0/24) - 1G
 ├── Proxmox hosts management
@@ -106,6 +113,7 @@ Data Network (192.168.11.0/24) - 10G
 ```
 
 **og-homelab Cluster:**
+
 ```
 Combined Network (192.168.30.0/24) - 2.5G
 ├── All services (management + data)
@@ -115,6 +123,7 @@ Combined Network (192.168.30.0/24) - 2.5G
 ```
 
 **Future Networks:**
+
 ```
 Storage Network (TBD) [Ready to implement - NICs available]
 ├── Dedicated NFS/iSCSI traffic
@@ -131,12 +140,14 @@ DMZ Network (TBD) [Future]
 ```
 
 **Network Isolation Benefits:**
+
 - **Performance**: Prevent backup/storage traffic from impacting services
 - **Security**: Isolate storage systems from general network
 - **QoS**: Prioritize different traffic types appropriately
 - **Scalability**: Add storage nodes without network congestion
 
 #### Access Control
+
 - **Zero Trust**: Authenticate everything
 - **Service Identity**: Every service has identity
 - **mTLS**: Service-to-service encryption (future)
@@ -145,6 +156,7 @@ DMZ Network (TBD) [Future]
 ### High Availability Patterns
 
 #### Service HA
+
 ```
 Active-Active Services:
 ├── Traefik (multiple instances)
@@ -161,18 +173,21 @@ Active-Passive Services:
 ## Rationale
 
 ### Why Dynamic Everything?
+
 - **Cloud-Native**: Treat on-prem like cloud
 - **Cattle not Pets**: Services are replaceable
 - **Automation First**: Manual = mistake-prone
 - **Scale Ready**: Patterns work at any size
 
 ### Why Service Mesh Architecture?
+
 - **Decoupling**: Services don't know about infrastructure
 - **Flexibility**: Change infrastructure without app changes
 - **Observability**: Automatic metrics and tracing
 - **Security**: Centralized policy enforcement
 
 ### Why Proxmox + Nomad?
+
 - **Proxmox**: Robust VM platform, good API
 - **Nomad**: Simple but powerful orchestration
 - **Together**: Best of VMs and containers
@@ -181,23 +196,24 @@ Active-Passive Services:
 ## Examples
 
 ### Good Example: Service Deployment
+
 ```hcl
 # Service registers itself with Consul
 service {
   name = "my-app"
   port = "web"  # Dynamic port
-  
+
   tags = [
     "traefik.enable=true",
     "traefik.http.routers.myapp.rule=Host(`myapp.lab.local`)",
   ]
-  
+
   check {
     type     = "http"
     path     = "/health"
     interval = "10s"
   }
-  
+
   identity {
     aud = ["consul.io"]
   }
@@ -205,6 +221,7 @@ service {
 ```
 
 ### Bad Example: Static Configuration
+
 ```yaml
 # ❌ Hardcoded addresses
 upstream app {
@@ -222,6 +239,7 @@ upstream app {
 ## Migration
 
 ### To Dynamic Infrastructure
+
 1. **Enable Service Discovery**: Deploy Consul
 2. **Add Health Checks**: Define for each service
 3. **Implement Load Balancing**: Deploy Traefik
@@ -229,6 +247,7 @@ upstream app {
 5. **Update DNS**: Point to new infrastructure
 
 ### To Monitoring
+
 1. **Deploy Netdata**: Immediate visibility
 2. **Configure Streaming**: Parent-child architecture
 3. **Add Dashboards**: Key metrics visible
@@ -238,11 +257,13 @@ upstream app {
 ## References
 
 ### Internal Documentation
+
 - [Network Architecture](../diagrams/network-port-architecture.md)
 - [Firewall Strategy](../operations/firewall-port-strategy.md)
 - [Netdata Architecture](../operations/netdata-architecture.md)
 - [Service Identity](../troubleshooting/service-identity-issues.md)
 
 ### Related Repositories
+
 - [terraform-homelab](https://github.com/basher83/terraform-homelab) - IaC for infrastructure provisioning
 - [Mission Control](https://github.com/basher83/docs/tree/main/mission-control) - Organization-wide standards
