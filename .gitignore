@@ -74,3 +74,35 @@ infisical-scan-results.sarif
 
 # KICS scan results
 kics-results/
+
+# System reports - contain sensitive infrastructure data
+reports/netdata/
+reports/**/*.yml
+reports/**/*.yaml
+reports/**/*.json
+reports/**/*.txt
+reports/**/*.log
+reports/**/*.csv
+reports/**/*.conf
+reports/**/*.cfg
+
+# Assessment reports with infrastructure details
+reports/assessment/*.yml
+reports/assessment/*.json
+reports/connectivity/*.yml
+reports/connectivity/*.json
+reports/consul/*.yml
+reports/consul/*.json
+reports/dns-ipam/*.yml
+reports/dns-ipam/*.json
+reports/infrastructure/*.yml
+reports/infrastructure/*.json
+reports/nomad/*.yml
+reports/nomad/*.json
+
+# Allow only sanitized documentation
+!reports/**/*.md
+!reports/**/README.md
+!reports/SECURITY.md
+!reports/**/*_sanitized.md
+!reports/**/*_summary.md
