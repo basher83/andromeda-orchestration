@@ -35,6 +35,10 @@ job "traefik" {
         ]
       }
 
+      env {
+        CONSUL_HTTP_ADDR = "${attr.unique.consul.name}.node.consul:8500"
+      }
+
       template {
         data = <<EOF
 # Static configuration
@@ -54,6 +58,9 @@ entryPoints:
   
   websecure:
     address: ":443"
+  
+  admin:
+    address: ":8080"
 
 providers:
   # File provider for static configs
@@ -64,7 +71,7 @@ providers:
   # Consul Catalog for service discovery
   consulCatalog:
     endpoint:
-      address: {{ env "CONSUL_HTTP_ADDR" | default "consul.service.consul:8500" }}
+      address: {{ if env "CONSUL_HTTP_ADDR" }}{{ env "CONSUL_HTTP_ADDR" }}{{ else }}consul.service.consul:8500{{ end }}
       scheme: http
     exposedByDefault: false
     prefix: traefik
@@ -74,7 +81,7 @@ providers:
 # providers:
 #   consul:
 #     endpoints:
-#       - "{{ env "CONSUL_HTTP_ADDR" | default "consul.service.consul:8500" }}"
+#       - "consul.service.consul:8500"
 #     prefix: traefik
 
 ping:
@@ -121,12 +128,19 @@ EOF
         name = "traefik"
         port = "admin"
         
+        identity {
+          aud = ["consul.io"]
+          ttl = "1h"
+        }
+        
         tags = [
           "traefik.enable=true",
           "traefik.http.routers.api.rule=Host(`traefik.lab.local`)",
           "traefik.http.routers.api.service=api@internal",
           "traefik.http.routers.api.entrypoints=websecure",
           "traefik.http.routers.api.tls=true",
+          "prometheus",
+          "metrics",
         ]
         
         check {
@@ -140,11 +154,44 @@ EOF
       service {
         name = "traefik-http"
         port = "http"
+        
+        identity {
+          aud = ["consul.io"]
+          ttl = "1h"
+        }
       }
 
       service {
         name = "traefik-https"
         port = "https"
+        
+        identity {
+          aud = ["consul.io"]
+          ttl = "1h"
+        }
+      }
+      
+      service {
+        name = "traefik-metrics"
+        port = "admin"
+        
+        identity {
+          aud = ["consul.io"]
+          ttl = "1h"
+        }
+        
+        tags = [
+          "prometheus",
+          "metrics",
+          "path:/metrics",
+        ]
+        
+        check {
+          type     = "http"
+          path     = "/metrics"
+          interval = "30s"
+          timeout  = "5s"
+        }
       }
     }
 
