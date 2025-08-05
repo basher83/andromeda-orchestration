@@ -1,6 +1,6 @@
 # Infisical Setup and Migration Guide
 
-This document provides accurate guidance for using Infisical with the NetBox-Ansible project, including the current state and migration plan to a properly organized secret structure.
+This document provides accurate guidance for using Infisical with the andromeda-orchestration project, including the current state and migration plan to a properly organized secret structure.
 
 ## Quick Reference: Free vs Paid Features
 
@@ -45,14 +45,14 @@ This document provides accurate guidance for using Infisical with the NetBox-Ans
 
 \*Note: Based on actual user experience, `cert-manager`, `ssh`, and `kms` project types are all available in the free tier with most core features accessible. The only confirmed limitations are SSH host groups (Pro) and KMIP protocol (Enterprise). The official pricing documentation may not reflect the current generous free tier limits.
 
-**Current NetBox-Ansible Setup**: Using Free tier with `secret-manager` project type - sufficient for current needs.
+**Current andromeda-orchestration Setup**: Using Free tier with `secret-manager` project type - sufficient for current needs.
 
 ## How Infisical Actually Works
 
 ### Core Concepts
 
 1. **Projects**: Top-level container for all secrets
-   - Project ID: `7b832220-24c0-45bc-a5f1-ce9794a31259` (netbox-ansible-homelab)
+   - Project ID: `7b832220-24c0-45bc-a5f1-ce9794a31259` (andromeda-orchestration-homelab)
    - Project Type: Must be specified when creating a project
 2. **Environments**: Logical separation within a project
    - `prod` (production)
@@ -74,7 +74,7 @@ Infisical supports 5 different project types, each optimized for specific use ca
    - Traditional secret management for application configs, API keys, database credentials
    - Full feature set: versioning (Pro), rotation (Pro), dynamic secrets (Enterprise), references (Free)
    - Best for: General application secrets, environment variables
-   - **This is what we're using for netbox-ansible-homelab**
+   - **This is what we're using for andromeda-orchestration-homelab**
 
 2. **`cert-manager`** (FREE)
 
@@ -148,7 +148,7 @@ Infisical supports 5 different project types, each optimized for specific use ca
 - 💰 Dynamic secrets (Enterprise)
 - 💰 Approval workflows (Enterprise)
 
-**Note**: For our current NetBox-Ansible setup, the Free tier covers all current and anticipated needs.
+**Note**: For our current andromeda-orchestration setup, the Free tier covers all current and anticipated needs.
 
 ### Ansible Collection Parameters
 
@@ -177,7 +177,7 @@ The `infisical.vault.read_secrets` lookup uses these parameters:
 Secrets have been organized into a hierarchical folder structure (keeping original secret names):
 
 ```plain
-Project: netbox-ansible-homelab (7b832220-24c0-45bc-a5f1-ce9794a31259)
+Project: andromeda-orchestration-homelab (7b832220-24c0-45bc-a5f1-ce9794a31259)
 ├─ 📁 /apollo-13/
 │  ├─ 📂 proxmox/ (shared credentials at this level)
 │  │  ├─ 🌍 dev, prod, staging
@@ -226,7 +226,7 @@ url: >-
 The proper folder structure has been created in Infisical:
 
 ```
-Project: netbox-ansible-homelab
+Project: andromeda-orchestration-homelab
 ├── Environment: prod
 │   ├── /apollo-13/
 │   │   ├── /proxmox/
@@ -506,7 +506,7 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
    - **Use Case**: Managing internal TLS certificates for services
    - **Example**: PowerDNS API certificates, internal service-to-service TLS, Proxmox CA certificates
    - **Benefits**: Automated certificate lifecycle, revocation support, proper PKI infrastructure
-   - **Implementation**: Will create separate project named `netbox-ansible-certificates`
+   - **Implementation**: Will create separate project named `andromeda-orchestration-certificates`
    - **Status**: Planned as separate project to keep concerns separated
    - **Cost**: Available in free tier (confirmed through testing)
 
@@ -550,22 +550,22 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 - **Free**: CLI-based scanning, pre-commit hooks, manual scans
 - **Pro**: Continuous monitoring, automated remediation, alerting
 
-### Recommended Setup for `netbox-ansible-scanning` Project
+### Recommended Setup for `andromeda-orchestration-scanning` Project
 
 1. **Create Secret Scanning Project** (Free)
 
    ```bash
    # Project details
-   Name: netbox-ansible-scanning
+   Name: andromeda-orchestration-scanning
    Type: secret-scanning
-   Description: Secret leak detection for NetBox-Ansible infrastructure code
+   Description: Secret leak detection for andromeda-orchestration infrastructure code
    ```
 
 2. **Configure Scanning Targets** (Pro - continuous monitoring)
 
    ```yaml
    repositories:
-     - url: https://github.com/yourusername/netbox-ansible
+     - url: https://github.com/yourusername/andromeda-orchestration
        branch: main
        scan_frequency: on_push # Scan on every push (Pro feature)
 
@@ -687,7 +687,7 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
    ```bash
    # Using Infisical CLI
    infisical project create \
-     --name "netbox-ansible-scanning" \
+     --name "andromeda-orchestration-scanning" \
      --type "secret-scanning"
    ```
 
@@ -788,12 +788,14 @@ docker run -t -v "$(pwd)":/path checkmarx/kics scan \
 ### KICS Results
 
 Scan results are saved to:
+
 - `kics-results/results.json` - JSON format for programmatic analysis
 - `kics-results/results.sarif` - SARIF format for IDE/CI integration
 
 ### Integration with Taskfile
 
 The `Taskfile.yml` includes:
+
 - `task security:secrets` - Infisical secrets scanning
 - `task security:kics` - KICS infrastructure scanning
 - `task security` - Combined security scanning

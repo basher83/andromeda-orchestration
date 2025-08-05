@@ -5,7 +5,7 @@ This document provides a detailed explanation of the repository organization and
 ## Directory Structure
 
 ```text
-netbox-ansible/
+andromeda-orchestration/
 ├── bin/                        # (Archived - see docs/archive/bin/)
 ├── docs/                       # Documentation
 │   ├── archive/               # Archived documentation files
@@ -57,6 +57,7 @@ netbox-ansible/
 ### `/bin/` (Archived)
 
 This directory has been archived to `docs/archive/bin/` as it contained only deprecated scripts:
+
 - **ansible-connect** - Legacy 1Password wrapper replaced by direct `uv run` commands with Infisical
 
 ### `/docs/`
@@ -128,7 +129,7 @@ Organized by environment:
    ```bash
    # Install uv and set up Python environment
    ./scripts/setup.sh
-   
+
    # Configure Infisical machine identity
    export INFISICAL_MACHINE_IDENTITY_CLIENT_ID="your-client-id"
    export INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET="your-client-secret"
@@ -140,7 +141,7 @@ Organized by environment:
    # Use Infisical inventory files (recommended)
    uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
    uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
-   
+
    # Legacy 1Password method (deprecated - script archived)
    # ./bin/ansible-connect playbook playbooks/site.yml
    ```

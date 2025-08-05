@@ -139,6 +139,7 @@ uv run ansible-playbook playbooks/site.yml --list-hosts
 GitHub Actions workflows (`.github/workflows/`):
 
 1. **ci.yml** - Runs on every push/PR:
+
    - Linting (ansible-lint, yamllint)
    - Python quality checks
    - Security scanning
@@ -156,7 +157,7 @@ GitHub Actions workflows (`.github/workflows/`):
 ```bash
 # Clone repository
 git clone <repo>
-cd netbox-ansible
+cd andromeda-orchestration
 
 # Use task for complete setup
 task setup
@@ -194,7 +195,7 @@ uv run ansible-galaxy collection install -r requirements.yml
    ```bash
    # Run all security scans (Infisical + KICS)
    task security
-   
+
    # Or run individually
    task security:secrets  # Infisical secrets detection
    task security:kics     # Infrastructure security scan
@@ -259,6 +260,7 @@ def test_invalid_credentials():
    ```
 
 3. **Test incrementally**:
+
    - Test individual tasks/plays during development
    - Use `--check` mode frequently
    - Validate inventory before running playbooks
@@ -273,16 +275,19 @@ def test_invalid_credentials():
 ### Common Issues
 
 1. **Ansible-lint failures**:
+
    - Check `.ansible-lint` for skip rules
    - Use inline comments: `# noqa: rule-name`
    - Consider if the rule is highlighting a real issue
 
 2. **YAML formatting**:
+
    - Ensure consistent indentation (2 spaces)
    - Check for trailing whitespace
    - Validate special characters in strings
 
 3. **Python type errors**:
+
    - Add type annotations to functions
    - Use `typing` module for complex types
    - Add `# type: ignore` sparingly with justification
@@ -299,13 +304,13 @@ def test_invalid_credentials():
    ```bash
    # Run full repository scan
    task security:secrets
-   
+
    # Or use Infisical CLI directly
    ./scripts/scan-secrets.sh full
-   
+
    # Scan only staged files (pre-commit)
    ./scripts/scan-secrets.sh staged
-   
+
    # CI mode with SARIF output
    ./scripts/scan-secrets.sh ci
    ```
@@ -315,7 +320,7 @@ def test_invalid_credentials():
    ```bash
    # Run KICS infrastructure scan
    task security:kics
-   
+
    # Results saved to kics-results/ directory
    # - results.json (JSON format)
    # - results.sarif (SARIF format)

@@ -1,6 +1,6 @@
 # High-Level Architecture Overview
 
-This diagram shows the overall architecture of the NetBox-Ansible automation project and how all components interact.
+This diagram shows the overall architecture of the andromeda-orchestration automation project and how all components interact.
 
 ```mermaid
 graph TB
@@ -36,19 +36,19 @@ graph TB
     Infisical -->|Credentials| Ansible
     AnsibleInv -->|Inventory| Ansible
     AnsiblePlay -->|Execute| Ansible
-    
+
     %% Management Connections
     Ansible -->|Manage| OGProxmox
     Ansible -->|Manage| DogProxmox
     Ansible -->|Configure| Consul
     Ansible -->|Deploy Jobs| Nomad
     Ansible -->|Configure| PowerDNS
-    
+
     %% Service Connections
     Consul <-->|Service Registry| Nomad
     PowerDNS -->|Query| NetBox
     PowerDNS -->|Service Discovery| Consul
-    
+
     %% Migration Path
     OGPihole -.->|Migration| PowerDNS
     OGUnbound -.->|Migration| PowerDNS
@@ -59,7 +59,7 @@ graph TB
     classDef automation fill:#f3e5f5,stroke:#4a148c,stroke-width:3px
     classDef legacy fill:#ffebee,stroke:#b71c1c,stroke-width:2px
     classDef modern fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
-    
+
     class NetBox sourceOfTruth
     class Infisical secrets
     class Ansible,AnsibleInv,AnsiblePlay automation
@@ -70,19 +70,24 @@ graph TB
 ## Key Components
 
 ### Source of Truth
+
 - **NetBox**: Central repository for all network device information, IP addressing, and infrastructure documentation
 
 ### Secrets Management
+
 - **Infisical**: Secure storage for all credentials, API tokens, and sensitive configuration data
 
 ### Automation Layer
+
 - **Ansible**: Core automation engine executing all infrastructure changes
 - **Dynamic Inventory**: Pulls real-time data from Proxmox clusters and (future) NetBox
 - **Playbooks & Roles**: Organized automation code for different infrastructure tasks
 
 ### Infrastructure Clusters
+
 - **og-homelab**: Original cluster currently running DNS services (Pi-hole + Unbound)
 - **doggos-homelab**: Modern 3-node cluster running Consul and Nomad, target for new DNS infrastructure
 
 ### Migration Path
+
 The dotted lines show the planned migration from Pi-hole/Unbound to PowerDNS integrated with NetBox and Consul.
