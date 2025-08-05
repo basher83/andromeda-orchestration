@@ -1,0 +1,4 @@
+---
+# Pi-hole Master (LXC 103) on proxmoxt430
+ansible_host: 192.168.30.103
+ansible_user: ansible
