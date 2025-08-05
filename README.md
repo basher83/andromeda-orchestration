@@ -166,18 +166,12 @@ See [docs/implementation/secrets-management/infisical-setup.md](docs/implementat
 - Inventory path set to `./inventory`
 - Host key checking disabled for development
 
-### Execution Environment
-
-- Uses `community-ee-minimal` container
-- Configuration in `execution-environment.yml`
-- Includes required collections and dependencies
-
 ## Contributing
 
 1. Follow the existing directory structure
-2. Use the 1Password integration for all credentials
+2. Use Infisical for all credential management
 3. Document any new patterns or integrations
-4. Test changes with the provided wrapper scripts
+4. Test changes using `uv run` commands
 
 ## Troubleshooting
 

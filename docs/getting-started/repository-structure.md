@@ -11,7 +11,8 @@ andromeda-orchestration/
 │   ├── archive/               # Archived documentation files
 │   ├── diagrams/              # Architecture and flow diagrams
 │   ├── infrastructure/        # Infrastructure documentation
-│   └── ai-docs/               # AI assistant documentation
+│   ├── ai-docs/               # AI assistant documentation
+│   └── resources/             # Useful resources and references
 ├── inventory/                  # Ansible inventories
 │   ├── og-homelab/           # Original homelab cluster
 │   └── doggos-homelab/       # Doggos cluster (3-node)
@@ -50,7 +51,6 @@ andromeda-orchestration/
 
 - **README.md** - Main project documentation with quick start guide
 - **ansible.cfg** - Ansible configuration with project defaults
-- **execution-environment.yml** - Container environment specification
 - **CLAUDE.md** - AI assistant guidance for code changes
 - **.gitignore** - Git ignore patterns for secrets and temp files
 

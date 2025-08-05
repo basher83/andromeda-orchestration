@@ -1,9 +1,11 @@
 # Security Standards
 
 ## Purpose
+
 Define security practices that protect sensitive infrastructure data, prevent credential exposure, and maintain compliance.
 
 ## Background
+
 Infrastructure automation inherently deals with sensitive data: credentials, network topology, service configurations. These standards ensure we protect this data while maintaining operational efficiency.
 
 ## Standard
@@ -11,12 +13,14 @@ Infrastructure automation inherently deals with sensitive data: credentials, net
 ### Data Classification
 
 #### Sensitive Data Types
+
 - **Credentials**: Passwords, tokens, API keys, certificates
 - **Infrastructure Details**: IP addresses, hostnames, network topology
 - **Configuration**: Service configs, firewall rules, ACLs
 - **Reports**: Assessment outputs, scan results, metrics
 
 #### Handling Requirements
+
 ```
 PUBLIC:       Can be committed to git
 INTERNAL:     Sanitize before committing
@@ -27,6 +31,7 @@ CRITICAL:     Never store, rotate immediately if exposed
 ### Secret Management
 
 #### Infisical Integration
+
 ```yaml
 # Primary secret store
 Environment Variables:
@@ -39,6 +44,7 @@ password: "{{ lookup('env', 'SERVICE_PASSWORD') }}"
 ```
 
 #### Never Commit
+
 - Hardcoded passwords
 - API tokens
 - Private keys
@@ -50,27 +56,43 @@ password: "{{ lookup('env', 'SERVICE_PASSWORD') }}"
 #### Automated Tools
 
 **1. Infisical Secret Detection**
+
 - **Config**: `.infisical-scan.toml`
 - **Git Hook**: Runs automatically on commit
 - **Manual**: `task security:secrets`
 - **Excludes**: Binary files, reports/, build artifacts
 
 **2. KICS Infrastructure Security**
+
 - **Config**: `kics.config`
 - **Manual**: `task security:kics`
 - **Focus**: Ansible, Docker, Terraform security
 - **Fail On**: HIGH, CRITICAL findings
 
-**3. Pre-commit Hooks**
+**3. Python Security Scanning**
+
+- **Bandit** (Static Analysis):
+  - **Config**: `.bandit`
+  - **Focus**: Security vulnerabilities in Python code
+  - **Run**: `bandit -r . -ll` (medium/high severity)
+- **Safety** (Dependency Scanning):
+  - **Config**: `.safety-policy.json`
+  - **Focus**: Known CVEs in dependencies
+  - **Run**: `safety check --json`
+
+**4. Pre-commit Hooks**
+
 - **Config**: `.pre-commit-config.yaml`
 - **Features**:
   - `detect-private-key`: Block private keys
   - `check-added-large-files`: Prevent large commits
   - `trailing-whitespace`: Clean code
   - `yamllint`: YAML validation
+  - `bandit`: Python security checks
 - **Run**: `task hooks`
 
 #### Scanning Commands
+
 ```bash
 # Run all security scans
 task security
@@ -86,6 +108,7 @@ task hooks
 ### GitIgnore Patterns
 
 #### Repository-wide Exclusions
+
 ```gitignore
 # Secrets - NEVER commit
 **/secrets/
@@ -110,15 +133,17 @@ reports/**/*.log
 ### Report Security
 
 #### Raw Reports
+
 - **Storage**: Local only, never git
 - **Formats**: .yml, .json, .txt, .log
 - **Retention**: 30 days maximum
 - **Location**: reports/ directory
 
 #### Sanitized Reports
+
 - **Format**: Markdown only
 - **Process**: Remove IPs, hostnames, tokens
-- **Naming**: *_sanitized.md or *_summary.md
+- **Naming**: *_sanitized.md or*_summary.md
 - **Storage**: Can be committed to git
 
 ### Incident Response
@@ -126,6 +151,7 @@ reports/**/*.log
 #### If Secrets Are Committed
 
 1. **Immediate Actions**:
+
 ```bash
 # Remove from history
 git filter-branch --force --index-filter \
@@ -143,6 +169,7 @@ git push --force --all
 ### Network Security
 
 #### Service Identity
+
 ```hcl
 # Every service gets identity
 service {
@@ -154,6 +181,7 @@ service {
 ```
 
 #### Access Control
+
 - Consul ACLs enabled
 - Nomad ACLs enabled
 - mTLS for service communication (future)
@@ -162,16 +190,19 @@ service {
 ### Compliance Checklist
 
 Daily:
+
 - [ ] No hardcoded secrets in code
 - [ ] Environment variables for credentials
 - [ ] Proper .gitignore patterns
 
 Weekly:
+
 - [ ] Run `task security`
 - [ ] Review uncommitted files
 - [ ] Clean old reports: `find reports -mtime +30 -delete`
 
 Monthly:
+
 - [ ] Rotate service tokens
 - [ ] Audit git history for secrets
 - [ ] Update security tools
@@ -179,16 +210,19 @@ Monthly:
 ## Rationale
 
 ### Why Multiple Scanning Layers?
+
 - **Defense in Depth**: Catch secrets at multiple points
 - **Different Focus**: Each tool specializes
 - **Redundancy**: If one misses, another catches
 
 ### Why Strict Report Handling?
+
 - **Data Sensitivity**: Reports contain full infrastructure details
 - **Audit Trail**: Git history is permanent
 - **Compliance**: Many regulations prohibit credential storage
 
 ### Why Automated Scanning?
+
 - **Human Error**: Manual reviews miss things
 - **Consistency**: Same checks every time
 - **Speed**: Instant feedback on commits
@@ -196,6 +230,7 @@ Monthly:
 ## Examples
 
 ### Good: Using Environment Variables
+
 ```yaml
 - name: Connect to service
   uri:
@@ -205,6 +240,7 @@ Monthly:
 ```
 
 ### Bad: Hardcoded Credentials
+
 ```yaml
 # ❌ NEVER DO THIS
 - name: Connect to service
@@ -215,6 +251,7 @@ Monthly:
 ```
 
 ### Good: Sanitized Report
+
 ```markdown
 # Infrastructure Assessment Summary
 
@@ -228,6 +265,7 @@ Monthly:
 ```
 
 ### Bad: Raw Report with Details
+
 ```yaml
 # ❌ Never commit raw reports
 nodes:
@@ -245,6 +283,7 @@ nodes:
 ## Migration
 
 ### To Secure Practices
+
 1. **Audit existing code**: `task security:secrets`
 2. **Move secrets to Infisical**: Never store in code
 3. **Update .gitignore**: Block sensitive patterns
@@ -252,6 +291,7 @@ nodes:
 5. **Train team**: Share these standards
 
 ### Finding Issues
+
 ```bash
 # Find potential secrets
 rg -i "(password|token|secret|key).*=" --type-not md
@@ -266,6 +306,7 @@ git log -p -S "password" --all
 ## Tools
 
 ### Find TODOs
+
 ```bash
 # Find documentation TODOs
 task todos
@@ -275,6 +316,7 @@ rg "\[TODO\]:" docs/ --type md
 ```
 
 ### Security Scanning
+
 ```bash
 # Full security check
 task security

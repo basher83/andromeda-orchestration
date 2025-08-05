@@ -1,71 +1,88 @@
-# Project Management Documentation
+# Project Management Directory
 
-This directory contains project tracking, task management, and infrastructure inventory documentation.
+This directory contains all project tracking documentation for the andromeda-orchestration project, organized for efficient navigation and minimal LLM context usage.
 
-## Documents
+## 🗺️ Navigation Guide
 
-### 📋 [task-list.md](task-list.md)
-Comprehensive project task tracking:
-- Phase-based task organization
-- Implementation checklists
-- Progress tracking
-- Dependencies and blockers
-- Success criteria
+### For Daily Work
 
-### 🏗️ [imported-infrastructure.md](imported-infrastructure.md)
-Documentation of infrastructure components imported from other projects:
-- Imported Ansible roles
-- Custom modules
-- Integration patterns
-- Source repositories
-- Modification history
+- **[current-sprint.md](./current-sprint.md)** - What's being worked on RIGHT NOW (< 100 lines)
+- **[task-summary.md](./task-summary.md)** - High-level project overview with progress metrics
 
-## Purpose
+### For Planning
 
-These documents help track:
-- **Project Progress** - What's done, in progress, and planned
-- **Dependencies** - What needs to be completed before other tasks
-- **Infrastructure State** - What components exist and their origins
-- **Decision History** - Why certain approaches were chosen
+- **[phases/](./phases/)** - Future phase planning documents
+  - `phase-3-netbox.md` - NetBox integration and DNS migration
+  - `phase-4-multisite.md` - Multi-site expansion
+  - `phase-5-optimization.md` - Performance and automation
 
-## Task Organization
+### For History
 
-Tasks are organized by:
-1. **Implementation Phases** (0-5)
-2. **Priority** (High/Medium/Low)
-3. **Component** (Consul, PowerDNS, NetBox, etc.)
-4. **Status** (Complete/In Progress/Planned/Blocked)
+- **[completed/](./completed/)** - Completed tasks organized by month
+  - `2025-07.md` - July completions (Phase 0)
+  - `2025-08.md` - August completions (Phases 1-2)
+- **[archive/](./archive/)** - Historical snapshots
+  - `full-task-list-2025-08-05.md` - Original 700+ line task list
 
-## Current Focus
+## 📋 Quick Start
 
-- **Active Phase**: Phase 1 - Consul DNS Foundation
-- **Next Phase**: Phase 3 - NetBox Integration
-- **Recently Completed**: Phase 2 - PowerDNS Deployment
+1. **Check current work**: Open [current-sprint.md](./current-sprint.md)
+2. **Update task status**: Edit the appropriate file
+3. **Plan next sprint**: Review [task-summary.md](./task-summary.md) and update priorities
+4. **Archive completed work**: Move finished tasks to `completed/YYYY-MM.md`
 
-## Using These Documents
+## 🔄 Workflow
 
-### For Project Planning
-1. Review `task-list.md` for current status
-2. Identify dependencies and blockers
-3. Plan next sprint based on priorities
+```mermaid
+graph LR
+    A[New Task] --> B[current-sprint.md]
+    B --> C{Status?}
+    C -->|Completed| D[completed/YYYY-MM.md]
+    C -->|Blocked| E[Document in current-sprint.md]
+    C -->|Future| F[phases/phase-X.md]
+```
 
-### For Implementation
-1. Check task details and acceptance criteria
-2. Review imported components in `imported-infrastructure.md`
-3. Update task status as work progresses
+## 📏 File Size Guidelines
 
-## Related Resources
+- **current-sprint.md**: Max 100 lines (optimal for LLM context)
+- **task-summary.md**: Max 150 lines (overview only)
+- **phase files**: Max 200 lines each
+- **completed files**: No limit (archival)
 
-- **Implementation Guides**: [`../implementation/`](../implementation/)
-- **Roadmap**: [`../../ROADMAP.md`](../../ROADMAP.md)
-- **Assessment Reports**: [`../../reports/assessment/`](../../reports/assessment/)
-- **Playbooks**: [`../../playbooks/`](../../playbooks/)
+## 🏷️ Task Format
 
-## Quick Status
+All tasks follow this standard format:
 
-| Phase | Status | Completion |
-|-------|--------|------------|
-| Phase 0 | ✅ Complete | 100% |
-| Phase 1 | 🚧 In Progress | ~40% |
-| Phase 2 | ✅ Ready | Playbooks complete |
-| Phase 3-5 | ⏳ Planned | 0% |
+```markdown
+### [Number]. Task Title
+**Description**: Clear, actionable description
+**Status**: Not Started | In Progress | Completed | Blocked
+**Priority**: Critical | High | Medium | Low
+**Blockers**: None | Specific issues
+**Related**: Links to docs
+
+Tasks:
+- [ ] Subtask 1
+- [ ] Subtask 2
+```
+
+## 📊 Progress Tracking
+
+Use these commands to track progress:
+
+```bash
+# Count tasks in current sprint
+grep -c "^###" current-sprint.md
+
+# Find blocked items
+grep -A3 "Blocked" current-sprint.md
+
+# Count completed this month
+grep -c "✅" completed/2025-08.md
+```
+
+## 🔗 Related Documentation
+
+- [Project Management Standards](../standards/project-management-standards.md)
+- [DNS/IPAM Implementation Plan](../implementation/dns-ipam/implementation-plan.md)
+- [Repository Structure](../getting-started/repository-structure.md)
