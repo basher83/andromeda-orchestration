@@ -52,8 +52,8 @@ This document provides accurate guidance for using Infisical with the andromeda-
 ### Core Concepts
 
 1. **Projects**: Top-level container for all secrets
-   - Project ID: `7b832220-24c0-45bc-a5f1-ce9794a31259` (andromeda-orchestration-homelab)
-   - Project Type: Must be specified when creating a project
+   - Must specify project type when creating
+   - Each project has a unique ID
 2. **Environments**: Logical separation within a project
    - `prod` (production)
    - `staging`
@@ -64,6 +64,8 @@ This document provides accurate guidance for using Infisical with the andromeda-
    - NOT just path prefixes in secret names
 4. **Secrets**: Key-value pairs stored within folders
    - Accessed by combining environment, folder path, and secret name
+
+**Project-specific configuration**: See [andromeda-infisical-config.md](./andromeda-infisical-config.md) for this project's setup.
 
 ### Project Types
 
@@ -148,7 +150,7 @@ Infisical supports 5 different project types, each optimized for specific use ca
 - 💰 Dynamic secrets (Enterprise)
 - 💰 Approval workflows (Enterprise)
 
-**Note**: For our current andromeda-orchestration setup, the Free tier covers all current and anticipated needs.
+**Note**: The Free tier typically covers most homelab and small team needs.
 
 ### Ansible Collection Parameters
 
@@ -163,156 +165,36 @@ The `infisical.vault.read_secrets` lookup uses these parameters:
 - secret_name: Specific secret key (optional - omit to get all secrets in folder)
 ```
 
-## Current State
+## Project Configuration
 
-### Authentication
+For project-specific configuration including secret organization, authentication setup, and current usage patterns, see:
+- [andromeda-infisical-config.md](./andromeda-infisical-config.md)
 
-- Using Universal Auth with machine identity
-- Credentials stored in environment variables:
-  - `INFISICAL_UNIVERSAL_AUTH_CLIENT_ID`
-  - `INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET`
+## Migration Guide
 
-### Secret Organization
+For organizations migrating from other secret management solutions:
 
-Secrets have been organized into a hierarchical folder structure (keeping original secret names):
+### Phase 1: Parallel Implementation
+1. Set up Infisical alongside existing solution
+2. Configure authentication (Universal Auth recommended)
+3. Create project structure matching your needs
+4. Enable sync with existing solution if available (e.g., 1Password sync)
 
-```plain
-Project: andromeda-orchestration-homelab (7b832220-24c0-45bc-a5f1-ce9794a31259)
-├─ 📁 /apollo-13/
-│  ├─ 📂 proxmox/ (shared credentials at this level)
-│  │  ├─ 🌍 dev, prod, staging
-│  │  │  🔑 ANSIBLE_TOKEN_ID
-│  │  │  🔑 ANSIBLE_USERNAME
-│  │  ├─ 📂 og-homelab/
-│  │  │  └─ 🌍 dev, prod, staging
-│  │  │     🔑 ANSIBLE_TOKEN_SECRET_OG
-│  │  └─ 📂 doggos-homelab/
-│  │     └─ 🌍 dev, prod, staging
-│  │        🔑 ANSIBLE_TOKEN_SECRET_DOGGOS
-│  │
-│  ├─ 📂 consul/
-│  │  └─ 🌍 dev, prod, staging
-│  │     🔑 CONSUL_MASTER_TOKEN
-│  │
-│  └─ 📂 vault/
-│     └─ 🌍 dev, prod, staging
-│        🔑 VAULT_DEV_ROOT_TOKEN
-│
-└─ 📁 /services/
-   ├─ 📂 netbox/ (ready for secrets)
-   └─ 📂 powerdns/ (ready for secrets)
-```
+### Phase 2: Gradual Migration
+1. Start with non-critical secrets
+2. Update automation scripts to use Infisical
+3. Validate access patterns and permissions
+4. Document new procedures
 
-Note: Certificates will be managed in a separate `cert-manager` type project for proper PKI functionality.
+### Phase 3: Full Migration
+1. Migrate remaining secrets
+2. Update all references
+3. Decommission old solution
+4. Archive legacy documentation
 
-### Current Usage
+### Environment Separation
 
-All inventory files now use the organized folder structure with shared and cluster-specific secrets:
-
-```yaml
-# Shared secrets from /apollo-13/proxmox/
-user: >-
-  {{ (lookup('infisical.vault.read_secrets',
-             path='/apollo-13/proxmox',
-             secret_name='ANSIBLE_USERNAME')).value }}
-
-# Cluster-specific secrets from /apollo-13/proxmox/{cluster-name}/
-url: >-
-  {{ (lookup('infisical.vault.read_secrets',
-             path='/apollo-13/proxmox/doggos-homelab',
-             secret_name='API_URL')).value }}
-```
-
-## Migration Status
-
-### ✅ Phase 1: Folder Structure (COMPLETED)
-
-The proper folder structure has been created in Infisical:
-
-```
-Project: andromeda-orchestration-homelab
-├── Environment: prod
-│   ├── /apollo-13/
-│   │   ├── /proxmox/
-│   │   │   ├── /og-homelab/
-│   │   │   └── /doggos-homelab/
-│   │   ├── /consul/
-│   │   └── /nomad/
-│   ├── /services/
-│   │   ├── /netbox/
-│   │   └── /powerdns/
-│   └── /certificates/
-├── Environment: staging
-│   └── [same structure as prod]
-└── Environment: dev
-    └── [same structure as prod]
-```
-
-### ✅ Phase 2: Secret Organization (MOSTLY COMPLETE)
-
-Secrets have been organized into folders and replicated across environments:
-
-| Secret Name                 | Location                           | Environments       | Status | Notes                   |
-| --------------------------- | ---------------------------------- | ------------------ | ------ | ----------------------- |
-| ANSIBLE_TOKEN_ID            | /apollo-13/proxmox/                | dev, prod, staging | ✅     | Shared between clusters |
-| ANSIBLE_USERNAME            | /apollo-13/proxmox/                | dev, prod, staging | ✅     | Shared between clusters |
-| ANSIBLE_TOKEN_SECRET_OG     | /apollo-13/proxmox/og-homelab/     | dev, prod, staging | ✅     | Cluster-specific        |
-| ANSIBLE_TOKEN_SECRET_DOGGOS | /apollo-13/proxmox/doggos-homelab/ | dev, prod, staging | ✅     | Cluster-specific        |
-| CONSUL_MASTER_TOKEN         | /apollo-13/consul/                 | dev, prod, staging | ✅     | Kept original name      |
-| API_URL (og-homelab)        | /apollo-13/proxmox/og-homelab/     | dev, prod, staging | ✅     | Cluster-specific        |
-| API_URL (doggos-homelab)    | /apollo-13/proxmox/doggos-homelab/ | dev, prod, staging | ✅     | Cluster-specific        |
-| NOMAD tokens                | /apollo-13/nomad/                  | dev, prod, staging | ✅     | Created folder          |
-| VAULT_DEV_ROOT_TOKEN        | /apollo-13/vault/                  | dev, prod, staging | ✅     | Dev mode token          |
-| NETBOX_USERNAME             | /services/netbox/                  | dev, prod, staging | ✅     | Created folder          |
-| NETBOX_API_KEY              | /services/netbox/                  | dev, prod, staging | ✅     | Created folder          |
-| POWERDNS_API_KEY            | /services/powerdns/                | dev, prod, staging | ❌     | Need to add             |
-
-### ✅ Phase 3: Update Ansible Code (COMPLETED)
-
-Update inventory files to use the new organized folder structure:
-
-```yaml
-# inventory/doggos-homelab/infisical.proxmox.yml
-plugin: community.general.proxmox
-api_host: >-
-  {{ (lookup('infisical.vault.read_secrets',
-             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-             env_slug='prod',
-             path='/apollo-13/proxmox/doggos-homelab',
-             secret_name='API_URL')).value }}
-api_user: >-
-  {{ (lookup('infisical.vault.read_secrets',
-             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-             env_slug='prod',
-             path='/apollo-13/proxmox',
-             secret_name='ANSIBLE_USERNAME')).value }}
-api_token_id: >-
-  {{ (lookup('infisical.vault.read_secrets',
-             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-             env_slug='prod',
-             path='/apollo-13/proxmox',
-             secret_name='ANSIBLE_TOKEN_ID')).value }}
-api_token_secret: >-
-  {{ (lookup('infisical.vault.read_secrets',
-             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-             env_slug='prod',
-             path='/apollo-13/proxmox/doggos-homelab',
-             secret_name='ANSIBLE_TOKEN_SECRET_DOGGOS')).value }}
-```
-
-### Phase 4: Implement Environment Separation
-
-1. Clone secrets from `prod` to `staging` and `dev` environments
-2. Update values as appropriate for each environment
-3. Modify playbooks to use environment-specific lookups:
+Implement proper environment isolation:
 
 ```yaml
 vars:
@@ -324,8 +206,8 @@ tasks:
       api_token: >-
         {{ (lookup('infisical.vault.read_secrets',
                    env_slug=infisical_env,
-                   path='/apollo-13/proxmox/og-homelab',
-                   secret_name='API_TOKEN_SECRET')).value }}
+                   path='/backend',
+                   secret_name='API_TOKEN')).value }}
 ```
 
 ## Technical Implementation
@@ -344,7 +226,6 @@ tasks:
    collections:
      - name: infisical.vault
    ```
-
 3. **Environment Variables** (managed by direnv):
 
    ```bash
@@ -414,41 +295,6 @@ uv run ansible-playbook playbooks/examples/infisical-demo.yml
 INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 ```
 
-## Migration Checklist
-
-### ✅ Completed
-
-- [x] Create folder structure in Infisical UI/API
-- [x] Organize secrets into folders (keeping original names):
-  - [x] Proxmox shared credentials in `/apollo-13/proxmox/`
-  - [x] Cluster-specific tokens in `/apollo-13/proxmox/{cluster}/`
-  - [x] Consul tokens in `/apollo-13/consul/`
-- [x] Replicate secrets across all environments (dev, prod, staging)
-- [x] Create `/services/` structure with netbox and powerdns folders
-
-### ✅ Recently Completed (Phase 3)
-
-- [x] Update inventory files with new paths
-  - [x] `inventory/og-homelab/infisical.proxmox.yml` - Now uses organized paths
-  - [x] `inventory/doggos-homelab/infisical.proxmox.yml` - Now uses organized paths
-- [x] Test inventory connections with new paths - Both clusters working correctly
-- [x] Add missing secrets:
-  - [x] API_URL for each Proxmox cluster (in all environments)
-  - [x] Create `/apollo-13/nomad/` folder and add MANAGEMENT_TOKEN
-- [x] Add service secrets:
-  - [x] NetBox API credentials in `/services/netbox/`
-- [x] Update playbooks to use new paths
-  - [x] Consul playbooks - `service-register.yml` migrated from 1Password
-  - [x] Nomad playbooks - `register-service.yml` migrated from 1Password
-  - [x] Infrastructure playbooks - Updated demo to show organized structure
-
-### 📋 To Do (Phase 4 and Beyond)
-
-- [ ] PowerDNS credentials in `/services/powerdns/` (when PowerDNS is deployed)
-- [ ] Implement environment-aware lookups (dev/staging/prod separation)
-- [ ] Create separate `cert-manager` project for PKI/certificates
-- [ ] Consider renaming secrets for consistency (optional future task)
-- [ ] Archive 1Password configuration files once fully migrated
 
 ## Troubleshooting
 
@@ -474,7 +320,6 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 ## Best Practices
 
 1. **Secret Naming**
-
    - Use UPPER_SNAKE_CASE for consistency
    - Be descriptive: `API_TOKEN_SECRET` not just `TOKEN`
    - Don't include environment in names (use Infisical environments)
@@ -486,7 +331,6 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
    - Use consistent naming across environments
 
 3. **Access Control**
-
    - Create separate machine identities for different services
    - Grant minimal required permissions (RBAC requires Pro)
    - Use folder-level access controls
@@ -500,316 +344,69 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 
 ## Evaluating Additional Project Types
 
-### Current Setup
+### Beyond Secret Management
 
-- Using `secret-manager` type for general secrets management
-- Covers all current needs: API tokens, credentials, configuration values
+Infisical offers specialized project types for different security needs:
 
-### Future Considerations
+1. **Certificate Management (`cert-manager`)** (FREE)
+   - Managing internal TLS certificates
+   - Automated certificate lifecycle
+   - ACME/Let's Encrypt support
+   - Consider for: Internal PKI, service certificates
 
-1. **Certificate Management (`cert-manager`)** (FREE) - **PLANNED**
-
-   - **Use Case**: Managing internal TLS certificates for services
-   - **Example**: PowerDNS API certificates, internal service-to-service TLS, Proxmox CA certificates
-   - **Benefits**: Automated certificate lifecycle, revocation support, proper PKI infrastructure
-   - **Implementation**: Will create separate project named `andromeda-orchestration-certificates`
-   - **Status**: Planned as separate project to keep concerns separated
-   - **Cost**: Available in free tier (confirmed through testing)
-
-2. **SSH Management (`ssh`)** (FREE with Pro features)
-
-   - **Use Case**: Managing SSH access to Proxmox nodes and VMs
-   - **Current State**: Using traditional SSH keys
-   - **Free Features**: CA setup, host registration, certificate issuance
-   - **Pro Features**: Host groups for bulk management
-   - **Benefits**: Ephemeral certificates, centralized access control, audit trails
-   - **Implementation**: Can start with free features, upgrade for host groups if needed
-   - **Cost**: Basic features available free, host groups require Pro
+2. **SSH Management (`ssh`)** (FREE with limitations)
+   - Ephemeral SSH certificates
+   - Centralized access control
+   - Audit trails
+   - Pro feature: Host groups for bulk management
 
 3. **Key Management (`kms`)** (FREE)
-
-   - **Use Case**: If we need to encrypt sensitive data at rest
-   - **Example**: Encrypting backups, database encryption keys
-   - **Benefits**: Centralized key management, rotation policies
-   - **Free Features**: Key creation, encryption/decryption, basic key rotation
-   - **Enterprise Features**: KMIP protocol support
-   - **Implementation**: Separate project for cryptographic operations
-   - **Cost**: Core features available free, KMIP requires Enterprise
-
-4. **Secret Scanning (`secret-scanning`)** - **FREE**
-   - **Use Case**: Scanning this repository and related codebases
-   - **Benefits**: Prevent accidental secret commits
-   - **Implementation**: Integrate with CI/CD pipeline
-   - **Note**: CLI scanning is free, continuous monitoring requires Pro
-
-### Recommendation
-
-- Continue with `secret-manager` for current needs (Free tier sufficient)
-- Consider `cert-manager` project when implementing internal PKI (Phase 2 of DNS/IPAM plan) - available in free tier
-- Evaluate `ssh` project type if moving away from static SSH keys - available in free tier (host groups require Pro)
-- `secret-scanning` can be implemented immediately as a separate project for security (Free CLI tool, continuous monitoring requires Pro)
-
-## Secret Scanning Project Configuration
-
-**Note**: The following features are available based on your subscription:
-
-- **Free**: CLI-based scanning, pre-commit hooks, manual scans
-- **Pro**: Continuous monitoring, automated remediation, alerting
-
-### Recommended Setup for `andromeda-orchestration-scanning` Project
-
-1. **Create Secret Scanning Project** (Free)
-
-   ```bash
-   # Project details
-   Name: andromeda-orchestration-scanning
-   Type: secret-scanning
-   Description: Secret leak detection for andromeda-orchestration infrastructure code
-   ```
-
-2. **Configure Scanning Targets** (Pro - continuous monitoring)
-
-   ```yaml
-   repositories:
-     - url: https://github.com/yourusername/andromeda-orchestration
-       branch: main
-       scan_frequency: on_push # Scan on every push (Pro feature)
-
-   local_paths:
-     - /ansible/playbooks/
-     - /ansible/inventory/
-     - /terraform/
-
-   exclude_patterns:
-     - "*.tfstate"
-     - "*.tfstate.backup"
-     - ".env.example"
-     - "docs/examples/*"
-   ```
-
-3. **Secret Detection Rules**
-
-   ```yaml
-   detection_rules:
-     # Standard patterns (140+ built-in)
-     - type: api_keys
-     - type: private_keys
-     - type: passwords
-     - type: tokens
-
-     # Custom patterns for your infrastructure
-     custom_patterns:
-       - name: "Proxmox API Token"
-         pattern: "PVEAPIToken=.*"
-         severity: high
-
-       - name: "Consul Token"
-         pattern: "CONSUL_.*_TOKEN=.*"
-         severity: high
-
-       - name: "NetBox Token"
-         pattern: "NETBOX_TOKEN=.*"
-         severity: high
-   ```
-
-4. **Integration with CI/CD**
-
-   ```yaml
-   # .github/workflows/secret-scan.yml
-   name: Secret Scanning
-   on: [push, pull_request]
-
-   jobs:
-     scan:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
-
-         - name: Run Infisical Secret Scan
-           uses: Infisical/infisical-scan-action@v1
-           with:
-             client-id: ${{ secrets.INFISICAL_CLIENT_ID }}
-             client-secret: ${{ secrets.INFISICAL_CLIENT_SECRET }}
-             project-id: <scanning-project-id>
-             fail-on-finding: true
-   ```
-
-5. **Pre-commit Hook Configuration** (Free)
-
-   ```yaml
-   # .pre-commit-config.yaml
-   repos:
-     - repo: local
-       hooks:
-         - id: infisical-scan
-           name: Infisical Secret Scan
-           entry: infisical scan
-           language: system
-           pass_filenames: false
-           always_run: true
-   ```
-
-6. **Alerting Configuration** (Pro)
-
-   ```yaml
-   alerts:
-     channels:
-       - type: email
-         recipients:
-           - security@team.com
-         on_events:
-           - secret_detected
-           - high_severity_finding
-
-       - type: slack
-         webhook: <slack-webhook-url>
-         channel: "#security-alerts"
-         on_events:
-           - secret_detected
-
-   thresholds:
-     auto_block_push: true # Block git push if secrets detected
-     severity_threshold: medium # Alert on medium+ severity
-   ```
-
-7. **Remediation Workflow** (Pro)
-
-   ```yaml
-   remediation:
-     auto_actions:
-       - rotate_affected_secrets: true # Requires Pro for rotation
-       - create_incident_ticket: true
-       - notify_secret_owner: true
-
-     quarantine:
-       - move_to_draft_pr: true
-       - require_security_review: true
-   ```
-
-### Implementation Steps
-
-1. **Create the Secret Scanning Project** (Free)
-
-   ```bash
-   # Using Infisical CLI
-   infisical project create \
-     --name "andromeda-orchestration-scanning" \
-     --type "secret-scanning"
-   ```
-
-2. **Configure Repository Integration** (Pro for continuous monitoring)
-
-   - Connect GitHub repository (Pro)
-   - Set up webhook for real-time scanning (Pro)
-   - Configure branch protection rules (Pro)
-   - Alternative: Use CLI for manual scans (Free)
-
-3. **Install Local Tools** (Free)
-
-   ```bash
-   # Install Infisical CLI
-   brew install infisical/get-cli/infisical
-
-   # Install pre-commit
-   pip install pre-commit
-   pre-commit install
-   ```
-
-4. **Run Initial Scan** (Free)
-
-   ```bash
-   # Full repository scan
-   infisical scan --deep
-
-   # Scan with custom config
-   infisical scan --config .infisical-scan.yml
-   ```
-
-### Best Practices for Secret Scanning
-
-1. **Scan Early and Often**
-
-   - Enable pre-commit hooks
-   - Scan in CI/CD pipeline
-   - Regular scheduled scans
-
-2. **Custom Patterns**
-
-   - Define patterns specific to your infrastructure
-   - Include vendor-specific formats
-   - Update patterns as new services are added
-
-3. **False Positive Management**
-
-   ```yaml
-   # .infisical-scan-ignore
-   # Ignore specific files
-   docs/examples/sample-config.yml
-
-   # Ignore specific patterns
-   pattern:EXAMPLE_.*_TOKEN
-
-   # Ignore specific findings by ID
-   finding:abc123def456
-   ```
-
-4. **Response Plan**
-
-   - Document incident response procedures
-   - Automate secret rotation where possible
-   - Track remediation metrics
-
-5. **Training**
-   - Educate team on secure coding practices
-   - Regular security awareness sessions
-   - Share scanning reports and trends
-
-## KICS Infrastructure Security Integration
-
-In addition to Infisical secrets scanning, this project integrates KICS (Keeping Infrastructure as Code Secure) for infrastructure security scanning.
-
-### KICS Configuration
-
-- **Configuration file**: `kics.config` (YAML format)
-- **Exclusions**: Configured to skip test containers and documentation
-- **Output**: JSON and SARIF formats in `kics-results/` directory
-
-### Running KICS Scans
-
-```bash
-# Run KICS infrastructure scan
-task security:kics
-
-# Run combined security scans (Infisical + KICS)
-task security
-
-# Manual Docker command (if needed)
-docker run -t -v "$(pwd)":/path checkmarx/kics scan \
-  -p /path \
-  --output-path /path/kics-results \
-  --output-name results \
-  --report-formats json,sarif
-```
-
-### KICS Results
-
-Scan results are saved to:
-
-- `kics-results/results.json` - JSON format for programmatic analysis
-- `kics-results/results.sarif` - SARIF format for IDE/CI integration
-
-### Integration with Taskfile
-
-The `Taskfile.yml` includes:
-
-- `task security:secrets` - Infisical secrets scanning
-- `task security:kics` - KICS infrastructure scanning
-- `task security` - Combined security scanning
+   - Encryption key management
+   - Data-at-rest encryption
+   - Key rotation policies
+   - Enterprise feature: KMIP protocol
+
+4. **Secret Scanning (`secret-scanning`)** (FREE)
+   - Repository scanning
+   - Pre-commit hooks
+   - CI/CD integration
+   - Pro feature: Continuous monitoring
+
+### PKI and Certificate Considerations
+
+When choosing between Infisical's cert-manager and other PKI solutions (like Vault):
+
+**Infisical cert-manager**:
+- ✅ Integrated with existing secret management
+- ✅ ACME/Let's Encrypt automation
+- ✅ Simple certificate lifecycle management
+- ✅ Good for internal service certificates
+- ❌ Less flexible than full PKI solutions
+
+**HashiCorp Vault PKI**:
+- ✅ Full-featured PKI engine
+- ✅ Complex certificate hierarchies
+- ✅ Custom certificate policies
+- ✅ Integration with existing Vault deployment
+- ❌ Requires separate infrastructure
+
+**Recommendation**: Start with Infisical cert-manager for simplicity, evaluate Vault PKI for complex
+requirements.
+
+## Security Scanning
+
+For comprehensive security scanning procedures including:
+- Infisical CLI secret detection  
+- KICS infrastructure security scanning
+- Pre-commit hook integration
+- CI/CD security workflows
+
+See: [Security Scanning Operations](../../operations/security-scanning.md)
 
 ## Related Documentation
 
-- [Secrets Management Comparison](secrets-management-comparison.md) - Detailed comparison of 1Password vs Infisical
-- [1Password Integration (Archived)](archive/1password-integration.md) - Legacy secret management (being replaced)
-- [DNS & IPAM Implementation Plan](dns-ipam-implementation-plan.md) - Uses Infisical for infrastructure secrets
-- [NetBox Integration](netbox.md) - NetBox API tokens managed via Infisical
-- [Troubleshooting Guide](troubleshooting.md) - Secret lookup troubleshooting
+- [Project-specific Configuration](./andromeda-infisical-config.md) - Current project setup and usage
+- [Secrets Management Comparison](./comparison.md) - Detailed comparison of 1Password vs Infisical
+- [Security Scanning Operations](../../operations/security-scanning.md) - Security scanning procedures
+- [1Password Integration (Archived)](../../archive/1password-integration.md) - Legacy secret management
+- [Security Standards](../../standards/security-standards.md) - Overall security practices
