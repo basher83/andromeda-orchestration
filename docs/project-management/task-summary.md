@@ -2,7 +2,7 @@
 
 **Project**: NetBox-focused Ansible automation with DNS/IPAM infrastructure
 **Status**: Phase 2 Complete, Phase 3 ACCELERATED (NetBox already deployed!)
-**Last Updated**: 2025-08-05
+**Last Updated**: 2025-08-06
 
 ---
 
@@ -25,8 +25,8 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
 ### Overall Metrics
 
 - **Total Tasks**: 34
-- **Completed**: 15 (44%)
-- **In Progress**: 2 (6%)
+- **Completed**: 16 (47%)
+- **In Progress**: 1 (3%)
 - **Blocked**: 1 (3%)
 - **Not Started**: 16 (47%)
 
@@ -36,7 +36,7 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
 
 - **CRITICAL**: NetBox already deployed at <https://192.168.30.213/>!
 - Bootstrap NetBox with essential DNS records (accelerated)
-- Deploy HashiCorp Vault (dev mode)
+- ✅ Vault deployed in dev mode across all nodes
 - Configure PowerDNS-NetBox integration
 
 ## ✅ Major Achievements
@@ -49,13 +49,14 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
 - ✅ Pi-hole HA cluster documented
 - ✅ Consul-Nomad integration established
 
-### DNS Infrastructure (August 2025)
+### DNS & HashiCorp Infrastructure (August 2025)
 
 - ✅ Consul DNS enabled cluster-wide
 - ✅ PowerDNS deployed as authoritative server
 - ✅ Traefik load balancer operational
 - ✅ Nomad job management standardized
 - ✅ Netdata monitoring optimized
+- ✅ **Vault deployed (dev mode)** - HashiCorp stack complete!
 - ✅ **NetBox deployed (LXC 213 on pve1)** - Major milestone!
 
 ## 🚧 Known Issues
@@ -72,8 +73,8 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
 1. NetBox configuration and data model setup
 2. PowerDNS-NetBox integration
 3. DNS record migration from Pi-hole
-4. HashiCorp Vault deployment
-5. IP address schema implementation in NetBox
+4. IP address schema implementation in NetBox
+5. Deploy Vault in production mode (optional)
 
 ### Next Month
 
