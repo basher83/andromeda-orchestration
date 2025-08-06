@@ -225,7 +225,7 @@ secret: "{{ lookup('infisical', 'path/to/secret') }}"
 ## References
 
 ### Internal Documentation
-- [Dynamic Inventory Guide](../implementation/secrets-management/infisical-setup.md)
+- [Dynamic Inventory Guide](../implementation/infisical/infisical-setup.md)
 - [Repository Structure](../getting-started/repository-structure.md)
 - [uv with Ansible](../getting-started/uv-ansible-notes.md)
 

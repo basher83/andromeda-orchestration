@@ -23,7 +23,7 @@ Essential documentation for new users and developers:
 Detailed implementation guides organized by component:
 - **[dns-ipam/](implementation/dns-ipam/)** - DNS & IPAM overhaul documentation
 - **[consul/](implementation/consul/)** - Consul configuration and integration
-- **[secrets-management/](implementation/secrets-management/)** - Infisical setup and migration
+- **[infisical/](implementation/infisical/)** - Infisical secrets management
 - **Nomad Configuration** - Storage, patterns, and port allocation guides
 - **[netbox-integration.md](implementation/netbox-integration.md)** - NetBox automation patterns
 
@@ -84,7 +84,7 @@ Deprecated documentation preserved for reference:
 ### For Implementation
 - [DNS & IPAM Master Plan](implementation/dns-ipam/implementation-plan.md)
 - [Phase 1 Implementation Guide](implementation/dns-ipam/phase1-guide.md)
-- [Infisical Setup](implementation/secrets-management/infisical-setup.md)
+- [Infisical Setup](implementation/infisical/infisical-setup.md)
 
 ### For Operations
 - [Troubleshooting Guide](getting-started/troubleshooting.md)
@@ -139,7 +139,7 @@ When adding or updating documentation:
 | Getting Started | ✅ Complete | `getting-started/` |
 | DNS/IPAM Implementation | ✅ Complete | `implementation/dns-ipam/` |
 | Consul Integration | ✅ Complete | `implementation/consul/` |
-| Secrets Management | ✅ Complete | `implementation/secrets-management/` |
+| Secrets Management | ✅ Complete | `implementation/infisical/` |
 | NetBox Patterns | ✅ Complete | `implementation/netbox-integration.md` |
 | Operational Guides | 🚧 Growing | `operations/` |
 | Architecture Diagrams | ✅ Complete | `diagrams/` |

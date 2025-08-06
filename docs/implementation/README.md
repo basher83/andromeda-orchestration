@@ -36,11 +36,12 @@ HashiCorp Nomad orchestration and job configuration
 - **storage-patterns.md** - Common storage implementation patterns
 - **port-allocation.md** - Port allocation best practices
 
-### 🔑 [secrets-management/](secrets-management/)
+### 🔑 [infisical/](infisical/)
 
-Secrets management implementation
+Infisical secrets management implementation
 
 - **infisical-setup.md** - Infisical configuration and migration guide
+- **andromeda-infisical-config.md** - Project-specific configuration
 - **comparison.md** - Comparison between 1Password and Infisical approaches
 
 ### 🗄️ [netbox/](netbox/)
