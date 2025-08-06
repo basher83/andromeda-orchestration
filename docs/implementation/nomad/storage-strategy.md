@@ -32,19 +32,19 @@ Nomad provides four distinct storage types, each optimized for different use cas
 ```mermaid
 graph TD
     Start[Storage Needed?] --> Persistent{Data Persistent?}
-    
+
     Persistent -->|No| Ephemeral[Ephemeral Disk]
     Persistent -->|Yes| Shared{Multi-node Access?}
-    
+
     Shared -->|Yes| CSI[CSI Volume]
     Shared -->|No| Dynamic{Dynamic Provisioning?}
-    
+
     Dynamic -->|Yes| DynHost[Dynamic Host Volume]
     Dynamic -->|No| Frequency{Config Changes?}
-    
+
     Frequency -->|Rare| StaticHost[Static Host Volume]
     Frequency -->|Often| DynHost
-    
+
     Ephemeral --> Cache[Cache/Temp Files]
     StaticHost --> Database[Databases]
     DynHost --> PerAlloc[Per-Allocation Data]
@@ -66,11 +66,11 @@ graph TD
 ```hcl
 task "cache-service" {
   driver = "docker"
-  
+
   config {
     image = "redis:alpine"
   }
-  
+
   ephemeral_disk {
     size    = 1024  # MB
     migrate = false # Don't preserve on reschedule
@@ -104,7 +104,7 @@ client {
     path      = "/opt/nomad/volumes/powerdns-mysql"
     read_only = false
   }
-  
+
   host_volume "traefik-certs" {
     path      = "/opt/nomad/volumes/traefik-certs"
     read_only = false
@@ -120,7 +120,7 @@ group "database" {
     source    = "powerdns-mysql"
     read_only = false
   }
-  
+
   task "mysql" {
     volume_mount {
       volume      = "data"
@@ -137,7 +137,7 @@ group "database" {
 - name: Provision Nomad host volumes
   hosts: tag_client
   become: true
-  
+
   vars:
     nomad_volumes_base: /opt/nomad/volumes
     volumes:
@@ -150,14 +150,14 @@ group "database" {
       - name: prometheus-data
         owner: 65534
         group: 65534
-  
+
   tasks:
     - name: Create volumes directory
       file:
         path: "{{ nomad_volumes_base }}"
         state: directory
         mode: '0755'
-    
+
     - name: Create volume directories
       file:
         path: "{{ nomad_volumes_base }}/{{ item.name }}"
@@ -181,10 +181,10 @@ group "database" {
 client {
   host_volume "dynamic-data" {
     path = "/opt/nomad/volumes/dynamic"
-    
+
     # Dynamic volume configuration
     dynamic = true
-    
+
     # Plugin script for provisioning
     plugin = "ext4-volume"
   }
@@ -200,23 +200,23 @@ case "$1" in
   create)
     VOLUME_ID="$2"
     SIZE_GB="$3"
-    
+
     # Create sparse file
     truncate -s "${SIZE_GB}G" "/opt/nomad/volumes/dynamic/${VOLUME_ID}.img"
-    
+
     # Create filesystem
     mkfs.ext4 -F "/opt/nomad/volumes/dynamic/${VOLUME_ID}.img"
-    
+
     # Create mount point
     mkdir -p "/opt/nomad/volumes/dynamic/${VOLUME_ID}"
-    
+
     # Mount
     mount -o loop "/opt/nomad/volumes/dynamic/${VOLUME_ID}.img" \
           "/opt/nomad/volumes/dynamic/${VOLUME_ID}"
-    
+
     echo "/opt/nomad/volumes/dynamic/${VOLUME_ID}"
     ;;
-    
+
   delete)
     VOLUME_ID="$2"
     umount "/opt/nomad/volumes/dynamic/${VOLUME_ID}"
@@ -241,23 +241,23 @@ esac
 job "nfs-csi-plugin" {
   datacenters = ["dc1"]
   type        = "system"
-  
+
   group "plugin" {
     task "plugin" {
       driver = "docker"
-      
+
       config {
         image = "k8s.gcr.io/sig-storage/nfsplugin:v4.1.0"
-        
+
         args = [
           "--v=5",
           "--nodeid=${node.unique.id}",
           "--endpoint=unix:///csi/csi.sock"
         ]
-        
+
         privileged = true
       }
-      
+
       csi_plugin {
         id        = "nfs"
         type      = "monolith"
@@ -321,10 +321,10 @@ Format: `{service}-{type}-{environment}`
    ```hcl
    job "migrate-volume" {
      type = "batch"
-     
+
      task "migrate" {
        driver = "raw_exec"
-       
+
        config {
          command = "/opt/nomad/scripts/migrate-volume.sh"
          args    = ["${old_volume}", "${new_volume}"]
@@ -354,7 +354,7 @@ Format: `{service}-{type}-{environment}`
 ---
 - name: Backup Nomad host volumes
   hosts: tag_client
-  
+
   tasks:
     - name: Create backup
       archive:
@@ -373,7 +373,7 @@ Format: `{service}-{type}-{environment}`
 ### Key Metrics
 1. **Disk Usage**
    ```promql
-   node_filesystem_avail_bytes{mountpoint=~"/opt/nomad/volumes/.*"} 
+   node_filesystem_avail_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
    / node_filesystem_size_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
    ```
 
