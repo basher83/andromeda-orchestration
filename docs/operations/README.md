@@ -11,12 +11,19 @@ Comprehensive Netdata monitoring architecture:
 - Data retention policies
 - Performance optimization
 
-### 🔧 [netdata-streaming-troubleshooting.md](netdata-streaming-troubleshooting.md)
-Troubleshooting guide for Netdata streaming issues:
+### 🔧 Netdata Streaming Troubleshooting
+See [Troubleshooting Guide](../troubleshooting/netdata-streaming-guide.md) for:
 - Common streaming problems
 - Diagnostic procedures
 - Configuration validation
 - Performance tuning
+
+### 📁 [netdata/](netdata/)
+Netdata configuration references and current settings:
+- Upstream integration documentation
+- Current deployed configurations
+- Stock configuration templates
+- Consul telemetry integration
 
 ### 🎯 [pihole-ha-cluster.md](pihole-ha-cluster.md)
 Pi-hole high availability cluster documentation:
@@ -24,6 +31,13 @@ Pi-hole high availability cluster documentation:
 - Gravity sync setup
 - Failover procedures
 - Migration planning (Phase 4)
+
+### 🔒 [firewall-port-strategy.md](firewall-port-strategy.md)
+Network security and port management:
+- Firewall rule organization
+- Port allocation strategy
+- Service exposure policies
+- Security zones
 
 ## Purpose
 

@@ -15,19 +15,28 @@ HashiCorp Consul configuration and integration
 - **acl-integration.md** - Consul ACL setup and integration patterns
 - **telemetry-setup.md** - Configuring Consul telemetry and monitoring
 
+### 🔒 [vault/](vault/)
+HashiCorp Vault deployment and secrets management
+- **deployment-strategy.md** - Complete deployment strategy with phased approach
+- **enhanced-deployment-strategy.md** - Production-grade patterns from community research
+- **repository-comparison.md** - Analysis of production implementations
+
+### 📦 [nomad/](nomad/)
+HashiCorp Nomad orchestration and job configuration
+- **storage-configuration.md** - Complete storage configuration guide
+- **storage-strategy.md** - Strategic approach to Nomad storage
+- **storage-patterns.md** - Common storage implementation patterns
+- **port-allocation.md** - Port allocation best practices
+
 ### 🔑 [secrets-management/](secrets-management/)
 Secrets management implementation
 - **infisical-setup.md** - Infisical configuration and migration guide
 - **comparison.md** - Comparison between 1Password and Infisical approaches
 
-### 📦 Nomad Configuration
-- **[nomad-storage-configuration.md](nomad-storage-configuration.md)** - Complete storage configuration guide for Nomad jobs
-- **[nomad-storage-strategy.md](nomad-storage-strategy.md)** - Strategic approach to Nomad storage
-- **[nomad-storage-patterns.md](nomad-storage-patterns.md)** - Common storage implementation patterns
-- **[nomad-port-allocation.md](nomad-port-allocation.md)** - Port allocation best practices
-
-### 🗄️ [netbox-integration.md](netbox-integration.md)
-NetBox as source of truth - integration patterns and best practices
+### 🗄️ [netbox/](netbox/)
+NetBox as source of truth for infrastructure automation
+- **integration.md** - Comprehensive automation patterns with Ansible
+- **README.md** - Implementation overview and quick start
 
 ## Implementation Phases
 
