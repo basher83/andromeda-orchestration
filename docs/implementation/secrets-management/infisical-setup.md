@@ -190,9 +190,13 @@ Project: andromeda-orchestration-homelab (7b832220-24c0-45bc-a5f1-ce9794a31259)
 │  │     └─ 🌍 dev, prod, staging
 │  │        🔑 ANSIBLE_TOKEN_SECRET_DOGGOS
 │  │
-│  └─ 📂 consul/
+│  ├─ 📂 consul/
+│  │  └─ 🌍 dev, prod, staging
+│  │     🔑 CONSUL_MASTER_TOKEN
+│  │
+│  └─ 📂 vault/
 │     └─ 🌍 dev, prod, staging
-│        🔑 CONSUL_MASTER_TOKEN
+│        🔑 VAULT_DEV_ROOT_TOKEN
 │
 └─ 📁 /services/
    ├─ 📂 netbox/ (ready for secrets)
@@ -258,6 +262,7 @@ Secrets have been organized into folders and replicated across environments:
 | API_URL (og-homelab)        | /apollo-13/proxmox/og-homelab/     | dev, prod, staging | ✅     | Cluster-specific        |
 | API_URL (doggos-homelab)    | /apollo-13/proxmox/doggos-homelab/ | dev, prod, staging | ✅     | Cluster-specific        |
 | NOMAD tokens                | /apollo-13/nomad/                  | dev, prod, staging | ✅     | Created folder          |
+| VAULT_DEV_ROOT_TOKEN        | /apollo-13/vault/                  | dev, prod, staging | ✅     | Dev mode token          |
 | NETBOX_USERNAME             | /services/netbox/                  | dev, prod, staging | ✅     | Created folder          |
 | NETBOX_API_KEY              | /services/netbox/                  | dev, prod, staging | ✅     | Created folder          |
 | POWERDNS_API_KEY            | /services/powerdns/                | dev, prod, staging | ❌     | Need to add             |
@@ -341,6 +346,7 @@ tasks:
    ```
 
 3. **Environment Variables** (managed by direnv):
+
    ```bash
    export INFISICAL_UNIVERSAL_AUTH_CLIENT_ID="your-client-id"
    export INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET="your-client-secret"
