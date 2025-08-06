@@ -1,0 +1,116 @@
+---
+# Configure Vault for production mode with Raft integrated storage
+# Based on best practices from research findings
+
+- name: Create Vault production configuration
+  ansible.builtin.template:
+    src: vault.hcl.j2
+    dest: "{{ vault_config_dir }}/vault.hcl"
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0640"
+    backup: true
+  notify: restart vault
+
+- name: Ensure Raft storage directory has correct permissions
+  ansible.builtin.file:
+    path: "{{ vault_data_dir }}"
+    state: directory
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0700"
+  when: vault_storage_backend == "raft"
+
+- name: Configure TLS certificates (if enabled)
+  when: not vault_tls_disable | bool
+  block:
+    - name: Ensure TLS directory exists
+      ansible.builtin.file:
+        path: "{{ vault_tls_dir }}"
+        state: directory
+        owner: "{{ vault_user }}"
+        group: "{{ vault_group }}"
+        mode: "0750"
+
+    - name: Check for existing certificates
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ vault_tls_cert_file }}"
+        - "{{ vault_tls_key_file }}"
+        - "{{ vault_tls_ca_file }}"
+      register: tls_files
+
+    - name: Fail if TLS enabled but certificates missing
+      ansible.builtin.fail:
+        msg: "TLS is enabled but certificate files are missing. Please provide certificates or set vault_tls_disable to true."
+      when: tls_files.results | selectattr('stat.exists', 'equalto', false) | list | length > 0
+
+- name: Create Vault audit log directory
+  ansible.builtin.file:
+    path: "{{ vault_log_dir }}"
+    state: directory
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0750"
+  when: vault_audit_enabled | bool
+
+- name: Set VAULT_ADDR environment variable for production
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    line: "VAULT_ADDR={{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}"
+    create: true
+    mode: "0644"
+
+- name: Create vault profile script for production
+  ansible.builtin.copy:
+    content: |
+      # Vault production environment
+      export VAULT_ADDR="{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}"
+      {% if not vault_tls_disable %}
+      export VAULT_CACERT="{{ vault_tls_ca_file }}"
+      {% endif %}
+
+      # Helper aliases
+      alias vault-status='vault status'
+      alias vault-operator='vault operator'
+      alias vault-policies='vault policy list'
+      alias vault-audit='vault audit list'
+      alias vault-secrets='vault secrets list'
+    dest: /etc/profile.d/vault.sh
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Create Vault policy files
+  ansible.builtin.template:
+    src: "policies/{{ item.path }}"
+    dest: "{{ vault_config_dir }}/policies/{{ item.name }}.hcl"
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0640"
+  loop: "{{ vault_policies }}"
+  when: vault_policies | length > 0
+
+- name: Register Vault service with Consul
+  ansible.builtin.include_tasks: consul_register.yml
+  when:
+    - "'consul' in group_names or consul_agent_enabled | default(false)"
+  tags:
+    - vault-consul
+
+- name: Display production mode information
+  ansible.builtin.debug:
+    msg:
+      - "Vault is configured in PRODUCTION mode"
+      - "Storage backend: {{ vault_storage_backend }}"
+      - "TLS enabled: {{ not vault_tls_disable }}"
+      - "Auto-unseal enabled: {{ vault_auto_unseal_enabled }}"
+      - "API Address: {{ vault_api_addr }}"
+      - "Cluster Address: {{ vault_cluster_addr }}"
+      - ""
+      - "Next steps:"
+      - "1. Initialize Vault: vault operator init"
+      - "2. Unseal Vault: vault operator unseal <key>"
+      - "3. Login: vault login <root-token>"
+      - "4. Configure policies and auth methods"

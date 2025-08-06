@@ -1,0 +1,68 @@
+# Nomad Workload Policy
+# {{ ansible_managed }}
+# Default policy for Nomad workloads using workload identity
+
+# Allow workloads to read their own secrets
+path "secret/data/nomad/{{`{{identity.entity.aliases.auth_jwt_*.metadata.nomad_namespace}}/{{identity.entity.aliases.auth_jwt_*.metadata.nomad_job_id}}`}}/*" {
+  capabilities = ["read", "list"]
+}
+
+path "secret/metadata/nomad/{{`{{identity.entity.aliases.auth_jwt_*.metadata.nomad_namespace}}/{{identity.entity.aliases.auth_jwt_*.metadata.nomad_job_id}}`}}/*" {
+  capabilities = ["read", "list"]
+}
+
+# Allow workloads to read shared secrets
+path "secret/data/nomad/shared/*" {
+  capabilities = ["read", "list"]
+}
+
+path "secret/metadata/nomad/shared/*" {
+  capabilities = ["read", "list"]
+}
+
+# Allow token renewal
+path "auth/token/renew-self" {
+  capabilities = ["update"]
+}
+
+path "auth/token/lookup-self" {
+  capabilities = ["read"]
+}
+
+# PKI certificate generation for workloads
+{% if vault_pki_enabled %}
+path "pki/issue/nomad-workload" {
+  capabilities = ["create", "update"]
+}
+
+path "pki/cert/*" {
+  capabilities = ["read"]
+}
+{% endif %}
+
+# Database credentials (if needed)
+path "database/creds/nomad-*" {
+  capabilities = ["read"]
+}
+
+# Transit encryption (if needed)
+path "transit/encrypt/nomad-workload" {
+  capabilities = ["update"]
+}
+
+path "transit/decrypt/nomad-workload" {
+  capabilities = ["update"]
+}
+
+# System capabilities
+path "sys/capabilities-self" {
+  capabilities = ["update"]
+}
+
+path "sys/leases/renew" {
+  capabilities = ["update"]
+}
+
+path "sys/leases/lookup" {
+  capabilities = ["update"]
+}

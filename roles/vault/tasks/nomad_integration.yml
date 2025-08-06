@@ -1,0 +1,132 @@
+---
+# Configure Vault for Nomad integration
+# Sets up JWT auth backend for workload identity
+
+- name: Wait for Vault to be unsealed
+  ansible.builtin.uri:
+    url: "{{ vault_api_addr }}/v1/sys/health"
+    method: GET
+    status_code: [200, 429]  # 200=active, 429=standby
+  register: vault_health
+  until: vault_health.status in [200, 429]
+  retries: 30
+  delay: 10
+
+- name: Check if JWT auth is already enabled
+  ansible.builtin.uri:
+    url: "{{ vault_api_addr }}/v1/sys/auth"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ vault_root_token | default(vault_dev_root_token) }}"
+  register: auth_methods
+  failed_when: false
+
+- name: Enable JWT auth for Nomad
+  ansible.builtin.uri:
+    url: "{{ vault_api_addr }}/v1/sys/auth/{{ vault_nomad_jwt_auth_backend_path }}"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_root_token | default(vault_dev_root_token) }}"
+    body_format: json
+    body:
+      type: "jwt"
+      description: "JWT auth for Nomad workload identity"
+      config:
+        default_lease_ttl: "{{ vault_nomad_default_lease_ttl }}"
+        max_lease_ttl: "{{ vault_nomad_max_lease_ttl }}"
+    status_code: [200, 204]
+  when: vault_nomad_jwt_auth_backend_path not in (auth_methods.json | default({}))
+
+- name: Configure JWT auth backend
+  ansible.builtin.uri:
+    url: "{{ vault_api_addr }}/v1/auth/{{ vault_nomad_jwt_auth_backend_path }}/config"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_root_token | default(vault_dev_root_token) }}"
+    body_format: json
+    body:
+      jwks_url: "https://{{ nomad_address | default('nomad.service.consul:4646') }}/.well-known/jwks.json"
+      jwt_supported_algs: ["RS256"]
+      default_role: "nomad-workload"
+    status_code: [200, 204]
+
+- name: Create Nomad server policy
+  ansible.builtin.uri:
+    url: "{{ vault_api_addr }}/v1/sys/policies/acl/nomad-server"
+    method: PUT
+    headers:
+      X-Vault-Token: "{{ vault_root_token | default(vault_dev_root_token) }}"
+    body_format: json
+    body:
+      policy: "{{ lookup('template', 'policies/nomad-server.hcl.j2') }}"
+    status_code: [200, 204]
+
+- name: Create Nomad workload policy
+  ansible.builtin.uri:
+    url: "{{ vault_api_addr }}/v1/sys/policies/acl/nomad-workload"
+    method: PUT
+    headers:
+      X-Vault-Token: "{{ vault_root_token | default(vault_dev_root_token) }}"
+    body_format: json
+    body:
+      policy: "{{ lookup('template', 'policies/nomad-workload.hcl.j2') }}"
+    status_code: [200, 204]
+
+- name: Create Nomad workload role
+  ansible.builtin.uri:
+    url: "{{ vault_api_addr }}/v1/auth/{{ vault_nomad_jwt_auth_backend_path }}/role/nomad-workload"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_root_token | default(vault_dev_root_token) }}"
+    body_format: json
+    body:
+      role_type: "jwt"
+      bound_audiences: ["vault.io"]
+      user_claim: "/nomad_job_id"
+      user_claim_json_pointer: true
+      claim_mappings:
+        nomad_namespace: "nomad_namespace"
+        nomad_job_id: "nomad_job_id"
+        nomad_task: "nomad_task"
+      token_type: "service"
+      token_policies: ["nomad-workload"]
+      token_period: "{{ vault_nomad_default_lease_ttl }}"
+      token_explicit_max_ttl: "{{ vault_nomad_max_lease_ttl }}"
+    status_code: [200, 204]
+
+- name: Create token for Nomad servers
+  ansible.builtin.uri:
+    url: "{{ vault_api_addr }}/v1/auth/token/create"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ vault_root_token | default(vault_dev_root_token) }}"
+    body_format: json
+    body:
+      policies: ["nomad-server"]
+      period: "768h"
+      renewable: true
+      display_name: "nomad-server-token"
+    status_code: [200]
+  register: nomad_token
+  no_log: true
+
+- name: Display Nomad integration information
+  ansible.builtin.debug:
+    msg:
+      - "Nomad integration configured successfully"
+      - "JWT auth backend: {{ vault_nomad_jwt_auth_backend_path }}"
+      - "Policies created: nomad-server, nomad-workload"
+      - ""
+      - "Configure Nomad servers with:"
+      - "  vault {"
+      - "    enabled = true"
+      - "    address = \"{{ vault_api_addr }}\""
+      - "    token = \"<use-token-from-secure-storage>\""
+      - "    jwt_auth_backend_path = \"{{ vault_nomad_jwt_auth_backend_path }}\""
+      - "  }"
+      - ""
+      - "In Nomad jobs, use:"
+      - "  vault {"
+      - "    role = \"nomad-workload\""
+      - "    change_mode = \"restart\""
+      - "  }"

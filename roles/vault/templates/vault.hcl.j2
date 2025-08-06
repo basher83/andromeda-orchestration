@@ -1,0 +1,132 @@
+# Vault Production Configuration
+# {{ ansible_managed }}
+
+# Cluster name
+cluster_name = "vault-{{ ansible_hostname }}"
+
+# Disable mlock
+disable_mlock = {{ vault_disable_mlock | lower }}
+
+# UI configuration
+ui = {{ vault_ui_enabled | lower }}
+
+# API listener configuration
+listener "tcp" {
+  address = "{{ vault_bind_address }}:{{ vault_port }}"
+  cluster_address = "{{ vault_cluster_address }}:{{ vault_cluster_port }}"
+
+  {% if vault_tls_disable %}
+  tls_disable = true
+  {% else %}
+  tls_cert_file = "{{ vault_tls_cert_file }}"
+  tls_key_file = "{{ vault_tls_key_file }}"
+  tls_client_ca_file = "{{ vault_tls_ca_file }}"
+  tls_require_and_verify_client_cert = false
+  tls_disable_client_certs = false
+  {% endif %}
+
+  {% if vault_telemetry_enabled %}
+  telemetry {
+    unauthenticated_metrics_access = true
+  }
+  {% endif %}
+}
+
+# Storage backend configuration
+{% if vault_storage_backend == "raft" %}
+storage "raft" {
+  path = "{{ vault_data_dir }}"
+  node_id = "{{ vault_raft_node_id }}"
+
+  {% for leader in vault_raft_retry_join %}
+  retry_join {
+    leader_api_addr = "{{ leader }}"
+    {% if not vault_tls_disable %}
+    leader_ca_cert_file = "{{ vault_tls_ca_file }}"
+    {% endif %}
+  }
+  {% endfor %}
+
+  performance_multiplier = 1
+  {% if not vault_tls_disable %}
+  leader_ca_cert_file = "{{ vault_tls_ca_file }}"
+  {% endif %}
+}
+{% elif vault_storage_backend == "consul" %}
+storage "consul" {
+  address = "{{ vault_consul_address }}"
+  path = "{{ vault_consul_path }}"
+  {% if vault_consul_token %}
+  token = "{{ vault_consul_token }}"
+  {% endif %}
+  ha_enabled = {{ vault_ha_enabled | lower }}
+}
+{% elif vault_storage_backend == "file" %}
+storage "file" {
+  path = "{{ vault_data_dir }}"
+}
+{% endif %}
+
+# API address configuration
+api_addr = "{{ vault_api_addr }}"
+cluster_addr = "{{ vault_cluster_addr }}"
+
+# Auto-unseal configuration
+{% if vault_auto_unseal_enabled and vault_auto_unseal_type == "transit" %}
+seal "transit" {
+  address = "{{ vault_auto_unseal_config.address }}"
+  token = "{{ vault_auto_unseal_config.token }}"
+  disable_renewal = "{{ vault_auto_unseal_config.disable_renewal | default(false) | lower }}"
+  key_name = "{{ vault_auto_unseal_config.key_name | default('autounseal') }}"
+  mount_path = "{{ vault_auto_unseal_config.mount_path | default('transit/') }}"
+  {% if not vault_tls_disable %}
+  tls_ca_cert = "{{ vault_tls_ca_file }}"
+  {% endif %}
+}
+{% elif vault_auto_unseal_enabled and vault_auto_unseal_type == "awskms" %}
+seal "awskms" {
+  region = "{{ vault_auto_unseal_config.region }}"
+  kms_key_id = "{{ vault_auto_unseal_config.kms_key_id }}"
+  {% if vault_auto_unseal_config.endpoint is defined %}
+  endpoint = "{{ vault_auto_unseal_config.endpoint }}"
+  {% endif %}
+}
+{% elif vault_auto_unseal_enabled and vault_auto_unseal_type == "azurekeyvault" %}
+seal "azurekeyvault" {
+  tenant_id = "{{ vault_auto_unseal_config.tenant_id }}"
+  vault_name = "{{ vault_auto_unseal_config.vault_name }}"
+  key_name = "{{ vault_auto_unseal_config.key_name }}"
+}
+{% elif vault_auto_unseal_enabled and vault_auto_unseal_type == "gcpckms" %}
+seal "gcpckms" {
+  project = "{{ vault_auto_unseal_config.project }}"
+  region = "{{ vault_auto_unseal_config.region }}"
+  key_ring = "{{ vault_auto_unseal_config.key_ring }}"
+  crypto_key = "{{ vault_auto_unseal_config.crypto_key }}"
+}
+{% endif %}
+
+# Telemetry configuration
+{% if vault_telemetry_enabled %}
+telemetry {
+  disable_hostname = {{ vault_telemetry_disable_hostname | lower }}
+  prometheus_retention_time = "{{ vault_telemetry_prometheus_retention_time }}"
+  {% if vault_telemetry_statsd_address %}
+  statsd_address = "{{ vault_telemetry_statsd_address }}"
+  {% endif %}
+  {% if vault_telemetry_statsite_address %}
+  statsite_address = "{{ vault_telemetry_statsite_address }}"
+  {% endif %}
+}
+{% endif %}
+
+# Default and max lease TTL
+default_lease_ttl = "{{ vault_default_lease_ttl }}"
+max_lease_ttl = "{{ vault_max_lease_ttl }}"
+
+# Cluster configuration
+cluster_disable = {{ vault_cluster_disable | lower }}
+
+# Logging
+log_level = "{{ vault_log_level }}"
+log_format = "{{ vault_log_format }}"

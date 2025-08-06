@@ -1,0 +1,53 @@
+[Unit]
+Description=HashiCorp Vault
+Documentation=https://www.vaultproject.io/docs/
+Requires=network-online.target
+After=network-online.target
+{% if vault_storage_backend == "consul" %}
+After=consul.service
+Wants=consul.service
+{% endif %}
+ConditionFileNotEmpty={{ vault_config_dir }}/vault.hcl
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=notify
+EnvironmentFile=-/etc/vault.d/vault.env
+User={{ vault_user }}
+Group={{ vault_group }}
+ProtectSystem=full
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+SecureBits=keep-caps
+AmbientCapabilities=CAP_IPC_LOCK
+{% if not vault_disable_mlock %}
+Capabilities=CAP_IPC_LOCK+ep
+CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
+{% else %}
+CapabilityBoundingSet=CAP_SYSLOG
+{% endif %}
+NoNewPrivileges=yes
+ExecStart=/usr/local/bin/vault server -config={{ vault_config_dir }}
+ExecReload=/bin/kill --signal HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+LimitNOFILE=65536
+LimitMEMLOCK=infinity
+KillSignal=SIGINT
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vault
+
+# Environment variables
+Environment="HOME={{ vault_base_dir }}"
+Environment="VAULT_LOG_LEVEL={{ vault_log_level }}"
+Environment="VAULT_LOG_FORMAT={{ vault_log_format }}"
+
+[Install]
+WantedBy=multi-user.target

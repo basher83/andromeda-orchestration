@@ -1,0 +1,60 @@
+---
+# Configure auto-unseal for Vault
+# Supports multiple unseal providers
+
+- name: Validate auto-unseal configuration
+  ansible.builtin.assert:
+    that:
+      - vault_auto_unseal_type in ['transit', 'awskms', 'azurekeyvault', 'gcpckms']
+      - vault_auto_unseal_config is defined
+      - vault_auto_unseal_config | length > 0
+    fail_msg: "Auto-unseal requires valid type and configuration"
+
+- name: Install AWS CLI for KMS unseal
+  ansible.builtin.package:
+    name: awscli
+    state: present
+  when: vault_auto_unseal_type == "awskms"
+
+- name: Install Azure CLI for Key Vault unseal
+  ansible.builtin.shell: |
+    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  args:
+    creates: /usr/bin/az
+  when: vault_auto_unseal_type == "azurekeyvault"
+
+- name: Create auto-unseal test script
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      # Test auto-unseal configuration
+
+      set -e
+
+      export VAULT_ADDR="{{ vault_api_addr }}"
+
+      # Check if Vault is initialized
+      if ! vault status 2>/dev/null | grep -q "Initialized.*true"; then
+        echo "Vault is not initialized. Run: vault operator init"
+        exit 1
+      fi
+
+      # Check seal status
+      if vault status 2>/dev/null | grep -q "Sealed.*false"; then
+        echo "Vault is already unsealed (auto-unseal working)"
+        exit 0
+      else
+        echo "Vault is sealed. Auto-unseal may not be configured correctly."
+        exit 1
+      fi
+    dest: /usr/local/bin/vault-test-unseal
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Display auto-unseal configuration
+  ansible.builtin.debug:
+    msg:
+      - "Auto-unseal configured with {{ vault_auto_unseal_type }}"
+      - "Configuration will be applied on next Vault restart"
+      - "Test with: /usr/local/bin/vault-test-unseal"
