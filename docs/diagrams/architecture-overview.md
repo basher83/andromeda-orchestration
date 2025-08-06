@@ -27,6 +27,7 @@ graph TB
     subgraph "doggos-homelab Cluster"
         DogProxmox[Proxmox VE<br/>3 Nodes]
         Consul[Consul<br/>Service Discovery]
+        Vault[Vault<br/>Secrets & PKI]
         Nomad[Nomad<br/>Orchestrator]
         PowerDNS[PowerDNS<br/>Future DNS]
     end
@@ -41,11 +42,14 @@ graph TB
     Ansible -->|Manage| OGProxmox
     Ansible -->|Manage| DogProxmox
     Ansible -->|Configure| Consul
+    Ansible -->|Configure| Vault
     Ansible -->|Deploy Jobs| Nomad
     Ansible -->|Configure| PowerDNS
 
     %% Service Connections
     Consul <-->|Service Registry| Nomad
+    Vault <-->|Secrets/Tokens| Nomad
+    Vault -->|PKI/Certs| Consul
     PowerDNS -->|Query| NetBox
     PowerDNS -->|Service Discovery| Consul
 
@@ -64,7 +68,7 @@ graph TB
     class Infisical secrets
     class Ansible,AnsibleInv,AnsiblePlay automation
     class OGPihole,OGUnbound legacy
-    class PowerDNS,Consul,Nomad modern
+    class PowerDNS,Consul,Vault,Nomad modern
 ```
 
 ## Key Components

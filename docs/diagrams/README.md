@@ -5,19 +5,16 @@ This directory contains Mermaid-based architecture and flow diagrams for the and
 ## Available Diagrams
 
 1. **[Architecture Overview](architecture-overview.md)**
-
    - High-level view of all system components
-   - Shows relationships between NetBox, Ansible, Infisical, and infrastructure
+   - Shows relationships between NetBox, Ansible, Infisical, Vault, and infrastructure
    - Illustrates both current and target states
 
 2. **[DNS/IPAM Migration Flow](dns-ipam-migration-flow.md)**
-
    - Detailed flowchart of the 5-phase migration plan
    - Includes decision points and rollback procedures
    - Maps directly to the implementation plan phases
 
 3. **[Secrets Management Flow](secrets-management-flow.md)**
-
    - Sequence diagram showing authentication flow
    - Details how secrets move from Infisical to target infrastructure
    - Includes error handling scenarios
@@ -27,6 +24,24 @@ This directory contains Mermaid-based architecture and flow diagrams for the and
    - Parent-child streaming relationships
    - Parent-to-parent mesh replication topology
    - Network routing and access points
+
+5. **[Network Port Architecture](network-port-architecture.md)**
+   - Port allocation strategy and ranges
+   - Traffic flow patterns
+   - Service registration flow
+   - Infrastructure port mappings including Vault
+
+6. **[Vault Architecture](vault-architecture.md)** *(New)*
+   - Complete Vault deployment architecture
+   - Raft storage cluster topology
+   - PKI hierarchy and certificate management
+   - Secret rotation and backup flows
+
+7. **[HashiCorp Stack Integration](hashicorp-stack-integration.md)** *(New)*
+   - Integration between Consul, Vault, and Nomad
+   - Authentication and authorization flows
+   - Service lifecycle management
+   - Data flow patterns across the stack
 
 ## Viewing Diagrams
 
