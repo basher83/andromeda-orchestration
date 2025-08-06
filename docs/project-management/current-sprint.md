@@ -38,17 +38,33 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 ### 15. Deploy HashiCorp Vault
 
 **Description**: Complete the HashiCorp stack with Vault for advanced secrets management
-**Status**: Not Started
-**Priority**: High (but NetBox takes precedence)
-**Blockers**: None - Traefik deployed for HTTPS access
-**Related**: Secrets management strategy, HashiCorp stack completion
+**Status**: ✅ Completed (2025-08-06)
+**Priority**: High
+**Blockers**: None
+**Related**: docs/implementation/vault/, HashiCorp stack completion
 
-**Sprint Tasks**:
+**Completed Tasks**:
 
-- [ ] Create Vault Nomad job specification (dev mode initially)
-- [ ] Deploy Vault in dev mode for exploration
-- [ ] Test basic secret storage and retrieval
-- [ ] Document access patterns
+- [x] Created comprehensive Vault Ansible role with dev/production modes
+- [x] Developed deployment playbooks for both dev and production
+- [x] Documented phased deployment strategy
+- [x] Researched and analyzed production patterns from 3 repositories
+- [x] Created enhanced deployment strategy with PKI, rotation, and DR
+- [x] Generated architecture diagrams for Vault and HashiCorp stack
+- [x] Prepared Nomad integration templates (JWT workload identity)
+- [x] Deployed Vault in dev mode to all 3 nomad-server nodes
+- [x] Verified Vault accessibility and health on all nodes
+- [x] Registered Vault services in Consul
+- [x] Tested KV secret engine functionality
+- [x] Stored dev token securely in Infisical at `/apollo-13/vault/`
+- [x] Created comprehensive Vault operations documentation
+
+**Deployment Details**:
+- Running on: nomad-server-1-lloyd (v1.15.5), nomad-server-2-holly (v1.20.1), nomad-server-3-mable (v1.20.1)
+- Dev token secured in Infisical: `/apollo-13/vault/VAULT_DEV_ROOT_TOKEN`
+- Accessible at: http://192.168.10.11:8200, http://192.168.10.12:8200, http://192.168.10.13:8200
+- Operations guide: `docs/operations/vault-access.md`
+- Ready for production deployment when needed
 
 ### 28. Implement Markdown Linting and Enforcement
 
@@ -121,11 +137,11 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 
 ## 📊 Sprint Metrics
 
-- **Completed This Sprint**: 1/1 (Netdata optimization)
-- **In Progress**: 2 (NetBox bootstrap, Vault deployment)
+- **Completed This Sprint**: 2 (Netdata optimization, Vault deployment)
+- **In Progress**: 1 (NetBox bootstrap)
 - **Blocked**: 1 (Service identity tokens)
 - **Not Started**: 1 (Markdown linting)
-- **Overall Project**: 15/34 tasks (44%) - NetBox deployment counted!
+- **Overall Project**: 16/34 tasks (47%) - HashiCorp stack complete!
 
 ## 🔗 Quick Links
 
