@@ -1,0 +1,108 @@
+---
+# Install Vault
+# Based on HashiCorp official installation patterns
+
+- name: Create vault group
+  ansible.builtin.group:
+    name: "{{ vault_group }}"
+    system: true
+    state: present
+
+- name: Create vault user
+  ansible.builtin.user:
+    name: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    system: true
+    shell: /bin/false
+    home: "{{ vault_base_dir }}"
+    create_home: false
+
+- name: Create vault directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0755"
+  loop:
+    - "{{ vault_base_dir }}"
+    - "{{ vault_config_dir }}"
+    - "{{ vault_data_dir }}"
+    - "{{ vault_log_dir }}"
+    - "{{ vault_tls_dir }}"
+
+- name: Install required packages
+  ansible.builtin.package:
+    name:
+      - unzip
+      - jq
+      - curl
+    state: present
+
+- name: Check if Vault is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/vault
+  register: vault_binary
+
+- name: Get installed Vault version
+  ansible.builtin.command: vault version
+  register: installed_vault_version
+  changed_when: false
+  failed_when: false
+  when: vault_binary.stat.exists
+
+- name: Parse installed version
+  ansible.builtin.set_fact:
+    installed_version: "{{ installed_vault_version.stdout | regex_search('v([0-9.]+)', '\\1') | first }}"
+  when:
+    - vault_binary.stat.exists
+    - installed_vault_version.rc == 0
+    - installed_vault_version.stdout != ""
+
+- name: Download Vault binary
+  ansible.builtin.unarchive:
+    src: "{{ vault_download_url }}"
+    dest: /tmp
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0755"
+  when: >
+    not vault_binary.stat.exists or
+    (installed_version is defined and installed_version != vault_version)
+
+- name: Install Vault binary
+  ansible.builtin.copy:
+    src: /tmp/vault
+    dest: /usr/local/bin/vault
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+  when: >
+    not vault_binary.stat.exists or
+    (installed_version is defined and installed_version != vault_version)
+  notify: restart vault
+
+- name: Create Vault systemd service file
+  ansible.builtin.template:
+    src: "{{ 'vault-dev.service.j2' if vault_mode == 'dev' else 'vault.service.j2' }}"
+    dest: /etc/systemd/system/vault.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - reload systemd
+    - restart vault
+
+- name: Set vault binary capabilities
+  community.general.capabilities:
+    path: /usr/local/bin/vault
+    capability: cap_ipc_lock+ep
+    state: present
+  when: not vault_disable_mlock | bool
+
+- name: Clean up temporary files
+  ansible.builtin.file:
+    path: /tmp/vault
+    state: absent

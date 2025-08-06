@@ -1,0 +1,71 @@
+# Nomad Server Policy
+# {{ ansible_managed }}
+# Allows Nomad servers to manage tokens and secrets for workloads
+
+# Allow Nomad to generate tokens for workloads
+path "auth/token/create/nomad-workload" {
+  capabilities = ["update"]
+}
+
+path "auth/token/roles/nomad-workload" {
+  capabilities = ["read"]
+}
+
+path "auth/token/lookup-self" {
+  capabilities = ["read"]
+}
+
+path "auth/token/lookup" {
+  capabilities = ["update"]
+}
+
+path "auth/token/revoke-accessor" {
+  capabilities = ["update"]
+}
+
+# Allow Nomad to renew its own token
+path "auth/token/renew-self" {
+  capabilities = ["update"]
+}
+
+# Allow Nomad to access secrets for workloads
+path "secret/data/nomad/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "secret/metadata/nomad/*" {
+  capabilities = ["list", "read", "delete"]
+}
+
+# Allow creating tokens for JWT auth method (workload identity)
+path "auth/{{ vault_nomad_jwt_auth_backend_path }}/login" {
+  capabilities = ["create", "update"]
+}
+
+# PKI access for certificate generation
+{% if vault_pki_enabled %}
+path "pki/issue/*" {
+  capabilities = ["create", "update"]
+}
+
+path "pki/certs" {
+  capabilities = ["list"]
+}
+
+path "pki/cert/*" {
+  capabilities = ["read"]
+}
+{% endif %}
+
+# System capabilities
+path "sys/capabilities-self" {
+  capabilities = ["update"]
+}
+
+path "sys/leases/renew" {
+  capabilities = ["update"]
+}
+
+path "sys/leases/lookup" {
+  capabilities = ["update"]
+}

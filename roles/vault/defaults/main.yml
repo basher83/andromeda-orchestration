@@ -1,0 +1,110 @@
+---
+# Vault installation and configuration defaults
+# Based on Skatteetaten/vagrant-hashistack patterns with production-ready defaults
+
+# Installation settings
+vault_version: "1.20.1"
+vault_architecture: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+vault_download_url: "https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_{{ vault_architecture }}.zip"
+vault_checksum_url: "https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_SHA256SUMS"
+
+# User and group
+vault_user: "vault"
+vault_group: "vault"
+
+# Directories
+vault_base_dir: "/opt/vault"
+vault_config_dir: "/etc/vault.d"
+vault_data_dir: "/opt/vault/data"
+vault_log_dir: "/var/log/vault"
+vault_tls_dir: "/opt/vault/tls"
+
+# Network configuration
+vault_bind_address: "0.0.0.0"
+vault_cluster_address: "{{ ansible_default_ipv4.address }}"
+vault_api_addr: "http://{{ ansible_default_ipv4.address }}:8200"
+vault_cluster_addr: "http://{{ ansible_default_ipv4.address }}:8201"
+vault_port: 8200
+vault_cluster_port: 8201
+
+# Mode configuration
+vault_mode: "dev"  # Options: dev, production
+vault_dev_root_token: "root"  # Only used in dev mode
+vault_dev_listen_address: "0.0.0.0:8200"
+
+# Storage backend configuration
+vault_storage_backend: "raft"  # Options: raft, consul, file
+vault_raft_node_id: "{{ ansible_hostname }}"
+vault_raft_retry_join: []  # List of leader API addresses for Raft join
+
+# Consul backend settings (if using consul storage)
+vault_consul_address: "127.0.0.1:8500"
+vault_consul_path: "vault/"
+vault_consul_token: ""  # Will be pulled from Infisical in production
+
+# Auto-unseal configuration
+vault_auto_unseal_enabled: false
+vault_auto_unseal_type: "transit"  # Options: transit, awskms, azurekeyvault, gcpckms
+vault_auto_unseal_config: {}  # Provider-specific configuration
+
+# TLS configuration
+vault_tls_disable: true  # Set to false for production
+vault_tls_cert_file: "{{ vault_tls_dir }}/vault.crt"
+vault_tls_key_file: "{{ vault_tls_dir }}/vault.key"
+vault_tls_ca_file: "{{ vault_tls_dir }}/ca.crt"
+
+# Telemetry configuration
+vault_telemetry_enabled: true
+vault_telemetry_disable_hostname: false
+vault_telemetry_prometheus_retention_time: "24h"
+vault_telemetry_statsd_address: ""
+vault_telemetry_statsite_address: ""
+
+# UI configuration
+vault_ui_enabled: true
+
+# Log level
+vault_log_level: "info"  # Options: trace, debug, info, warn, error
+vault_log_format: "json"  # Options: standard, json
+
+# Service management
+vault_service_name: "vault"
+vault_service_enabled: true
+vault_service_state: "started"
+
+# Nomad integration settings
+vault_nomad_integration_enabled: false
+vault_nomad_jwt_auth_backend_path: "nomad"
+vault_nomad_default_lease_ttl: "768h"
+vault_nomad_max_lease_ttl: "768h"
+
+# PKI settings
+vault_pki_enabled: false
+vault_pki_max_lease_ttl: "87600h"  # 10 years
+vault_pki_default_lease_ttl: "8760h"  # 1 year
+
+# Performance tuning
+vault_max_lease_ttl: "768h"
+vault_default_lease_ttl: "768h"
+vault_cluster_disable: false
+vault_disable_mlock: false
+
+# Audit configuration
+vault_audit_enabled: false
+vault_audit_path: "{{ vault_log_dir }}/audit.log"
+
+# Policies to create
+vault_policies: []
+# Example:
+# - name: nomad-server
+#   path: policies/nomad-server.hcl
+# - name: nomad-workload
+#   path: policies/nomad-workload.hcl
+
+# Initial root token handling
+vault_remove_root_token: true  # Remove root token after initial setup in production
+
+# High Availability settings
+vault_ha_enabled: false
+vault_ha_redirect_addr: ""
+vault_ha_cluster_addr: ""

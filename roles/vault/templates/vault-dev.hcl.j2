@@ -1,0 +1,37 @@
+# Vault Development Mode Configuration
+# {{ ansible_managed }}
+# WARNING: This configuration is for development only!
+
+# Disable mlock for dev mode
+disable_mlock = true
+
+# UI enabled for easy exploration
+ui = {{ vault_ui_enabled | lower }}
+
+# Dev mode specific settings
+dev {
+  enabled = true
+  dev_root_token_id = "{{ vault_dev_root_token }}"
+  dev_listen_address = "{{ vault_dev_listen_address }}"
+}
+
+# API listener
+listener "tcp" {
+  address = "{{ vault_bind_address }}:{{ vault_port }}"
+  tls_disable = true
+}
+
+# Telemetry configuration
+{% if vault_telemetry_enabled %}
+telemetry {
+  disable_hostname = {{ vault_telemetry_disable_hostname | lower }}
+  prometheus_retention_time = "{{ vault_telemetry_prometheus_retention_time }}"
+}
+{% endif %}
+
+# Logging
+log_level = "{{ vault_log_level }}"
+log_format = "{{ vault_log_format }}"
+
+# API address for client redirection
+api_addr = "{{ vault_api_addr }}"
