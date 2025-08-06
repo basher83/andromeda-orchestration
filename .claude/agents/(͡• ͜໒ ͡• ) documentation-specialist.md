@@ -1,6 +1,6 @@
 ---
 name: documentation-specialist
-description: Use proactively for creating, updating, reviewing, or organizing documentation. Specialist for documentation maintenance, markdown formatting, and ensuring comprehensive project documentation.
+description: Use PROACTIVELY for creating, updating, reviewing, or organizing documentation. Specialist for documentation maintenance, markdown formatting, and ensuring comprehensive project documentation.
 tools: TodoWrite, Read, Write, Edit, MultiEdit, Grep, Glob, LS, Bash
 color: blue
 model: opus

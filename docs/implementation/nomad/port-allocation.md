@@ -30,30 +30,30 @@ job "my-service" {
         # Nomad assigns from 20000-32000 range
       }
     }
-    
+
     task "api" {
       driver = "docker"
-      
+
       config {
         image = "my-app:latest"
         ports = ["http"]
       }
-      
+
       env {
         PORT = "${NOMAD_PORT_http}"  # Pass dynamic port to app
       }
     }
-    
+
     service {
       name = "my-api"
       port = "http"
-      
+
       tags = [
         # Traefik routing
         "traefik.enable=true",
         "traefik.http.routers.api.rule=Host(`api.lab.local`)",
       ]
-      
+
       check {
         type     = "http"
         path     = "/health"
@@ -111,7 +111,7 @@ network {
 # Traefik/Nginx/Caddy
 network {
   mode = "host"  # Important for load balancers
-  
+
   port "http" {
     static = 80
   }
@@ -153,7 +153,7 @@ network {
 service {
   name = "my-app"
   port = "http"
-  
+
   tags = [
     "traefik.enable=true",
     "traefik.http.routers.myapp.rule=Host(`myapp.lab.local`)",
@@ -169,7 +169,7 @@ service {
 service {
   name = "my-app"
   port = "http"
-  
+
   connect {
     sidecar_service {}
   }
@@ -184,11 +184,11 @@ service {
 job "webapp" {
   group "frontend" {
     count = 3  # Multiple instances, each gets different port
-    
+
     network {
       port "http" { to = 3000 }
     }
-    
+
     service {
       name = "webapp"
       port = "http"
@@ -209,17 +209,17 @@ job "microservice" {
       port "metrics" { to = 2112 }   # Prometheus metrics
       port "health" { to = 8086 }    # Health checks
     }
-    
+
     service {
       name = "microservice-http"
       port = "http"
     }
-    
+
     service {
       name = "microservice-grpc"
       port = "grpc"
     }
-    
+
     service {
       name = "microservice-metrics"
       port = "metrics"
@@ -240,11 +240,11 @@ job "postgres" {
         to = 5432
       }
     }
-    
+
     service {
       name = "postgres"
       port = "db"
-      
+
       # Only accessible within the cluster
       tags = ["internal"]
     }
@@ -259,12 +259,12 @@ job "postgres" {
 ```hcl
 task "app" {
   driver = "docker"
-  
+
   config {
     image = "myapp:latest"
     ports = ["http"]
   }
-  
+
   # Pass dynamic port to application
   env {
     PORT = "${NOMAD_PORT_http}"
@@ -278,12 +278,12 @@ task "app" {
 ```hcl
 task "legacy-app" {
   driver = "docker"
-  
+
   config {
     image = "legacy:latest"
     ports = ["http"]
   }
-  
+
   # If app can't be configured, use 'to' in network block
   # network { port "http" { to = 8080 } }
 }

@@ -79,7 +79,7 @@ Examples:
 ```hcl
 job "postgres" {
   datacenters = ["dc1"]
-  
+
   group "database" {
     # Define the volume
     volume "postgres-data" {
@@ -87,20 +87,20 @@ job "postgres" {
       source    = "postgres-data"  # Must match client config
       read_only = false
     }
-    
+
     task "postgres" {
       driver = "docker"
-      
+
       config {
         image = "postgres:15"
       }
-      
+
       # Mount the volume
       volume_mount {
         volume      = "postgres-data"
         destination = "/var/lib/postgresql/data"
       }
-      
+
       env {
         POSTGRES_PASSWORD = "{{ keyOrDefault \"postgres/password\" \"\" }}"
       }
@@ -114,22 +114,22 @@ job "postgres" {
 ```hcl
 job "webapp" {
   datacenters = ["dc1"]
-  
+
   group "app" {
     task "webapp" {
       driver = "docker"
-      
+
       config {
         image = "myapp:latest"
       }
-      
+
       # Ephemeral disk for cache
       ephemeral_disk {
         size    = 1024  # MB
         migrate = false # Don't preserve on reschedule
         sticky  = false # Clean cache on updates
       }
-      
+
       env {
         CACHE_DIR = "/alloc/data/cache"
         TEMP_DIR  = "/alloc/data/tmp"
@@ -144,27 +144,27 @@ job "webapp" {
 ```hcl
 job "shared-app" {
   datacenters = ["dc1"]
-  
+
   group "app" {
     count = 3  # Multiple instances
-    
+
     # CSI volume for shared data
     volume "shared-data" {
       type      = "csi"
       source    = "app-shared-data"
       read_only = false
-      
+
       attachment_mode = "file-system"
       access_mode     = "multi-node-multi-writer"
     }
-    
+
     task "app" {
       driver = "docker"
-      
+
       config {
         image = "myapp:latest"
       }
-      
+
       volume_mount {
         volume      = "shared-data"
         destination = "/data"
@@ -230,25 +230,25 @@ group "database" {
     type   = "host"
     source = "mysql-data"
   }
-  
+
   volume "backup" {
     type   = "host"
     source = "mysql-backup"
   }
-  
+
   task "mysql" {
     volume_mount {
       volume      = "data"
       destination = "/var/lib/mysql"
     }
   }
-  
+
   task "backup" {
     volume_mount {
       volume      = "backup"
       destination = "/backup"
     }
-    
+
     # Runs periodic backups
   }
 }
@@ -263,13 +263,13 @@ group "app" {
     type   = "host"
     source = "app-db-ssd"
   }
-  
+
   # Large HDD for files
   volume "files" {
     type   = "csi"
     source = "app-files-hdd"
   }
-  
+
   # Ephemeral for cache
   ephemeral_disk {
     size = 2048
@@ -285,7 +285,7 @@ job "app-blue" {
     volume "shared" {
       type   = "csi"
       source = "app-shared-data"
-      
+
       # Both blue and green access same data
       access_mode = "multi-node-multi-writer"
     }
@@ -297,7 +297,7 @@ job "app-green" {
     volume "shared" {
       type   = "csi"
       source = "app-shared-data"
-      
+
       access_mode = "multi-node-multi-writer"
     }
   }

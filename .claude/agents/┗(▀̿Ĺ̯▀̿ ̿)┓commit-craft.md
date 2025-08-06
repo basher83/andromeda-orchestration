@@ -1,6 +1,6 @@
 ---
 name: commit-craft
-description: Use proactively after completing coding tasks with 3+ modified files to create clean, logical commits following conventional commit standards. If they say 'create commits' or 'make commits' use this agent.
+description: Use PROACTIVELY after completing coding tasks with 3+ modified files to create clean, logical commits following conventional commit standards. If they say 'create commits' or 'make commits' use this agent.
 tools: TodoWrite, Read, Write, Edit, Grep, Glob, LS, Bash
 color: green
 model: sonnet
@@ -47,15 +47,7 @@ When invoked, you must follow these steps:
    - Reference issues with "Fixes #123" or "Relates to #456"
    - Note breaking changes with "BREAKING CHANGE:" footer
 
-5. **Present Plan to User**
-
-   - Show TodoWrite commit plan with:
-     - Files included in each commit
-     - Draft commit message
-     - Rationale for grouping
-   - Wait for user approval or modifications
-
-6. **Execute Commits**
+5. **Execute Commits**
    - Stage files for each commit using `git add`
    - Create commits with approved messages
    - Show `git log --oneline -10` after completion
@@ -81,13 +73,7 @@ Provide your final response with:
    - Types of changes detected
    - Suggested number of commits
 
-2. **Proposed Commit Plan**
-
-   - TodoWrite list with commit sequence
-   - Files grouped per commit
-   - Draft messages for each
-
-3. **Execution Results**
+2. **Execution Results**
    - Git commands executed
    - Final commit hashes
    - Updated git log output
