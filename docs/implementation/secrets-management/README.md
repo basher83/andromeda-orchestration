@@ -5,12 +5,20 @@ This directory contains documentation for secrets management implementation usin
 ## Documents
 
 ### 🔑 [infisical-setup.md](infisical-setup.md)
-Complete guide for Infisical setup and migration:
-- Machine identity configuration
-- Project and environment structure
-- Secret organization patterns
-- Ansible integration using `infisical.vault` collection
-- Migration from 1Password
+General guide for Infisical setup:
+- Core concepts and project types
+- Authentication methods
+- Ansible integration patterns
+- Best practices
+- Migration guidance
+
+### 🚀 [andromeda-infisical-config.md](andromeda-infisical-config.md)
+Project-specific Infisical configuration:
+- Current project details and IDs
+- Secret organization structure
+- Usage patterns in inventory and playbooks
+- Migration status
+- Future considerations
 
 ### 📊 [comparison.md](comparison.md)
 Detailed comparison between secrets management solutions:

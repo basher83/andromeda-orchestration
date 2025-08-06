@@ -39,6 +39,20 @@ Network security and port management:
 - Service exposure policies
 - Security zones
 
+### 🔍 [security-scanning.md](security-scanning.md)
+Security scanning operations and procedures:
+- Infisical CLI secret detection
+- KICS infrastructure security scanning
+- Pre-commit hooks and CI/CD integration
+- False positive management
+
+### 🔐 [vault-access.md](vault-access.md)
+HashiCorp Vault access and operations:
+- Development mode access procedures
+- Node details and versions
+- CLI and UI access instructions
+- Basic operations guide
+
 ## Purpose
 
 These documents provide:
