@@ -154,8 +154,21 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 
 - **Consul**: Deployed (configuration state pending assessment)
 - **Nomad**: Operational on doggos-homelab
+- **Vault**: Deployed in dev mode on all nomad-server nodes (see below for access)
 - **DNS**: Currently Pi-hole + Unbound (to be migrated)
 - **IPAM**: Ad-hoc management (to be replaced with NetBox)
+
+### Vault Access
+
+Vault is currently running in development mode on all three nomad-server nodes:
+
+- nomad-server-1-lloyd: <http://192.168.10.11:8200> (v1.15.5)
+- nomad-server-2-holly: <http://192.168.10.12:8200> (v1.20.1)
+- nomad-server-3-mable: <http://192.168.10.13:8200> (v1.20.1)
+
+Development token is stored in Infisical at `/apollo-13/vault/VAULT_DEV_ROOT_TOKEN`.
+
+For detailed Vault operations, see `docs/operations/vault-access.md`.
 
 ## Important Considerations
 
