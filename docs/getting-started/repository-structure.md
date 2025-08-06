@@ -64,7 +64,7 @@ This directory has been archived to `docs/archive/bin/` as it contained only dep
 
 - **infisical-setup-and-migration.md** - Primary secrets management guide (Infisical)
 - **1password-integration.md** - Legacy 1Password setup (deprecated)
-- **secrets-management-comparison.md** - Comparison of 1Password vs Infisical
+- **infisical/comparison.md** - Comparison of 1Password vs Infisical
 - **troubleshooting.md** - Common issues and solutions
 - **repository-structure.md** - This file
 - **archive/** - Original documentation preserved for reference
