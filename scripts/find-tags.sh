@@ -65,9 +65,9 @@ count_tags() {
 show_tags() {
     local pattern="$1"
     local title="$2"
-    
+
     echo -e "${YELLOW}=== $title ===${NC}"
-    
+
     # Find and display with colors
     rg "$pattern" . \
         --glob '!.venv/**' \
@@ -94,7 +94,7 @@ show_tags() {
             echo "$line"
         fi
     done || echo "  No tags found"
-    
+
     echo ""
 }
 
@@ -102,10 +102,10 @@ show_tags() {
 if [ "$TAG_FILTER" = "ALL" ] || [ "$TAG_FILTER" = "TODO" ] || [ "$TAG_FILTER" = "FIXME" ] || \
    [ "$TAG_FILTER" = "BUG" ] || [ "$TAG_FILTER" = "HACK" ] || [ "$TAG_FILTER" = "WARNING" ] || \
    [ "$TAG_FILTER" = "NOTE" ] || [ "$TAG_FILTER" = "DEPRECATED" ] || [ "$TAG_FILTER" = "SECURITY" ]; then
-    
+
     # Documentation tags
     show_tags "$DOC_PATTERN" "Documentation Tags"
-    
+
     # Code tags
     show_tags "$CODE_PATTERN" "Code Tags"
 fi
@@ -126,22 +126,22 @@ if [ "$TAG_FILTER" = "ALL" ]; then
             printf "${color}%-12s: %3d${NC}\n" "$tag" "$total"
         fi
     done
-    
+
     # Total count
     echo "-------------------"
     total_all=$(count_tags "$ALL_PATTERN")
     echo -e "${GREEN}Total tags  : ${total_all}${NC}"
-    
+
     # Priority breakdown
     echo ""
     echo -e "${CYAN}=== By Priority ===${NC}"
-    
+
     critical=$((${tag_counts[SECURITY]:-0}))
     high=$((${tag_counts[FIXME]:-0} + ${tag_counts[BUG]:-0}))
     medium=$((${tag_counts[TODO]:-0} + ${tag_counts[HACK]:-0}))
     low=$((${tag_counts[DEPRECATED]:-0}))
     info=$((${tag_counts[WARNING]:-0} + ${tag_counts[NOTE]:-0}))
-    
+
     [ $critical -gt 0 ] && echo -e "${RED}Critical : $critical (SECURITY)${NC}"
     [ $high -gt 0 ] && echo -e "${RED}High     : $high (FIXME, BUG)${NC}"
     [ $medium -gt 0 ] && echo -e "${YELLOW}Medium   : $medium (TODO, HACK)${NC}"

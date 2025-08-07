@@ -34,7 +34,7 @@
       "type": "stdio",
       "command": "/usr/local/netdata/usr/sbin/nd-mcp",
       "args": [
-        "ws://192.168.11.2:19999/mcp?api_key=d8d22964-c41e-43ab-bdba-11c063622051"
+        "ws://192.168.30.50:19999/mcp?api_key=688656a9-ef64-4b54-a9de-b9860a39bd33"
       ]
     }
   }
