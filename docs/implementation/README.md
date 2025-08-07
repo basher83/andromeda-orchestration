@@ -6,10 +6,12 @@ This directory contains detailed implementation guides for various infrastructur
 
 ### 📋 [dns-ipam/](dns-ipam/)
 
-DNS and IP Address Management implementation documentation
+DNS and IP Address Management implementation documentation (including NetBox IPAM)
 
 - **implementation-plan.md** - Master plan for DNS & IPAM overhaul (5 phases)
-- **phase1-guide.md** - Detailed Phase 1 implementation guide
+- **phase1-guide.md** - Phase 1: Consul DNS Foundation
+- **phase3-netbox-deployment.md** - Phase 3: NetBox IPAM deployment and configuration
+- **netbox-integration-patterns.md** - Comprehensive NetBox automation patterns with Ansible
 - **testing-strategy.md** - Testing approach for DNS/IPAM changes
 
 ### 🔐 [consul/](consul/)
@@ -44,12 +46,6 @@ Infisical secrets management implementation
 - **andromeda-infisical-config.md** - Project-specific configuration
 - **comparison.md** - Comparison between 1Password and Infisical approaches
 
-### 🗄️ [netbox/](netbox/)
-
-NetBox as source of truth for infrastructure automation
-
-- **integration.md** - Comprehensive automation patterns with Ansible
-- **README.md** - Implementation overview and quick start
 
 ## Implementation Phases
 
@@ -58,7 +54,7 @@ Following the DNS & IPAM roadmap:
 1. **Phase 0** ✅ - Assessment (Complete)
 2. **Phase 1** 🚧 - Consul DNS Foundation (In Progress)
 3. **Phase 2** ✅ - PowerDNS Deployment (Playbooks Ready)
-4. **Phase 3** ⏳ - NetBox Integration (Planned)
+4. **Phase 3** 🚀 - NetBox Integration (Accelerated - NetBox deployed!)
 5. **Phase 4** ⏳ - Pi-hole Migration (Planned)
 6. **Phase 5** ⏳ - Scale & Automate (Future)
 
