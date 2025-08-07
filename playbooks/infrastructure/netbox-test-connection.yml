@@ -1,0 +1,70 @@
+---
+# Test NetBox Connection using Infisical credentials
+- name: Test NetBox API Connection
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    netbox_url: "https://192.168.30.213"
+    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
+
+  tasks:
+    - name: Retrieve NetBox credentials from Infisical
+      set_fact:
+        netbox_username: >-
+          {{ (lookup('infisical.vault.read_secrets',
+                     universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                     universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                     project_id=infisical_project_id,
+                     env_slug=infisical_env,
+                     path='/apollo-13/services/netbox',
+                     secret_name='NETBOX_USERNAME')).value }}
+        netbox_api_key: >-
+          {{ (lookup('infisical.vault.read_secrets',
+                     universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                     universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                     project_id=infisical_project_id,
+                     env_slug=infisical_env,
+                     path='/apollo-13/services/netbox',
+                     secret_name='NETBOX_API_KEY')).value }}
+      no_log: true
+
+    - name: Display connection info (without sensitive data)
+      debug:
+        msg:
+          - "NetBox URL: {{ netbox_url }}"
+          - "Username retrieved: {{ 'Yes' if netbox_username else 'No' }}"
+          - "API Key retrieved: {{ 'Yes' if netbox_api_key else 'No' }}"
+          - "Environment: {{ infisical_env }}"
+
+    - name: Test NetBox API connectivity
+      uri:
+        url: "{{ netbox_url }}/api/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_api_key }}"
+        validate_certs: false
+        status_code: [200, 403]
+      register: api_test
+      ignore_errors: true
+
+    - name: Display API test result
+      debug:
+        msg: "NetBox API is {{ 'accessible' if api_test.status == 200 else 'requires authentication' if api_test.status == 403 else 'not reachable' }}"
+
+    - name: Get API status if successful
+      uri:
+        url: "{{ netbox_url }}/api/status/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_api_key }}"
+        validate_certs: false
+      register: api_status
+      when: api_test.status == 200
+      ignore_errors: true
+
+    - name: Display NetBox status
+      debug:
+        var: api_status.json
+      when: api_status is defined and api_status.json is defined

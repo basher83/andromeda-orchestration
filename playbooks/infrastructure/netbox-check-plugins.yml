@@ -1,0 +1,58 @@
+---
+# Check installed NetBox plugins
+- name: Check NetBox Plugins
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    netbox_url: "https://192.168.30.213"
+    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
+    netbox_validate_certs: false
+
+  tasks:
+    - name: Retrieve NetBox API token from Infisical
+      set_fact:
+        netbox_token: >-
+          {{ (lookup('infisical.vault.read_secrets',
+                     universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                     universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                     project_id=infisical_project_id,
+                     env_slug=infisical_env,
+                     path='/apollo-13/services/netbox',
+                     secret_name='NETBOX_API_KEY')).value }}
+      no_log: true
+
+    - name: Check installed plugins
+      uri:
+        url: "{{ netbox_url }}/api/plugins/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        validate_certs: false
+      register: plugins_response
+      failed_when: false
+
+    - name: Display plugin check results
+      debug:
+        msg:
+          - "Plugin API Status: {{ plugins_response.status | default('Failed') }}"
+          - "Response: {{ plugins_response.json | default(plugins_response.msg | default('No plugins endpoint found')) }}"
+
+    - name: Check NetBox version and capabilities
+      uri:
+        url: "{{ netbox_url }}/api/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        validate_certs: false
+      register: api_response
+
+    - name: Display NetBox capabilities
+      debug:
+        msg:
+          - "NetBox Version: {{ api_response.headers['API-Version'] | default('Unknown') }}"
+          - "Available endpoints:"
+          - "{{ api_response.json.keys() | list }}"

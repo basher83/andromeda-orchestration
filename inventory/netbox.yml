@@ -1,0 +1,54 @@
+---
+# NetBox dynamic inventory configuration
+# This inventory connects to NetBox as the source of truth for infrastructure
+
+plugin: netbox.netbox.nb_inventory
+api_endpoint: http://192.168.30.213  # NetBox URL (LXC 213 on pve1)
+validate_certs: false  # Set to true in production with proper certs
+
+# API token will be set via environment variable: NETBOX_TOKEN
+# token: set via NETBOX_TOKEN environment variable
+
+# Grouping configuration
+group_by:
+  - device_roles  # Group by device role (e.g., server, switch, router)
+  - sites        # Group by site (e.g., og-homelab, doggos-homelab)
+  - platforms    # Group by platform (e.g., linux, proxmox)
+  - tags         # Group by tags
+
+# Create groups for specific attributes
+keyed_groups:
+  # Group by status
+  - key: status
+    prefix: status
+    separator: "_"
+  # Group by manufacturer
+  - key: manufacturer
+    prefix: manufacturer
+    separator: "_"
+  # Group by device type
+  - key: device_type
+    prefix: type
+    separator: "_"
+
+# Compose variables for hosts
+compose:
+  # Use the primary IP for ansible_host
+  ansible_host: primary_ip4.address | default(primary_ip6.address) | regex_replace('/.*', '')
+  # Add custom facts from NetBox custom fields
+  # netbox_custom: custom_fields
+
+# Query filters (optional)
+# device_query_filters:
+#   - has_primary_ip: true
+#   - status: active
+
+# Virtual machine filters (optional)
+# virtual_machine_query_filters:
+#   - status: active
+
+# Flatten custom fields for easier access
+flatten_custom_fields: true
+
+# Include full device/VM details
+fetch_all: true
