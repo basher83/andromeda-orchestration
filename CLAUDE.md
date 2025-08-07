@@ -70,7 +70,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
     - `infisical.proxmox.yml` - Uses Infisical for secrets (recommended)
     - `1password.proxmox.yml` - Uses 1Password for secrets (legacy)
 - **In Progress**: DNS & IPAM infrastructure deployment (see `docs/implementation/dns-ipam/implementation-plan.md`)
-- **Planned**: NetBox dynamic inventory integration (see `docs/implementation/netbox-integration.md` for patterns)
+- **Planned**: NetBox dynamic inventory integration (see `docs/implementation/dns-ipam/netbox-integration-patterns.md` for patterns)
 - **Authentication**:
   - Infisical: Machine identity credentials via environment variables
   - 1Password: API tokens via Connect server (legacy)
@@ -100,7 +100,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
   - Risk assessments and mitigation strategies
   - Success criteria for each phase
 
-- `docs/implementation/netbox-integration.md`: Comprehensive NetBox integration patterns including:
+- `docs/implementation/dns-ipam/netbox-integration-patterns.md`: Comprehensive NetBox integration patterns including:
 
   - Dynamic inventory configuration
   - State management with NetBox modules
@@ -177,7 +177,7 @@ For detailed Vault operations, see `docs/operations/vault-access.md`.
 - Ensure Infisical environment variables are set before running commands (see `docs/implementation/secrets-management/infisical-setup.md`)
 - Use the execution environment for consistency across different systems
 - Always test inventory plugins with `ansible-inventory` before running playbooks
-- NetBox integration should follow the patterns in `docs/implementation/netbox-integration.md`
+- NetBox integration should follow the patterns in `docs/implementation/dns-ipam/netbox-integration-patterns.md`
 
 ## Recommended Tools
 
