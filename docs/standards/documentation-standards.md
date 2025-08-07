@@ -58,30 +58,131 @@ Every README must include:
 [Descriptive Links](relative/path.md) not [click here](path)
 ```
 
-### TODO Tagging
+### Tagging Standards
 
-Use consistent TODO tags for tracking tasks within documentation:
+Use consistent tags for tracking tasks, issues, and important notes across both documentation and code.
 
+#### Tag Types and Usage
+
+| Tag | Purpose | Priority | Example |
+|-----|---------|----------|---------|
+| `TODO` | Future tasks or improvements | Medium | "Add error handling for edge cases" |
+| `FIXME` | Broken code that needs fixing | High | "This breaks when input is null" |
+| `BUG` | Known bugs that need resolution | High | "Returns incorrect value for negative numbers" |
+| `HACK` | Temporary workaround that needs proper solution | Medium | "Using sleep() until proper event system is ready" |
+| `WARNING` | Important cautions for other developers | Info | "Do not modify - external system dependency" |
+| `NOTE` | Important information or context | Info | "This follows RFC-2119 specification" |
+| `DEPRECATED` | Code/docs scheduled for removal | Low | "Use new_function() instead - removal in v2.0" |
+| `SECURITY` | Security-related concerns | Critical | "Validate input to prevent SQL injection" |
+
+#### Format Standards
+
+**In Documentation (Markdown):**
 ```markdown
 [TODO]: Description of task to complete
-[TODO]: Cross-reference with docs/other-file.md
-[TODO]: Implement feature X after Y is complete
+[FIXME]: This section has incorrect information about X
+[WARNING]: Do not use this approach in production
+[NOTE]: This follows the pattern established in RFC-2119
 ```
 
-**Standards:**
-- Format: `[TODO]: ` followed by clear action item
-- Placement: At relevant location in document
-- Searchable: Use `rg "\[TODO\]:"` to find all TODOs
-- Examples:
-  - `[TODO]: Add diagram for network architecture`
-  - `[TODO]: Cross-reference with docs/troubleshooting/netdata-streaming-issues.md and combine the two documents`
-  - `[TODO]: Update after Phase 2 implementation`
+**In Code (Comments):**
+```python
+# TODO: Add retry logic for network failures
+# FIXME: This breaks when count > 100
+# WARNING: Do not modify - external dependency
+# NOTE: Algorithm based on Dijkstra's shortest path
+```
 
-**Why TODO Tags?**
-- **Visibility**: Easy to search across all documentation
-- **Context**: TODOs stay near relevant content
-- **Tracking**: Can generate TODO reports
-- **Git-friendly**: Shows in diffs when added/resolved
+```yaml
+# TODO: Add production configuration after testing
+# HACK: Using hardcoded values until Vault integration is complete
+```
+
+#### Standards and Rules
+
+**Format Requirements:**
+- Documentation: `[TAG]: ` (brackets, colon, space)
+- Code: `# TAG: ` (hash, space, tag, colon, space)
+- Always include descriptive text after the tag
+- Keep descriptions concise but complete
+- Include ticket/issue numbers when applicable: `[TODO]: (PROJ-123) Implement feature`
+
+**Placement:**
+- Place tags at the relevant location in code/docs
+- For multi-line issues, place tag on first line
+- Group related tags together when possible
+
+**Priority Guidelines:**
+- `SECURITY` - Address immediately
+- `FIXME`, `BUG` - Address in current sprint
+- `TODO`, `HACK` - Address in next refactor
+- `WARNING`, `NOTE` - Informational only
+- `DEPRECATED` - Remove by stated deadline
+
+#### Searching and Tracking
+
+**Find all tags:**
+```bash
+# In documentation
+rg '\[(TODO|FIXME|BUG|HACK|WARNING|NOTE|DEPRECATED|SECURITY)\]:'
+
+# In code  
+rg '# (TODO|FIXME|BUG|HACK|WARNING|NOTE|DEPRECATED|SECURITY):'
+
+# All tags project-wide
+rg '(\[|# )(TODO|FIXME|BUG|HACK|WARNING|NOTE|DEPRECATED|SECURITY):'
+
+# Specific tag type
+rg '\[FIXME\]:|# FIXME:'
+```
+
+**Generate reports:**
+```bash
+# Count by type
+rg '(\[|# )(TODO|FIXME|BUG|WARNING)' --no-filename | \
+  sed -E 's/.*(\[|# )(TODO|FIXME|BUG|WARNING).*/\2/' | \
+  sort | uniq -c
+
+# List with file locations
+rg '(\[|# )(TODO|FIXME|BUG)' --vimgrep
+```
+
+#### Examples
+
+**Good Examples:**
+```markdown
+[TODO]: Add monitoring dashboard after Netdata deployment is complete
+[FIXME]: This link is broken - should point to /docs/operations/runbooks.md
+[WARNING]: Do not run this playbook in production without backup
+```
+
+```python
+# TODO: (INFRA-456) Replace with dynamic configuration from Consul
+# FIXME: Memory leak when processing > 1000 items - see issue #234
+# HACK: Using subprocess because native library has threading bug
+# NOTE: Keep in sync with Ansible role defaults in roles/consul/defaults/main.yml
+```
+
+**Bad Examples:**
+```markdown
+[TODO]: Fix this            # Too vague
+TODO: Add tests             # Missing brackets
+[TODO] Missing colon        # Wrong format
+```
+
+```python
+# TODO                      # No description
+# todo: lowercase           # Wrong case
+#TODO: No space             # Missing space
+```
+
+#### Why Unified Tagging?
+- **Consistency**: Same patterns in code and docs
+- **Searchability**: Easy to find all issues project-wide  
+- **Prioritization**: Clear severity levels
+- **Maintenance**: Systematic debt tracking
+- **Onboarding**: New developers understand codebase state
+- **Automation**: Can generate reports and metrics
 
 ## Rationale
 
