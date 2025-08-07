@@ -12,6 +12,9 @@ dependencies = [
     "python-dateutil>=2.8",
     "infisical-python>=2.2.0",
     "infisicalsdk>=1.0.0",
+    "pynetbox>=7.0.0",
+    "packaging>=21.0",
+    "pytz>=2023.3",
 ]
 
 [project.optional-dependencies]

@@ -32,7 +32,10 @@ dependencies = [
     { name = "infisicalsdk" },
     { name = "jinja2" },
     { name = "netaddr" },
+    { name = "packaging" },
+    { name = "pynetbox" },
     { name = "python-dateutil" },
+    { name = "pytz" },
     { name = "pyyaml" },
     { name = "requests" },
 ]
@@ -63,10 +66,13 @@ requires-dist = [
     { name = "molecule-plugins", extras = ["docker"], marker = "extra == 'dev'", specifier = ">=23.5.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.9.0" },
     { name = "netaddr", specifier = ">=0.9" },
+    { name = "packaging", specifier = ">=21.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
+    { name = "pynetbox", specifier = ">=7.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
     { name = "pytest-ansible", marker = "extra == 'dev'", specifier = ">=24.1.0" },
     { name = "python-dateutil", specifier = ">=2.8" },
+    { name = "pytz", specifier = ">=2023.3" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "requests", specifier = ">=2.31" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.0" },
@@ -914,6 +920,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pynetbox"
+version = "7.5.0"
+source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
+dependencies = [
+    { name = "packaging" },
+    { name = "requests" },
+]
+sdist = { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/d3/0b/695021a23c373991d07c1e4cb510287a521318cfc4b29f68ebbecb19fcd2/pynetbox-7.5.0.tar.gz", hash = "sha256:780064c800fb8c079c9828df472203146442ed3dd0b522a28a501204eb00c066", size = 73850, upload-time = "2025-05-20T16:03:03.831Z" }
+wheels = [
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/44/b7/a24bc58f0e27f0cd847bf14ffbe9722604f5abe3ec9c12dd8f89cb965be8/pynetbox-7.5.0-py3-none-any.whl", hash = "sha256:ab755a0020c0abb09b4d24c8f8ba89df26f04fa56c35de73302e29a39352f031", size = 35808, upload-time = "2025-05-20T16:03:02.445Z" },
+]
+
+[[package]]
 name = "pytest"
 version = "8.4.1"
 source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
@@ -1000,6 +1019,15 @@ dependencies = [
 sdist = { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432, upload-time = "2024-03-01T18:36:20.211Z" }
 wheels = [
     { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892, upload-time = "2024-03-01T18:36:18.57Z" },
+]
+
+[[package]]
+name = "pytz"
+version = "2025.2"
+source = { registry = "https://pkgs.safetycli.com/repository/the-mothership/pypi/simple/" }
+sdist = { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/f8/bf/abbd3cdfb8fbc7fb3d4d38d320f2441b1e7cbe29be4f23797b4a2b5d8aac/pytz-2025.2.tar.gz", hash = "sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3", size = 320884, upload-time = "2025-03-25T02:25:00.538Z" }
+wheels = [
+    { url = "https://pkgs.safetycli.com/package/the-mothership/pypi/packages/81/c4/34e93fe5f5429d7570ec1fa436f1986fb1f00c3e0f43a589fe2bbcd22c3f/pytz-2025.2-py2.py3-none-any.whl", hash = "sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00", size = 509225, upload-time = "2025-03-25T02:24:58.468Z" },
 ]
 
 [[package]]
