@@ -19,21 +19,47 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 
 ## 🚀 Active Tasks
 
+### 21. PowerDNS-NetBox Integration
+
+**Description**: Configure PowerDNS to use NetBox as backend for DNS records
+**Status**: 🚧 In Progress (2025-08-07)
+**Priority**: Critical - Phase 4 requirement
+**Blockers**: None - Both NetBox and PowerDNS are operational
+**Related**: Phase 4 core task
+
+**Sprint Tasks**:
+
+- [x] Install NetBox DNS plugin (v1.3.5 - installing now)
+- [ ] Configure DNS zones in NetBox
+- [ ] Set up PowerDNS API integration with NetBox
+- [ ] Create sync script for NetBox to PowerDNS
+- [ ] Test DNS record synchronization
+- [ ] Configure automatic PTR records
+- [ ] Set up zone transfers from NetBox
+- [ ] Configure automatic DNS updates
+
 ### 20. Bootstrap NetBox with Essential Records (ACCELERATED)
 
 **Description**: Configure NetBox and seed with critical DNS records
-**Status**: In Progress
+**Status**: ✅ Completed (2025-08-07)
 **Priority**: Critical (NetBox is ready!)
 **Blockers**: None - NetBox deployed and accessible
 **Related**: Phase 3 core task
 
-**Sprint Tasks**:
+**Completed Tasks**:
 
-- [ ] Access NetBox at <https://192.168.30.213/>
-- [ ] Configure NetBox IPAM and DCIM modules
-- [ ] Create initial data model (sites, prefixes, VLANs)
-- [ ] Import critical DNS records (proxmox hosts, core services)
-- [ ] Test API access from PowerDNS
+- [x] Access NetBox at <https://192.168.30.213/>
+- [x] Configure NetBox IPAM and DCIM modules
+- [x] Create initial data model (sites, prefixes, VLANs)
+- [x] Import critical infrastructure (Proxmox hosts, VMs)
+- [x] Test API access and functionality
+- [x] Created 3 sites (OG Homelab, Doggos Homelab)
+- [x] Configured 4 network prefixes (192.168.10.0/24, 192.168.11.0/24, 192.168.30.0/24)
+- [x] Added 3 Proxmox physical hosts with interfaces and IPs
+- [x] Created Proxmox cluster configuration
+- [x] Added 6 Nomad VMs with dual network interfaces
+- [x] Assigned 29 IP addresses total
+- [x] Created 4 operational playbooks for NetBox management
 
 ### 15. Deploy HashiCorp Vault
 
@@ -99,6 +125,12 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 
 ## ✅ Recently Completed (Last 7 Days)
 
+1. **NetBox Bootstrap and Population** (Aug 7)
+   - Created sites, prefixes, and device roles
+   - Added all physical hosts and VMs
+   - Configured network interfaces and IP assignments
+   - Created management playbooks
+
 1. **Netdata Monitoring Optimization** (Aug 4)
    - Disabled unused Statsd collectors
    - Verified streaming architecture
@@ -117,7 +149,7 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 ### 30. Initialize Molecule Testing for Critical Roles (NEW)
 
 **Description**: Add Molecule tests for HashiCorp stack roles
-**Status**: Not Started  
+**Status**: Not Started
 **Priority**: P1 (High) - Critical roles lack testing
 **Blockers**: None
 **Related**: Testing & QA Initiative, roles/*/molecule/
@@ -149,15 +181,16 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 
 ## 📊 Sprint Metrics
 
-- **Completed This Sprint**: 2 (Netdata optimization, Vault deployment)
-- **In Progress**: 1 (NetBox bootstrap)
+- **Completed This Sprint**: 3 (Netdata optimization, Vault deployment, NetBox bootstrap)
+- **In Progress**: 1 (PowerDNS-NetBox integration)
 - **Blocked**: 1 (Service identity tokens)
 - **Not Started**: 2 (Testing initiatives)
-- **Overall Project**: 16/36 tasks (44%) - Testing gaps identified!
+- **Overall Project**: 17/36 tasks (47%) - Phase 4 now active!
 
 ## 🔗 Quick Links
 
 - [Task Summary](./task-summary.md) - Project overview
-- [Phase 3 Planning](./phases/phase-3-netbox.md) - Next major phase
+- [Phase 4 DNS Integration](./phases/phase-4-dns-integration.md) - Current phase
+- [Phase 3 NetBox](./phases/phase-3-netbox.md) - Completed phase
 - [Troubleshooting](../troubleshooting.md) - Known issues
 - [Full Task Archive](./archive/full-task-list-2025-08-05.md) - Complete history
