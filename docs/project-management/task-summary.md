@@ -19,16 +19,17 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
 | **Phase 1: Foundation** | ✅ Complete | 100% | [August 2025](./completed/2025-08.md) |
 | **Phase 2: Implementation** | ✅ Complete | 100% | [August 2025](./completed/2025-08.md) |
 | **Phase 3: Migration** | 🚀 In Progress | 10% | [Active](./phases/phase-3-netbox.md) |
+| **Testing & QA** | 🆕 Planning | 0% | [Initiative](./phases/testing-qa-initiative.md) |
 | **Phase 4: Optimization** | 🔮 Future | 0% | [Planning](./phases/phase-4-multisite.md) |
 | **Phase 5: Post-Implementation** | 🔮 Future | 0% | Not started |
 
 ### Overall Metrics
 
-- **Total Tasks**: 34
-- **Completed**: 16 (47%)
+- **Total Tasks**: 36 (includes new testing tasks)
+- **Completed**: 16 (44%)
 - **In Progress**: 1 (3%)
 - **Blocked**: 1 (3%)
-- **Not Started**: 16 (47%)
+- **Not Started**: 18 (50%)
 
 ## 🎯 Current Focus
 
@@ -38,6 +39,7 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
 - Bootstrap NetBox with essential DNS records (accelerated)
 - ✅ Vault deployed in dev mode across all nodes
 - Configure PowerDNS-NetBox integration
+- 🆕 **NEW**: Critical testing gaps identified - unit tests for 14 modules needed
 
 ## ✅ Major Achievements
 
@@ -66,15 +68,21 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
    - PowerDNS deployed without service blocks
    - Workaround in place, monitoring for fixes
 
+2. **Test Coverage Gap** (NEW)
+   - Zero test coverage for 14 custom modules
+   - 7 critical roles lack Molecule tests
+   - Risk to production stability
+
 ## 📅 Upcoming Milestones
 
 ### Next 2 Weeks (Accelerated due to NetBox availability)
 
 1. NetBox configuration and data model setup
-2. PowerDNS-NetBox integration
-3. DNS record migration from Pi-hole
-4. IP address schema implementation in NetBox
-5. Deploy Vault in production mode (optional)
+2. PowerDNS-NetBox integration  
+3. **Unit tests for Consul/Nomad modules** (Critical)
+4. DNS record migration from Pi-hole
+5. IP address schema implementation in NetBox
+6. Molecule tests for HashiCorp roles (High priority)
 
 ### Next Month
 
