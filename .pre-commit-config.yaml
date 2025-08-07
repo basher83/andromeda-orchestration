@@ -69,10 +69,11 @@ repos:
         args: [--severity=warning]
 
   # Markdown linting
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.39.0
+  # Using markdownlint-cli2 for better configuration support
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.12.1
     hooks:
-      - id: markdownlint
+      - id: markdownlint-cli2
         args: [--fix]
 
 # Configuration for specific tools
