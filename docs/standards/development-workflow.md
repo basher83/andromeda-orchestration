@@ -21,6 +21,7 @@ Define the end-to-end workflow from local development to production deployment.
 - Security scans
 - Test execution
 - Documentation updates
+- Tag verification (see [Tagging Standards](./documentation-standards.md#tagging-standards))
 
 ### Code Review Process
 [TODO]: Document review requirements:
