@@ -1,0 +1,8 @@
+---
+# Localhost inventory for NetBox operations
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_become: false
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
