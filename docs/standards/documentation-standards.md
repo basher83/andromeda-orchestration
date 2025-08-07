@@ -126,7 +126,7 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 # In documentation
 rg '\[(TODO|FIXME|BUG|HACK|WARNING|NOTE|DEPRECATED|SECURITY)\]:'
 
-# In code  
+# In code
 rg '# (TODO|FIXME|BUG|HACK|WARNING|NOTE|DEPRECATED|SECURITY):'
 
 # All tags project-wide
@@ -178,7 +178,7 @@ TODO: Add tests             # Missing brackets
 
 #### Why Unified Tagging?
 - **Consistency**: Same patterns in code and docs
-- **Searchability**: Easy to find all issues project-wide  
+- **Searchability**: Easy to find all issues project-wide
 - **Prioritization**: Clear severity levels
 - **Maintenance**: Systematic debt tracking
 - **Onboarding**: New developers understand codebase state
