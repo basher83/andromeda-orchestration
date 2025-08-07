@@ -66,25 +66,21 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 - Operations guide: `docs/operations/vault-access.md`
 - Ready for production deployment when needed
 
-### 28. Implement Markdown Linting and Enforcement
+### 29. Add Unit Tests for Custom Modules (NEW - Critical)
 
-**Description**: Set up automated markdown linting to enforce documentation standards
+**Description**: Create unit tests for 14 custom modules with zero coverage
 **Status**: Not Started
-**Priority**: P1 (High) - Growing documentation debt
+**Priority**: P0 (Critical) - No test coverage for custom code
 **Blockers**: None
-**Related**: docs/standards/documentation-standards.md (lines 53-55)
+**Related**: Testing & QA Initiative, modules/*, tests/unit/
 
 **Sprint Tasks**:
 
-- [ ] Set up markdownlint or similar tool
-- [ ] Create .markdownlint.json configuration enforcing:
-  - Language specification for all code blocks
-  - Blank lines around lists and code blocks
-  - Other standards from documentation-standards.md
-- [ ] Add pre-commit hooks for markdown validation
-- [ ] Configure CI checks for pull requests
-- [ ] Create cleanup script for existing violations
-- [ ] Document linting setup in docs/standards/linting-standards.md
+- [ ] Create test structure: `mkdir -p tests/unit/modules`
+- [ ] Start with Consul modules (8 total) - highest usage
+- [ ] Add pytest configuration and coverage setup
+- [ ] Target: 80% code coverage minimum
+- [ ] Run with: `task test:python`
 
 ## 🚧 Blocked Items
 
@@ -118,7 +114,22 @@ This changes our priorities significantly - we can now accelerate NetBox integra
    - API accessible via Traefik
    - MySQL data persisted
 
-## 📋 Next Priorities (Updated for NetBox Availability)
+### 30. Initialize Molecule Testing for Critical Roles (NEW)
+
+**Description**: Add Molecule tests for HashiCorp stack roles
+**Status**: Not Started  
+**Priority**: P1 (High) - Critical roles lack testing
+**Blockers**: None
+**Related**: Testing & QA Initiative, roles/*/molecule/
+
+**Sprint Tasks**:
+
+- [ ] Initialize Molecule for consul, nomad, vault roles
+- [ ] Create default test scenarios
+- [ ] Configure Docker/Podman drivers
+- [ ] Run with: `task test:roles`
+
+## 📋 Next Priorities (Updated for NetBox + Testing)
 
 1. **PowerDNS-NetBox Integration** (Can start immediately!)
    - Install NetBox DNS plugin
@@ -130,18 +141,19 @@ This changes our priorities significantly - we can now accelerate NetBox integra
    - Define service IP ranges
    - Create VLAN documentation
 
-3. **Ansible NetBox Integration**
-   - Configure dynamic inventory
-   - Test NetBox modules
-   - Create automation playbooks
+3. **Testing Infrastructure** (Critical gap identified!)
+   - Unit tests for 14 custom modules
+   - Molecule tests for critical roles
+   - Fix syntax check issues
+   - Document testing standards
 
 ## 📊 Sprint Metrics
 
 - **Completed This Sprint**: 2 (Netdata optimization, Vault deployment)
 - **In Progress**: 1 (NetBox bootstrap)
 - **Blocked**: 1 (Service identity tokens)
-- **Not Started**: 1 (Markdown linting)
-- **Overall Project**: 16/34 tasks (47%) - HashiCorp stack complete!
+- **Not Started**: 2 (Testing initiatives)
+- **Overall Project**: 16/36 tasks (44%) - Testing gaps identified!
 
 ## 🔗 Quick Links
 

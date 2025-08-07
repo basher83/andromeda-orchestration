@@ -148,6 +148,7 @@ uv run ansible-playbook playbooks/infrastructure/phase1-consul-foundation.yml \
 ```
 
 ### Validate DNS Resolution
+
 ```bash
 # Test on a specific host
 uv run ansible nomad-server-1-lloyd -i inventory/doggos-homelab/infisical.proxmox.yml \
