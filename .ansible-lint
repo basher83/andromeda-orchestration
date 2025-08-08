@@ -16,6 +16,7 @@ exclude_paths:
   - archive/
   - .venv/
   - venv/
+  - .github/
 
 # Enable progressive mode
 profile: production
