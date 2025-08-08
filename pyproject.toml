@@ -10,8 +10,6 @@ dependencies = [
     "jinja2>=3.1",
     "netaddr>=0.9",
     "python-dateutil>=2.8",
-    "infisical-python>=2.2.0",
-    "infisicalsdk>=1.0.0",
     "pynetbox>=7.0.0",
     "packaging>=21.0",
     "pytz>=2023.3",
@@ -30,6 +28,12 @@ dev = [
     "mypy>=1.9.0",
     "types-requests>=2.31",
     "types-pyyaml>=6.0",
+]
+
+# Optional secrets integration (install only when needed)
+secrets = [
+    "infisical-python>=2.2.0",
+    "infisicalsdk>=1.0.0",
 ]
 
 [tool.ruff]
