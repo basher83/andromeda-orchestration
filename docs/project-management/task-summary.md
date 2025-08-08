@@ -40,7 +40,7 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
 - ✅ Bootstrap NetBox with essential records (3 sites, 8 devices, 6 VMs, 29 IPs)
 - ✅ Vault deployed in dev mode across all nodes
 - 🚧 **IN PROGRESS**: PowerDNS-NetBox integration (Phase 4)
-  - Installing NetBox DNS plugin v1.3.5
+  - ✅ NetBox DNS plugin v1.3.5 installed and operational
   - Next: Configure DNS zones and sync
 - 🆕 **NEW**: Critical testing gaps identified - unit tests for 14 modules needed
 
@@ -64,7 +64,7 @@ Navigation: [Current Sprint](./current-sprint.md) | [Completed](./completed/) | 
 - ✅ **Vault deployed (dev mode)** - HashiCorp stack complete!
 - ✅ **NetBox deployed (LXC 213 on pve1)** - Major milestone!
 - ✅ **NetBox populated** - All infrastructure documented (Aug 7)
-- 🚧 **NetBox DNS plugin** - Installing v1.3.5 for PowerDNS integration (Aug 7)
+- ✅ **NetBox DNS plugin v1.3.5** - Installed and operational for PowerDNS integration (Aug 8)
 
 ## 🚧 Known Issues
 

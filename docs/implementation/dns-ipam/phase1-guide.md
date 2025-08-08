@@ -9,11 +9,9 @@ Before starting Phase 1, ensure:
 1. ✅ **Consul-Nomad Integration Working** (Completed 2025-07-30)
    - All Nomad services registered in Consul
    - ACL tokens properly configured
-   
 2. ✅ **Infrastructure Roles Imported** (Completed 2025-07-30)
    - consul, nomad, system_base, nfs roles available
    - Custom modules for Consul/Nomad management
-   
 3. ✅ **Firewall Rules Configured**
    - Port 8600/udp already open (via system_base role)
 
@@ -91,6 +89,7 @@ uv run ansible nomad-server-1-lloyd -i inventory/doggos-homelab/infisical.proxmo
 ### 1. DNS Resolution (per node)
 
 The `consul_dns` role configures:
+
 - **systemd-resolved**: Forwards `.consul` queries to Consul DNS on port 8600
 - **Fallback**: Maintains existing DNS servers for non-Consul queries
 - **Cache**: Enables DNS caching for performance
@@ -99,7 +98,10 @@ Configuration file: `/etc/systemd/resolved.conf.d/consul.conf`
 
 ### 2. Service Registration (on first Consul server)
 
+[TODO]: Unsure why we're registering these services. They are running in og-homelab
+
 The following services are registered:
+
 - **pihole**: 3 instances (LXC containers)
   - pihole-lxc-103: 192.168.30.103
   - pihole-lxc-136: 192.168.30.136
@@ -119,7 +121,7 @@ The `consul_dns` role supports multiple DNS backends:
 
 ```yaml
 # In your playbook or inventory
-consul_dns_method: systemd-resolved  # Default
+consul_dns_method: systemd-resolved # Default
 # consul_dns_method: dnsmasq        # Alternative
 # consul_dns_method: resolv         # Direct /etc/resolv.conf
 ```
@@ -153,12 +155,14 @@ consul_register_services: false
 ### DNS Resolution Not Working
 
 1. Check systemd-resolved status:
+
    ```bash
    systemctl status systemd-resolved
    journalctl -u systemd-resolved -f
    ```
 
 2. Verify Consul DNS is responding:
+
    ```bash
    dig @127.0.0.1 -p 8600 consul.service.consul
    ```
@@ -172,11 +176,13 @@ consul_register_services: false
 ### Services Not Registering
 
 1. Verify Consul ACL token:
+
    ```bash
    consul catalog services -token <your-token>
    ```
 
 2. Check service registration API:
+
    ```bash
    curl -H "X-Consul-Token: <token>" http://127.0.0.1:8500/v1/agent/services
    ```
@@ -205,6 +211,8 @@ After Phase 1 is complete:
 3. **Prepare for Phase 2**: Review PowerDNS requirements and Nomad job specs
 
 ## Phase 1 Checklist
+
+[TODO]: Wrong, pihole does not run in consul.
 
 - [ ] DNS resolution configured on all nodes
 - [ ] `.consul` domain queries forwarded to Consul

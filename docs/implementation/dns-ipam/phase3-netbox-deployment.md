@@ -5,6 +5,7 @@ NetBox as the source of truth for network infrastructure automation.
 ## 📚 Documentation
 
 ### Core Integration
+
 - **[integration.md](integration.md)** - Comprehensive NetBox automation with Ansible
   - Dynamic inventory configuration
   - State management with NetBox modules
@@ -13,6 +14,7 @@ NetBox as the source of truth for network infrastructure automation.
   - Best practices and troubleshooting
 
 ### Planned Documentation
+
 - **ipam-migration.md** - Migration from ad-hoc IPAM to NetBox (planned)
 - **device-onboarding.md** - Automated device discovery and onboarding (planned)
 - **custom-fields.md** - Custom field patterns for automation (planned)
@@ -20,6 +22,7 @@ NetBox as the source of truth for network infrastructure automation.
 ## 🚀 Quick Start
 
 ### Dynamic Inventory Setup
+
 ```yaml
 # netbox_inv.yml
 ---
@@ -39,6 +42,7 @@ ansible-inventory -i netbox_inv.yml --list
 ```
 
 ### Basic NetBox Operations
+
 ```bash
 # Install NetBox collection
 ansible-galaxy collection install netbox.netbox
@@ -51,15 +55,16 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 ## 📋 Implementation Status
 
 ### ✅ Completed
+
 - Comprehensive integration patterns documentation
 - Dynamic inventory configuration examples
 - State management patterns
 - Event-driven automation patterns
 
-### 🚧 In Progress
-- Phase 3 NetBox deployment planning
+[TODO]: Netbox is deployed, but not in nomad.
 
 ### ⏳ Planned
+
 - NetBox deployment in Nomad
 - IPAM data migration
 - Device discovery integration
@@ -68,6 +73,7 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 ## 🏗️ Architecture Overview
 
 ### NetBox as Source of Truth
+
 ```
 ┌─────────────────────────────────────────┐
 │            NetBox Database              │
@@ -91,6 +97,7 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 ```
 
 ### Integration Points
+
 - **Ansible**: Dynamic inventory, modules, lookups
 - **Consul**: Service registration from NetBox data
 - **Nomad**: Job generation based on NetBox devices
@@ -100,22 +107,26 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 ## 📁 Related Resources
 
 ### Playbooks
+
 - `playbooks/infrastructure/netbox/` (to be created)
   - `populate-ipam.yml`
   - `device-discovery.yml`
   - `sync-dns.yml`
 
 ### Inventory
+
 - Dynamic inventory plugin configuration
 - Group variables for NetBox integration
 
 ### Phase 3 Planning
+
 - Part of DNS & IPAM overhaul
 - See [DNS & IPAM Implementation Plan](../dns-ipam/implementation-plan.md)
 
 ## 🔑 Key Decisions
 
 ### Why NetBox?
+
 - Single source of truth for network data
 - Comprehensive API for automation
 - Extensible with custom fields
@@ -123,12 +134,14 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 - Webhook support for event-driven automation
 
 ### Integration Approach
+
 - **Dynamic Inventory**: Real-time device data
 - **State Management**: NetBox modules for CRUD operations
 - **Data Queries**: Runtime lookups for configuration
 - **Event-Driven**: Webhooks trigger Ansible workflows
 
 ### Data Model Strategy
+
 - Standard NetBox models for common data
 - Custom fields for organization-specific needs
 - Config contexts for hierarchical configuration
@@ -136,17 +149,18 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 
 ## 📊 Implementation Phases
 
-| Phase | Focus | Duration | Status |
-|-------|-------|----------|--------|
-| 1 | NetBox Deployment | 1 week | ⏳ Planned |
-| 2 | IPAM Migration | 2 weeks | ⏳ Planned |
-| 3 | Device Onboarding | 1 week | ⏳ Planned |
-| 4 | DNS Integration | 1 week | ⏳ Planned |
-| 5 | Automation Workflows | 2 weeks | ⏳ Planned |
+| Phase | Focus                | Duration | Status       |
+| ----- | -------------------- | -------- | ------------ |
+| 1     | NetBox Deployment    | 1 week   | ✅ Completed |
+| 2     | IPAM Migration       | 2 weeks  | ⏳ Planned   |
+| 3     | Device Onboarding    | 1 week   | ⏳ Planned   |
+| 4     | DNS Integration      | 1 week   | ⏳ Planned   |
+| 5     | Automation Workflows | 2 weeks  | ⏳ Planned   |
 
 ## 🔧 Common Patterns
 
 ### Dynamic Inventory Groups
+
 ```yaml
 # Groups created automatically:
 @device_roles_router
@@ -157,6 +171,7 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 ```
 
 ### State Management
+
 ```yaml
 # IPAM object creation
 - netbox.netbox.netbox_prefix:
@@ -176,6 +191,7 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 ```
 
 ### Data Queries
+
 ```yaml
 # Runtime lookups
 - set_fact:
@@ -186,12 +202,14 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 ## 🛠️ Troubleshooting
 
 ### Common Issues
+
 - **Empty inventory**: Check API URL and token
 - **Module not found**: Install netbox.netbox collection
 - **API errors**: Verify user permissions in NetBox
 - **SSL errors**: Set `validate_certs: False` for self-signed certs
 
 ### Debug Commands
+
 ```bash
 # Test NetBox connectivity
 curl -H "Authorization: Token ${NETBOX_TOKEN}" "${NETBOX_API}/api/status/"
