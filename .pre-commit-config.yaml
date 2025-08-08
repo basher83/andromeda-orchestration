@@ -9,11 +9,13 @@ repos:
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^(\.infisical-scan\.toml)$
       - id: end-of-file-fixer
+        exclude: ^(\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|files/consul/auth-methods/.*\.json|files/consul/policies/.*\.hcl|.*\.j2)$
       - id: check-yaml
-        args: [--unsafe]  # Allow custom tags
+        args: [--unsafe] # Allow custom tags
       - id: check-added-large-files
-        args: ['--maxkb=1000']
+        args: ["--maxkb=1000"]
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: detect-private-key
@@ -21,6 +23,7 @@ repos:
         args: [--fix=lf]
       - id: pretty-format-json
         args: [--autofix]
+        exclude: ^(\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|uv\.lock|kics-results/.*\.json|files/consul/auth-methods/.*\.json)$
 
   # YAML formatting
   - repo: https://github.com/adrienverge/yamllint
@@ -78,4 +81,5 @@ repos:
 
 # Configuration for specific tools
 default_language_version:
-  python: python3.11
+  # Use the system's Python 3 to avoid pinning to a specific minor version
+  python: python3
