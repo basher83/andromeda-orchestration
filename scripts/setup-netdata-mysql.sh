@@ -40,7 +40,7 @@ cat > /etc/netdata/go.d/mysql.conf << 'EOF'
 jobs:
   - name: local
     dsn: netdata@unix(/run/mysqld/mysqld.sock)/
-    
+
   - name: tcp
     dsn: netdata@tcp(localhost:3306)/
 EOF

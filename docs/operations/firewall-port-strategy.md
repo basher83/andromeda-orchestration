@@ -205,7 +205,7 @@ job "windmill" {
         to = 8000  # Windmill's default port
       }
     }
-    
+
     service {
       name = "windmill"
       port = "http"
@@ -228,7 +228,7 @@ job "grafana" {
         to = 3000  # Grafana's default port
       }
     }
-    
+
     service {
       name = "grafana"
       port = "http"

@@ -8,7 +8,7 @@
   vars:
     consul_config_file: /etc/consul.d/consul.hcl
     consul_agent_token: "00b57268-c5f9-edb4-bc90-639fb4ab3232"
-    
+
   tasks:
     - name: Display target host
       ansible.builtin.debug:
@@ -92,7 +92,7 @@
 
     - name: Display token verification
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Token verification result:"
           - "{{ token_status.stdout_lines }}"
 
@@ -107,7 +107,7 @@
                  env_slug='dev',
                  path='/apollo-13/consul',
                  secret_name='CONSUL_MASTER_TOKEN')).value }}
-      
+
   tasks:
     - name: Wait for changes to propagate
       ansible.builtin.pause:
@@ -121,7 +121,7 @@
 
     - name: Display all registered nodes
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "All Consul nodes:"
           - "{{ all_nodes.stdout_lines }}"
 

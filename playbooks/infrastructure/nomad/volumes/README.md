@@ -128,7 +128,7 @@ client {
     path      = "/opt/nomad/volumes/mysql-data"
     read_only = false
   }
-  
+
   # Dynamic host volume
   host_volume "dynamic-ext4" {
     path = "/opt/nomad/volumes/dynamic/volumes"
@@ -157,7 +157,7 @@ job "mysql" {
       source    = "mysql-data"
       read_only = false
     }
-    
+
     task "mysql" {
       volume_mount {
         volume      = "data"
@@ -176,12 +176,12 @@ job "prometheus" {
     volume "data" {
       type   = "host"
       source = "dynamic-ext4"
-      
+
       parameters {
         size = "50G"
       }
     }
-    
+
     task "prometheus" {
       volume_mount {
         volume      = "data"

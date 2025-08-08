@@ -9,7 +9,7 @@
     nomad_config_file: /etc/nomad.d/nomad.hcl
     nomad_server_token: "00b57268-c5f9-edb4-bc90-639fb4ab3232"
     nomad_client_token: "8e0c8f6d-8e00-8011-53f3-a0da44c305d4"
-    
+
   tasks:
     - name: Get node type
       ansible.builtin.shell: |
@@ -29,25 +29,25 @@
           consul {
             address = "127.0.0.1:8500"
             token = "{{ consul_token }}"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Keep existing identity settings
             service_identity {
               enabled = true
               auto    = true
             }
-            
+
             task_identity {
               enabled = true
             }
@@ -82,7 +82,7 @@
                  env_slug='dev',
                  path='/apollo-13/consul',
                  secret_name='CONSUL_MASTER_TOKEN')).value }}
-      
+
   tasks:
     - name: Wait for services to register
       ansible.builtin.pause:
@@ -96,7 +96,7 @@
 
     - name: Display registered services
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Registered services in Consul:"
           - "{{ consul_services.stdout_lines }}"
 
@@ -116,14 +116,14 @@
 
     - name: Display Nomad server nodes in Consul
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Nomad servers registered:"
           - "{{ nomad_nodes.stdout_lines }}"
       when: nomad_nodes.rc == 0
 
     - name: Display Nomad client nodes in Consul
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Nomad clients registered:"
           - "{{ nomad_client_nodes.stdout_lines }}"
       when: nomad_client_nodes.rc == 0

@@ -8,7 +8,7 @@
   vars:
     nomad_config_file: /etc/nomad.d/nomad.hcl
     nomad_client_token: "8e0c8f6d-8e00-8011-53f3-a0da44c305d4"
-    
+
   tasks:
     - name: Check if client block is incomplete
       ansible.builtin.shell: |
@@ -39,24 +39,24 @@
           consul {
             address = "127.0.0.1:8500"
             token = "{{ nomad_client_token }}"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Service and task identity settings
             service_identity {
               enabled = true
             }
-            
+
             task_identity {
               enabled = true
             }
@@ -82,13 +82,13 @@
 
 - name: Verify All Nodes
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Check all Nomad nodes
       ansible.builtin.command: nomad node status
       register: node_status
       changed_when: false
-      
+
     - name: Display node status
       ansible.builtin.debug:
         msg:

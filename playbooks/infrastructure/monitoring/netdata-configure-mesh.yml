@@ -6,11 +6,11 @@
   hosts: lloyd,holly,mable
   become: true
   gather_facts: true
-  
+
   roles:
     - role: netdata
       tags: netdata
-  
+
   tasks:
     - name: Ensure firewall allows mesh connections from og-homelab
       community.general.ufw:
@@ -25,11 +25,11 @@
   hosts: pve1
   become: true
   gather_facts: true
-  
+
   roles:
     - role: netdata
       tags: netdata
-  
+
   tasks:
     - name: Ensure firewall allows mesh connections from doggos-homelab
       community.general.ufw:
@@ -45,33 +45,33 @@
   become: true
   gather_facts: false
   serial: 1
-  
+
   tasks:
     - name: Wait for Netdata to stabilize
       ansible.builtin.wait_for:
         port: 19999
         timeout: 30
       ignore_errors: true
-    
+
     - name: Check streaming connections
       ansible.builtin.shell: |
         ss -tan | grep :19999 | grep ESTAB | wc -l
       register: connection_count
       changed_when: false
-    
+
     - name: Get Netdata API info
       ansible.builtin.uri:
         url: "http://localhost:19999/api/v1/info"
         method: GET
       register: netdata_info
-    
+
     - name: Display mesh status
       ansible.builtin.debug:
         msg:
           - "Node: {{ inventory_hostname }}"
           - "Active connections: {{ connection_count.stdout }}"
           - "Expected connections: ~{{ (groups['netdata_parents'] | default([]) | length) + 1 }}"
-    
+
     - name: Test connectivity to other parents
       ansible.builtin.wait_for:
         host: "{{ item }}"
@@ -84,7 +84,7 @@
       when: item != ansible_default_ipv4.address
       ignore_errors: true
       register: connectivity_test
-    
+
     - name: Report connectivity issues
       ansible.builtin.debug:
         msg: "WARNING: Cannot reach {{ item.item }}"
@@ -94,20 +94,20 @@
 - name: Generate mesh topology report
   hosts: localhost
   gather_facts: false
-  
+
   tasks:
     - name: Create mesh topology diagram
       ansible.builtin.copy:
         content: |
           # Netdata Parent Mesh Topology
           Generated: {{ ansible_date_time.iso8601 }}
-          
+
           ## Mesh Architecture
-          
+
           ```
           doggos-homelab                           og-homelab
           ==============                           ==========
-          
+
           lloyd (10.11) <----+---+---+-----------> pve1 (30.50)
               ^              |   |   |               ^
               |              |   |   |               |
@@ -117,45 +117,45 @@
               |                  |                   |
               v                  |                   |
           mable (10.13) <--------+-------------------+
-          
+
           Legend:
           - Each parent streams to all other parents
           - Bidirectional replication
           - Full mesh topology (n*(n-1) connections)
           - Total connections: 12 (4 nodes * 3 peers each)
           ```
-          
+
           ## Parent Nodes
-          
+
           ### doggos-homelab (10G internal network)
           - lloyd: 192.168.10.11:19999 (dual-NIC)
           - holly: 192.168.10.12:19999 (dual-NIC)
           - mable: 192.168.10.13:19999 (dual-NIC)
-          
+
           ### og-homelab (2.5G network)
           - pve1: 192.168.30.50:19999
-          
+
           ## Mesh Benefits
-          
+
           1. **Unified View**: Access all metrics from any parent node
           2. **Redundancy**: If one parent fails, data is available from others
           3. **Cross-Cluster**: View doggos metrics from og-homelab and vice versa
           4. **Load Distribution**: Query any parent for reduced load
-          
+
           ## Access URLs
-          
+
           From any parent node, you can view metrics for:
           - All doggos-homelab nodes (VMs and physical)
           - All og-homelab containers and VMs
           - Combined infrastructure view
-          
+
           Primary access points:
           - http://lloyd:19999 (doggos primary)
           - http://192.168.30.50:19999 (og primary)
-          
+
         dest: "{{ playbook_dir }}/../../reports/netdata-mesh-topology-{{ ansible_date_time.date }}.md"
         mode: '0644'
-    
+
     - name: Display completion message
       ansible.builtin.debug:
         msg:

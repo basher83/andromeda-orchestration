@@ -6,13 +6,13 @@
   hosts: dockerhost
   become: true
   gather_facts: true
-  
+
   tasks:
     - name: Install Netdata if not present
       ansible.builtin.package:
         name: netdata
         state: present
-    
+
     - name: Create streaming configuration
       ansible.builtin.copy:
         content: |
@@ -32,7 +32,7 @@
         group: netdata
         mode: '0640'
         backup: true
-    
+
     - name: Configure Netdata for minimal resource usage
       ansible.builtin.copy:
         content: |
@@ -40,10 +40,10 @@
               memory mode = ram
               history = 1800
               update every = 2
-              
+
           [web]
               enabled = no
-              
+
           [plugins]
               apps = no
               cgroups = yes
@@ -68,23 +68,23 @@
         group: netdata
         mode: '0640'
         backup: true
-    
+
     - name: Restart Netdata
       ansible.builtin.systemd:
         name: netdata
         state: restarted
         daemon_reload: true
-    
+
     - name: Verify streaming
       ansible.builtin.wait_for:
         timeout: 10
-      
+
     - name: Check streaming status
       ansible.builtin.shell: |
         grep -q "connected to" /var/log/netdata/error.log 2>/dev/null || echo "Not streaming yet"
       register: stream_status
       changed_when: false
-    
+
     - name: Display status
       ansible.builtin.debug:
         msg: "Streaming status: {{ stream_status.stdout }}"

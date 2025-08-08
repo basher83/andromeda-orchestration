@@ -62,7 +62,7 @@
           name: "{{ item.name }}."
           kind: "Native"
           masters: []
-          nameservers: 
+          nameservers:
             - "ns1.homelab.local."
           rrsets:
             - name: "{{ item.name }}."
@@ -95,7 +95,7 @@
                   disabled: false
               ttl: "{{ item.ttl | default(3600) }}"
       loop: "{{ netbox_records.json.results | selectattr('type', 'equalto', 'A') | list }}"
-      when: 
+      when:
         - netbox_records.json.count > 0
         - item.type == 'A'
       register: record_creation
@@ -118,7 +118,7 @@
                   disabled: false
               ttl: "{{ item.ttl | default(3600) }}"
       loop: "{{ netbox_records.json.results | selectattr('type', 'equalto', 'NS') | list }}"
-      when: 
+      when:
         - netbox_records.json.count > 0
         - item.type == 'NS'
 

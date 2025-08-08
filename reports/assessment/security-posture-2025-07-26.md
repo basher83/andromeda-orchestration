@@ -144,7 +144,7 @@ logging_infrastructure:
     purpose: Log shipping
   - component: Grafana
     purpose: Log visualization
-  
+
 audit_requirements:
   - dns_queries: true
   - configuration_changes: true
@@ -206,7 +206,7 @@ external_exposure:
     ports: [53, 8600]
     risk: Medium
     mitigation: Rate limiting + ACLs
-  
+
   - service: NetBox UI
     ports: [443]
     risk: Medium
@@ -217,7 +217,7 @@ internal_exposure:
     ports: [8500]
     risk: High
     mitigation: mTLS + ACLs
-  
+
   - service: Nomad API
     ports: [4646]
     risk: High
@@ -261,12 +261,12 @@ monitoring_checklist:
     - Failed authentication attempts
     - Unusual DNS query patterns
     - Certificate expiration warnings
-  
+
   weekly:
     - Security patch availability
     - Access control review
     - Backup verification
-  
+
   monthly:
     - Full security audit
     - Incident response drill
@@ -299,7 +299,7 @@ monitoring_checklist:
 security_team:
   incident_response: security-team@example.com
   vulnerability_reports: security@example.com
-  
+
 escalation:
   level_1: Infrastructure Team Lead
   level_2: Security Team Lead

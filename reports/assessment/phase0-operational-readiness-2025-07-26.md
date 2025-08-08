@@ -124,12 +124,12 @@ dns_current_state:
     - identify: true
     - document_zones: true
     - export_records: true
-  
+
   pi_hole:
     custom_dns_entries: export
     upstream_servers: document
     query_logs: analyze
-    
+
   client_configuration:
     resolv_conf: document
     dhcp_settings: capture
@@ -148,7 +148,7 @@ network_validation:
       dns: [53, 8600]
       powerdns_api: [8081]
       netbox: [80, 443]
-  
+
   security:
     firewall_rules: documented
     network_segmentation: planned
@@ -163,7 +163,7 @@ storage_requirements:
     netbox_media: 10GB
     powerdns_mariadb: 20GB
     consul_data: 10GB
-  
+
   backup_storage:
     location: define
     retention: 30_days
@@ -184,11 +184,11 @@ stakeholders:
   technical_team:
     updates: daily
     method: slack
-    
+
   management:
     updates: weekly
     method: email
-    
+
   end_users:
     updates: phase_completion
     method: status_page
@@ -201,12 +201,12 @@ issue_categories:
     - Missing credentials
     - Network connectivity failures
     - Incompatible versions
-    
+
   high:
     - Incomplete documentation
     - Configuration drift
     - Resource constraints
-    
+
   medium:
     - Performance concerns
     - Best practice violations

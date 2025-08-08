@@ -30,11 +30,11 @@ ls: cannot open directory '/etc/consul.d/': Permission denied
 Config dir not found
 
 === Network Ports ===
-LISTEN 0      4096                             *:8600             *:*          
-LISTEN 0      4096                             *:8500             *:*          
-LISTEN 0      4096                             *:8302             *:*          
-LISTEN 0      4096                             *:8300             *:*          
-LISTEN 0      4096                             *:8301             *:*          
+LISTEN 0      4096                             *:8600             *:*
+LISTEN 0      4096                             *:8500             *:*
+LISTEN 0      4096                             *:8302             *:*
+LISTEN 0      4096                             *:8300             *:*
+LISTEN 0      4096                             *:8301             *:*
 ```
 
 ### nomad-server-2 (192.168.11.12)
@@ -61,11 +61,11 @@ ls: cannot open directory '/etc/consul.d/': Permission denied
 Config dir not found
 
 === Network Ports ===
-LISTEN 0      4096                             *:8302             *:*          
-LISTEN 0      4096                             *:8301             *:*          
-LISTEN 0      4096                             *:8300             *:*          
-LISTEN 0      4096                             *:8500             *:*          
-LISTEN 0      4096                             *:8600             *:*          
+LISTEN 0      4096                             *:8302             *:*
+LISTEN 0      4096                             *:8301             *:*
+LISTEN 0      4096                             *:8300             *:*
+LISTEN 0      4096                             *:8500             *:*
+LISTEN 0      4096                             *:8600             *:*
 ```
 
 ### nomad-server-3 (192.168.11.13)
@@ -92,11 +92,11 @@ ls: cannot open directory '/etc/consul.d/': Permission denied
 Config dir not found
 
 === Network Ports ===
-LISTEN 0      4096                             *:8302             *:*          
-LISTEN 0      4096                             *:8300             *:*          
-LISTEN 0      4096                             *:8301             *:*          
-LISTEN 0      4096                             *:8500             *:*          
-LISTEN 0      4096                             *:8600             *:*          
+LISTEN 0      4096                             *:8302             *:*
+LISTEN 0      4096                             *:8300             *:*
+LISTEN 0      4096                             *:8301             *:*
+LISTEN 0      4096                             *:8500             *:*
+LISTEN 0      4096                             *:8600             *:*
 ```
 
 ### nomad-client-1 (192.168.10.11)
@@ -123,11 +123,11 @@ ls: cannot open directory '/etc/consul.d/': Permission denied
 Config dir not found
 
 === Network Ports ===
-LISTEN 0      4096                             *:8600             *:*          
-LISTEN 0      4096                             *:8500             *:*          
-LISTEN 0      4096                             *:8302             *:*          
-LISTEN 0      4096                             *:8300             *:*          
-LISTEN 0      4096                             *:8301             *:*          
+LISTEN 0      4096                             *:8600             *:*
+LISTEN 0      4096                             *:8500             *:*
+LISTEN 0      4096                             *:8302             *:*
+LISTEN 0      4096                             *:8300             *:*
+LISTEN 0      4096                             *:8301             *:*
 ```
 
 ### nomad-client-2 (192.168.10.12)
@@ -154,11 +154,11 @@ ls: cannot open directory '/etc/consul.d/': Permission denied
 Config dir not found
 
 === Network Ports ===
-LISTEN 0      4096                             *:8302             *:*          
-LISTEN 0      4096                             *:8301             *:*          
-LISTEN 0      4096                             *:8300             *:*          
-LISTEN 0      4096                             *:8500             *:*          
-LISTEN 0      4096                             *:8600             *:*          
+LISTEN 0      4096                             *:8302             *:*
+LISTEN 0      4096                             *:8301             *:*
+LISTEN 0      4096                             *:8300             *:*
+LISTEN 0      4096                             *:8500             *:*
+LISTEN 0      4096                             *:8600             *:*
 ```
 
 ### nomad-client-3 (192.168.10.22)
@@ -185,9 +185,9 @@ ls: cannot open directory '/etc/consul.d/': Permission denied
 Config dir not found
 
 === Network Ports ===
-LISTEN 0      4096                 192.168.11.22:8301       0.0.0.0:*          
-LISTEN 0      4096                             *:8500             *:*          
-LISTEN 0      4096                             *:8600             *:*          
+LISTEN 0      4096                 192.168.11.22:8301       0.0.0.0:*
+LISTEN 0      4096                             *:8500             *:*
+LISTEN 0      4096                             *:8600             *:*
 ```
 
 ## Findings

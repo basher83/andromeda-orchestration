@@ -18,7 +18,7 @@
                  env_slug='dev',
                  path='/apollo-13/consul',
                  secret_name='CONSUL_MASTER_TOKEN')).value }}
-    
+
   tasks:
     - name: Test Consul API with management token
       ansible.builtin.uri:
@@ -130,7 +130,7 @@
               --projectId="7b832220-24c0-45bc-a5f1-ce9794a31259" \
               --path="/apollo-13/consul" \
               --env=dev
-          
+
         - name: Store Nomad client token
           ansible.builtin.shell: |
             export INFISICAL_CLIENT_ID="{{ lookup('env', 'INFISICAL_CLIENT_ID') }}"
@@ -145,7 +145,7 @@
   become: true
   vars:
     nomad_config_file: /etc/nomad.d/nomad.hcl
-    
+
   tasks:
     - name: Get node type
       ansible.builtin.shell: |
@@ -165,25 +165,25 @@
           consul {
             address = "127.0.0.1:8500"
             token = "{{ consul_token }}"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Keep existing identity settings
             service_identity {
               enabled = true
               auto    = true
             }
-            
+
             task_identity {
               enabled = true
             }
@@ -218,7 +218,7 @@
                  env_slug='dev',
                  path='/apollo-13/consul',
                  secret_name='CONSUL_MASTER_TOKEN')).value }}
-      
+
   tasks:
     - name: Wait for services to register
       ansible.builtin.pause:
@@ -232,7 +232,7 @@
 
     - name: Display registered services
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Registered services in Consul:"
           - "{{ consul_services.stdout_lines }}"
 

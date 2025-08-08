@@ -8,7 +8,7 @@
   become: true
   vars:
     nomad_client_token: "8e0c8f6d-8e00-8011-53f3-a0da44c305d4"
-    
+
   tasks:
     - name: Create emergency Nomad client configuration
       ansible.builtin.copy:
@@ -18,24 +18,24 @@
           bind_addr = "0.0.0.0"
           log_level  = "INFO"
           datacenter = "dc1"
-          
+
           # Advertise on high-speed interface
           advertise {
             http = "{{ inter_device_interface | default(ansible_default_ipv4.address) }}:4646"
             rpc  = "{{ inter_device_interface | default(ansible_default_ipv4.address) }}:4647"
             serf = "{{ inter_device_interface | default(ansible_default_ipv4.address) }}:4648"
           }
-          
+
           ui {
             enabled = true
           }
-          
+
           # RPC and dial timeouts
           limits {
             rpc_timeout  = "3s"
             dial_timeout = "3s"
           }
-          
+
           # Docker plugin
           plugin "docker" {
             config {
@@ -46,7 +46,7 @@
               }
             }
           }
-          
+
           # Client configuration
           client {
             enabled  = true
@@ -55,46 +55,46 @@
               "192.168.11.12:4647",
               "192.168.11.13:4647"
             ]
-            
+
             network_interface = "eth1"
             cni_path          = "/opt/cni/bin"
-            
+
             bridge_network_name   = "nomad"
             bridge_network_subnet = "172.26.64.0/20"
-            
+
             host_network "public" {
               cidr           = "0.0.0.0/0"
               reserved_ports = "22"
             }
-            
+
             host_volume "nomad-volumes" {
               path      = "/mnt/nomad-volumes"
               read_only = false
             }
           }
-          
+
           # Consul integration
           consul {
             address = "127.0.0.1:8500"
             token = "{{ nomad_client_token }}"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Service and task identity settings
             service_identity {
               enabled = true
             }
-            
+
             task_identity {
               enabled = true
             }
@@ -132,7 +132,7 @@
 
 - name: Verify All Nodes
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Wait for clients to reconnect
       ansible.builtin.pause:
@@ -142,7 +142,7 @@
       ansible.builtin.command: nomad node status
       register: node_status
       changed_when: false
-      
+
     - name: Display node status
       ansible.builtin.debug:
         msg:

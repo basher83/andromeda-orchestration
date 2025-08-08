@@ -7,15 +7,15 @@ job "traefik" {
 
     network {
       mode = "host"
-      
+
       port "http" {
         static = 80
       }
-      
+
       port "https" {
         static = 443
       }
-      
+
       port "admin" {
         to = 8080
       }
@@ -24,7 +24,7 @@ job "traefik" {
     service {
       name = "traefik"
       port = "admin"
-      
+
       tags = [
         "traefik.enable=true",
         "traefik.http.routers.api.rule=Host(`traefik.lab.local`)",
@@ -32,7 +32,7 @@ job "traefik" {
         "traefik.http.routers.api.entrypoints=websecure",
         "traefik.http.routers.api.tls=true",
       ]
-      
+
       check {
         type     = "http"
         path     = "/ping"
@@ -40,7 +40,7 @@ job "traefik" {
         interval = "10s"
         timeout  = "2s"
       }
-      
+
       # Service identity configuration
       identity {
         aud = ["consul.io"]
@@ -50,12 +50,12 @@ job "traefik" {
     service {
       name = "traefik-http"
       port = "http"
-      
+
       tags = [
         "http",
         "loadbalancer",
       ]
-      
+
       identity {
         aud = ["consul.io"]
       }
@@ -64,12 +64,12 @@ job "traefik" {
     service {
       name = "traefik-https"
       port = "https"
-      
+
       tags = [
         "https",
         "loadbalancer",
       ]
-      
+
       identity {
         aud = ["consul.io"]
       }

@@ -136,7 +136,7 @@ tasks:
             debug:
               msg: 'Smoke test passed'" | uv run ansible-playbook --syntax-check /dev/stdin
       echo "✅ Ansible is working correctly"
-      
+
       # Test that custom modules exist
       echo "Testing custom modules exist..."
       if [ -f "plugins/modules/consul_acl_token.py" ] && [ -f "plugins/modules/nomad_job.py" ]; then

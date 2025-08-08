@@ -4,7 +4,7 @@
 - name: Check PBS logs
   hosts: localhost
   gather_facts: false
-  
+
   tasks:
     - name: Add PBS to inventory
       ansible.builtin.add_host:
@@ -17,7 +17,7 @@
   hosts: pbs
   become: true
   gather_facts: false
-  
+
   tasks:
     - name: Find all Netdata related files
       ansible.builtin.shell: |
@@ -31,11 +31,11 @@
         ls -la /var/cache/netdata/ 2>/dev/null | head -10
       register: netdata_files
       changed_when: false
-    
+
     - name: Display Netdata files
       ansible.builtin.debug:
         msg: "{{ netdata_files.stdout_lines }}"
-    
+
     - name: Check if Netdata has error output
       ansible.builtin.shell: |
         if [ -f /var/cache/netdata/netdata-updater.log ]; then
@@ -47,11 +47,11 @@
         journalctl -u netdata --since "5 minutes ago" --no-pager -o cat | grep -v "NETDATA_START_COMMAND" | head -30
       register: error_logs
       changed_when: false
-    
+
     - name: Display error logs
       ansible.builtin.debug:
         msg: "{{ error_logs.stdout_lines }}"
-    
+
     - name: Test streaming manually
       ansible.builtin.shell: |
         # Try to manually test the connection
@@ -60,21 +60,21 @@
       register: manual_test
       changed_when: false
       failed_when: false
-    
+
     - name: Display manual test
       ansible.builtin.debug:
         msg: "{{ manual_test.stdout_lines }}"
-    
+
     - name: Check Netdata internal API
       ansible.builtin.uri:
         url: "http://127.0.0.1:19999/api/v1/info"
         method: GET
       register: netdata_info
       failed_when: false
-    
+
     - name: Display Netdata info
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Netdata running: {{ 'Yes' if netdata_info.status == 200 else 'No' }}"
           - "Version: {{ netdata_info.json.version | default('Unknown') }}"
           - "UID: {{ netdata_info.json.uid | default('Unknown') }}"

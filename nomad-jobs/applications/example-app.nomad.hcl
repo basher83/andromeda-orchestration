@@ -22,14 +22,14 @@ job "myapp" {
       service {
         name = "myapp"
         port = "http"
-        
+
         tags = [
           "traefik.enable=true",
           "traefik.http.routers.myapp.rule=Host(`myapp.lab.local`)",
           "traefik.http.routers.myapp.entrypoints=websecure",
           "traefik.http.routers.myapp.tls=true",
         ]
-        
+
         check {
           type     = "http"
           path     = "/health"

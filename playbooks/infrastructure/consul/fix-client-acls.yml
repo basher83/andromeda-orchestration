@@ -7,19 +7,19 @@
   become: true
   vars:
     consul_client_token: "8e0c8f6d-8e00-8011-53f3-a0da44c305d4"
-    
+
   tasks:
     - name: Remove duplicate ACL blocks
       ansible.builtin.shell: |
         # Remove ANSIBLE MANAGED ACL blocks
         sed -i '/^# BEGIN ANSIBLE MANAGED ACL CONFIGURATION/,/^# END ANSIBLE MANAGED ACL CONFIGURATION/d' /etc/consul.d/consul.hcl
-        
+
         # Update the existing ACL block with token
         sed -i '/^acl {/,/^}/ {
           /agent = ""/ s/""/"{{ consul_client_token }}"/
           /default_policy = "deny"/ s/"deny"/"allow"/
         }' /etc/consul.d/consul.hcl
-        
+
         # Add default token if not present
         if ! grep -q 'default =' /etc/consul.d/consul.hcl; then
           sed -i '/agent =/ a\    default = "{{ consul_client_token }}"' /etc/consul.d/consul.hcl
@@ -46,7 +46,7 @@
 
 - name: Verify Configuration
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Wait for agents to reconnect
       ansible.builtin.pause:
@@ -56,7 +56,7 @@
       ansible.builtin.command: consul members
       register: members_status
       changed_when: false
-      
+
     - name: Display status
       ansible.builtin.debug:
         msg:

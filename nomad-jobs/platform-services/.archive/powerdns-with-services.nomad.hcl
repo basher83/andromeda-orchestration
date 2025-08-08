@@ -21,19 +21,19 @@ job "powerdns" {
     service {
       name = "powerdns"
       port = "dns"
-      
+
       tags = [
         "dns",
         "authoritative",
       ]
-      
+
       check {
         type     = "tcp"
         port     = "dns"
         interval = "10s"
         timeout  = "2s"
       }
-      
+
       # Service identity configuration
       identity {
         aud = ["consul.io"]
@@ -43,12 +43,12 @@ job "powerdns" {
     service {
       name = "powerdns-api"
       port = "api"
-      
+
       tags = [
         "api",
         "rest",
       ]
-      
+
       check {
         type     = "http"
         path     = "/api/v1/servers"
@@ -59,7 +59,7 @@ job "powerdns" {
           X-API-Key = ["${PDNS_API_KEY}"]
         }
       }
-      
+
       identity {
         aud = ["consul.io"]
       }
@@ -68,20 +68,20 @@ job "powerdns" {
     service {
       name = "powerdns-mysql"
       port = "mysql"
-      
+
       tags = [
         "database",
         "mysql",
         "internal",
       ]
-      
+
       check {
         type     = "tcp"
         port     = "mysql"
         interval = "10s"
         timeout  = "2s"
       }
-      
+
       identity {
         aud = ["consul.io"]
       }
@@ -93,7 +93,7 @@ job "powerdns" {
       config {
         image = "mariadb:10.11"
         ports = ["mysql"]
-        
+
         volumes = [
           "local/mysql-init:/docker-entrypoint-initdb.d",
           "powerdns-mysql:/var/lib/mysql"

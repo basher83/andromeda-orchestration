@@ -21,12 +21,12 @@ job "powerdns" {
     service {
       name = "powerdns"
       port = "dns"
-      
+
       tags = [
         "dns",
         "authoritative",
       ]
-      
+
       check {
         type     = "tcp"
         port     = "dns"
@@ -38,7 +38,7 @@ job "powerdns" {
     service {
       name = "powerdns-api"
       port = "api"
-      
+
       tags = [
         "api",
         "rest",
@@ -51,7 +51,7 @@ job "powerdns" {
       config {
         image = "mariadb:10.11"
         ports = ["mysql"]
-        
+
         volumes = [
           "local/mysql-init:/docker-entrypoint-initdb.d",
           "powerdns-mysql:/var/lib/mysql"

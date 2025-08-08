@@ -7,15 +7,15 @@ job "traefik" {
 
     network {
       mode = "host"  # Required to bind to host ports 80/443
-      
+
       port "http" {
         static = 80
       }
-      
+
       port "https" {
         static = 443
       }
-      
+
       port "admin" {
         to = 8080  # Dashboard on dynamic port
       }
@@ -27,7 +27,7 @@ job "traefik" {
       config {
         image = "traefik:v3.0"
         ports = ["http", "https", "admin"]
-        
+
         volumes = [
           "local/traefik.yml:/etc/traefik/traefik.yml",
           "local/dynamic:/etc/traefik/dynamic",
@@ -55,10 +55,10 @@ entryPoints:
           to: websecure
           scheme: https
           permanent: true
-  
+
   websecure:
     address: ":443"
-  
+
   admin:
     address: ":8080"
 
@@ -67,7 +67,7 @@ providers:
   file:
     directory: /etc/traefik/dynamic
     watch: true
-  
+
   # Consul Catalog for service discovery
   consulCatalog:
     endpoint:
@@ -127,12 +127,12 @@ EOF
       service {
         name = "traefik"
         port = "admin"
-        
+
         identity {
           aud = ["consul.io"]
           ttl = "1h"
         }
-        
+
         tags = [
           "traefik.enable=true",
           "traefik.http.routers.api.rule=Host(`traefik.lab.local`)",
@@ -142,7 +142,7 @@ EOF
           "prometheus",
           "metrics",
         ]
-        
+
         check {
           type     = "http"
           path     = "/ping"
@@ -154,7 +154,7 @@ EOF
       service {
         name = "traefik-http"
         port = "http"
-        
+
         identity {
           aud = ["consul.io"]
           ttl = "1h"
@@ -164,28 +164,28 @@ EOF
       service {
         name = "traefik-https"
         port = "https"
-        
+
         identity {
           aud = ["consul.io"]
           ttl = "1h"
         }
       }
-      
+
       service {
         name = "traefik-metrics"
         port = "admin"
-        
+
         identity {
           aud = ["consul.io"]
           ttl = "1h"
         }
-        
+
         tags = [
           "prometheus",
           "metrics",
           "path:/metrics",
         ]
-        
+
         check {
           type     = "http"
           path     = "/metrics"

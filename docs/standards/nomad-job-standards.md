@@ -38,12 +38,12 @@ nomad-jobs/
 service {
   name = "service-name"
   port = "port-label"
-  
+
   identity {
     aud = ["consul.io"]  # MANDATORY
     ttl = "1h"          # Recommended
   }
-  
+
   tags = [...]
   check {...}
 }
@@ -63,11 +63,11 @@ network {
   port "dns" {
     static = 53  # ONLY for DNS
   }
-  
+
   # Dynamic ports - DEFAULT
   port "api" {}    # Nomad assigns from 20000-32000
   port "web" {}    # No conflicts possible
-  
+
   # Port mapping for containers
   port "admin" {
     to = 8080    # Container port
@@ -97,33 +97,33 @@ volume "service-data" {
 ```hcl
 task "service" {
   driver = "docker"
-  
+
   config {
     image = "image:tag"  # Always specify tag
     ports = ["web", "api"]
-    
+
     # For debugging - remove in production
     args = [
       "--debug",
       "--verbose"
     ]
   }
-  
+
   # Resource limits - ALWAYS SET
   resources {
     cpu    = 200  # MHz
     memory = 256  # MB
   }
-  
+
   # Environment variables
   env {
     # Configuration via env vars
     CONFIG_OPTION = "value"
-    
+
     # NEVER hardcode secrets
     API_KEY = "${NOMAD_SECRET_API_KEY}"
   }
-  
+
   # Consul template for secrets
   template {
     data = <<EOF
@@ -143,7 +143,7 @@ service {
     path     = "/health"
     interval = "10s"
     timeout  = "2s"
-    
+
     # For authenticated endpoints
     header {
       Authorization = ["Bearer ${NOMAD_SECRET_TOKEN}"]
@@ -194,28 +194,28 @@ check {
 job "api-service" {
   datacenters = ["dc1"]
   type = "service"
-  
+
   group "api" {
     count = 2  # HA deployment
-    
+
     network {
       port "http" {}  # Dynamic port
     }
-    
+
     service {
       name = "api"
       port = "http"
-      
+
       identity {
         aud = ["consul.io"]
         ttl = "1h"
       }
-      
+
       tags = [
         "traefik.enable=true",
         "traefik.http.routers.api.rule=Host(`api.lab.local`)",
       ]
-      
+
       check {
         type     = "http"
         path     = "/health"
@@ -223,15 +223,15 @@ job "api-service" {
         timeout  = "2s"
       }
     }
-    
+
     task "api" {
       driver = "docker"
-      
+
       config {
         image = "api:v1.2.3"  # Specific version
         ports = ["http"]
       }
-      
+
       resources {
         cpu    = 500
         memory = 512
@@ -250,22 +250,22 @@ job "bad-service" {
         static = 8080  # ❌ Unnecessary static port
       }
     }
-    
+
     service {
       name = "app"
       port = "web"
       # ❌ Missing identity block
     }
-    
+
     task "app" {
       config {
         image = "app:latest"  # ❌ Non-deterministic
       }
-      
+
       env {
         API_KEY = "secret123"  # ❌ Hardcoded secret
       }
-      
+
       # ❌ No resource limits
     }
   }

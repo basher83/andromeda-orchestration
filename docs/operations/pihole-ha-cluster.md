@@ -102,7 +102,7 @@ DHCP is **NOT** handled by Pi-hole. It is managed by the UniFi Controller.
    ```bash
    # SSH to master Pi-hole
    ssh ansible@192.168.30.136
-   
+
    # Create teleporter backup
    pihole -a -t
    ```
@@ -127,7 +127,7 @@ DHCP is **NOT** handled by Pi-hole. It is managed by the UniFi Controller.
     - name: Create Pi-hole teleporter backup
       command: pihole -a -t
       register: backup_result
-    
+
     - name: Fetch backup file
       fetch:
         src: "{{ backup_result.stdout_lines[-1] }}"

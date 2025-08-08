@@ -42,7 +42,7 @@ Comprehensive security practices and procedures.
 - Incident response procedures
 - Report security
 
-### [git-standards.md](git-standards.md) 
+### [git-standards.md](git-standards.md)
 [TODO]: Version control practices and collaboration guidelines.
 - Branch naming conventions
 - Commit message format

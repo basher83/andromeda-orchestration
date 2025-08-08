@@ -6,7 +6,7 @@
   hosts: all
   become: true
   gather_facts: false
-  
+
   tasks:
     - name: Enable telemetry in Consul configuration
       include_role:
@@ -14,7 +14,7 @@
         tasks_from: telemetry
       vars:
         consul_prometheus_retention_time: "{{ prometheus_retention_time | default('360h') }}"
-        
+
     - name: Verify telemetry endpoint is accessible
       uri:
         url: "http://127.0.0.1:8500/v1/agent/metrics?format=prometheus"
@@ -24,7 +24,7 @@
       changed_when: false
       retries: 3
       delay: 5
-      
+
     - name: Report telemetry status
       debug:
         msg: "Consul telemetry endpoint {{ 'enabled' if metrics_check.status == 200 else 'not accessible' }} on {{ inventory_hostname }}"
@@ -32,7 +32,7 @@
 - name: Summary report
   hosts: localhost
   gather_facts: false
-  
+
   tasks:
     - name: Generate telemetry status report
       debug:

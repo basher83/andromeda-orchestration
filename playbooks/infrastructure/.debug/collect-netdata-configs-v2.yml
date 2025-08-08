@@ -4,10 +4,10 @@
   hosts: all:!localhost
   become: true
   gather_facts: true
-  
+
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
-    
+
   tasks:
     - name: Determine node role and IP
       set_fact:
@@ -26,12 +26,12 @@
             unknown
           {%- endif -%}
         node_ip: "{{ ansible_host | default(ansible_default_ipv4.address | default('unknown')) }}"
-      
+
     - name: Check if Netdata is installed
       stat:
         path: /usr/sbin/netdata
       register: netdata_binary
-      
+
     - name: Get Netdata version
       command:
         cmd: netdata -v
@@ -39,48 +39,48 @@
       when: netdata_binary.stat.exists
       changed_when: false
       failed_when: false
-      
+
     - name: Get Netdata service status
       systemd:
         name: netdata
       register: netdata_service
       when: netdata_binary.stat.exists
       failed_when: false
-      
+
     - name: Get listening ports
       shell: |
         ss -tlnp | grep -E '19999|19998' || echo "No Netdata ports listening"
       register: listening_ports
       changed_when: false
       failed_when: false
-      
+
     - name: Read netdata.conf
       slurp:
         src: /etc/netdata/netdata.conf
       register: netdata_conf
       when: netdata_binary.stat.exists
       failed_when: false
-      
+
     - name: Read stream.conf
       slurp:
         src: /etc/netdata/stream.conf
       register: stream_conf
       when: netdata_binary.stat.exists
       failed_when: false
-      
+
     - name: Read consul.conf
       slurp:
         src: /etc/netdata/go.d/consul.conf
       register: consul_conf
       when: netdata_binary.stat.exists
       failed_when: false
-      
+
     - name: Read consul service file
       slurp:
         src: /etc/consul.d/netdata.json
       register: consul_service
       failed_when: false
-      
+
     - name: Get recent streaming logs
       shell: |
         journalctl -u netdata --since "2 hours ago" --no-pager | grep -i stream | tail -30 || echo "No streaming logs"
@@ -88,7 +88,7 @@
       when: netdata_binary.stat.exists
       changed_when: false
       failed_when: false
-      
+
     - name: Test connectivity to parents (for children only)
       shell: |
         echo "=== Connectivity tests from {{ inventory_hostname }} ==="
@@ -97,12 +97,12 @@
           timeout 1 nc -zv $dest 19999 2>&1 || echo "Connection failed"
         done
       register: connectivity_test
-      when: 
+      when:
         - node_role == "child"
         - netdata_binary.stat.exists
       changed_when: false
       failed_when: false
-      
+
     - name: Store configuration data
       set_fact:
         node_config:
@@ -125,18 +125,18 @@
   connection: local
   gather_facts: no
   become: false
-  
+
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
     report_dir: "reports/netdata/configs/{{ timestamp }}"
-    
+
   tasks:
     - name: Create report directory
       file:
         path: "{{ report_dir }}"
         state: directory
         mode: '0755'
-        
+
     - name: Save individual host configurations
       copy:
         content: |
@@ -144,43 +144,43 @@
           # Generated: {{ timestamp }}
           # Role: {{ hostvars[item].node_config.role }}
           # IP: {{ hostvars[item].node_config.ip }}
-          
+
           ## Service Status
           - Version: {{ hostvars[item].node_config.version }}
           - Service State: {{ hostvars[item].node_config.service_state }}
           - Service Enabled: {{ hostvars[item].node_config.service_enabled }}
-          
+
           ## Listening Ports
           ```
           {{ hostvars[item].node_config.listening_ports }}
           ```
-          
+
           ## Configuration: /etc/netdata/stream.conf
           ```ini
           {{ hostvars[item].node_config.stream_conf }}
           ```
-          
+
           ## Configuration: /etc/netdata/netdata.conf
           ```ini
           {{ hostvars[item].node_config.netdata_conf | regex_replace('(?m)^#.*\n', '') | regex_replace('\n\n+', '\n\n') }}
           ```
-          
+
           ## Consul Integration
           ### /etc/netdata/go.d/consul.conf
           ```yaml
           {{ hostvars[item].node_config.consul_conf }}
           ```
-          
+
           ### /etc/consul.d/netdata.json
           ```json
           {{ hostvars[item].node_config.consul_service }}
           ```
-          
+
           ## Recent Streaming Logs
           ```
           {{ hostvars[item].node_config.streaming_logs }}
           ```
-          
+
           {% if hostvars[item].node_config.role == 'child' %}
           ## Connectivity Test to Parent Nodes
           ```
@@ -191,29 +191,29 @@
         mode: '0644'
       loop: "{{ groups['all'] | difference(['localhost']) }}"
       when: hostvars[item].node_config is defined
-      
+
     - name: Generate summary report
       copy:
         content: |
           # Netdata Configuration Summary
           # Generated: {{ timestamp }}
-          
+
           ## Nodes Analyzed
-          
+
           ### Parent Nodes
           {% for host in groups['all'] | difference(['localhost']) %}
           {% if hostvars[host].node_config is defined and hostvars[host].node_config.role == 'parent' %}
           - **{{ host }}** ({{ hostvars[host].node_config.ip }}): {{ hostvars[host].node_config.version }}
           {% endif %}
           {% endfor %}
-          
+
           ### Child Nodes
           {% for host in groups['all'] | difference(['localhost']) %}
           {% if hostvars[host].node_config is defined and hostvars[host].node_config.role == 'child' %}
           - **{{ host }}** ({{ hostvars[host].node_config.ip }}): {{ hostvars[host].node_config.version }}
           {% endif %}
           {% endfor %}
-          
+
           ## Individual Configuration Files
           {% for host in groups['all'] | difference(['localhost']) %}
           {% if hostvars[host].node_config is defined %}
@@ -222,10 +222,10 @@
           {% endfor %}
         dest: "{{ report_dir }}/00_summary.md"
         mode: '0644'
-        
+
     - name: Display completion message
       debug:
-        msg: 
+        msg:
           - "Configuration collection complete!"
           - "Reports saved to: {{ report_dir }}"
           - "Summary: {{ report_dir }}/00_summary.md"

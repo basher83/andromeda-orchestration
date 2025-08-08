@@ -5,11 +5,11 @@
   hosts: nomad-server-1-lloyd
   become: true
   gather_facts: false
-  
+
   vars:
     consul_addr: "http://127.0.0.1:8500"
     policy_name: "prometheus-scraping"
-    
+
   tasks:
     - name: Get Consul master token from Infisical
       set_fact:
@@ -22,27 +22,27 @@
                      path='/apollo-13/consul',
                      secret_name='CONSUL_MASTER_TOKEN')).value }}
       no_log: true
-      
+
     - name: Create policy file
       copy:
         content: |
           # Policy for Prometheus/Netdata scraping
           operator = "read"
-          
+
           node_prefix "" {
             policy = "read"
           }
-          
+
           agent_prefix "" {
             policy = "read"
           }
-          
+
           service_prefix "" {
             policy = "read"
           }
         dest: /tmp/prometheus-policy.hcl
         mode: '0600'
-        
+
     - name: Create ACL policy
       shell: |
         consul acl policy create \
@@ -54,7 +54,7 @@
       register: policy_result
       failed_when: false
       changed_when: "'Created' in policy_result.stdout"
-      
+
     - name: Check if policy already exists
       shell: |
         consul acl policy read \
@@ -65,7 +65,7 @@
       register: policy_check
       failed_when: false
       changed_when: false
-      
+
     - name: Create ACL token
       shell: |
         consul acl token create \
@@ -77,23 +77,23 @@
         CONSUL_HTTP_ADDR: "{{ consul_addr }}"
       register: token_result
       when: policy_check.rc == 0
-      
+
     - name: Parse token result
       set_fact:
         prometheus_token: "{{ (token_result.stdout | from_json).SecretID }}"
       when: token_result is changed
-      
+
     - name: Display token (for manual Infisical storage)
       debug:
         msg: |
           Prometheus ACL Token Created!
           =========================
           SecretID: {{ prometheus_token }}
-          
+
           Please store this token in Infisical at:
           /apollo-13/consul/PROMETHEUS_SCRAPING_TOKEN
       when: prometheus_token is defined
-      
+
     - name: Test token
       uri:
         url: "{{ consul_addr }}/v1/agent/metrics?format=prometheus"
@@ -102,11 +102,11 @@
         validate_certs: false
       register: metrics_test
       failed_when: false
-      
+
     - name: Report test result
       debug:
         msg: "Metrics endpoint test: {{ 'SUCCESS' if metrics_test.status == 200 else 'FAILED' }} (Status: {{ metrics_test.status }})"
-        
+
     - name: Clean up policy file
       file:
         path: /tmp/prometheus-policy.hcl

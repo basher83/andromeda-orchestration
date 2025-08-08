@@ -13,7 +13,7 @@
     netdata_port: 19999
     netdata_bind_to: "*"
     netdata_web_enabled: true  # Force enable web server
-    
+
     # Consul service configuration
     netdata_consul_service_name: "{{ 'netdata-parent' if inventory_hostname in groups.get('netdata_parents', []) else 'netdata-child' }}"
     netdata_consul_service_port: 19999
@@ -27,15 +27,15 @@
     netdata_consul_service_meta:
       version: "latest"
       environment: "production"
-      
+
   tasks:
     - name: Ensure correct network interface IP is used
       ansible.builtin.set_fact:
         correct_ip: "{{ ansible_all_ipv4_addresses | select('match', '^192\\.168\\.11\\.') | first | default(ansible_default_ipv4.address) }}"
-        
+
     - name: Display IP address being used
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Host: {{ inventory_hostname }}"
           - "Correct IP: {{ correct_ip }}"
           - "Default IPv4: {{ ansible_default_ipv4.address }}"
@@ -95,7 +95,7 @@
         block: |
           [global]
               bind to = *:{{ netdata_port }}
-              
+
           [web]
               enabled = yes
               mode = multi-threaded
@@ -114,7 +114,7 @@
       ansible.builtin.systemd:
         name: consul
         state: reloaded
-      when: 
+      when:
         - consul_binary.stat.exists
         - consul_service_fixed.changed or consul_service_updated.changed
 

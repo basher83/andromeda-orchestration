@@ -4,7 +4,7 @@
 - name: Check PBS connection attempts
   hosts: localhost
   gather_facts: false
-  
+
   tasks:
     - name: Add PBS to inventory
       ansible.builtin.add_host:
@@ -17,7 +17,7 @@
   hosts: pbs
   become: true
   gather_facts: false
-  
+
   tasks:
     - name: Test connectivity to pve1
       ansible.builtin.shell: |
@@ -29,11 +29,11 @@
       register: connectivity
       changed_when: false
       failed_when: false
-    
+
     - name: Display connectivity test
       ansible.builtin.debug:
         msg: "{{ connectivity.stdout_lines }}"
-    
+
     - name: Check Netdata process
       ansible.builtin.shell: |
         echo "=== Netdata processes ==="
@@ -43,11 +43,11 @@
         grep -E "enabled.*=.*yes" /etc/netdata/stream.conf | grep -v "^#"
       register: netdata_proc
       changed_when: false
-    
+
     - name: Display process info
       ansible.builtin.debug:
         msg: "{{ netdata_proc.stdout_lines }}"
-    
+
     - name: Run tcpdump briefly to see if PBS is trying to connect
       ansible.builtin.shell: |
         echo "=== Capturing outgoing traffic to pve1 port 19999 ==="
@@ -55,7 +55,7 @@
       register: tcpdump_out
       changed_when: false
       failed_when: false
-    
+
     - name: Display tcpdump
       ansible.builtin.debug:
         msg: "{{ tcpdump_out.stdout_lines }}"

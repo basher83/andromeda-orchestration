@@ -4,7 +4,7 @@
 - name: Update nftables for Nomad workloads
   hosts: tag_client
   become: true
-  
+
   tasks:
     - name: Create Nomad-friendly nftables configuration
       template:
@@ -15,23 +15,23 @@
         mode: '0755'
         backup: true
       notify: restart nftables
-      
+
   handlers:
     - name: restart nftables
       systemd:
         name: nftables
         state: restarted
-        
+
 - name: Verify nftables rules
   hosts: tag_client
   become: true
-  
+
   tasks:
     - name: Check nftables status
       command: nft list ruleset
       register: nft_rules
       changed_when: false
-      
+
     - name: Verify PowerDNS ports are allowed
       assert:
         that:

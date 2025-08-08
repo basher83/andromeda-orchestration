@@ -20,7 +20,7 @@
     path: /etc/consul.d/consul.hcl
     marker: "# {mark} ANSIBLE MANAGED TELEMETRY BLOCK"
     block: |
-      
+
       # Expose Prometheus endpoint for monitoring
       telemetry {
         prometheus_retention_time = "{{ consul_prometheus_retention_time | default('360h') }}"

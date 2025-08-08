@@ -5,7 +5,7 @@
 - name: Configure PBS to stream to pve1
   hosts: localhost
   gather_facts: false
-  
+
   tasks:
     - name: Add PBS to inventory
       ansible.builtin.add_host:
@@ -18,13 +18,13 @@
   hosts: pbs
   become: true
   gather_facts: false
-  
+
   tasks:
     - name: Install Netdata if not present
       ansible.builtin.package:
         name: netdata
         state: present
-    
+
     - name: Create streaming configuration
       ansible.builtin.copy:
         content: |
@@ -44,7 +44,7 @@
         group: netdata
         mode: '0640'
         backup: true
-    
+
     - name: Configure Netdata for minimal resource usage
       ansible.builtin.copy:
         content: |
@@ -52,10 +52,10 @@
               memory mode = ram
               history = 1800
               update every = 2
-              
+
           [web]
               enabled = no
-              
+
           [plugins]
               apps = no
               cgroups = yes
@@ -80,34 +80,34 @@
         group: netdata
         mode: '0640'
         backup: true
-    
+
     - name: Restart Netdata
       ansible.builtin.systemd:
         name: netdata
         state: restarted
         daemon_reload: true
-    
+
     - name: Wait for service to start
       ansible.builtin.wait_for:
         timeout: 10
-      
+
     - name: Check streaming status
       ansible.builtin.shell: |
         sleep 5
         netstat -an | grep -q "192.168.30.50:19999.*ESTABLISHED" && echo "Connected to pve1" || echo "Not connected yet"
       register: stream_status
       changed_when: false
-    
+
     - name: Display status
       ansible.builtin.debug:
         msg: "PBS streaming status: {{ stream_status.stdout }}"
-    
+
     - name: Check Netdata logs for connection attempts
       ansible.builtin.shell: |
         tail -20 /var/log/netdata/error.log | grep -E "(stream|connect|192.168.30.50)" || echo "No streaming logs found"
       register: log_check
       changed_when: false
-    
+
     - name: Display logs
       ansible.builtin.debug:
         msg: "{{ log_check.stdout_lines }}"

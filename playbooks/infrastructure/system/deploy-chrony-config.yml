@@ -5,7 +5,7 @@
 - name: Deploy chrony configuration to Nomad nodes
   hosts: ~nomad.*
   become: true
-  
+
   tasks:
     - name: Ensure chrony is installed
       ansible.builtin.package:

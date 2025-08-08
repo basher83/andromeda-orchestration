@@ -6,10 +6,10 @@ This directory contains Nomad job specifications for infrastructure services tha
 
 ### PowerDNS (PRODUCTION)
 
-**File**: `powerdns.nomad.hcl`  
-**Status**: ✅ Deployed and Running  
-**Version**: pdns-auth-48:latest  
-**Last Updated**: 2025-08-04  
+**File**: `powerdns.nomad.hcl`
+**Status**: ✅ Deployed and Running
+**Version**: pdns-auth-48:latest
+**Last Updated**: 2025-08-04
 
 **Purpose**: Authoritative DNS server for the homelab infrastructure.
 

@@ -30,7 +30,7 @@
         type: "A"
         value: "192.168.11.13"
         description: "Proxmox host 3"
-      
+
       # Nomad servers
       - zone: "homelab.local"
         name: "nomad-server-1"
@@ -47,7 +47,7 @@
         type: "A"
         value: "192.168.10.13"
         description: "Nomad server 3 on mable"
-      
+
       # Nomad clients
       - zone: "homelab.local"
         name: "nomad-client-1"
@@ -64,7 +64,7 @@
         type: "A"
         value: "192.168.11.22"
         description: "Nomad client 3 on mable"
-      
+
       # Services
       - zone: "homelab.local"
         name: "netbox"
@@ -81,7 +81,7 @@
         type: "A"
         value: "192.168.10.11"
         description: "HashiCorp Vault"
-      
+
       # CNAME aliases
       - zone: "homelab.local"
         name: "dns"
@@ -162,7 +162,7 @@
         validate_certs: "{{ netbox_validate_certs }}"
         status_code: [200, 201, 400]
       loop: "{{ dns_records }}"
-      when: 
+      when:
         - item.type == 'A'
         - item.value.split('.')[2] + '.' + item.value.split('.')[1] + '.' + item.value.split('.')[0] + '.in-addr.arpa' in zone_ids
       register: ptr_results

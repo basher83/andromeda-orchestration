@@ -43,7 +43,7 @@
 
 - name: Claim Netdata to cloud
   ansible.builtin.include_tasks: claim.yml
-  when: 
+  when:
     - netdata_claim_token is defined
     - netdata_claim_rooms is defined
   tags:

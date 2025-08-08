@@ -23,10 +23,10 @@ run_playbook() {
     local playbook=$1
     local description=$2
     local extra_args="${3:-}"
-    
+
     echo -e "${YELLOW}Testing: $description${NC}"
     echo "Running: uv run ansible-playbook $playbook -i $INVENTORY $extra_args"
-    
+
     if uv run ansible-playbook "$playbook" -i "$INVENTORY" $extra_args; then
         echo -e "${GREEN}✓ $description passed${NC}"
         return 0

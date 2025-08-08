@@ -7,15 +7,15 @@ job "traefik" {
 
     network {
       mode = "host"
-      
+
       port "http" {
         static = 80
       }
-      
+
       port "https" {
         static = 443
       }
-      
+
       port "admin" {
         to = 8080
       }
@@ -27,7 +27,7 @@ job "traefik" {
       config {
         image = "traefik:v3.0"
         ports = ["http", "https", "admin"]
-        
+
         volumes = [
           "local/traefik.yml:/etc/traefik/traefik.yml"
         ]
@@ -49,7 +49,7 @@ entryPoints:
           to: websecure
           scheme: https
           permanent: true
-  
+
   websecure:
     address: ":443"
 
@@ -95,7 +95,7 @@ EOF
           "traefik.http.routers.api.service=api@internal",
           "traefik.http.routers.api.entrypoints=websecure",
         ]
-        
+
         check {
           type     = "http"
           path     = "/ping"
@@ -103,12 +103,12 @@ EOF
           timeout  = "2s"
         }
       }
-      
+
       service {
         name = "traefik-http"
         port = "http"
       }
-      
+
       service {
         name = "traefik-https"
         port = "https"

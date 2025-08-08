@@ -131,7 +131,7 @@ Annual Cost (5 Pro identities): $1,080 + infrastructure
 - name: Retrieve secret
   set_fact:
     secret: "{{ lookup('onepassword_connect', 'Item Name', field='password') }}"
-    
+
 # Alternative with community.general
 - name: Retrieve with community collection
   set_fact:
@@ -143,7 +143,7 @@ Annual Cost (5 Pro identities): $1,080 + infrastructure
 # Native collection usage
 - name: Retrieve secret
   set_fact:
-    secret: "{{ lookup('infisical.vault.read_secrets', 
+    secret: "{{ lookup('infisical.vault.read_secrets',
                 secret_name='API_KEY',
                 project_id='{{ project_id }}',
                 environment='production',
@@ -309,7 +309,7 @@ source "amazon-ebs" "ubuntu" {
     alternative_names:
       - "*.{{ service_domain }}"
     auto_renew: true
-    
+
 # Certificate automatically issued and renewed!
 ```
 

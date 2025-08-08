@@ -6,7 +6,7 @@
 - name: Fix Docker nftables Compatibility
   hosts: tag_client
   become: true
-  
+
   tasks:
     - name: Create Docker daemon configuration directory
       ansible.builtin.file:
@@ -59,7 +59,7 @@
   vars:
     nomad_config_file: /etc/nomad.d/nomad.hcl
     nomad_client_token: "8e0c8f6d-8e00-8011-53f3-a0da44c305d4"
-    
+
   tasks:
     - name: Backup current configuration
       ansible.builtin.copy:
@@ -71,7 +71,7 @@
       ansible.builtin.shell: |
         # Remove all ANSIBLE MANAGED blocks
         sed -i '/^# BEGIN ANSIBLE MANAGED CONSUL/,/^# END ANSIBLE MANAGED CONSUL/d' {{ nomad_config_file }}
-        
+
         # Remove all consul blocks and any orphaned sections
         awk '
         BEGIN { in_consul = 0; brace_count = 0; skip_section = 0 }
@@ -80,7 +80,7 @@
         /^  task_identity {/ && !in_consul { skip_section = 1; brace_count = 1; next }
         /^  service_identity {/ && !in_consul { skip_section = 1; brace_count = 1; next }
         skip_section && /{/ { brace_count++ }
-        skip_section && /}/ { 
+        skip_section && /}/ {
           brace_count--
           if (brace_count == 0) {
             skip_section = 0
@@ -102,24 +102,24 @@
           consul {
             address = "127.0.0.1:8500"
             token = "{{ nomad_client_token }}"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Service and task identity settings
             service_identity {
               enabled = true
             }
-            
+
             task_identity {
               enabled = true
             }
@@ -149,7 +149,7 @@
 
 - name: Verify Configuration
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Wait for clients to reconnect
       ansible.builtin.pause:
@@ -159,7 +159,7 @@
       ansible.builtin.command: nomad node status
       register: node_status
       changed_when: false
-      
+
     - name: Check Docker status on clients
       ansible.builtin.command: docker version --format json
       delegate_to: "{{ item }}"
@@ -169,7 +169,7 @@
         - nomad-client-3-mable
       register: docker_versions
       ignore_errors: true
-      
+
     - name: Display status
       ansible.builtin.debug:
         msg:

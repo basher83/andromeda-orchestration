@@ -6,13 +6,13 @@
   hosts: localhost
   gather_facts: no
   connection: local
-  
+
   vars:
     # Generate random passwords
     mysql_root_password: "{{ lookup('password', '/tmp/powerdns_mysql_root length=32 chars=ascii_letters,digits') }}"
     mysql_user_password: "{{ lookup('password', '/tmp/powerdns_mysql_user length=32 chars=ascii_letters,digits') }}"
     powerdns_api_key: "{{ lookup('password', '/tmp/powerdns_api length=48 chars=ascii_letters,digits') }}"
-    
+
   tasks:
     - name: Generate and display secrets
       debug:
@@ -20,33 +20,33 @@
           ============================================
           PowerDNS Secrets Generated
           ============================================
-          
+
           MySQL Root Password: {{ mysql_root_password }}
           MySQL User Password: {{ mysql_user_password }}
           PowerDNS API Key: {{ powerdns_api_key }}
-          
+
           ============================================
           MANUAL SETUP STEPS:
           ============================================
-          
+
           1. SSH to a Nomad server:
              ssh ansible@nomad-server-1
-          
+
           2. Get your Consul management token (from Infisical or saved elsewhere)
-          
+
           3. Set the secrets in Consul KV:
-             
+
              consul kv put powerdns/mysql/root_password "{{ mysql_root_password }}"
              consul kv put powerdns/mysql/password "{{ mysql_user_password }}"
              consul kv put powerdns/api/key "{{ powerdns_api_key }}"
-          
+
           4. Verify the secrets:
              consul kv get powerdns/mysql/root_password
              consul kv get powerdns/mysql/password
              consul kv get powerdns/api/key
-          
+
           ============================================
-          
+
     - name: Save to file for reference
       copy:
         content: |
@@ -54,14 +54,14 @@
           MYSQL_ROOT_PASSWORD={{ mysql_root_password }}
           MYSQL_USER_PASSWORD={{ mysql_user_password }}
           POWERDNS_API_KEY={{ powerdns_api_key }}
-          
+
           # Consul KV Commands:
           consul kv put powerdns/mysql/root_password "{{ mysql_root_password }}"
           consul kv put powerdns/mysql/password "{{ mysql_user_password }}"
           consul kv put powerdns/api/key "{{ powerdns_api_key }}"
         dest: /tmp/powerdns-secrets.txt
         mode: '0600'
-        
+
     - name: Show file location
       debug:
         msg: "Secrets saved to: /tmp/powerdns-secrets.txt (mode 0600)"

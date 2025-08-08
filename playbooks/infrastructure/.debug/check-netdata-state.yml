@@ -4,26 +4,26 @@
   hosts: all:!localhost
   become: true
   gather_facts: true
-  
+
   tasks:
     - name: Check if Netdata is installed
       ansible.builtin.stat:
         path: /usr/sbin/netdata
       register: netdata_binary
-      
+
     - name: Get Netdata version
       ansible.builtin.command:
         cmd: netdata -v
       register: netdata_version
       when: netdata_binary.stat.exists
       changed_when: false
-      
+
     - name: Check Netdata service status
       ansible.builtin.systemd:
         name: netdata
       register: netdata_service
       when: netdata_binary.stat.exists
-      
+
     - name: Check for existing configuration files
       ansible.builtin.stat:
         path: "{{ item }}"
@@ -33,7 +33,7 @@
         - /etc/netdata/stream.conf
         - /etc/netdata/go.d/consul.conf
         - /etc/consul.d/netdata.json
-        
+
     - name: Display Netdata status
       ansible.builtin.debug:
         msg:
@@ -41,19 +41,18 @@
           - "Version: {{ netdata_version.stdout | default('Not installed') }}"
           - "Service state: {{ netdata_service.status.ActiveState | default('Unknown') }}"
           - "Config files present: {{ config_files.results | selectattr('stat.exists') | map(attribute='item') | list }}"
-          
+
     - name: Check streaming connections on parent nodes
       ansible.builtin.shell: |
         curl -s http://localhost:19999/api/v1/info | jq -r '.stream'
       register: streaming_info
-      when: 
+      when:
         - netdata_binary.stat.exists
         - inventory_hostname in groups.get('proxmox_nodes', [])
       changed_when: false
       failed_when: false
-      
+
     - name: Display streaming info for parents
       ansible.builtin.debug:
         msg: "Streaming connections: {{ streaming_info.stdout | default('No streaming info') }}"
       when: streaming_info is defined
-

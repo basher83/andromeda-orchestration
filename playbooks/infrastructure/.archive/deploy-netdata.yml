@@ -3,7 +3,7 @@
   hosts: all
   become: true
   gather_facts: true
-  
+
   tasks:
     - name: Deploy Netdata with role
       ansible.builtin.include_role:
@@ -15,11 +15,11 @@
           - "monitoring"
           - "metrics"
           - "{{ 'parent' if inventory_hostname in groups.get('netdata_parents', []) else 'child' }}"
-        
+
         # Configure based on node type
         netdata_streaming_enabled: "{{ inventory_hostname not in groups.get('netdata_parents', []) }}"
         netdata_parent_enabled: "{{ inventory_hostname in groups.get('netdata_parents', []) }}"
-        
+
         # Web interface - disable on child nodes to save resources
         netdata_web_enabled: "{{ inventory_hostname in groups.get('netdata_parents', []) }}"
 
@@ -29,7 +29,7 @@
   hosts: netdata_parents
   become: true
   gather_facts: true
-  
+
   tasks:
     - name: Deploy Netdata parent configuration
       ansible.builtin.include_role:
@@ -40,7 +40,7 @@
         netdata_memory_mode: "dbengine"
         netdata_dbengine_disk_space: 1024  # 1GB for parent nodes
         netdata_history: 86400  # 24 hours
-        
+
         # Consul service for parent
         netdata_consul_enabled: true
         netdata_consul_service_name: "netdata-parent"
@@ -51,12 +51,12 @@
           - "api"
 
 ---
-# Separate playbook for child nodes  
+# Separate playbook for child nodes
 - name: Configure Netdata child nodes
   hosts: all:!netdata_parents
   become: true
   gather_facts: true
-  
+
   tasks:
     - name: Deploy Netdata child configuration
       ansible.builtin.include_role:
@@ -68,7 +68,7 @@
         netdata_web_enabled: false  # Disable web UI on children
         netdata_memory_mode: "ram"  # Use RAM mode for children
         netdata_history: 3600  # 1 hour local retention
-        
+
         # Consul service for children
         netdata_consul_enabled: true
         netdata_consul_service_name: "netdata-child"

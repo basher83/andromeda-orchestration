@@ -4,27 +4,27 @@
   hosts: all:!localhost
   become: true
   gather_facts: true
-  
+
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
-    
+
   tasks:
     - name: Determine node type and cluster
       set_fact:
         is_netdata_parent: "{{ inventory_hostname in ['lloyd', 'holly', 'mable', 'pve1'] }}"
         is_nomad_cluster: "{{ 'nomad' in inventory_hostname or inventory_hostname in ['lloyd', 'holly', 'mable'] }}"
         node_ip: "{{ ansible_host | default(ansible_default_ipv4.address | default('unknown')) }}"
-    
+
     - name: Check if Netdata is installed
       stat:
         path: /usr/sbin/netdata
       register: netdata_installed
-    
+
     - name: Check if Consul is installed
       stat:
         path: /usr/bin/consul
       register: consul_installed
-    
+
     # Netdata configuration files
     - name: Read netdata.conf
       slurp:
@@ -32,23 +32,23 @@
       register: netdata_conf
       when: netdata_installed.stat.exists
       failed_when: false
-    
+
     - name: Read stream.conf
       slurp:
         src: /etc/netdata/stream.conf
       register: stream_conf
       when: netdata_installed.stat.exists
       failed_when: false
-    
+
     - name: Read Netdata's consul.conf (go.d plugin)
       slurp:
         src: /etc/netdata/go.d/consul.conf
       register: netdata_consul_conf
-      when: 
+      when:
         - netdata_installed.stat.exists
         - is_nomad_cluster
       failed_when: false
-    
+
     # Consul configuration for Netdata service
     - name: Read Consul service definition for Netdata
       slurp:
@@ -56,31 +56,31 @@
       register: consul_netdata_service
       when: consul_installed.stat.exists
       failed_when: false
-    
+
     - name: Display netdata.conf
       debug:
         msg: |
           === {{ inventory_hostname }} ({{ node_ip }}) - netdata.conf ===
           Type: {% if is_netdata_parent %}PARENT{% else %}CHILD{% endif %}
           Cluster: {% if is_nomad_cluster %}NOMAD{% else %}OTHER{% endif %}
-          
+
           {{ netdata_conf.content | b64decode | default('File not found') | regex_replace('(?m)^#.*\n', '') | regex_replace('\n\n+', '\n\n') }}
       when: netdata_conf.content is defined
-    
+
     - name: Display stream.conf
       debug:
         msg: |
           === {{ inventory_hostname }} ({{ node_ip }}) - stream.conf ===
           {{ stream_conf.content | b64decode | default('File not found') }}
       when: stream_conf.content is defined
-    
+
     - name: Display Netdata's consul.conf (go.d plugin)
       debug:
         msg: |
           === {{ inventory_hostname }} ({{ node_ip }}) - /etc/netdata/go.d/consul.conf ===
           {{ netdata_consul_conf.content | b64decode | default('File not found') }}
       when: netdata_consul_conf.content is defined
-    
+
     - name: Display Consul service definition
       debug:
         msg: |

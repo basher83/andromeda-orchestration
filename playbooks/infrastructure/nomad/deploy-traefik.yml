@@ -8,7 +8,7 @@
     nomad_api_endpoint: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646', true) }}"
     traefik_job: "nomad-jobs/core-infrastructure/traefik.nomad.hcl"
     consul_api_endpoint: "{{ lookup('env', 'CONSUL_HTTP_ADDR') | default('http://192.168.11.10:8500', true) }}"
-  
+
   pre_tasks:
     - name: Check Consul connectivity
       ansible.builtin.uri:

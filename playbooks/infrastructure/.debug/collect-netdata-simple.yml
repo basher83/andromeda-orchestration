@@ -4,16 +4,16 @@
   hosts: all:!localhost
   become: true
   gather_facts: true
-  
+
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
-    
+
   tasks:
     - name: Check if Netdata is installed
       ansible.builtin.stat:
         path: /usr/sbin/netdata
       register: netdata_binary
-      
+
     - name: Get Netdata version
       ansible.builtin.command:
         cmd: netdata -v
@@ -21,35 +21,35 @@
       when: netdata_binary.stat.exists
       changed_when: false
       failed_when: false
-      
+
     - name: Check Netdata service status
       ansible.builtin.systemd:
         name: netdata
       register: netdata_service
       when: netdata_binary.stat.exists
       failed_when: false
-      
+
     - name: Read netdata.conf
       ansible.builtin.slurp:
         src: /etc/netdata/netdata.conf
       register: netdata_conf
       when: netdata_binary.stat.exists
       failed_when: false
-      
+
     - name: Read stream.conf
       ansible.builtin.slurp:
         src: /etc/netdata/stream.conf
       register: stream_conf
       when: netdata_binary.stat.exists
       failed_when: false
-      
+
     - name: Check listening ports
       ansible.builtin.shell: |
         ss -tlnp | grep -E '19999|19998' || echo "No Netdata ports listening"
       register: listening_ports
       changed_when: false
       failed_when: false
-      
+
     - name: Get recent Netdata logs with streaming errors
       ansible.builtin.shell: |
         journalctl -u netdata --since "1 hour ago" --no-pager | grep -E "stream|denied|API key|error" | tail -50 || echo "No streaming errors found"
@@ -57,7 +57,7 @@
       when: netdata_binary.stat.exists
       changed_when: false
       failed_when: false
-      
+
     - name: Save configuration data locally
       become: no
       ansible.builtin.copy:
@@ -65,31 +65,31 @@
           # Netdata Configuration Report for {{ inventory_hostname }}
           # Generated: {{ timestamp }}
           # IP: {{ ansible_host | default('N/A') }}
-          
+
           ## Status
           - Installed: {{ netdata_binary.stat.exists }}
           - Version: {{ netdata_version.stdout | default('Not installed') }}
           - Service State: {{ netdata_service.status.ActiveState | default('Unknown') }}
           - Service Enabled: {{ netdata_service.status.UnitFileState | default('Unknown') }}
           - Role: {{ 'parent' if inventory_hostname in groups.get('netdata_parents', []) else 'child' if inventory_hostname in groups.get('netdata_children', []) else 'standalone' }}
-          
+
           ## Listening Ports
           {{ listening_ports.stdout }}
-          
+
           ## Stream Configuration
           {% if stream_conf.content is defined %}
           {{ stream_conf.content | b64decode }}
           {% else %}
           No stream.conf found
           {% endif %}
-          
+
           ## Recent Streaming Errors
           {% for line in netdata_logs.stdout_lines | default(['No logs']) %}
           {{ line }}
           {% endfor %}
         dest: "/tmp/netdata_{{ inventory_hostname }}_{{ timestamp }}.txt"
       delegate_to: localhost
-      
+
     - name: Display summary
       ansible.builtin.debug:
         msg:

@@ -1,5 +1,5 @@
 ---
-# Need to target 100.109.215.25, 100.94.200.83, 100.121.233.15, 100.119.207.2 via tailscale inventory, user: root. 
+# Need to target 100.109.215.25, 100.94.200.83, 100.121.233.15, 100.119.207.2 via tailscale inventory, user: root.
 # And 192.168.30.40, 192.168.30.106 via og-homelab proxmox inventory, user: root.
 # purge_zabbix.yml
 - name: Fully purge Zabbix from hosts

@@ -5,22 +5,22 @@ Date: 2025-07-30
 Token Used: 73d098e0-3dda-a9d9-e9e2-4756ee1334e4
 
 Configuration Status:
-- nomad-server-1-lloyd: 
+- nomad-server-1-lloyd:
   - Netdata: Installed
   - Consul API: Accessible
-- nomad-server-2-holly: 
+- nomad-server-2-holly:
   - Netdata: Installed
   - Consul API: Accessible
-- nomad-server-3-mable: 
+- nomad-server-3-mable:
   - Netdata: Installed
   - Consul API: Accessible
-- nomad-client-1-lloyd: 
+- nomad-client-1-lloyd:
   - Netdata: Installed
   - Consul API: Accessible
-- nomad-client-2-holly: 
+- nomad-client-2-holly:
   - Netdata: Installed
   - Consul API: Accessible
-- nomad-client-3-mable: 
+- nomad-client-3-mable:
   - Netdata: Installed
   - Consul API: Accessible
 - lloyd, holly, mable:

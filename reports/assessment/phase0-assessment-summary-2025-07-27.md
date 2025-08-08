@@ -33,7 +33,7 @@ Successfully gathered critical infrastructure information despite assessment pla
 - **DNS**: Port 8600 responding but not integrated
 - **ACLs**: Enabled (requiring tokens)
 
-### ✅ Nomad Cluster  
+### ✅ Nomad Cluster
 
 - **Status**: Healthy and operational
 - **Nodes**: 6 total (3 servers, 3 clients)
