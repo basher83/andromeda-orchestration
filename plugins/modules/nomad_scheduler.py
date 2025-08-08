@@ -14,18 +14,10 @@ from ..module_utils.utils import is_subset
 def run_module():
     # define available arguments/parameters a user can pass to the module
     preemption_config_spec = dict(
-        system_scheduler_enabled=dict(
-            type="bool", aliases=["SystemSchedulerEnabled"], default=True
-        ),
-        sys_batch_scheduler_enabled=dict(
-            type="bool", aliases=["SysBatchSchedulerEnabled"], default=False
-        ),
-        batch_scheduler_enabled=dict(
-            type="bool", aliases=["BatchSchedulerEnabled"], default=False
-        ),
-        service_scheduler_enabled=dict(
-            type="bool", aliases=["ServiceSchedulerEnabled"], default=False
-        ),
+        system_scheduler_enabled=dict(type="bool", aliases=["SystemSchedulerEnabled"], default=True),
+        sys_batch_scheduler_enabled=dict(type="bool", aliases=["SysBatchSchedulerEnabled"], default=False),
+        batch_scheduler_enabled=dict(type="bool", aliases=["BatchSchedulerEnabled"], default=False),
+        service_scheduler_enabled=dict(type="bool", aliases=["ServiceSchedulerEnabled"], default=False),
     )
     module_args = dict(
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
@@ -37,15 +29,11 @@ def run_module():
             no_log=True,
             fallback=(env_fallback, ["NOMAD_TOKEN"]),
         ),
-        scheduler_algorithm=dict(
-            type="str", choices=["binpack", "spread"], default="binpack"
-        ),
+        scheduler_algorithm=dict(type="str", choices=["binpack", "spread"], default="binpack"),
         memory_oversubscription_enabled=dict(type="bool", default=False),
         reject_job_registration=dict(type="bool", default=False),
         pause_eval_broker=dict(type="bool", default=False),
-        preemption_config=dict(
-            type=dict, aliases=["PreemptionConfig"], options=preemption_config_spec
-        ),
+        preemption_config=dict(type=dict, aliases=["PreemptionConfig"], options=preemption_config_spec),
     )
 
     # seed the final result dict in the object. Default nothing changed ;)
@@ -62,25 +50,15 @@ def run_module():
     existing_config = nomad.get_scheduler_config().get("SchedulerConfig")
     desired_config = dict(
         SchedulerAlgorithm=module.params.get("scheduler_algorithm"),
-        MemoryOversubscriptionEnabled=module.params.get(
-            "memory_oversubscription_enabled"
-        ),
+        MemoryOversubscriptionEnabled=module.params.get("memory_oversubscription_enabled"),
         RejectJobRegistration=module.params.get("reject_job_registration"),
         PauseEvalBroker=module.params.get("pause_eval_broker"),
         PreemptionConfig=dict(
             # repeat the defaults here since they do not seem to be respected from preemption_config_spec
-            SystemSchedulerEnabled=module.params.get("preemption_config").get(
-                "system_scheduler_enabled", True
-            ),
-            SysBatchSchedulerEnabled=module.params.get("preemption_config").get(
-                "sys_batch_scheduler_enabled", False
-            ),
-            BatchSchedulerEnabled=module.params.get("preemption_config").get(
-                "batch_scheduler_enabled", False
-            ),
-            ServiceSchedulerEnabled=module.params.get("preemption_config").get(
-                "service_scheduler_enabled", False
-            ),
+            SystemSchedulerEnabled=module.params.get("preemption_config").get("system_scheduler_enabled", True),
+            SysBatchSchedulerEnabled=module.params.get("preemption_config").get("sys_batch_scheduler_enabled", False),
+            BatchSchedulerEnabled=module.params.get("preemption_config").get("batch_scheduler_enabled", False),
+            ServiceSchedulerEnabled=module.params.get("preemption_config").get("service_scheduler_enabled", False),
         ),
     )
     if not is_subset(desired_config, existing_config):

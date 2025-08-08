@@ -1,12 +1,8 @@
 # Copyright (c) George Bolo <gbolo@linuxctl.com>
 # SPDX-License-Identifier: MIT
 
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
 
 import json
-import sys
 
 from ansible.module_utils.common.text.converters import to_native
 from ansible.module_utils.six.moves.urllib.error import HTTPError
@@ -34,12 +30,10 @@ URL_JOB = "{url}/v1/job/{id}?namespace={namespace}"
 URL_JOB_DELETE = "{url}/v1/job/{id}?purge={purge}&namespace={namespace}"
 URL_JOB_PARSE = "{url}/v1/jobs/parse?namespace={namespace}"
 URL_JOB_PLAN = "{url}/v1/job/{id}/plan?namespace={namespace}"
-URL_JOB_SUBMISSION = (
-    "{url}/v1/job/{id}/submission?namespace={namespace}&version={version}"
-)
+URL_JOB_SUBMISSION = "{url}/v1/job/{id}/submission?namespace={namespace}&version={version}"
 
 
-class NomadAPI(object):
+class NomadAPI:
     """NomadAPI is used to interact with the nomad API"""
 
     def __init__(self, module):
@@ -55,9 +49,7 @@ class NomadAPI(object):
             "User-Agent": "ansible-module-nomad",
         }
 
-    def api_request(
-        self, url, method, headers=None, body=None, json_response=True, accept_404=False
-    ):
+    def api_request(self, url, method, headers=None, body=None, json_response=True, accept_404=False):
         if headers is None:
             headers = self.headers
         try:
@@ -82,9 +74,7 @@ class NomadAPI(object):
                 try:
                     return json.loads(to_native(response_body))
                 except ValueError as e:
-                    self.module.fail_json(
-                        msg="API returned invalid JSON: %s" % (str(e))
-                    )
+                    self.module.fail_json(msg="API returned invalid JSON: %s" % (str(e)))
             return response_body
 
         except HTTPError as e:
@@ -99,21 +89,15 @@ class NomadAPI(object):
             )
             if e.code == 401 or e.code == 403:
                 self.module.fail_json(
-                    msg="Not Authorized: status=%s [%s] %s ->\n%s"
-                    % (e.code, method, url, response_body)
+                    msg="Not Authorized: status=%s [%s] %s ->\n%s" % (e.code, method, url, response_body)
                 )
             if e.code == 404 and accept_404:
                 return None
 
-            self.module.fail_json(
-                msg="Error: status=%s [%s] %s ->\n%s"
-                % (e.code, method, url, response_body)
-            )
+            self.module.fail_json(msg="Error: status=%s [%s] %s ->\n%s" % (e.code, method, url, response_body))
 
         except Exception as e:
-            self.module.fail_json(
-                msg="Could not make API call: [%s] %s ->\n%s" % (method, url, str(e))
-            )
+            self.module.fail_json(msg="Could not make API call: [%s] %s ->\n%s" % (method, url, str(e)))
 
     #
     # ACL Policies
@@ -269,18 +253,14 @@ class NomadAPI(object):
     #
     def get_csi_volumes(self):
         return self.api_request(
-            url=URL_CSI_VOLUMES.format(
-                url=self.url, namespace=quote_plus(self.namespace)
-            ),
+            url=URL_CSI_VOLUMES.format(url=self.url, namespace=quote_plus(self.namespace)),
             method="GET",
             json_response=True,
         )
 
     def get_csi_volume(self, id):
         return self.api_request(
-            url=URL_CSI_VOLUME.format(
-                url=self.url, id=id, namespace=quote_plus(self.namespace)
-            ),
+            url=URL_CSI_VOLUME.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="GET",
             json_response=True,
             accept_404=True,
@@ -288,9 +268,7 @@ class NomadAPI(object):
 
     def delete_csi_volume(self, id):
         return self.api_request(
-            url=URL_CSI_VOLUME_DELETE.format(
-                url=self.url, id=id, namespace=quote_plus(self.namespace)
-            ),
+            url=URL_CSI_VOLUME_DELETE.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="DELETE",
             json_response=False,
             accept_404=True,
@@ -298,9 +276,7 @@ class NomadAPI(object):
 
     def create_csi_volume(self, id, body):
         return self.api_request(
-            url=URL_CSI_VOLUME_CREATE.format(
-                url=self.url, id=id, namespace=quote_plus(self.namespace)
-            ),
+            url=URL_CSI_VOLUME_CREATE.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="PUT",
             body=body,
             json_response=True,
@@ -311,9 +287,7 @@ class NomadAPI(object):
     #
     def parse_job(self, body):
         return self.api_request(
-            url=URL_JOB_PARSE.format(
-                url=self.url, namespace=quote_plus(self.namespace)
-            ),
+            url=URL_JOB_PARSE.format(url=self.url, namespace=quote_plus(self.namespace)),
             method="POST",
             body=body,
             json_response=True,
@@ -321,9 +295,7 @@ class NomadAPI(object):
 
     def plan_job(self, id, body):
         return self.api_request(
-            url=URL_JOB_PLAN.format(
-                url=self.url, id=id, namespace=quote_plus(self.namespace)
-            ),
+            url=URL_JOB_PLAN.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="POST",
             body=body,
             json_response=True,
@@ -331,18 +303,14 @@ class NomadAPI(object):
 
     def delete_job(self, id, purge=False):
         return self.api_request(
-            url=URL_JOB_DELETE.format(
-                url=self.url, id=id, purge=purge, namespace=quote_plus(self.namespace)
-            ),
+            url=URL_JOB_DELETE.format(url=self.url, id=id, purge=purge, namespace=quote_plus(self.namespace)),
             method="DELETE",
             json_response=True,
         )
 
     def create_or_update_job(self, id, body):
         return self.api_request(
-            url=URL_JOB.format(
-                url=self.url, id=id, namespace=quote_plus(self.namespace)
-            ),
+            url=URL_JOB.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="POST",
             body=body,
             json_response=True,
@@ -350,9 +318,7 @@ class NomadAPI(object):
 
     def get_job(self, id):
         return self.api_request(
-            url=URL_JOB.format(
-                url=self.url, id=id, namespace=quote_plus(self.namespace)
-            ),
+            url=URL_JOB.format(url=self.url, id=id, namespace=quote_plus(self.namespace)),
             method="GET",
             json_response=True,
             accept_404=True,

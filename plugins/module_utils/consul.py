@@ -1,9 +1,6 @@
 # Copyright (c) George Bolo <gbolo@linuxctl.com>
 # SPDX-License-Identifier: MIT
 
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
 
 import json
 
@@ -23,13 +20,11 @@ URL_ACL_TOKENS = "{url}/v1/acl/tokens"
 URL_ACL_TOKEN = "{url}/v1/acl/token"
 URL_ACL_TOKEN_ID = "{url}/v1/acl/token/{id}"
 URL_ACL_TOKEN_SELF = "{url}/v1/acl/token/self"
-URL_CONNECT_INTENTION = (
-    "{url}/v1/connect/intentions/exact?source={src}&destination={dst}"
-)
+URL_CONNECT_INTENTION = "{url}/v1/connect/intentions/exact?source={src}&destination={dst}"
 URL_SERVICE_NAME = "{url}/v1/catalog/service/{name}"
 
 
-class ConsulAPI(object):
+class ConsulAPI:
     """ConsulAPI is used to interact with the Consul API"""
 
     def __init__(self, module):
@@ -44,9 +39,7 @@ class ConsulAPI(object):
             "User-Agent": "ansible-module-consul",
         }
 
-    def api_request(
-        self, url, method, headers=None, body=None, json_response=True, ignore_codes=[]
-    ):
+    def api_request(self, url, method, headers=None, body=None, json_response=True, ignore_codes=[]):
         if headers is None:
             headers = self.headers
         try:
@@ -71,9 +64,7 @@ class ConsulAPI(object):
                 try:
                     return json.loads(to_native(response_body))
                 except ValueError as e:
-                    self.module.fail_json(
-                        msg="API returned invalid JSON: %s" % (str(e))
-                    )
+                    self.module.fail_json(msg="API returned invalid JSON: %s" % (str(e)))
             return response_body
 
         except HTTPError as e:
@@ -91,20 +82,14 @@ class ConsulAPI(object):
 
             if e.code == 401 or e.code == 403:
                 self.module.fail_json(
-                    msg="Not Authorized: status=%s [%s] %s ->\n%s"
-                    % (e.code, method, url, response_body)
+                    msg="Not Authorized: status=%s [%s] %s ->\n%s" % (e.code, method, url, response_body)
                 )
 
-            self.module.fail_json(
-                msg="Error: status=%s [%s] %s ->\n%s"
-                % (e.code, method, url, response_body)
-            )
+            self.module.fail_json(msg="Error: status=%s [%s] %s ->\n%s" % (e.code, method, url, response_body))
 
         except Exception as e:
             print("here")
-            self.module.fail_json(
-                msg="Could not make API call: [%s] %s ->\n%s" % (method, url, str(e))
-            )
+            self.module.fail_json(msg="Could not make API call: [%s] %s ->\n%s" % (method, url, str(e)))
 
     #
     # ACL Policies

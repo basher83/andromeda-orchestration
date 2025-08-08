@@ -1,9 +1,6 @@
 # Copyright (c) George Bolo <gbolo@linuxctl.com>
 # SPDX-License-Identifier: MIT
 
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
 
 import inspect
 import logging
@@ -43,22 +40,14 @@ if DEBUG_LOGGER_ENABLED:
     )
 
 
-def log_request(
-    module, url, method, request_body=None, status=None, response_body=None
-):
+def log_request(module, url, method, request_body=None, status=None, response_body=None):
     if DEBUG_LOGGER_ENABLED:
         # Emit a warning if this is enabled!
-        module.warn(
-            "{var} is enabled! Sensitive information may be logged to disk!".format(
-                var=ENV_VAR
-            )
-        )
+        module.warn(f"{ENV_VAR} is enabled! Sensitive information may be logged to disk!")
 
         logging.debug(
             REQUEST_LOG_TEMPLATE.format(
-                caller_file=os.path.basename(
-                    inspect.currentframe().f_back.f_code.co_filename
-                ),
+                caller_file=os.path.basename(inspect.currentframe().f_back.f_code.co_filename),
                 caller_func=inspect.currentframe().f_back.f_code.co_name,
                 url=url,
                 method=method,

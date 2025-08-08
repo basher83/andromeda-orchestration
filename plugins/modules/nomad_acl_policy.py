@@ -74,17 +74,13 @@ def run_module():
 
     if module.params.get("state") == "present":
         if existing_policy is None:
-            nomad.create_or_update_acl_policy(
-                policy_name, json.dumps(desired_policy_body)
-            )
+            nomad.create_or_update_acl_policy(policy_name, json.dumps(desired_policy_body))
             result["policy"] = nomad.get_acl_policy(policy_name)
             result["changed"] = True
         else:
             # compare if we need to change anything about the policy
             if not is_subset(desired_policy_body, existing_policy):
-                nomad.create_or_update_acl_policy(
-                    policy_name, json.dumps(desired_policy_body)
-                )
+                nomad.create_or_update_acl_policy(policy_name, json.dumps(desired_policy_body))
                 result["policy"] = nomad.get_acl_policy(policy_name)
                 result["changed"] = True
 

@@ -37,9 +37,7 @@ def run_module():
         namespace=dict(type="str", default="default"),
         plugin_id=dict(type="str", required=True),
         mount_options=dict(type="dict", required=False, options=mount_options_spec),
-        capabilities=dict(
-            type="list", required=True, elements="dict", options=capabilities_spec
-        ),
+        capabilities=dict(type="list", required=True, elements="dict", options=capabilities_spec),
         capacity_gb=dict(type="int", required=False),
         parameters=dict(type="dict", required=False),
     )
@@ -113,9 +111,7 @@ def run_module():
                 result["mismatched"] = True
         else:
             request_body = {"Volumes": [desired_volume]}
-            result["volume"] = nomad.create_csi_volume(
-                volume_id, json.dumps(request_body)
-            )
+            result["volume"] = nomad.create_csi_volume(volume_id, json.dumps(request_body))
             result["changed"] = True
 
     # post final results

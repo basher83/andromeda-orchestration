@@ -15,9 +15,7 @@ def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         state=dict(type="str", choices=["present", "absent"], default="present"),
-        url=dict(
-            type="str", required=True, fallback=(env_fallback, ["CONSUL_HTTP_ADDR"])
-        ),
+        url=dict(type="str", required=True, fallback=(env_fallback, ["CONSUL_HTTP_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
         management_token=dict(
@@ -67,9 +65,7 @@ def run_module():
             result["changed"] = True
 
     if module.params.get("state") == "present":
-        if existing_intention is None or not is_subset(
-            desired_intention_body, existing_intention
-        ):
+        if existing_intention is None or not is_subset(desired_intention_body, existing_intention):
             consul.create_or_update_connect_intention(
                 source=module.params.get("source"),
                 destination=module.params.get("destination"),

@@ -3,20 +3,15 @@
 # SPDX-License-Identifier: MIT
 
 
-import json
-
 from ansible.module_utils.basic import AnsibleModule, env_fallback
 
 from ..module_utils.consul import ConsulAPI
-from ..module_utils.utils import del_none, is_subset
 
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
-        url=dict(
-            type="str", required=True, fallback=(env_fallback, ["CONSUL_HTTP_ADDR"])
-        ),
+        url=dict(type="str", required=True, fallback=(env_fallback, ["CONSUL_HTTP_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
         management_token=dict(
