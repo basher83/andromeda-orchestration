@@ -68,7 +68,7 @@ This correctly checks if `stdout` is defined before accessing it, preventing err
    - name: Test connectivity between nodes
      ansible.builtin.command:
        cmd: "ping -c 2 -W 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
-     when: 
+     when:
        - item != inventory_hostname
        - hostvars[item]['ansible_default_ipv4'] is defined
        - hostvars[item]['ansible_default_ipv4']['address'] is defined

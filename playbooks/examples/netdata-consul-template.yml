@@ -6,15 +6,15 @@
   hosts: all
   become: true
   gather_facts: true
-  
+
   vars:
     # Enable consul-template for dynamic configuration
     netdata_consul_template_enabled: true
     netdata_consul_template_cpu_alarms: true
-    
+
     # Populate initial KV values
     netdata_consul_template_populate_kv: true
-    
+
     # Custom alarm thresholds for this environment
     netdata_consul_kv_defaults:
       - key: "netdata/alarms/cpu/10min_usage_warning_low"
@@ -33,7 +33,7 @@
         value: "30"
       - key: "netdata/alarms/cpu/10min_iowait_critical_high"
         value: "40"
-    
+
     # Add custom templates for other alarms
     netdata_consul_template_configs:
       - name: "memory.conf.ctmpl"
@@ -46,7 +46,7 @@
         command: "systemctl restart netdata"
         wait_min: "5s"
         wait_max: "30s"
-  
+
   tasks:
     - name: Deploy Netdata with consul-template
       ansible.builtin.include_role:
@@ -57,11 +57,11 @@
 - name: Update Netdata alarm thresholds via Consul KV
   hosts: localhost
   gather_facts: false
-  
+
   vars:
     consul_url: "http://{{ groups['consul_servers'][0] }}:8500"
     consul_token: "{{ vault_consul_management_token }}"
-    
+
   tasks:
     - name: Update CPU warning threshold for production
       ansible.builtin.uri:
@@ -71,7 +71,7 @@
         headers:
           X-Consul-Token: "{{ consul_token }}"
       when: environment == "production"
-      
+
     - name: Update IO wait thresholds based on workload type
       ansible.builtin.uri:
         url: "{{ consul_url }}/v1/kv/netdata/alarms/cpu/10min_iowait_warning_high"
@@ -79,7 +79,7 @@
         body: "{{ '60' if workload_type == 'database' else '40' }}"
         headers:
           X-Consul-Token: "{{ consul_token }}"
-      
+
     - name: Disable CPU steal alarms for non-virtualized hosts
       ansible.builtin.uri:
         url: "{{ consul_url }}/v1/kv/netdata/alarms/cpu/20min_steal_critical_high"
@@ -95,7 +95,7 @@
   hosts: localhost
   gather_facts: false
   connection: local
-  
+
   tasks:
     - name: Create memory alarm template
       ansible.builtin.copy:
@@ -113,7 +113,7 @@
              delay: down 15m multiplier 1.5 max 1h
               info: system RAM used
                 to: sysadmin
-    
+
     - name: Create disk alarm template
       ansible.builtin.copy:
         dest: "./disk.conf.ctmpl"

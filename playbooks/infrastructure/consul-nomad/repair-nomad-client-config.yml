@@ -8,7 +8,7 @@
   vars:
     nomad_config_file: /etc/nomad.d/nomad.hcl
     nomad_client_token: "[REDACTED_NOMAD_TOKEN]"
-    
+
   tasks:
     - name: Find most recent backup
       ansible.builtin.shell: |
@@ -29,7 +29,7 @@
       ansible.builtin.shell: |
         # Remove all existing consul blocks and ansible markers
         sed -i.tmp '/^# BEGIN ANSIBLE MANAGED CONSUL/,/^# END ANSIBLE MANAGED CONSUL/d' {{ nomad_config_file }}
-        
+
         # Also remove any standalone consul blocks
         perl -i -pe 'BEGIN{undef $/;} s/\nconsul\s*\{[^}]*\}//smg' {{ nomad_config_file }}
       when: backup_file.stdout != ""
@@ -42,24 +42,24 @@
           consul {
             address = "127.0.0.1:8500"
             token = "{{ nomad_client_token }}"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Service and task identity settings
             service_identity {
               enabled = true
             }
-            
+
             task_identity {
               enabled = true
             }
@@ -87,13 +87,13 @@
 
 - name: Verify All Nodes
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Check all Nomad nodes
       ansible.builtin.command: nomad node status
       register: node_status
       changed_when: false
-      
+
     - name: Display node status
       ansible.builtin.debug:
         msg:

@@ -15,8 +15,8 @@ playbooks/
 ├── assessment/        # Read-only assessment playbooks
 ├── infrastructure/    # Infrastructure deployment/management
 │   ├── consul/       # Service-specific subdirectories
-│   ├── nomad/        
-│   └── monitoring/   
+│   ├── nomad/
+│   └── monitoring/
 └── site.yml          # Master playbook (if needed)
 
 inventory/
@@ -71,17 +71,17 @@ compose:
   hosts: appropriate_group
   gather_facts: yes  # Explicitly set
   become: yes        # Explicitly set
-  
+
   vars:
     # Playbook-level variables
-    
+
   pre_tasks:
     - name: Validation tasks
-    
+
   roles:
     - role: role_name
       when: condition
-      
+
   tasks:
     - name: Descriptive task names
       module_name:
@@ -89,10 +89,10 @@ compose:
       tags:
         - relevant
         - tags
-        
+
   post_tasks:
     - name: Verification tasks
-    
+
   handlers:
     - name: Handler name
 ```
@@ -167,17 +167,17 @@ secret: "{{ lookup('infisical', 'path/to/secret') }}"
 - name: Deploy Nomad job from file
   hosts: localhost
   gather_facts: no
-  
+
   vars:
     nomad_host: "{{ lookup('env', 'NOMAD_ADDR') }}"
     job_file: "{{ job }}"  # Passed via -e job=path/to/job.hcl
-    
+
   tasks:
     - name: Validate job file exists
       ansible.builtin.stat:
         path: "{{ job_file }}"
       register: job_stat
-      
+
     - name: Deploy job to Nomad
       community.general.nomad_job:
         state: present

@@ -8,7 +8,7 @@
   become: true
   vars:
     nomad_config_file: /etc/nomad.d/nomad.hcl
-    
+
   tasks:
     - name: Update reserved ports to only include SSH (22)
       ansible.builtin.replace:
@@ -34,13 +34,13 @@
 
 - name: Verify Configuration
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Check node status
       ansible.builtin.command: nomad node status
       register: node_status
       changed_when: false
-      
+
     - name: Display status
       ansible.builtin.debug:
         msg:

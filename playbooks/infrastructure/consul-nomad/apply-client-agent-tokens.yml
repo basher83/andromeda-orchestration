@@ -9,7 +9,7 @@
   serial: 1  # Process one at a time to minimize disruption
   vars:
     consul_agent_token: "[REDACTED_NOMAD_TOKEN]"  # Nomad CLIENT token
-    
+
   tasks:
     - name: Update agent token in Consul config
       ansible.builtin.shell: |
@@ -38,7 +38,7 @@
 
     - name: Display verification results
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Host: {{ inventory_hostname }}"
           - "Token applied: {{ consul_agent_token }} (Nomad CLIENT token)"
           - "Verification output:"

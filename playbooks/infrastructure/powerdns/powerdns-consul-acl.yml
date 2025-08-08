@@ -4,10 +4,10 @@
 - name: Configure Consul ACL for PowerDNS
   hosts: nomad-server-1
   gather_facts: no
-  
+
   vars:
     consul_token: "edf460f9-f79a-e0b8-512c-c07f57efc065"
-    
+
   tasks:
     - name: Create PowerDNS KV read policy
       shell: |
@@ -19,15 +19,15 @@
       register: policy_create
       failed_when: false
       changed_when: "'Created' in policy_create.stdout"
-      
+
     - name: Update existing Nomad client token with PowerDNS policy
       shell: |
         # Get the existing token
         TOKEN_INFO=$(consul acl token read -token={{ consul_token }} -id=[REDACTED_NOMAD_TOKEN] -format=json)
-        
+
         # Get current policies
         POLICIES=$(echo "$TOKEN_INFO" | jq -r '.Policies[].Name' | grep -v powerdns-kv-read | xargs -I {} echo -n "-policy-name={} ")
-        
+
         # Update the token with additional policy
         consul acl token update -token={{ consul_token }} \
           -id=[REDACTED_NOMAD_TOKEN] \
@@ -35,7 +35,7 @@
           -policy-name=powerdns-kv-read
       register: token_update
       changed_when: true
-      
+
     - name: Display result
       debug:
         msg: "PowerDNS ACL policy applied to Nomad client token"

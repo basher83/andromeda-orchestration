@@ -152,7 +152,7 @@ grep -A 10 "^\[stream\]" /etc/netdata/stream.conf
 ping -c 3 192.168.30.50
 nc -zv 192.168.30.50 19999
 
-# From og parent to doggos parents  
+# From og parent to doggos parents
 ping -c 3 192.168.11.2
 nc -zv 192.168.11.2 19999
 ```

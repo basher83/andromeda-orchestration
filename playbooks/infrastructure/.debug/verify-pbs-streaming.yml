@@ -4,7 +4,7 @@
 - name: Verify PBS streaming
   hosts: localhost
   gather_facts: false
-  
+
   tasks:
     - name: Add PBS to inventory
       ansible.builtin.add_host:
@@ -17,17 +17,17 @@
   hosts: pbs
   become: true
   gather_facts: false
-  
+
   tasks:
     - name: Restart Netdata on PBS to force reconnection
       ansible.builtin.systemd:
         name: netdata
         state: restarted
-    
+
     - name: Wait a moment
       ansible.builtin.pause:
         seconds: 5
-    
+
     - name: Check PBS connection to pve1
       ansible.builtin.shell: |
         echo "=== Active connections ==="
@@ -37,7 +37,7 @@
         journalctl -u netdata -n 20 --no-pager | grep -E "(stream|connect|192.168.30.50)" | tail -10 || echo "No streaming logs"
       register: pbs_status
       changed_when: false
-    
+
     - name: Display PBS status
       ansible.builtin.debug:
         msg: "{{ pbs_status.stdout_lines }}"
@@ -46,7 +46,7 @@
   hosts: pve1
   become: true
   gather_facts: false
-  
+
   tasks:
     - name: Check for PBS connection on pve1
       ansible.builtin.shell: |
@@ -60,7 +60,7 @@
         journalctl -u netdata --since "2 minutes ago" --no-pager | grep -E "(STREAM|accepted|pbs|og-child-key)" | tail -20
       register: pve1_status
       changed_when: false
-    
+
     - name: Display pve1 status
       ansible.builtin.debug:
         msg: "{{ pve1_status.stdout_lines }}"

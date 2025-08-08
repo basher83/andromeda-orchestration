@@ -6,10 +6,10 @@
   hosts: all
   become: true
   gather_facts: true
-  
+
   roles:
     - consul_dns
-    
+
   post_tasks:
     - name: Run DNS validation
       include_role:

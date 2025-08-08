@@ -1,6 +1,6 @@
 # PowerDNS Deployment - Final Status
 
-**Date**: August 8, 2025  
+**Date**: August 8, 2025
 **Status**: ✅ Successfully Deployed
 
 ## Summary
@@ -50,10 +50,10 @@ PowerDNS has been successfully deployed on the Nomad cluster with the following 
 job "powerdns" {
   datacenters = ["dc1"]
   type        = "service"
-  
+
   group "powerdns" {
     count = 1
-    
+
     network {
       port "dns" {
         static = 53
@@ -63,14 +63,14 @@ job "powerdns" {
         to = 8081
       }
     }
-    
+
     task "powerdns" {
       driver = "docker"
-      
+
       config {
         image = "powerdns/pdns-auth-48:latest"
         ports = ["dns", "api"]
-        
+
         args = [
           "--daemon=no",
           "--guardian=no",

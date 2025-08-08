@@ -21,21 +21,21 @@
 
     - name: Display API test result
       debug:
-        msg: 
+        msg:
           - "NetBox API Status: {{ api_test.status }}"
           - "NetBox is {{ 'accessible' if api_test.status == 200 else 'requires authentication' if api_test.status == 403 else 'not reachable' }}"
 
     - name: Prompt for NetBox token
       pause:
         prompt: |
-          
+
           NetBox API requires authentication.
-          
+
           To get your NetBox API token:
           1. Log into NetBox at {{ netbox_url }}
           2. Go to Profile → API Tokens
           3. Create or copy an existing token
-          
+
           Enter your NetBox API token (will be hidden)
         echo: no
       register: token_input

@@ -7,7 +7,7 @@
   become: true
   vars:
     nomad_config_file: /etc/nomad.d/nomad.hcl
-  
+
   tasks:
     - name: Check node type
       ansible.builtin.shell: |
@@ -22,25 +22,25 @@
         block: |
           consul {
             address = "127.0.0.1:8500"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Keep existing identity settings
             service_identity {
               enabled = true
               auto    = true
             }
-            
+
             task_identity {
               enabled = true
             }
@@ -56,25 +56,25 @@
         block: |
           consul {
             address = "127.0.0.1:8500"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Keep existing identity settings
             service_identity {
               enabled = true
               auto    = true
             }
-            
+
             task_identity {
               enabled = true
             }

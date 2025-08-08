@@ -7,7 +7,7 @@
   become: true
   vars:
     nomad_server_token: "[REDACTED_NOMAD_SERVER_TOKEN]"
-    
+
   tasks:
     - name: Update Consul token in Nomad configuration
       ansible.builtin.replace:
@@ -33,7 +33,7 @@
 
 - name: Verify Configuration
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Wait for cluster to stabilize
       ansible.builtin.pause:
@@ -43,7 +43,7 @@
       ansible.builtin.command: nomad server members
       register: server_status
       changed_when: false
-      
+
     - name: Display status
       ansible.builtin.debug:
         msg:

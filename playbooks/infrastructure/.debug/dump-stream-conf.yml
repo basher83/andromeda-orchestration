@@ -3,14 +3,14 @@
   hosts: all:!localhost
   become: true
   gather_facts: no
-  
+
   tasks:
     - name: Read stream.conf
       slurp:
         src: /etc/netdata/stream.conf
       register: stream_conf
       failed_when: false
-      
+
     - name: Display stream.conf content
       debug:
         msg: |

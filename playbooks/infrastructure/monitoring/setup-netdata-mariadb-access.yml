@@ -11,7 +11,7 @@
     netdata_mysql_user: "netdata"
     netdata_mysql_host: "localhost"  # Use localhost for socket connection
     # No password for local socket authentication
-    
+
   tasks:
     - name: Check if MariaDB/MySQL is installed
       ansible.builtin.stat:
@@ -30,7 +30,7 @@
         name: mysql
       register: mysql_service
       failed_when: false
-      when: 
+      when:
         - mysql_binary.stat.exists
         - mariadb_service.status.ActiveState is not defined or mariadb_service.status.ActiveState != "active"
 
@@ -39,33 +39,33 @@
         mysql -u root << EOF
         -- Create netdata user for localhost (socket connection)
         CREATE USER IF NOT EXISTS '{{ netdata_mysql_user }}'@'localhost';
-        
+
         -- Grant minimal privileges needed for monitoring
         GRANT USAGE, REPLICATION CLIENT, PROCESS ON *.* TO '{{ netdata_mysql_user }}'@'localhost';
         GRANT SELECT ON performance_schema.* TO '{{ netdata_mysql_user }}'@'localhost';
-        
+
         -- Also create for 127.0.0.1 and Docker bridge IPs if needed
         CREATE USER IF NOT EXISTS '{{ netdata_mysql_user }}'@'127.0.0.1';
         GRANT USAGE, REPLICATION CLIENT, PROCESS ON *.* TO '{{ netdata_mysql_user }}'@'127.0.0.1';
         GRANT SELECT ON performance_schema.* TO '{{ netdata_mysql_user }}'@'127.0.0.1';
-        
+
         -- For Docker containers (172.17.0.1)
         CREATE USER IF NOT EXISTS '{{ netdata_mysql_user }}'@'172.17.0.1';
         GRANT USAGE, REPLICATION CLIENT, PROCESS ON *.* TO '{{ netdata_mysql_user }}'@'172.17.0.1';
         GRANT SELECT ON performance_schema.* TO '{{ netdata_mysql_user }}'@'172.17.0.1';
-        
+
         -- For any Docker subnet
         CREATE USER IF NOT EXISTS '{{ netdata_mysql_user }}'@'172.17.%';
         GRANT USAGE, REPLICATION CLIENT, PROCESS ON *.* TO '{{ netdata_mysql_user }}'@'172.17.%';
         GRANT SELECT ON performance_schema.* TO '{{ netdata_mysql_user }}'@'172.17.%';
-        
+
         FLUSH PRIVILEGES;
-        
+
         -- Show created users
         SELECT User, Host FROM mysql.user WHERE User = '{{ netdata_mysql_user }}';
         EOF
       register: mysql_user_creation
-      when: 
+      when:
         - mysql_binary.stat.exists
         - mariadb_service.status.ActiveState is defined and mariadb_service.status.ActiveState == "active" or mysql_service.status.ActiveState is defined and mysql_service.status.ActiveState == "active"
       changed_when: "'CREATE USER' in mysql_user_creation.stdout"
@@ -80,10 +80,10 @@
               # Alternative socket paths to try
               # dsn: {{ netdata_mysql_user }}@unix(/var/run/mysqld/mysqld.sock)/
               # dsn: {{ netdata_mysql_user }}@unix(/tmp/mysql.sock)/
-              
+
             - name: tcp_local
               dsn: {{ netdata_mysql_user }}@tcp(127.0.0.1:3306)/
-              
+
             - name: docker_bridge
               dsn: {{ netdata_mysql_user }}@tcp(172.17.0.1:3306)/
         mode: '0644'
@@ -116,7 +116,7 @@
       ansible.builtin.systemd:
         name: netdata
         state: restarted
-      when: 
+      when:
         - mysql_config_created.changed | default(false)
         - mysql_binary.stat.exists
 

@@ -14,7 +14,7 @@ graph TB
             H[holly<br/>10.12/11.12]
             M[mable<br/>10.13/11.13]
         end
-        
+
         subgraph "Nomad VMs (Children)"
             NS1[nomad-server-1]
             NS2[nomad-server-2]
@@ -23,7 +23,7 @@ graph TB
             NC2[nomad-client-2]
             NC3[nomad-client-3]
         end
-        
+
         %% Child to Parent Streaming
         NS1 -->|stream| L
         NC1 -->|stream| L
@@ -32,24 +32,24 @@ graph TB
         NS3 -->|stream| M
         NC3 -->|stream| M
     end
-    
+
     subgraph "og-homelab Cluster"
         subgraph "Proxmox Host (Parent)"
             P1[pve1<br/>30.50]
         end
-        
+
         subgraph "Containers & VMs (Children)"
             P430[proxmoxt430]
             C1[50+ Containers]
             V1[Multiple VMs]
         end
-        
+
         %% Child to Parent Streaming
         P430 -->|stream| P1
         C1 -->|stream| P1
         V1 -->|stream| P1
     end
-    
+
     %% Parent Mesh Replication
     L <-->|mesh| H
     L <-->|mesh| M
@@ -57,12 +57,12 @@ graph TB
     L <-->|mesh| P1
     H <-->|mesh| P1
     M <-->|mesh| P1
-    
+
     %% Styling
     classDef parent fill:#4a9eff,stroke:#333,stroke-width:3px,color:#fff
     classDef child fill:#95d3ff,stroke:#333,stroke-width:2px
     classDef mesh stroke:#ff6b6b,stroke-width:3px,stroke-dasharray: 5 5
-    
+
     class L,H,M,P1 parent
     class NS1,NS2,NS3,NC1,NC2,NC3,P430,C1,V1 child
 ```

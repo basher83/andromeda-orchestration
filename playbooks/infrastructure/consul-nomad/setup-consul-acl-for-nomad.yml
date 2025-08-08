@@ -10,7 +10,7 @@
   hosts: nomad-server-1-lloyd
   vars:
     consul_api: "http://127.0.0.1:8500"
-    
+
   tasks:
     - name: Check if Consul ACL is bootstrapped
       ansible.builtin.uri:
@@ -29,14 +29,14 @@
             method: PUT
             body_format: json
           register: bootstrap_result
-          
+
         - name: Save bootstrap token
           ansible.builtin.set_fact:
             consul_management_token: "{{ bootstrap_result.json.SecretID }}"
-            
+
         - name: Display bootstrap token
           ansible.builtin.debug:
-            msg: 
+            msg:
               - "IMPORTANT: Save this bootstrap token securely!"
               - "Bootstrap Token: {{ consul_management_token }}"
               - "This token has unlimited permissions and should be stored in Infisical"
@@ -48,15 +48,15 @@
           agent_prefix "" {
             policy = "read"
           }
-          
+
           node_prefix "" {
             policy = "read"
           }
-          
+
           service_prefix "" {
             policy = "write"
           }
-          
+
           acl = "write"
         dest: /tmp/nomad-server-policy.hcl
         mode: '0644'
@@ -68,15 +68,15 @@
           agent_prefix "" {
             policy = "read"
           }
-          
+
           node_prefix "" {
             policy = "read"
           }
-          
+
           service_prefix "" {
             policy = "write"
           }
-          
+
           # Allow Nomad clients to update their own node info
           node "" {
             policy = "write"
@@ -90,16 +90,16 @@
         - name: Prompt for Consul management token
           ansible.builtin.pause:
             prompt: |
-              
+
               Consul ACL is already bootstrapped. Please provide the management token.
               You can find it in:
               1. The initial bootstrap output
               2. Infisical at /consul/tokens/management (if stored)
               3. Your secure password manager
-              
+
               Enter Consul management token
           register: token_input
-          
+
         - name: Set management token
           ansible.builtin.set_fact:
             consul_management_token: "{{ token_input.user_input }}"
@@ -206,25 +206,25 @@
         content: |
           #!/bin/bash
           # Store Consul tokens in Infisical
-          
+
           echo "Storing Consul tokens in Infisical..."
-          
+
           # Store management token (if newly created)
           {% if consul_management_token is defined %}
           infisical secrets set MANAGEMENT="{{ consul_management_token }}" \
             --path="/consul/tokens" \
             --env=dev
           {% endif %}
-          
+
           # Store Nomad tokens
           infisical secrets set NOMAD_SERVER="{{ nomad_server_token }}" \
             --path="/consul/tokens" \
             --env=dev
-            
+
           infisical secrets set NOMAD_CLIENT="{{ nomad_client_token }}" \
             --path="/consul/tokens" \
             --env=dev
-          
+
           echo "Tokens stored successfully!"
         dest: /tmp/store-consul-tokens.sh
         mode: '0755'
@@ -235,7 +235,7 @@
   become: true
   vars:
     nomad_config_file: /etc/nomad.d/nomad.hcl
-    
+
   tasks:
     - name: Get node type
       ansible.builtin.shell: |
@@ -255,25 +255,25 @@
           consul {
             address = "127.0.0.1:8500"
             token = "{{ consul_token }}"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Keep existing identity settings
             service_identity {
               enabled = true
               auto    = true
             }
-            
+
             task_identity {
               enabled = true
             }
@@ -312,7 +312,7 @@
 
     - name: Display registered services
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Registered services in Consul:"
           - "{{ consul_services.stdout_lines }}"
 

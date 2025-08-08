@@ -6,10 +6,10 @@ This directory contains Nomad job specifications for core infrastructure service
 
 ### Traefik (PRODUCTION)
 
-**File**: `traefik.nomad.hcl`  
-**Status**: ✅ Deployed and Running  
-**Version**: v3.0  
-**Last Updated**: 2025-08-04  
+**File**: `traefik.nomad.hcl`
+**Status**: ✅ Deployed and Running
+**Version**: v3.0
+**Last Updated**: 2025-08-04
 
 **Purpose**: Load balancer and reverse proxy for all HTTP/HTTPS traffic in the cluster.
 
@@ -44,13 +44,13 @@ Services register with Traefik by adding tags to their Consul service registrati
 service {
   name = "myapp"
   port = "web"
-  
+
   # REQUIRED: Identity block for Consul integration
   identity {
     aud = ["consul.io"]
     ttl = "1h"
   }
-  
+
   tags = [
     "traefik.enable=true",
     "traefik.http.routers.myapp.rule=Host(`myapp.lab.local`)",

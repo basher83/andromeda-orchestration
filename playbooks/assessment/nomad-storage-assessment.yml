@@ -9,7 +9,7 @@
   hosts: tag_client
   gather_facts: true
   become: false
-  
+
   vars:
     ansible_become: false  # Override group_vars for this assessment
     report_dir: "{{ playbook_dir }}/../../reports/nomad"
@@ -19,7 +19,7 @@
       - /opt/nomad/volumes
       - /opt/nomad/volumes/dynamic
       - /alloc
-    
+
   tasks:
     - name: Ensure report directory exists
       delegate_to: localhost
@@ -29,7 +29,7 @@
         state: directory
         mode: '0755'
       run_once: true
-    
+
     # Check Nomad client status
     - name: Query Nomad client status
       uri:
@@ -37,7 +37,7 @@
         method: GET
       register: nomad_self
       failed_when: false
-    
+
     # Get node information
     - name: Get Nomad node information
       uri:
@@ -45,29 +45,29 @@
         method: GET
       register: nomad_node
       when: nomad_self is success
-    
+
     # Check for configured host volumes
     - name: Extract host volumes from configuration
       set_fact:
         configured_volumes: "{{ nomad_node.json.HostVolumes | default({}) }}"
-      when: 
+      when:
         - nomad_self is success
         - nomad_node is defined
-    
+
     # Check filesystem storage
     - name: Get filesystem information
       shell: |
         df -h | grep -E '^/dev/' | awk '{print $1 "," $2 "," $3 "," $4 "," $5 "," $6}'
       register: filesystem_info
       changed_when: false
-    
+
     # Check for existing volume directories
     - name: Check for volume directories
       stat:
         path: "{{ item }}"
       register: volume_paths
       loop: "{{ volume_base_paths }}"
-    
+
     # List contents of volume directories
     - name: List existing volumes
       find:
@@ -80,7 +80,7 @@
       failed_when: false
       loop_control:
         label: "{{ item.item }}"
-    
+
     # Check for volume usage
     - name: Get volume disk usage
       shell: |
@@ -93,7 +93,7 @@
       loop: "{{ volume_base_paths }}"
       changed_when: false
       failed_when: false
-    
+
     # Check for mount points
     - name: Get mount information
       shell: |
@@ -101,7 +101,7 @@
       register: mount_info
       changed_when: false
       failed_when: false
-    
+
     # Check for loop devices (for dynamic volumes)
     - name: Check loop devices
       shell: |
@@ -109,14 +109,14 @@
       register: loop_devices
       changed_when: false
       failed_when: false
-    
+
     # Check Nomad client configuration file
     - name: Read Nomad client configuration
       slurp:
         src: /etc/nomad.d/nomad.hcl
       register: nomad_config_raw
       failed_when: false
-    
+
     # Parse host volume configuration from file
     - name: Extract host volumes from config file
       shell: |
@@ -124,7 +124,7 @@
       register: config_volumes
       changed_when: false
       failed_when: false
-    
+
     # Check for CSI plugins
     - name: Query CSI plugins
       uri:
@@ -132,7 +132,7 @@
         method: GET
       register: csi_plugins
       failed_when: false
-    
+
     # Check for dynamic volume plugin scripts
     - name: Check for volume plugin scripts
       stat:
@@ -142,7 +142,7 @@
         - ext4-volume
         - xfs-volume
         - cleanup-orphaned-volumes.sh
-    
+
     # Compile storage assessment data
     - name: Compile storage assessment
       set_fact:
@@ -153,42 +153,42 @@
             status: "{{ 'healthy' if nomad_self is success else 'unhealthy' }}"
             node_id: "{{ nomad_self.json.stats.client.node_id | default('unknown') }}"
             datacenter: "{{ nomad_self.json.stats.client.dc | default('unknown') }}"
-          
+
           filesystem:
             devices: "{{ filesystem_info.stdout_lines | default([]) }}"
             mounts: "{{ mount_info.stdout_lines | default([]) }}"
-            
+
           host_volumes:
             configured: "{{ configured_volumes | default({}) }}"
             config_file: "{{ config_volumes.stdout_lines | default([]) }}"
-            
+
           volume_directories:
             base_paths: "{{ volume_base_paths }}"
             existing_paths: "{{ volume_paths.results | map(attribute='stat') | map('json_query', '{path: item, exists: exists}') | list }}"
-            
+
           existing_volumes: "{{ existing_volumes.results | selectattr('files', 'defined') | map(attribute='files') | list | flatten | map(attribute='path') | list }}"
-            
+
           volume_usage: "{{ volume_usage.results | map(attribute='stdout_lines') | list }}"
-            
+
           storage_types:
             ephemeral_disk:
               available: true
               path: /alloc/data
               notes: "Always available in Nomad"
-            
+
             static_host_volumes:
               configured: "{{ configured_volumes | length > 0 }}"
               count: "{{ configured_volumes | length }}"
               volumes: "{{ configured_volumes.keys() | list if configured_volumes else [] }}"
-              
+
             dynamic_host_volumes:
               plugins_installed: "{{ dict(plugin_scripts.results | map(attribute='item') | zip(plugin_scripts.results | map(attribute='stat.exists') | map('default', false))) }}"
               loop_devices: "{{ loop_devices.stdout_lines | default([]) }}"
-              
+
             csi_volumes:
               plugins: "{{ csi_plugins.json | default([]) if csi_plugins is success else [] }}"
               configured: "{{ (csi_plugins.json | default([]) | length) > 0 if csi_plugins is success else false }}"
-    
+
     # Save individual node report
     - name: Save node storage report
       delegate_to: localhost
@@ -197,7 +197,7 @@
         content: "{{ storage_assessment | to_nice_yaml }}"
         dest: "{{ report_dir }}/storage_assessment_node_{{ inventory_hostname }}_{{ timestamp }}.yml"
         mode: '0644'
-    
+
     # Aggregate all node data
     - name: Aggregate storage data
       delegate_to: localhost
@@ -205,7 +205,7 @@
       run_once: true
       set_fact:
         all_node_assessments: "{{ hostvars | dict2items | selectattr('value.storage_assessment', 'defined') | map(attribute='value.storage_assessment') | list }}"
-    
+
     # Create summary report
     - name: Create storage summary report
       delegate_to: localhost
@@ -216,79 +216,79 @@
           # Nomad Storage Assessment Summary
           Generated: {{ timestamp }}
           Environment: doggos-homelab
-          
+
           ## Cluster Storage Overview
-          
+
           Total Nodes Assessed: {{ all_node_assessments | length }}
-          
+
           ### Storage Type Availability
-          
+
           | Storage Type | Status | Details |
           |--------------|--------|---------|
           | Ephemeral Disk | ✅ Available | Built-in, always available |
           | Static Host Volumes | {{ '✅ Configured' if (all_node_assessments | selectattr('storage_types.static_host_volumes.configured', 'equalto', true) | list | length) > 0 else '❌ Not Configured' }} | {{ all_node_assessments | map(attribute='storage_types.static_host_volumes.count') | sum }} volumes total |
           | Dynamic Host Volumes | ❌ Not Ready | Plugin scripts not installed |
           | CSI Volumes | {{ '✅ Available' if (all_node_assessments | selectattr('storage_types.csi_volumes.configured', 'equalto', true) | list | length) > 0 else '❌ Not Available' }} | {{ all_node_assessments | map(attribute='storage_types.csi_volumes.plugins') | flatten | length }} plugins |
-          
+
           ### Per-Node Storage Status
-          
+
           {% for node in all_node_assessments %}
           #### {{ node.node_name }}
-          
+
           **Filesystem Usage:**
           ```
           {% for line in node.filesystem.devices %}
           {{ line }}
           {% endfor %}
           ```
-          
+
           **Configured Host Volumes:** {{ node.storage_types.static_host_volumes.count }}
           {% if node.storage_types.static_host_volumes.volumes %}
           {% for vol in node.storage_types.static_host_volumes.volumes %}
           - {{ vol }}
           {% endfor %}
           {% endif %}
-          
+
           **Volume Directories:**
           {% for path in node.volume_directories.base_paths %}
           - {{ path }}: {{ 'Exists (check individual reports for details)' }}
           {% endfor %}
-          
+
           {% endfor %}
-          
+
           ## Recommendations
-          
+
           {% if (all_node_assessments | selectattr('storage_types.static_host_volumes.configured', 'equalto', false) | list | length) == all_node_assessments | length %}
           ### 🚨 Critical: No Persistent Storage Configured
-          
+
           No static host volumes are configured on any Nomad client. This means:
           - All data is ephemeral and will be lost on container restart
           - Stateful services like databases cannot persist data
           - No backup procedures can be implemented
-          
+
           **Immediate Action Required:**
           ```bash
           # 1. Provision static host volumes
           ansible-playbook playbooks/infrastructure/nomad/volumes/provision-host-volumes.yml \
             -i inventory/doggos-homelab/infisical.proxmox.yml
-          
+
           # 2. Update Nomad client configuration and restart
           ```
           {% endif %}
-          
+
           ### ⚠️  Dynamic Volume Plugins Not Deployed
-          
+
           Dynamic volume plugin scripts are not installed. To enable:
           ```bash
           ansible-playbook playbooks/infrastructure/nomad/volumes/enable-dynamic-volumes.yml \
             -i inventory/doggos-homelab/infisical.proxmox.yml
           ```
-          
+
           ---
           Report generated by: nomad-storage-assessment.yml
         dest: "{{ report_dir }}/storage_assessment_summary_{{ timestamp }}.md"
         mode: '0644'
-    
+
     # Display summary
     - name: Display assessment summary
       delegate_to: localhost
@@ -297,11 +297,11 @@
       debug:
         msg: |
           Storage Assessment Complete!
-          
+
           Reports generated:
           - Summary: {{ report_dir }}/storage_assessment_summary_{{ timestamp }}.md
           - Node reports: {{ all_node_assessments | length }} files
-          
+
           Key Findings:
           - Ephemeral storage: Available on all nodes
           - Static volumes configured: {{ all_node_assessments | selectattr('storage_types.static_host_volumes.configured', 'equalto', true) | list | length }}/{{ all_node_assessments | length }} nodes

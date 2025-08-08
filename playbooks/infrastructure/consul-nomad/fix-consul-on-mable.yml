@@ -8,7 +8,7 @@
   vars:
     consul_config_file: /etc/consul.d/consul.hcl
     consul_encrypt_key: "6r73CP0icJrap1tsQ17yuqzVguho4/yz+aI/dkVg2Kk="
-    
+
   tasks:
     - name: Check if bind_addr is configured
       ansible.builtin.shell: |
@@ -96,7 +96,7 @@
   vars:
     nomad_config_file: /etc/nomad.d/nomad.hcl
     nomad_client_token: "[REDACTED_NOMAD_TOKEN]"
-    
+
   tasks:
     - name: Update Consul stanza with token
       ansible.builtin.blockinfile:
@@ -106,25 +106,25 @@
           consul {
             address = "127.0.0.1:8500"
             token = "{{ nomad_client_token }}"
-            
+
             # Enable service registration
             auto_advertise = true
             server_auto_join = true
             client_auto_join = true
-            
+
             # Service names
             server_service_name = "nomad"
             client_service_name = "nomad-client"
-            
+
             # Enable service checks
             checks_use_advertise = true
-            
+
             # Keep existing identity settings
             service_identity {
               enabled = true
               auto    = true
             }
-            
+
             task_identity {
               enabled = true
             }
@@ -166,7 +166,7 @@
                  env_slug='dev',
                  path='/apollo-13/consul',
                  secret_name='CONSUL_MASTER_TOKEN')).value }}
-      
+
   tasks:
     - name: Wait for service to register
       ansible.builtin.pause:
@@ -180,7 +180,7 @@
 
     - name: Display Nomad client nodes in Consul
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "Nomad clients registered:"
           - "{{ nomad_client_nodes.stdout_lines }}"
 

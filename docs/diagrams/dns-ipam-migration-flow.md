@@ -5,67 +5,67 @@ This diagram illustrates the phased migration approach from the current DNS infr
 ```mermaid
 flowchart TD
     Start([Current State:<br/>Pi-hole + Unbound]) --> Phase0{Phase 0:<br/>Assessment}
-    
+
     Phase0 -->|Complete| Phase1[Phase 1:<br/>Consul Foundation]
     Phase0 -->|Issues Found| Fix0[Fix Infrastructure<br/>Issues]
     Fix0 --> Phase0
-    
+
     Phase1 --> Phase1Tasks{Tasks}
     Phase1Tasks --> T1A[Deploy Consul DNS]
     Phase1Tasks --> T1B[Configure ACLs]
     Phase1Tasks --> T1C[Setup Service Registry]
-    
+
     T1A & T1B & T1C --> Phase1Check{Health Check}
     Phase1Check -->|Pass| Phase2[Phase 2:<br/>PowerDNS Deployment]
     Phase1Check -->|Fail| Rollback1[Rollback Consul<br/>Changes]
     Rollback1 --> Phase1
-    
+
     Phase2 --> Phase2Tasks{Tasks}
     Phase2Tasks --> T2A[Deploy PowerDNS<br/>in Nomad]
     Phase2Tasks --> T2B[Configure Zones]
     Phase2Tasks --> T2C[Test Resolution]
-    
+
     T2A & T2B & T2C --> Phase2Check{Validation}
     Phase2Check -->|Pass| Phase3[Phase 3:<br/>NetBox Integration]
     Phase2Check -->|Fail| Rollback2[Rollback PowerDNS]
     Rollback2 --> Phase2
-    
+
     Phase3 --> Phase3Tasks{Tasks}
     Phase3Tasks --> T3A[Import Existing<br/>DNS Records]
     Phase3Tasks --> T3B[Configure<br/>Dynamic Updates]
     Phase3Tasks --> T3C[Setup API<br/>Integration]
-    
+
     T3A & T3B & T3C --> Phase3Check{Integration Test}
     Phase3Check -->|Pass| Phase4[Phase 4:<br/>DNS Cutover]
     Phase3Check -->|Fail| Rollback3[Fix Integration]
     Rollback3 --> Phase3
-    
+
     Phase4 --> Phase4Tasks{Cutover Steps}
     Phase4Tasks --> T4A[Update DHCP<br/>DNS Servers]
     Phase4Tasks --> T4B[Monitor Traffic]
     Phase4Tasks --> T4C[Decommission<br/>Pi-hole]
-    
+
     T4A & T4B --> CutoverCheck{Traffic OK?}
     CutoverCheck -->|Yes| T4C
     CutoverCheck -->|No| EmergencyRB[Emergency<br/>Rollback]
     EmergencyRB --> Start
-    
+
     T4C --> Phase5[Phase 5:<br/>Production Hardening]
-    
+
     Phase5 --> Phase5Tasks{Tasks}
     Phase5Tasks --> T5A[Enable Monitoring]
     Phase5Tasks --> T5B[Configure Backups]
     Phase5Tasks --> T5C[Document Runbooks]
-    
+
     T5A & T5B & T5C --> Complete([Migration Complete:<br/>PowerDNS + NetBox])
-    
+
     %% Styling
     classDef phase fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
     classDef task fill:#fff9c4,stroke:#f57f17,stroke-width:2px
     classDef check fill:#fce4ec,stroke:#c2185b,stroke-width:2px
     classDef rollback fill:#ffebee,stroke:#d32f2f,stroke-width:3px
     classDef success fill:#e8f5e9,stroke:#388e3c,stroke-width:3px
-    
+
     class Phase0,Phase1,Phase2,Phase3,Phase4,Phase5 phase
     class T1A,T1B,T1C,T2A,T2B,T2C,T3A,T3B,T3C,T4A,T4B,T4C,T5A,T5B,T5C task
     class Phase1Check,Phase2Check,Phase3Check,CutoverCheck check

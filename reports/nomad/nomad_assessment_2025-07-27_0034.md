@@ -46,9 +46,9 @@ drwxr-xr-x 115 root  root  4096 Jul 22 06:04 ..
 -rw-r-----   1 nomad nomad 1392 Apr 28 19:44 nomad.hcl
 
 === Nomad Ports ===
-LISTEN 0      4096                             *:4646             *:*          
-LISTEN 0      4096                             *:4647             *:*          
-LISTEN 0      4096                             *:4648             *:*          
+LISTEN 0      4096                             *:4646             *:*
+LISTEN 0      4096                             *:4647             *:*
+LISTEN 0      4096                             *:4648             *:*
 
 === Nomad ACL Status ===
 Error listing ACL policies: Unexpected response code: 400 (ACL support disabled)
@@ -94,9 +94,9 @@ drwxr-xr-x 115 root  root  4096 Jul 23 06:20 ..
 -rw-r-----   1 nomad nomad 1392 Apr 28 19:44 nomad.hcl
 
 === Nomad Ports ===
-LISTEN 0      4096                             *:4647             *:*          
-LISTEN 0      4096                             *:4646             *:*          
-LISTEN 0      4096                             *:4648             *:*          
+LISTEN 0      4096                             *:4647             *:*
+LISTEN 0      4096                             *:4646             *:*
+LISTEN 0      4096                             *:4648             *:*
 
 === Nomad ACL Status ===
 Error listing ACL policies: Unexpected response code: 400 (ACL support disabled)
@@ -142,9 +142,9 @@ drwxr-xr-x 115 root  root  4096 Jul 23 06:07 ..
 -rw-r-----   1 nomad nomad 1392 Apr 28 19:44 nomad.hcl
 
 === Nomad Ports ===
-LISTEN 0      4096                             *:4646             *:*          
-LISTEN 0      4096                             *:4647             *:*          
-LISTEN 0      4096                             *:4648             *:*          
+LISTEN 0      4096                             *:4646             *:*
+LISTEN 0      4096                             *:4647             *:*
+LISTEN 0      4096                             *:4648             *:*
 
 === Nomad ACL Status ===
 Error listing ACL policies: Unexpected response code: 400 (ACL support disabled)
@@ -173,7 +173,7 @@ Server: Docker Engine - Community
 === Node Resources ===
 CPU cores: 4
 Memory: 15Gi
-Disk: 
+Disk:
 
 === Running Allocations ===
 No running jobs
@@ -202,7 +202,7 @@ Server: Docker Engine - Community
 === Node Resources ===
 CPU cores: 4
 Memory: 15Gi
-Disk: 
+Disk:
 
 === Running Allocations ===
 No running jobs
@@ -231,7 +231,7 @@ Server: Docker Engine - Community
 === Node Resources ===
 CPU cores: 8
 Memory: 15Gi
-Disk: 
+Disk:
 
 === Running Allocations ===
 No running jobs

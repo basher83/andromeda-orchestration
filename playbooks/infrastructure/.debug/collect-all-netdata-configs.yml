@@ -4,7 +4,7 @@
   hosts: all:!localhost
   become: true
   gather_facts: true
-  
+
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
     config_files:
@@ -12,7 +12,7 @@
       - /etc/netdata/stream.conf
       - /etc/netdata/go.d/consul.conf
       - /etc/consul.d/netdata.json
-    
+
   tasks:
     - name: Determine node role
       set_fact:
@@ -33,12 +33,12 @@
             unknown
           {%- endif -%}
         node_ip: "{{ ansible_host | default(ansible_default_ipv4.address | default('unknown')) }}"
-      
+
     - name: Check if Netdata is installed
       stat:
         path: /usr/sbin/netdata
       register: netdata_binary
-      
+
     - name: Get Netdata version
       command:
         cmd: netdata -v
@@ -46,14 +46,14 @@
       when: netdata_binary.stat.exists
       changed_when: false
       failed_when: false
-      
+
     - name: Check Netdata service status
       systemd:
         name: netdata
       register: netdata_service
       when: netdata_binary.stat.exists
       failed_when: false
-      
+
     - name: Read configuration files
       slurp:
         src: "{{ item }}"
@@ -61,14 +61,14 @@
       loop: "{{ config_files }}"
       when: netdata_binary.stat.exists
       failed_when: false
-      
+
     - name: Get listening ports
       shell: |
         ss -tlnp | grep -E '19999|19998' || echo "No Netdata ports listening"
       register: listening_ports
       changed_when: false
       failed_when: false
-      
+
     - name: Get recent streaming logs
       shell: |
         journalctl -u netdata --since "1 hour ago" --no-pager | grep -i stream | tail -20 || echo "No streaming logs"
@@ -76,7 +76,7 @@
       when: netdata_binary.stat.exists
       changed_when: false
       failed_when: false
-      
+
     - name: Test streaming connectivity (for children)
       shell: |
         if [ "{{ node_role }}" = "child" ]; then
@@ -91,7 +91,7 @@
       when: node_role == "child"
       changed_when: false
       failed_when: false
-      
+
     - name: Create report directory locally
       file:
         path: "reports/netdata/configs/{{ timestamp }}"
@@ -100,7 +100,7 @@
       delegate_to: localhost
       run_once: true
       become: no
-      
+
     - name: Save individual host report
       copy:
         content: |
@@ -110,10 +110,10 @@
           # IP: {{ node_ip }}
           # Version: {{ netdata_version.stdout | default('Not installed') }}
           # Service: {{ netdata_service.status.ActiveState | default('Unknown') }}
-          
+
           ## Listening Ports
           {{ listening_ports.stdout }}
-          
+
           {% for result in config_contents.results %}
           ## {{ result.item }}
           {% if result.content is defined %}
@@ -123,14 +123,14 @@
           {% else %}
           File not found
           {% endif %}
-          
+
           {% endfor %}
-          
+
           ## Recent Streaming Logs
           ```
           {{ streaming_logs.stdout | default('No logs') }}
           ```
-          
+
           {% if node_role == "child" %}
           ## Connectivity Test to Parents
           ```
@@ -141,7 +141,7 @@
         mode: '0644'
       delegate_to: localhost
       become: no
-      
+
     - name: Display summary
       debug:
         msg:

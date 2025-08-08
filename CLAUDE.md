@@ -18,19 +18,24 @@ detailed implementation roadmap.
 
 ```bash
 # Run playbooks using uv with Infisical secrets
+# First, install optional dependencies: uv sync --extra secrets
 uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
 ```
 
 **CRITICAL**: When working with NetBox or any playbooks that need Infisical secrets:
+
 - ALWAYS use `uv run ansible-playbook` (not `ansible-playbook` directly)
 - The Infisical Ansible collection (`infisical.vault.read_secrets`) has issues with Python virtual environments
 - If you encounter "worker was found in a dead state" errors with Infisical lookups, use the CLI workaround:
+
   ```bash
   # Get token via CLI and use environment variable
   export NETBOX_TOKEN=$(infisical run --env=staging --path="/apollo-13/services/netbox" -- printenv NETBOX_API_KEY)
   ansible-playbook playbooks/infrastructure/netbox-playbook.yml
   ```
+
 - For localhost-only playbooks (like NetBox API operations), you can skip inventory:
+
   ```bash
   uv run ansible-playbook playbooks/infrastructure/netbox-dns-discover.yml
   ```

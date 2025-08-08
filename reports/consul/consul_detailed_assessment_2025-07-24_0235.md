@@ -36,10 +36,10 @@ agent:
 	checks = 0
 	services = 0
 build:
-	prerelease = 
+	prerelease =
 	revision = 136b9cb8
 	version = 1.21.2
-	version_metadata = 
+	version_metadata =
 consul:
 	acl = enabled
 	bootstrap = false
@@ -161,10 +161,10 @@ agent:
 	checks = 0
 	services = 0
 build:
-	prerelease = 
+	prerelease =
 	revision = 136b9cb8
 	version = 1.21.2
-	version_metadata = 
+	version_metadata =
 consul:
 	acl = enabled
 	bootstrap = false
@@ -286,10 +286,10 @@ agent:
 	checks = 0
 	services = 0
 build:
-	prerelease = 
+	prerelease =
 	revision = 136b9cb8
 	version = 1.21.2
-	version_metadata = 
+	version_metadata =
 consul:
 	acl = enabled
 	bootstrap = false
@@ -411,10 +411,10 @@ agent:
 	checks = 0
 	services = 0
 build:
-	prerelease = 
+	prerelease =
 	revision = 136b9cb8
 	version = 1.21.2
-	version_metadata = 
+	version_metadata =
 consul:
 	acl = enabled
 	bootstrap = false
@@ -536,10 +536,10 @@ agent:
 	checks = 0
 	services = 0
 build:
-	prerelease = 
+	prerelease =
 	revision = 136b9cb8
 	version = 1.21.2
-	version_metadata = 
+	version_metadata =
 consul:
 	acl = enabled
 	bootstrap = false
@@ -661,10 +661,10 @@ agent:
 	checks = 0
 	services = 0
 build:
-	prerelease = 
+	prerelease =
 	revision = 74efe419
 	version = 1.20.5
-	version_metadata = 
+	version_metadata =
 consul:
 	acl = enabled
 	known_servers = 3
@@ -729,10 +729,10 @@ consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338954 3600 600 86400 0
 ## Key Findings
 1. **Cluster Health**: All nodes are running Consul service
 2. **Version**: Mix of v1.21.2 (most nodes) and v1.20.5 (nomad-client-3)
-3. **Network Configuration**: 
+3. **Network Configuration**:
    - Management: 192.168.10.x
    - Consul internal: 192.168.11.x
-4. **Security**: 
+4. **Security**:
    - ACLs enabled (deny by default)
    - Gossip encryption enabled
 5. **DNS**: Port 8600 is listening on all nodes

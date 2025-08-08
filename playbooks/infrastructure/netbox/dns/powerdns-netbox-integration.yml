@@ -7,7 +7,7 @@
   become: false
   vars:
     ansible_python_interpreter: "{{ ansible_playbook_python }}"
-    
+
     # Configuration
     powerdns_api_url: "http://192.168.11.20:8081"  # PowerDNS on nomad-client-1
     netbox_url: "https://192.168.30.213"
@@ -92,12 +92,12 @@
         content: |
           #!/bin/bash
           # NetBox to PowerDNS sync wrapper script
-          
+
           NETBOX_URL="{{ netbox_url }}"
           NETBOX_TOKEN="{{ netbox_token }}"
           POWERDNS_URL="{{ powerdns_api_url }}"
           POWERDNS_API_KEY="{{ powerdns_api_key }}"
-          
+
           python3 {{ playbook_dir }}/../../../scripts/netbox-powerdns-sync.py \
             --netbox-url "$NETBOX_URL" \
             --netbox-token "$NETBOX_TOKEN" \

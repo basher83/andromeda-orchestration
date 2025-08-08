@@ -56,7 +56,7 @@ Modify the inventory to always use IP addresses:
 ```yaml
 compose:
   ansible_host: >-
-    {{ proxmox_ipconfig0.ip | default(proxmox_net0.ip) | 
+    {{ proxmox_ipconfig0.ip | default(proxmox_net0.ip) |
        regex_replace('/\d+$', '') }}
 ```
 
@@ -80,7 +80,7 @@ Make DNS-dependent tasks more resilient:
   ansible.builtin.command:
     cmd: "ping -c 2 -W 2 {{ hostvars[item]['ansible_default_ipv4']['address'] | default(item) }}"
   loop: "{{ groups['all'] }}"
-  when: 
+  when:
     - item != inventory_hostname
     - hostvars[item]['ansible_default_ipv4'] is defined
   register: ping_tests
@@ -167,17 +167,17 @@ Make DNS-dependent tasks more resilient:
       ansible.builtin.command:
         cmd: primary-assessment-tool
       register: primary_result
-  
+
   rescue:
     - name: Fallback assessment method
       ansible.builtin.command:
         cmd: fallback-assessment-tool
       register: fallback_result
-    
+
     - name: Use fallback data
       ansible.builtin.set_fact:
         assessment_result: "{{ fallback_result }}"
-  
+
   always:
     - name: Ensure cleanup
       ansible.builtin.file:

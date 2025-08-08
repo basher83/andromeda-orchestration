@@ -14,7 +14,7 @@
                  env_slug='prod',
                  path='/apollo-13/consul',
                  secret_name='CONSUL_MASTER_TOKEN')).value }}
-    
+
   tasks:
     - name: Create service identity policy template
       ansible.builtin.copy:
@@ -23,11 +23,11 @@
           node_prefix "" {
             policy = "read"
           }
-          
+
           service_prefix "" {
             policy = "write"
           }
-          
+
           # Allow service identity tokens to be created
           acl = "write"
         dest: /tmp/nomad-service-identity-policy.hcl
@@ -95,14 +95,14 @@
 - name: Restart Nomad to Apply Changes
   hosts: tag_nomad
   become: true
-  
+
   tasks:
     - name: Restart Nomad service
       ansible.builtin.systemd:
         name: nomad
         state: restarted
         daemon_reload: true
-      
+
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
@@ -112,13 +112,13 @@
 
 - name: Verify Configuration
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Check Nomad server status
       ansible.builtin.command: nomad server members
       register: nomad_status
       changed_when: false
-      
+
     - name: Display status
       ansible.builtin.debug:
         msg:

@@ -24,7 +24,7 @@ job "powerdns" {
       config {
         image = "mariadb:10.11"
         ports = ["mysql"]
-        
+
         volumes = [
           "local/mysql-init:/docker-entrypoint-initdb.d",
           "powerdns-mysql:/var/lib/mysql"
@@ -94,13 +94,13 @@ EOF
       service {
         name = "powerdns-mysql"
         port = "mysql"
-        
+
         identity {
           name = "powerdns-mysql"
           aud  = ["consul.io"]
           ttl  = "24h"
         }
-        
+
         check {
           type     = "tcp"
           interval = "10s"
@@ -151,30 +151,30 @@ EOF
       service {
         name = "powerdns"
         port = "dns"
-        
+
         identity {
           name = "powerdns"
           aud  = ["consul.io"]
           ttl  = "24h"
         }
-        
+
         check {
           type     = "tcp"
           interval = "10s"
           timeout  = "2s"
         }
       }
-      
+
       service {
         name = "powerdns-api"
         port = "api"
-        
+
         identity {
           name = "powerdns-api"
           aud  = ["consul.io"]
           ttl  = "24h"
         }
-        
+
         tags = [
           "traefik.enable=true",
           "traefik.http.routers.powerdns.rule=Host(`powerdns.lab.local`)",
@@ -182,7 +182,7 @@ EOF
           "traefik.http.routers.powerdns.tls=true",
           "traefik.http.services.powerdns.loadbalancer.server.port=${NOMAD_PORT_api}",
         ]
-        
+
         check {
           type     = "http"
           path     = "/api/v1/servers"

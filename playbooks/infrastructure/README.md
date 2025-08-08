@@ -22,7 +22,7 @@ This directory contains organized Ansible playbooks for infrastructure managemen
 - **`monitoring/`** - Netdata monitoring deployment
   - `deploy-netdata-all.yml` - Deploy to all clusters
   - `deploy-netdata-doggos.yml` - Deploy to doggos-homelab
-  - `deploy-netdata-og.yml` - Deploy to og-homelab  
+  - `deploy-netdata-og.yml` - Deploy to og-homelab
   - `netdata-configure-mesh.yml` - Configure parent mesh topology
 
 - **`network/`** - Network configuration

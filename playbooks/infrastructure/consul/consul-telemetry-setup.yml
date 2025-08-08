@@ -7,7 +7,7 @@
   hosts: tag_server[0]
   become: true
   gather_facts: false
-  
+
   vars:
     consul_policy_name: prometheus-scraping
     consul_token_description: "Prometheus/Netdata scraping token"
@@ -19,7 +19,7 @@
                  env_slug='prod',
                  path='/apollo-13/consul',
                  secret_name='CONSUL_MASTER_TOKEN')).value }}
-    
+
   tasks:
     - name: Create Consul ACL policy for Prometheus scraping
       consul_acl_policy:
@@ -28,21 +28,21 @@
         rules: |
           # Policy for Prometheus/Netdata scraping
           operator = "read"
-          
+
           node_prefix "" {
             policy = "read"
           }
-          
+
           agent_prefix "" {
             policy = "read"
           }
-          
+
           service_prefix "" {
             policy = "read"
           }
         state: present
       register: acl_policy_result
-      
+
     - name: Create ACL token for Prometheus/Netdata
       consul_acl_token:
         token: "{{ consul_master_token }}"
@@ -53,7 +53,7 @@
           - name: "{{ consul_policy_name }}"
         state: present
       register: acl_token_result
-      
+
     - name: Store the generated token in Infisical
       uri:
         url: "https://app.infisical.com/api/v3/secrets/raw"
@@ -75,17 +75,17 @@
   hosts: all
   become: true
   gather_facts: true
-  
+
   vars:
     prometheus_token: "{{ hostvars[groups['tag_server'][0]]['acl_token_result']['secret_id'] }}"
     consul_addr: "http://127.0.0.1:8500"
-    
+
   tasks:
     - name: Check if Netdata is installed
       stat:
         path: /etc/netdata
       register: netdata_dir
-      
+
     - name: Configure Netdata Consul collector
       when: netdata_dir.stat.exists
       block:
@@ -96,7 +96,7 @@
             mode: '0755'
             owner: netdata
             group: netdata
-            
+
         - name: Backup existing Consul configuration
           copy:
             src: /etc/netdata/go.d/consul.conf
@@ -104,7 +104,7 @@
             remote_src: true
             force: false
           failed_when: false
-          
+
         - name: Configure Consul collector
           template:
             src: netdata-consul.conf.j2
@@ -113,7 +113,7 @@
             owner: netdata
             group: netdata
           notify: restart netdata
-          
+
     - name: Verify Consul connectivity
       uri:
         url: "{{ consul_addr }}/v1/agent/metrics"
@@ -123,11 +123,11 @@
       register: consul_metrics_test
       failed_when: false
       changed_when: false
-      
+
     - name: Report connectivity status
       debug:
         msg: "Consul metrics endpoint {{ 'accessible' if consul_metrics_test.status == 200 else 'not accessible' }}"
-        
+
   handlers:
     - name: restart netdata
       systemd:
@@ -139,7 +139,7 @@
   hosts: tag_server[0]
   become: false
   gather_facts: false
-  
+
   tasks:
     - name: Create telemetry setup report
       copy:
@@ -147,16 +147,16 @@
           Consul Telemetry Setup Report
           =============================
           Date: {{ ansible_date_time.iso8601 }}
-          
+
           ACL Policy: {{ consul_policy_name }}
           Token Description: {{ consul_token_description }}
           Token Created: {{ acl_token_result.changed | default(false) }}
-          
+
           Nodes Configured:
           {% for host in groups['all'] %}
           - {{ host }}: {{ hostvars[host]['consul_metrics_test']['status'] | default('unknown') }}
           {% endfor %}
-          
+
           Token stored in Infisical at: /apollo-13/consul/PROMETHEUS_SCRAPING_TOKEN
         dest: "{{ playbook_dir }}/../../reports/consul-telemetry-setup-{{ ansible_date_time.date }}.txt"
       delegate_to: localhost

@@ -7,7 +7,7 @@
   become: true
   vars:
     consul_client_token: "[REDACTED_NOMAD_TOKEN]"
-    
+
   tasks:
     - name: Add ACL configuration to Consul
       ansible.builtin.blockinfile:
@@ -44,7 +44,7 @@
 
 - name: Verify Configuration
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Wait for agents to reconnect
       ansible.builtin.pause:
@@ -54,7 +54,7 @@
       ansible.builtin.command: consul members
       register: members_status
       changed_when: false
-      
+
     - name: Display status
       ansible.builtin.debug:
         msg:

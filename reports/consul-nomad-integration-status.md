@@ -1,6 +1,6 @@
 # Consul-Nomad Integration Status Report
 
-**Date**: 2025-07-29  
+**Date**: 2025-07-29
 **Cluster**: doggos-homelab
 
 ## Summary
@@ -65,25 +65,25 @@ The following configuration was added to all Nomad nodes:
 ```hcl
 consul {
   address = "127.0.0.1:8500"
-  
+
   # Enable service registration
   auto_advertise = true
   server_auto_join = true
   client_auto_join = true
-  
+
   # Service names
   server_service_name = "nomad"
   client_service_name = "nomad-client"
-  
+
   # Enable service checks
   checks_use_advertise = true
-  
+
   # Keep existing identity settings
   service_identity {
     enabled = true
     auto    = true
   }
-  
+
   task_identity {
     enabled = true
   }

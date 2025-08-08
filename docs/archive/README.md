@@ -31,7 +31,7 @@ These files document the legacy 1Password Connect integration that has been repl
 - **1password-connect-troubleshooting.md** - Troubleshooting specific to 1Password Connect
 - **consul-1password-setup.md** - How Consul ACL tokens were managed with 1Password
 
-**Status**: Deprecated as of 2025-07-27  
+**Status**: Deprecated as of 2025-07-27
 **Replacement**: See `/docs/implementation/infisical/infisical-setup.md`
 
 ### 2. Completed Project Artifacts

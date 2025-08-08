@@ -166,12 +166,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run Infisical Scan
         uses: Infisical/infisical-scan-action@v1
         with:
           fail-on-finding: true
-      
+
       - name: Run KICS Scan
         uses: checkmarx/kics-github-action@v1
         with:

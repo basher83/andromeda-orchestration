@@ -12,16 +12,16 @@
     netdata_web_enabled: true
     netdata_bind_to: "*"
     netdata_port: 19999
-    
+
   tasks:
     - name: Get correct 192.168.11.x IP address
       ansible.builtin.set_fact:
-        ansible_default_ipv4: 
+        ansible_default_ipv4:
           address: "{{ ansible_all_ipv4_addresses | select('match', '^192\\.168\\.11\\.') | first | default(ansible_default_ipv4.address) }}"
           interface: "{{ ansible_default_ipv4.interface }}"
           netmask: "{{ ansible_default_ipv4.netmask }}"
           network: "{{ ansible_default_ipv4.network }}"
-          
+
     - name: Display corrected IP
       ansible.builtin.debug:
         msg: "Using IP {{ ansible_default_ipv4.address }} for {{ inventory_hostname }}"
@@ -30,7 +30,7 @@
       ansible.builtin.include_role:
         name: netdata
         tasks_from: configure
-        
+
     - name: Ensure web server mode is set in [web] section
       ansible.builtin.lineinfile:
         path: /etc/netdata/netdata.conf

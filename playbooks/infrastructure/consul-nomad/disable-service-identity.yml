@@ -6,7 +6,7 @@
 - name: Disable Service Identity Requirement in Nomad
   hosts: tag_nomad
   become: true
-  
+
   tasks:
     - name: Update Nomad configuration to disable service identity
       ansible.builtin.replace:
@@ -14,21 +14,21 @@
         regexp: '(\s+service_identity\s*{\s*\n\s*enabled\s*=\s*)true'
         replace: '\1false'
       register: config_updated
-      
+
     - name: Update task identity setting
       ansible.builtin.replace:
         path: /etc/nomad.d/nomad.hcl
         regexp: '(\s+task_identity\s*{\s*\n\s*enabled\s*=\s*)true'
         replace: '\1false'
       register: task_config_updated
-      
+
     - name: Restart Nomad if configuration changed
       ansible.builtin.systemd:
         name: nomad
         state: restarted
         daemon_reload: true
       when: config_updated.changed or task_config_updated.changed
-      
+
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
@@ -39,13 +39,13 @@
 
 - name: Verify Configuration
   hosts: nomad-server-1-lloyd
-  
+
   tasks:
     - name: Check Nomad server status
       ansible.builtin.command: nomad server members
       register: nomad_status
       changed_when: false
-      
+
     - name: Display status
       ansible.builtin.debug:
         msg:

@@ -6,7 +6,7 @@
 - name: Fix DNS resolver configuration
   hosts: all
   become: true
-  
+
   tasks:
     - name: Check current systemd-resolved status
       ansible.builtin.systemd:

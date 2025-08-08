@@ -12,36 +12,36 @@ sequenceDiagram
     participant Infra as Target<br/>Infrastructure
 
     Dev->>Env: Export credentials<br/>INFISICAL_UNIVERSAL_AUTH_CLIENT_ID<br/>INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET
-    
+
     Dev->>Ansible: Run playbook<br/>ansible-playbook -i inventory/
-    
+
     Ansible->>Ansible: Parse inventory file
-    
+
     Note over Ansible: Inventory contains<br/>Infisical lookups
-    
+
     Ansible->>Lookup: Request secret<br/>project_id, env_slug,<br/>path, secret_name
-    
+
     Lookup->>Env: Read auth credentials
-    
+
     Lookup->>API: Authenticate with<br/>Universal Auth
-    
+
     API-->>Lookup: Return auth token
-    
+
     Lookup->>API: Request secret<br/>with token
-    
+
     API-->>Lookup: Return secret value
-    
+
     Lookup-->>Ansible: Inject secret<br/>into variable
-    
+
     Ansible->>Infra: Apply configuration<br/>with secrets
-    
+
     Note over Infra: Secrets never stored<br/>in code or logs
 
     rect rgb(255, 235, 238)
         Note over Dev,Infra: Error Handling
         API--xLookup: Auth failure
         Lookup--xAnsible: Raise error:<br/>Check credentials
-        
+
         API--xLookup: Secret not found
         Lookup--xAnsible: Raise error:<br/>Secret missing
     end

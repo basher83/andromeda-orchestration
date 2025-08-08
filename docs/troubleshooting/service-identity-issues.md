@@ -10,15 +10,15 @@ When deploying services with Consul service blocks in Nomad, the workload identi
 
 1. **PowerDNS Deployment Failures**:
    ```
-   Template failed: kv.get(powerdns/mysql/password): Unexpected response code: 403 
-   (rpc error making call: Permission denied: token with AccessorID '05081fff-66cc-58ba-2bb3-88f9cd4f1780' 
+   Template failed: kv.get(powerdns/mysql/password): Unexpected response code: 403
+   (rpc error making call: Permission denied: token with AccessorID '05081fff-66cc-58ba-2bb3-88f9cd4f1780'
    lacks permission 'key:read' on "powerdns/mysql/password")
    ```
 
 2. **Service Registration Errors**:
    ```
-   failed to derive Consul token for service powerdns: 
-   Unexpected response code: 403 (rpc error making call: ACL not found: 
+   failed to derive Consul token for service powerdns:
+   Unexpected response code: 403 (rpc error making call: ACL not found:
    auth method "nomad-workloads" not found)
    ```
 
@@ -74,11 +74,11 @@ Add identity blocks to ALL service definitions when service_identity is enabled:
 service {
   name = "myservice"
   port = "myport"
-  
+
   identity {
     aud = ["consul.io"]
   }
-  
+
   # ... rest of service config
 }
 ```
@@ -107,12 +107,12 @@ For PowerDNS: Deployed without service blocks entirely to avoid validation error
 service {
   name = "service-name"
   port = "port-name"
-  
+
   identity {
     aud = ["consul.io"]  # REQUIRED when service_identity is enabled
     ttl = "1h"          # Optional, but recommended for security
   }
-  
+
   # ... rest of service config
 }
 ```

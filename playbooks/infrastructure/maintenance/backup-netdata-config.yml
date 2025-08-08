@@ -6,40 +6,40 @@
   gather_facts: true
   vars:
     backup_dir: "/root/netdata-backup-{{ ansible_date_time.epoch }}"
-  
+
   tasks:
     - name: Check if Netdata is installed
       ansible.builtin.stat:
         path: /usr/sbin/netdata
       register: netdata_binary
-      
+
     - name: Get Netdata version
       ansible.builtin.command:
         cmd: netdata -v
       register: netdata_version
       when: netdata_binary.stat.exists
       changed_when: false
-      
+
     - name: Check Netdata service status
       ansible.builtin.systemd:
         name: netdata
       register: netdata_service
       when: netdata_binary.stat.exists
-      
+
     - name: Create backup directory
       ansible.builtin.file:
         path: "{{ backup_dir }}"
         state: directory
         mode: '0700'
       when: netdata_binary.stat.exists
-        
+
     - name: Backup Netdata configuration directory
       ansible.builtin.archive:
         path: /etc/netdata/
         dest: "{{ backup_dir }}/netdata-config.tar.gz"
         format: gz
       when: netdata_binary.stat.exists
-      
+
     - name: Backup Consul service registration
       ansible.builtin.copy:
         src: /etc/consul.d/netdata.json
@@ -48,7 +48,7 @@
         mode: preserve
       failed_when: false
       when: netdata_binary.stat.exists
-      
+
     - name: Save current Netdata service status
       ansible.builtin.copy:
         content: |
@@ -56,13 +56,13 @@
           Hostname: {{ ansible_hostname }}
           Netdata version: {{ netdata_version.stdout | default('Not installed') }}
           Service status: {{ netdata_service.status.ActiveState | default('Unknown') }}
-          
+
           Configuration files backed up:
           - /etc/netdata/* -> netdata-config.tar.gz
           - /etc/consul.d/netdata.json -> consul-netdata.json (if exists)
         dest: "{{ backup_dir }}/backup-info.txt"
       when: netdata_binary.stat.exists
-        
+
     - name: Display backup location
       ansible.builtin.debug:
         msg: "Netdata configuration backed up to: {{ backup_dir }}"

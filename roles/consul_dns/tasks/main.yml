@@ -11,7 +11,7 @@
 
 - name: Register infrastructure services
   include_tasks: register_services.yml
-  when: 
+  when:
     - consul_register_services | bool
     - inventory_hostname in groups['consul_servers']
     - inventory_hostname == groups['consul_servers'][0]

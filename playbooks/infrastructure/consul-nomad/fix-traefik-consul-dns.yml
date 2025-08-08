@@ -8,7 +8,7 @@
   become: true
   vars:
     docker_daemon_config: /etc/docker/daemon.json
-    
+
   tasks:
     - name: Ensure Consul DNS is accessible on all interfaces
       ansible.builtin.lineinfile:
@@ -27,11 +27,11 @@
             dns = "0.0.0.0"
             http = "0.0.0.0"
           }
-          
+
           ports {
             dns = 8600
           }
-          
+
           recursors = ["8.8.8.8", "1.1.1.1"]
         insertafter: "^datacenter"
       register: consul_dns_config
@@ -67,14 +67,14 @@
         content: |
           # Forward .consul queries to Consul DNS
           server=/consul/{{ ansible_default_ipv4.address }}#8600
-          
+
           # Don't read /etc/resolv.conf
           no-resolv
-          
+
           # Upstream DNS servers
           server=8.8.8.8
           server=1.1.1.1
-          
+
           # Listen on Docker bridge
           listen-address=172.17.0.1
           bind-interfaces
@@ -146,7 +146,7 @@
                 config {
                   image = "traefik:v3.0"
                   ports = ["http", "https", "api"]
-                  
+
                   args = [
                     "--api.insecure=true",
                     "--api.dashboard=true",
@@ -168,13 +168,13 @@
                 service {
                   name = "traefik"
                   port = "http"
-                  
+
                   tags = [
                     "traefik.enable=true",
                     "traefik.http.routers.api.rule=Host(`traefik.local`)",
                     "traefik.http.routers.api.service=api@internal"
                   ]
-                  
+
                   check {
                     type     = "http"
                     path     = "/ping"
@@ -217,7 +217,7 @@
               config {
                 image = "traefik:v3.0"
                 ports = ["http", "https", "api"]
-                
+
                 args = [
                   "--api.insecure=true",
                   "--api.dashboard=true",
@@ -239,11 +239,11 @@
               service {
                 name = "traefik"
                 port = "http"
-                
+
                 tags = [
                   "traefik.enable=true"
                 ]
-                
+
                 check {
                   type     = "http"
                   path     = "/ping"

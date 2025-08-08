@@ -43,12 +43,12 @@ case "${1:-full}" in
         echo -e "${GREEN}Running full repository scan...${NC}"
         infisical scan --verbose --redact
         ;;
-    
+
     staged)
         echo -e "${GREEN}Scanning staged files...${NC}"
         infisical scan git-changes --staged --verbose --redact
         ;;
-    
+
     ci)
         echo -e "${GREEN}Running CI scan with SARIF output...${NC}"
         infisical scan \
@@ -57,7 +57,7 @@ case "${1:-full}" in
             --no-color \
             --exit-code 1
         ;;
-    
+
     baseline)
         echo -e "${YELLOW}Updating baseline file...${NC}"
         infisical scan \
@@ -65,11 +65,11 @@ case "${1:-full}" in
             --report-path "${PROJECT_ROOT}/.infisical-scan-baseline.json"
         echo -e "${GREEN}Baseline updated${NC}"
         ;;
-    
+
     help|--help|-h)
         usage
         ;;
-    
+
     *)
         echo -e "${RED}Unknown command: $1${NC}"
         usage

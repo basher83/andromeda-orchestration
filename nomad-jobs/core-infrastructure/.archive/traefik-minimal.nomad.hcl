@@ -7,15 +7,15 @@ job "traefik" {
 
     network {
       mode = "host"
-      
+
       port "http" {
         static = 80
       }
-      
+
       port "https" {
         static = 443
       }
-      
+
       port "admin" {
         to = 8080
       }

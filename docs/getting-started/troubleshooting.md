@@ -219,7 +219,7 @@ VM names may not resolve, causing connectivity tests to fail.
    - name: Test connectivity
      ansible.builtin.command:
        cmd: "ping -c 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
-     when: 
+     when:
        - hostvars[item]['ansible_default_ipv4'] is defined
        - hostvars[item]['ansible_default_ipv4']['address'] is defined
    ```

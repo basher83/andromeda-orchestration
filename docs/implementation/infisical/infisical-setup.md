@@ -396,7 +396,7 @@ requirements.
 ## Security Scanning
 
 For comprehensive security scanning procedures including:
-- Infisical CLI secret detection  
+- Infisical CLI secret detection
 - KICS infrastructure security scanning
 - Pre-commit hook integration
 - CI/CD security workflows

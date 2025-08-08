@@ -61,6 +61,6 @@
     headers:
       X-Consul-Token: "{{ netdata_consul_acl_token | default(omit) }}"
   loop: "{{ netdata_consul_kv_defaults }}"
-  when: 
+  when:
     - netdata_consul_kv_defaults is defined
     - netdata_consul_template_populate_kv | default(false)

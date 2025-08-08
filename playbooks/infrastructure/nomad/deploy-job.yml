@@ -9,7 +9,7 @@
     job_path: "{{ job | mandatory }}"
     force_start: "{{ force | default(false) }}"
     wait_for_healthy: "{{ wait | default(true) }}"
-  
+
   tasks:
     - name: Validate job file exists
       become: false
@@ -59,7 +59,7 @@
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
         name: "{{ job_name }}"
       register: job_info
-      
+
     - name: Wait for healthy deployment
       community.general.nomad_job_info:
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"

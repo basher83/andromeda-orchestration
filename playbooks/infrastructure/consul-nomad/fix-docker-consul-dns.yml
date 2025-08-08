@@ -8,7 +8,7 @@
   become: true
   vars:
     docker_daemon_config: /etc/docker/daemon.json
-    
+
   tasks:
     - name: Check current Docker daemon configuration
       ansible.builtin.stat:

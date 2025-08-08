@@ -57,10 +57,10 @@ nomad-jobs/
    ```bash
    # Move test files to archive
    mv .testing/*.nomad.hcl .archive/
-   
+
    # Rename final version to service name
    mv {service}-final.nomad.hcl {service}.nomad.hcl
-   
+
    # Update README.md with production details
    ```
 
@@ -73,7 +73,7 @@ nomad-jobs/
   - Prometheus metrics enabled
   - Consul service discovery active
 
-### Platform Services  
+### Platform Services
 - **PowerDNS** (pdns-auth-48) - ✅ Production
   - Authoritative DNS server
   - API enabled with MySQL backend
@@ -123,12 +123,12 @@ All service blocks MUST include identity configuration:
 service {
   name = "myservice"
   port = "web"
-  
+
   identity {
     aud = ["consul.io"]  # REQUIRED
     ttl = "1h"          # Recommended
   }
-  
+
   # ... rest of service configuration
 }
 ```
@@ -206,7 +206,7 @@ End-user facing services:
    ```bash
    # Check what's using a port
    ss -tlnp | grep :80
-   
+
    # Find Nomad allocation
    nomad job status | grep -B2 "static = 80"
    ```
@@ -221,10 +221,10 @@ End-user facing services:
    ```bash
    # Check job status
    nomad job status <job-name>
-   
+
    # View allocation logs
    nomad alloc logs <alloc-id>
-   
+
    # Check specific task logs
    nomad alloc logs -task <task-name> <alloc-id>
    ```

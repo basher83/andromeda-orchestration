@@ -24,7 +24,7 @@ job "powerdns" {
       config {
         image = "mariadb:10.11"
         ports = ["mysql"]
-        
+
         volumes = [
           "local/mysql-init:/docker-entrypoint-initdb.d",
           "powerdns-mysql:/var/lib/mysql"
