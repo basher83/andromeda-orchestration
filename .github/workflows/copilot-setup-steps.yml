@@ -1,0 +1,86 @@
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  copilot-setup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check changed files
+        run: |
+          echo "Changed files in the last commit:"
+          git diff HEAD~1 --name-only
+
+      - name: Check prerequisites
+        id: prereqs
+        run: |
+          ERRORS=0
+          if ! command -v ansible &> /dev/null; then
+            echo "::error::❌ Ansible not found. Please install Ansible first."
+            ERRORS=1
+          fi
+          if ! command -v python3 &> /dev/null; then
+            echo "::error::❌ Python3 not found. Please install Python 3.9+."
+            ERRORS=1
+          fi
+          if ! command -v uv &> /dev/null; then
+            echo "::error::❌ uv not found. Please install uv first (see docs/getting-started/uv-ansible-notes.md)"
+            ERRORS=1
+          fi
+          if [ $ERRORS -eq 1 ]; then
+            exit 1
+          fi
+
+      - name: Setup Python Virtual Environment
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+
+      - name: Install dependencies with uv
+        run: |
+          set -e
+          uv pip install -r requirements.txt || { echo "::error::uv pip install failed. Check your uv installation and requirements.txt"; exit 1; }
+
+      - name: Install Ansible Core (system)
+        run: |
+          pip install ansible-core resolvelib || { echo "::error::pip install ansible-core failed."; exit 1; }
+
+      - name: Install Ansible Galaxy collections with diagnostics
+        id: galaxy
+        run: |
+          set -e
+          echo "Attempting to install Ansible Galaxy collections..."
+          if [ ! -f requirements.yml ]; then
+            echo "::warning::requirements.yml not found. Skipping collection install."
+            exit 0
+          fi
+          ansible-galaxy collection install -r requirements.yml || {
+            echo "::error::Ansible Galaxy collection install failed."
+            echo "Troubleshooting steps:"
+            echo "1. Check your internet connectivity and firewall settings."
+            echo "2. Ensure that AWS S3 endpoints (e.g., ansible-galaxy-ng.s3.dualstack.us-east-1.amazonaws.com) are allowed."
+            echo "3. Try running the command locally to see if you get more detailed errors."
+            echo "4. Review your requirements.yml for typos or unsupported versions."
+            echo "5. See https://github.com/ansible/galaxy/issues for more help."
+            exit 2
+          }
+
+      - name: Show installed Ansible collections and versions
+        run: |
+          ansible-galaxy collection list
+
+      - name: Print troubleshooting info
+        if: failure()
+        run: |
+          echo "⚠️ Troubleshooting info:"
+          echo "Check the error logs above for more details."
+          echo "If you see DNS or SSL errors, your runner may be blocked from accessing public S3 or Ansible Galaxy endpoints."
+          echo "If you see permission errors, check your requirements.yml and your credentials."
