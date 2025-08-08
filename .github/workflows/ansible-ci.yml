@@ -1,0 +1,105 @@
+name: Ansible CI
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ansible.cfg
+      - requirements.yml
+      - pyproject.toml
+      - uv.lock
+      - plugins/**
+      - roles/**
+      - playbooks/**
+      - inventory/**
+      - tests/**
+      - .github/workflows/ansible-ci.yml
+  pull_request:
+    paths:
+      - ansible.cfg
+      - requirements.yml
+      - pyproject.toml
+      - uv.lock
+      - plugins/**
+      - roles/**
+      - playbooks/**
+      - inventory/**
+      - tests/**
+      - .github/workflows/ansible-ci.yml
+
+jobs:
+  lint-and-test:
+    name: Lint, syntax-check, and localhost run
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    env:
+      ANSIBLE_CONFIG: ${{ github.workspace }}/ansible.cfg
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Sync project dependencies (incl. dev extras) with uv
+        run: |
+          set -euxo pipefail
+          # Create and use a local .venv managed by uv
+          uv sync --extra dev
+          uv run python -V
+          uv run pip list
+
+      - name: Cache Ansible Galaxy collections
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ansible/collections
+          key: ansible-galaxy-${{ runner.os }}-${{ hashFiles('requirements.yml') }}
+          restore-keys: |
+            ansible-galaxy-${{ runner.os }}-
+
+      - name: Install Ansible Galaxy collections
+        if: ${{ hashFiles('requirements.yml') != '' }}
+        run: |
+          set -euxo pipefail
+          uv run ansible-galaxy collection install -r requirements.yml
+
+      - name: Show Ansible version and collections
+        run: |
+          uv run ansible --version
+          uv run ansible-galaxy collection list || true
+
+      - name: Run ansible-lint
+        run: |
+          # ansible-lint is installed via the dev extra in pyproject.toml
+          uv run ansible-lint --version
+          uv run ansible-lint .
+
+      - name: Syntax-check playbooks (playbooks/ and tests/)
+        run: |
+          set -euo pipefail
+          mapfile -d '' files < <(git ls-files -z 'playbooks/**/*.yml' 'tests/test_*.yml')
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No playbooks found to syntax-check."
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            echo "::group::Syntax-check $f"
+            uv run ansible-playbook --syntax-check "$f"
+            echo "::endgroup::"
+          done
+
+      - name: Run safe localhost test playbook
+        run: |
+          # Executes a simple playbook that gathers and prints localhost facts
+          uv run ansible-playbook -i inventory/localhost.yml tests/test_localhost.yml
