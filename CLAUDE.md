@@ -21,6 +21,20 @@ detailed implementation roadmap.
 uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
 ```
 
+**CRITICAL**: When working with NetBox or any playbooks that need Infisical secrets:
+- ALWAYS use `uv run ansible-playbook` (not `ansible-playbook` directly)
+- The Infisical Ansible collection (`infisical.vault.read_secrets`) has issues with Python virtual environments
+- If you encounter "worker was found in a dead state" errors with Infisical lookups, use the CLI workaround:
+  ```bash
+  # Get token via CLI and use environment variable
+  export NETBOX_TOKEN=$(infisical run --env=staging --path="/apollo-13/services/netbox" -- printenv NETBOX_API_KEY)
+  ansible-playbook playbooks/infrastructure/netbox-playbook.yml
+  ```
+- For localhost-only playbooks (like NetBox API operations), you can skip inventory:
+  ```bash
+  uv run ansible-playbook playbooks/infrastructure/netbox-dns-discover.yml
+  ```
+
 ### Working with Dynamic Inventory
 
 ```bash
@@ -139,6 +153,8 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
    - Use Infisical for secret retrieval (recommended)
    - 1Password Connect still available during transition
    - Environment variables for authentication
+   - **Known Issue**: Infisical Ansible collection may fail in virtual environments
+   - **Workaround**: Use Infisical CLI to export secrets as environment variables
 
 ## Current Infrastructure State
 
@@ -178,6 +194,8 @@ For detailed Vault operations, see `docs/operations/vault-access.md`.
 - Use the execution environment for consistency across different systems
 - Always test inventory plugins with `ansible-inventory` before running playbooks
 - NetBox integration should follow the patterns in `docs/implementation/dns-ipam/netbox-integration-patterns.md`
+- **ALWAYS use `uv run` prefix for Ansible commands** to ensure proper Python environment
+- NetBox DNS plugin v1.3.5 is installed and operational as of August 8, 2025
 
 ## Recommended Tools
 

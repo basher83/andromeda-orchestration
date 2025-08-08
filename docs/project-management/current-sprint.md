@@ -29,7 +29,7 @@ This changes our priorities significantly - we can now accelerate NetBox integra
 
 **Sprint Tasks**:
 
-- [x] Install NetBox DNS plugin (v1.3.5 - installing now)
+- [x] Install NetBox DNS plugin (v1.3.5 - installed and operational)
 - [ ] Configure DNS zones in NetBox
 - [ ] Set up PowerDNS API integration with NetBox
 - [ ] Create sync script for NetBox to PowerDNS
