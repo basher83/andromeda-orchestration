@@ -3,12 +3,9 @@
 # SPDX-License-Identifier: MIT
 
 
-import json
-
 from ansible.module_utils.basic import AnsibleModule, env_fallback
 
 from ..module_utils.consul import ConsulAPI
-from ..module_utils.utils import del_none, is_subset
 
 
 def run_module():
@@ -46,9 +43,7 @@ def run_module():
     # since the point of this module is to figure out a service IP and port
     # let's throw an error if we don't find one...
     if len(result["instances"]) == 0:
-        module.fail_json(
-            "could not find consul service named " + module.params.get("service_name")
-        )
+        module.fail_json("could not find consul service named " + module.params.get("service_name"))
 
     module.exit_json(**result)
 

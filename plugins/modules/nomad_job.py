@@ -23,9 +23,7 @@ if nomad_diff_spec is not None:
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
-        state=dict(
-            type="str", choices=["present", "absent", "purged"], default="present"
-        ),
+        state=dict(type="str", choices=["present", "absent", "purged"], default="present"),
         url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
         validate_certs=dict(type="bool", default=True),
         connection_timeout=dict(type="int", default=10),
@@ -63,9 +61,7 @@ def run_module():
     if module.params.get("name") is not None:
         job_id = module.params.get("name")
     else:
-        parsed_job = nomad.parse_job(
-            json.dumps(dict(JobHCL=module.params.get("hcl_spec")))
-        )
+        parsed_job = nomad.parse_job(json.dumps(dict(JobHCL=module.params.get("hcl_spec"))))
         job_id = parsed_job["ID"]
 
     existing_job = nomad.get_job(job_id)
@@ -77,14 +73,10 @@ def run_module():
         # if the job is already stopped but purge is set, we need to purge it.
         # also the job can still exist but not purged, in this case the
         # job has Stop set to True
-        if (existing_job is not None and purged) or (
-            existing_job is not None and not existing_job["Stop"]
-        ):
+        if (existing_job is not None and purged) or (existing_job is not None and not existing_job["Stop"]):
             result["changed"] = True
             result["diff"] = dict(
-                before="Job ID {} in namespace {} will be STOPPED!\n".format(
-                    job_id, module.params.get("namespace")
-                ),
+                before="Job ID {} in namespace {} will be STOPPED!\n".format(job_id, module.params.get("namespace")),
                 after="",
             )
             # exit now if in check mode
@@ -108,9 +100,7 @@ def run_module():
         # do a nice diff if the system has nomad_diff available
         if _nomad_diff_available and plan.get("Diff") is not None:
             try:
-                result["diff"] = dict(
-                    prepared=nomad_diff.format(plan["Diff"], colors=True, verbose=False)
-                )
+                result["diff"] = dict(prepared=nomad_diff.format(plan["Diff"], colors=True, verbose=False))
             except:
                 # if we can't get a diff, it's not a big deal...
                 pass
