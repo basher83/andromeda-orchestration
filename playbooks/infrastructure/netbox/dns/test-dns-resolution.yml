@@ -1,0 +1,120 @@
+---
+# Test DNS resolution through PowerDNS
+- name: Test DNS Resolution
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    powerdns_ip: "192.168.11.20"
+    test_queries:
+      # Forward lookups
+      - query: "lloyd.homelab.local"
+        type: "A"
+        expected: "192.168.11.11"
+      - query: "holly.homelab.local"
+        type: "A"
+        expected: "192.168.11.12"
+      - query: "mable.homelab.local"
+        type: "A"
+        expected: "192.168.11.13"
+      - query: "nomad-server-1.homelab.local"
+        type: "A"
+        expected: "192.168.10.11"
+      - query: "netbox.homelab.local"
+        type: "A"
+        expected: "192.168.30.213"
+      - query: "powerdns.homelab.local"
+        type: "A"
+        expected: "192.168.11.20"
+      - query: "dns.homelab.local"
+        type: "CNAME"
+        expected: "powerdns.homelab.local"
+      # Reverse lookups
+      - query: "192.168.11.11"
+        type: "PTR"
+        expected: "lloyd.homelab.local"
+      - query: "192.168.11.12"
+        type: "PTR"
+        expected: "holly.homelab.local"
+      - query: "192.168.30.213"
+        type: "PTR"
+        expected: "netbox.homelab.local"
+
+  tasks:
+    - name: Test forward DNS lookups
+      command: "dig @{{ powerdns_ip }} {{ item.query }} {{ item.type }} +short"
+      loop: "{{ test_queries }}"
+      when: item.type in ['A', 'CNAME']
+      register: forward_results
+      changed_when: false
+
+    - name: Test reverse DNS lookups
+      command: "dig @{{ powerdns_ip }} -x {{ item.query }} +short"
+      loop: "{{ test_queries }}"
+      when: item.type == 'PTR'
+      register: reverse_results
+      changed_when: false
+
+    - name: Compile test results
+      set_fact:
+        test_results: []
+
+    - name: Process forward lookup results
+      set_fact:
+        test_results: "{{ test_results + [{'query': item.item.query, 'type': item.item.type, 'expected': item.item.expected, 'actual': item.stdout | default('NO ANSWER'), 'status': (item.stdout | default('') == item.item.expected) | ternary('✓ PASS', '✗ FAIL')}] }}"
+      loop: "{{ forward_results.results }}"
+      when: item.skipped is not defined
+
+    - name: Process reverse lookup results
+      set_fact:
+        test_results: "{{ test_results + [{'query': item.item.query, 'type': item.item.type, 'expected': item.item.expected, 'actual': item.stdout | default('NO ANSWER') | regex_replace('\\.$', ''), 'status': (item.stdout | default('') | regex_replace('\\.$', '') == item.item.expected) | ternary('✓ PASS', '✗ FAIL')}] }}"
+      loop: "{{ reverse_results.results }}"
+      when: item.skipped is not defined
+
+    - name: Display test results header
+      debug:
+        msg:
+          - "======================================"
+          - "     DNS Resolution Test Results      "
+          - "======================================"
+          - "PowerDNS Server: {{ powerdns_ip }}"
+          - ""
+
+    - name: Display individual test results
+      debug:
+        msg: "{{ item.status }} | {{ item.type }} | {{ item.query }} -> {{ item.actual }} (expected: {{ item.expected }})"
+      loop: "{{ test_results }}"
+
+    - name: Calculate test summary
+      set_fact:
+        passed_tests: "{{ test_results | selectattr('status', 'search', 'PASS') | list | length }}"
+        failed_tests: "{{ test_results | selectattr('status', 'search', 'FAIL') | list | length }}"
+        total_tests: "{{ test_results | length }}"
+
+    - name: Display test summary
+      debug:
+        msg:
+          - ""
+          - "======================================"
+          - "            Test Summary              "
+          - "======================================"
+          - "Total Tests: {{ total_tests }}"
+          - "Passed: {{ passed_tests }}"
+          - "Failed: {{ failed_tests }}"
+          - "Success Rate: {{ ((passed_tests | int / total_tests | int) * 100) | round(2) }}%"
+          - ""
+          - "{% if failed_tests | int == 0 %}✓ All tests passed! DNS integration is working correctly.{% else %}✗ Some tests failed. Please check the configuration.{% endif %}"
+
+    - name: Test zone transfer (AXFR)
+      command: "dig @{{ powerdns_ip }} homelab.local AXFR +short"
+      register: axfr_result
+      changed_when: false
+      failed_when: false
+
+    - name: Display zone transfer results
+      debug:
+        msg:
+          - ""
+          - "Zone Transfer Test (AXFR):"
+          - "{{ axfr_result.stdout_lines | default(['Zone transfer not allowed or no records']) }}"

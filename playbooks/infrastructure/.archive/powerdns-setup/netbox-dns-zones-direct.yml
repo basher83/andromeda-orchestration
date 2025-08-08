@@ -1,0 +1,115 @@
+---
+# Configure DNS zones in NetBox using direct token
+- name: Configure DNS Zones in NetBox
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    netbox_url: "https://192.168.30.213"
+    netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
+    netbox_validate_certs: false
+
+    # DNS configuration
+    dns_zones:
+      forward:
+        - name: "homelab.local"
+          description: "Primary homelab domain"
+        - name: "doggos.local"
+          description: "Doggos cluster domain"
+        - name: "og.local"
+          description: "OG homelab cluster domain"
+      reverse:
+        - name: "10.168.192.in-addr.arpa"
+          description: "Reverse zone for 192.168.10.0/24"
+          network: "192.168.10.0/24"
+        - name: "11.168.192.in-addr.arpa"
+          description: "Reverse zone for 192.168.11.0/24"
+          network: "192.168.11.0/24"
+        - name: "30.168.192.in-addr.arpa"
+          description: "Reverse zone for 192.168.30.0/24"
+          network: "192.168.30.0/24"
+
+  tasks:
+    - name: Check token is set
+      fail:
+        msg: "NETBOX_TOKEN environment variable not set"
+      when: netbox_token == ""
+
+    - name: Test NetBox API connectivity
+      uri:
+        url: "{{ netbox_url }}/api/status/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        validate_certs: "{{ netbox_validate_certs }}"
+      register: api_test
+
+    - name: Display NetBox status
+      debug:
+        msg:
+          - "NetBox API Connection: Successful"
+          - "API Response received with status {{ api_test.status }}"
+
+    - name: Create forward DNS zones in NetBox
+      uri:
+        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/"
+        method: POST
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          name: "{{ item.name }}"
+          description: "{{ item.description }}"
+          soa_rname: "admin.{{ item.name }}"
+          soa_serial: 2025080801
+          soa_ttl: 3600
+          soa_refresh: 10800
+          soa_retry: 3600
+          soa_expire: 604800
+          soa_minimum: 3600
+          default_ttl: 3600
+        validate_certs: "{{ netbox_validate_certs }}"
+        status_code: [200, 201, 400]
+      loop: "{{ dns_zones.forward }}"
+      register: forward_zone_results
+      failed_when: forward_zone_results.status not in [200, 201] and 'already exists' not in (forward_zone_results.json | default({}) | string)
+
+    - name: Create reverse DNS zones in NetBox
+      uri:
+        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/"
+        method: POST
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          name: "{{ item.name }}"
+          description: "{{ item.description }}"
+          soa_rname: "admin.homelab.local"
+          soa_serial: 2025080801
+          soa_ttl: 3600
+          soa_refresh: 10800
+          soa_retry: 3600
+          soa_expire: 604800
+          soa_minimum: 3600
+          default_ttl: 3600
+          arpa_network: "{{ item.network }}"
+        validate_certs: "{{ netbox_validate_certs }}"
+        status_code: [200, 201, 400]
+      loop: "{{ dns_zones.reverse }}"
+      register: reverse_zone_results
+      failed_when: reverse_zone_results.status not in [200, 201] and 'already exists' not in (reverse_zone_results.json | default({}) | string)
+
+    - name: Display zone creation summary
+      debug:
+        msg:
+          - "DNS Zone Configuration Complete!"
+          - "Forward zones: {{ dns_zones.forward | map(attribute='name') | list }}"
+          - "Reverse zones: {{ dns_zones.reverse | map(attribute='name') | list }}"
+          - ""
+          - "Next steps:"
+          - "1. Add DNS records to zones"
+          - "2. Configure PowerDNS sync"
+          - "3. Test DNS resolution"

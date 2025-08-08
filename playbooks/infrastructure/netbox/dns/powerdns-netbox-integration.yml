@@ -1,0 +1,122 @@
+---
+# Configure PowerDNS to integrate with NetBox
+- name: Configure PowerDNS for NetBox Integration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    
+    # Configuration
+    powerdns_api_url: "http://192.168.11.20:8081"  # PowerDNS on nomad-client-1
+    netbox_url: "https://192.168.30.213"
+    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
+    consul_url: "http://192.168.11.20:8500"  # Consul on nomad-client-1
+
+  tasks:
+    - name: Retrieve PowerDNS API key from Consul KV
+      uri:
+        url: "{{ consul_url }}/v1/kv/powerdns/api/key?raw"
+        method: GET
+      register: powerdns_api_key_result
+
+    - name: Set PowerDNS API key
+      set_fact:
+        powerdns_api_key: "{{ powerdns_api_key_result.content }}"
+
+    - name: Retrieve NetBox API token from Infisical
+      set_fact:
+        netbox_token: >-
+          {{ (lookup('infisical.vault.read_secrets',
+                     universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                     universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                     project_id=infisical_project_id,
+                     env_slug=infisical_env,
+                     path='/services/netbox',
+                     secret_name='NETBOX_API_KEY')).value }}
+      no_log: true
+
+    - name: Test PowerDNS API connectivity
+      uri:
+        url: "{{ powerdns_api_url }}/api/v1/servers"
+        method: GET
+        headers:
+          X-API-Key: "{{ powerdns_api_key }}"
+        status_code: 200
+      register: pdns_api_test
+
+    - name: Display PowerDNS server info
+      debug:
+        msg: "PowerDNS API is accessible. Server: {{ pdns_api_test.json }}"
+
+    - name: Run initial sync from NetBox to PowerDNS (dry-run)
+      command: |
+        python3 {{ playbook_dir }}/../../../scripts/netbox-powerdns-sync.py \
+          --netbox-url {{ netbox_url }} \
+          --netbox-token {{ netbox_token }} \
+          --powerdns-url {{ powerdns_api_url }} \
+          --powerdns-api-key {{ powerdns_api_key }} \
+          --no-verify-ssl \
+          --dry-run
+      register: sync_dry_run
+      changed_when: false
+
+    - name: Display dry-run results
+      debug:
+        msg: "{{ sync_dry_run.stdout_lines }}"
+
+    - name: Prompt for actual sync
+      pause:
+        prompt: "Review the dry-run results above. Press Enter to perform actual sync or Ctrl-C to abort"
+
+    - name: Run actual sync from NetBox to PowerDNS
+      command: |
+        python3 {{ playbook_dir }}/../../../scripts/netbox-powerdns-sync.py \
+          --netbox-url {{ netbox_url }} \
+          --netbox-token {{ netbox_token }} \
+          --powerdns-url {{ powerdns_api_url }} \
+          --powerdns-api-key {{ powerdns_api_key }} \
+          --no-verify-ssl
+      register: sync_result
+
+    - name: Display sync results
+      debug:
+        msg: "{{ sync_result.stdout_lines }}"
+
+    - name: Create sync script wrapper
+      copy:
+        dest: /tmp/netbox-powerdns-sync.sh
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          # NetBox to PowerDNS sync wrapper script
+          
+          NETBOX_URL="{{ netbox_url }}"
+          NETBOX_TOKEN="{{ netbox_token }}"
+          POWERDNS_URL="{{ powerdns_api_url }}"
+          POWERDNS_API_KEY="{{ powerdns_api_key }}"
+          
+          python3 {{ playbook_dir }}/../../../scripts/netbox-powerdns-sync.py \
+            --netbox-url "$NETBOX_URL" \
+            --netbox-token "$NETBOX_TOKEN" \
+            --powerdns-url "$POWERDNS_URL" \
+            --powerdns-api-key "$POWERDNS_API_KEY" \
+            --no-verify-ssl
+
+    - name: Test DNS resolution
+      command: dig @192.168.11.20 ns1.homelab.local A +short
+      register: dns_test
+      changed_when: false
+
+    - name: Display DNS test results
+      debug:
+        msg:
+          - "DNS Resolution Test:"
+          - "Query: ns1.homelab.local"
+          - "Result: {{ dns_test.stdout }}"
+          - ""
+          - "Integration Complete!"
+          - "NetBox DNS zones are now synced to PowerDNS"
+          - "Sync script created at: /tmp/netbox-powerdns-sync.sh"

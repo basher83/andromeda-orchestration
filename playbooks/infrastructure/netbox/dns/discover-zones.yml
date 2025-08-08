@@ -1,0 +1,88 @@
+---
+# Discover DNS configuration in NetBox
+- name: Discover NetBox DNS Configuration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    netbox_url: "https://192.168.30.213"
+    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
+
+  tasks:
+    - name: Retrieve NetBox API token from Infisical
+      set_fact:
+        netbox_token: >-
+          {{ (lookup('infisical.vault.read_secrets',
+                     universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                     universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                     project_id=infisical_project_id,
+                     env_slug=infisical_env,
+                     path='/apollo-13/services/netbox',
+                     secret_name='NETBOX_API_KEY')).value }}
+      no_log: true
+
+    - name: Get all DNS zones
+      uri:
+        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        validate_certs: false
+      register: zones
+
+    - name: Get all DNS records
+      uri:
+        url: "{{ netbox_url }}/api/plugins/netbox-dns/records/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        validate_certs: false
+      register: records
+
+    - name: Get all nameservers
+      uri:
+        url: "{{ netbox_url }}/api/plugins/netbox-dns/nameservers/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        validate_certs: false
+      register: nameservers
+
+    - name: Display DNS summary
+      debug:
+        msg:
+          - "=== NetBox DNS Configuration ==="
+          - "DNS Zones: {{ zones.json.count }}"
+          - "DNS Records: {{ records.json.count }}"
+          - "Nameservers: {{ nameservers.json.count }}"
+
+    - name: List DNS zones
+      debug:
+        msg:
+          - "Zone: {{ item.name }}"
+          - "  Type: {{ 'Reverse' if 'arpa' in item.name else 'Forward' }}"
+          - "  Description: {{ item.description | default('N/A') }}"
+          - "  SOA MNAME: {{ item.soa_mname.name if item.soa_mname else 'Not set' }}"
+          - "  Status: {{ item.status }}"
+      loop: "{{ zones.json.results }}"
+      when: zones.json.count > 0
+
+    - name: List nameservers
+      debug:
+        msg: "Nameserver: {{ item.name }} - {{ item.description | default('') }}"
+      loop: "{{ nameservers.json.results }}"
+      when: nameservers.json.count > 0
+
+    - name: List DNS records
+      debug:
+        msg: "Record: {{ item.name }} ({{ item.type }}) -> {{ item.value }} in zone {{ item.zone.name if item.zone else 'N/A' }}"
+      loop: "{{ records.json.results }}"
+      when: records.json.count > 0
+
+    - name: Zone details
+      debug:
+        msg:
+          - "=== Zone Details ==="
+          - "Forward Zones: {{ zones.json.results | selectattr('name', 'match', '^(?!.*arpa).*$') | list | length }}"
+          - "Reverse Zones: {{ zones.json.results | selectattr('name', 'match', '.*arpa$') | list | length }}"

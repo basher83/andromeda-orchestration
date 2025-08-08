@@ -1,0 +1,117 @@
+---
+# Manual approach to create DNS zones in NetBox using curl
+- name: Configure DNS Zones in NetBox (Manual)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    netbox_url: "https://192.168.30.213"
+    netbox_validate_certs: false
+    
+    # DNS zones to create
+    dns_zones:
+      forward:
+        - name: "homelab.local"
+          description: "Primary homelab domain"
+        - name: "doggos.local"
+          description: "Doggos cluster domain"
+        - name: "og.local"
+          description: "OG homelab cluster domain"
+      reverse:
+        - name: "10.168.192.in-addr.arpa"
+          description: "Reverse zone for 192.168.10.0/24"
+        - name: "11.168.192.in-addr.arpa"
+          description: "Reverse zone for 192.168.11.0/24"
+        - name: "30.168.192.in-addr.arpa"
+          description: "Reverse zone for 192.168.30.0/24"
+
+  tasks:
+    - name: Instructions for manual zone creation
+      debug:
+        msg:
+          - "====================================="
+          - "    Manual DNS Zone Creation Guide   "
+          - "====================================="
+          - ""
+          - "Since Infisical lookup is having issues, please create zones manually:"
+          - ""
+          - "1. Access NetBox at: {{ netbox_url }}"
+          - "2. Navigate to: Plugins → NetBox DNS → Zones"
+          - "3. Create the following forward zones:"
+          - "   - homelab.local (Primary homelab domain)"
+          - "   - doggos.local (Doggos cluster domain)"
+          - "   - og.local (OG homelab cluster domain)"
+          - ""
+          - "4. Create the following reverse zones:"
+          - "   - 10.168.192.in-addr.arpa (192.168.10.0/24)"
+          - "   - 11.168.192.in-addr.arpa (192.168.11.0/24)"
+          - "   - 30.168.192.in-addr.arpa (192.168.30.0/24)"
+          - ""
+          - "For each zone, set:"
+          - "  - SOA MNAME: ns1.homelab.local"
+          - "  - SOA RNAME: admin.homelab.local"
+          - "  - Default TTL: 3600"
+          - ""
+          - "Or use the API directly with your token:"
+          - ""
+          - "export NETBOX_TOKEN='your-token-here'"
+          - ""
+          - "Then run the curl commands below:"
+
+    - name: Generate curl commands for forward zones
+      debug:
+        msg: |
+          # Create forward zone: {{ item.name }}
+          curl -X POST {{ netbox_url }}/api/plugins/netbox-dns/zones/ \
+            -H "Authorization: Token $NETBOX_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "{{ item.name }}",
+              "description": "{{ item.description }}",
+              "soa_mname": "ns1.homelab.local",
+              "soa_rname": "admin.homelab.local",
+              "soa_serial": 2025080801,
+              "soa_ttl": 3600,
+              "soa_refresh": 10800,
+              "soa_retry": 3600,
+              "soa_expire": 604800,
+              "soa_minimum": 3600,
+              "default_ttl": 3600
+            }' {% if not netbox_validate_certs %}--insecure{% endif %}
+      loop: "{{ dns_zones.forward }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Generate curl commands for reverse zones
+      debug:
+        msg: |
+          # Create reverse zone: {{ item.name }}
+          curl -X POST {{ netbox_url }}/api/plugins/netbox-dns/zones/ \
+            -H "Authorization: Token $NETBOX_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "{{ item.name }}",
+              "description": "{{ item.description }}",
+              "soa_mname": "ns1.homelab.local",
+              "soa_rname": "admin.homelab.local",
+              "soa_serial": 2025080801,
+              "soa_ttl": 3600,
+              "soa_refresh": 10800,
+              "soa_retry": 3600,
+              "soa_expire": 604800,
+              "soa_minimum": 3600,
+              "default_ttl": 3600,
+              "arpa_network": "{{ item.name | regex_replace('(\\d+)\\.(\\d+)\\.(\\d+)\\.in-addr\\.arpa', '192.\\3.\\2.\\1/24') }}"
+            }' {% if not netbox_validate_certs %}--insecure{% endif %}
+      loop: "{{ dns_zones.reverse }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Test connectivity command
+      debug:
+        msg: |
+          # Test NetBox API connectivity
+          curl {{ netbox_url }}/api/plugins/netbox-dns/ \
+            -H "Authorization: Token $NETBOX_TOKEN" \
+            {% if not netbox_validate_certs %}--insecure{% endif %}
