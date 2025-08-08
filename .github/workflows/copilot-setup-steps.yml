@@ -1,23 +1,26 @@
-name: Copilot Setup Steps
+name: "Copilot Setup Steps"
 
+# Automatically run the setup steps when they are changed to allow for easy validation, and
+# allow manual testing through the repository's "Actions" tab
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
 
 jobs:
-  copilot-setup:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Check changed files
-        run: |
-          echo "Changed files in the last commit:"
-          git diff HEAD~1 --name-only
 
       - name: Check prerequisites
         id: prereqs
