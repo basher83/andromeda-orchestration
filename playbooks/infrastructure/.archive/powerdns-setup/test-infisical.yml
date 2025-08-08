@@ -1,0 +1,35 @@
+---
+- name: Test Infisical Integration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
+    
+  tasks:
+    - name: Display environment
+      debug:
+        msg: "Using Infisical environment: {{ infisical_env }}"
+    
+    - name: Test Infisical lookup
+      debug:
+        msg: "Testing Infisical access..."
+    
+    - name: Retrieve NetBox API token from Infisical
+      set_fact:
+        netbox_token: >-
+          {{ lookup('infisical.vault.read_secrets',
+                     universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                     universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                     project_id=infisical_project_id,
+                     env_slug=infisical_env,
+                     path='/apollo-13/services/netbox',
+                     secret_name='NETBOX_API_KEY') }}
+      no_log: false  # Temporarily disable no_log to see errors
+    
+    - name: Check if token was retrieved
+      debug:
+        msg: "Token retrieved successfully (length: {{ netbox_token.value | length if netbox_token.value is defined else 'undefined' }})"

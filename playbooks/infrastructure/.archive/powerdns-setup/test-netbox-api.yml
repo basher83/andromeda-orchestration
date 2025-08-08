@@ -1,0 +1,93 @@
+---
+# Test NetBox API without Infisical
+- name: Test NetBox API Access
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    netbox_url: "https://192.168.30.213"
+    netbox_validate_certs: false
+
+  tasks:
+    - name: Test NetBox API (no auth)
+      uri:
+        url: "{{ netbox_url }}/api/"
+        method: GET
+        validate_certs: "{{ netbox_validate_certs }}"
+        status_code: [200, 403]
+      register: api_test
+      ignore_errors: true
+
+    - name: Display API test result
+      debug:
+        msg: 
+          - "NetBox API Status: {{ api_test.status }}"
+          - "NetBox is {{ 'accessible' if api_test.status == 200 else 'requires authentication' if api_test.status == 403 else 'not reachable' }}"
+
+    - name: Prompt for NetBox token
+      pause:
+        prompt: |
+          
+          NetBox API requires authentication.
+          
+          To get your NetBox API token:
+          1. Log into NetBox at {{ netbox_url }}
+          2. Go to Profile → API Tokens
+          3. Create or copy an existing token
+          
+          Enter your NetBox API token (will be hidden)
+        echo: no
+      register: token_input
+      when: api_test.status == 403
+
+    - name: Set token from input
+      set_fact:
+        netbox_token: "{{ token_input.user_input }}"
+      when: token_input.user_input is defined
+      no_log: true
+
+    - name: Test with provided token
+      uri:
+        url: "{{ netbox_url }}/api/status/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        validate_certs: "{{ netbox_validate_certs }}"
+      register: auth_test
+      when: netbox_token is defined
+
+    - name: Display authentication result
+      debug:
+        msg:
+          - "Authentication: {{ 'Successful' if auth_test.status == 200 else 'Failed' }}"
+          - "NetBox Version: {{ auth_test.json.netbox_version | default('Unknown') }}"
+          - "Python Version: {{ auth_test.json.python_version | default('Unknown') }}"
+      when: auth_test is defined and auth_test.status is defined
+
+    - name: Check for DNS plugin
+      uri:
+        url: "{{ netbox_url }}/api/plugins/netbox-dns/"
+        method: GET
+        headers:
+          Authorization: "Token {{ netbox_token }}"
+        validate_certs: "{{ netbox_validate_certs }}"
+        status_code: [200, 404]
+      register: dns_plugin_test
+      when: netbox_token is defined
+
+    - name: Display DNS plugin status
+      debug:
+        msg:
+          - "DNS Plugin: {{ 'Installed and accessible' if dns_plugin_test.status == 200 else 'Not found' }}"
+      when: dns_plugin_test is defined
+
+    - name: Export token for further use
+      debug:
+        msg:
+          - ""
+          - "To use this token in other playbooks, export it:"
+          - "export NETBOX_TOKEN='{{ netbox_token }}'"
+          - ""
+          - "Or save it to Infisical for permanent storage."
+      when: netbox_token is defined and auth_test.status == 200
