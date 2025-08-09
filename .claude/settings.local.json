@@ -15,7 +15,13 @@
       "Bash(ansible:*)",
       "Bash(git add:*)",
       "Bash(uv run pre-commit run:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(nomad node status:*)",
+      "Bash(nomad job run:*)",
+      "Bash(nomad:*)",
+      "Bash(consul kv put:*)",
+      "Bash(consul catalog:*)",
+      "Bash(curl:*)"
     ]
   }
 }
