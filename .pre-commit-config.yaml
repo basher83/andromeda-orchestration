@@ -11,7 +11,7 @@ repos:
       - id: trailing-whitespace
         exclude: ^(\.infisical-scan\.toml)$
       - id: end-of-file-fixer
-        exclude: ^(\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|files/consul/auth-methods/.*\.json|files/consul/policies/.*\.hcl|.*\.j2)$
+        exclude: ^(\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|roles/.*/files/.*\.(json|hcl)|.*\.j2)$
       - id: check-yaml
         args: [--unsafe] # Allow custom tags
       - id: check-added-large-files
@@ -23,7 +23,7 @@ repos:
         args: [--fix=lf]
       - id: pretty-format-json
         args: [--autofix]
-        exclude: ^(\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|uv\.lock|kics-results/.*\.json|files/consul/auth-methods/.*\.json)$
+        exclude: ^(\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|uv\.lock|kics-results/.*\.json)$
 
   # YAML formatting
   - repo: https://github.com/adrienverge/yamllint

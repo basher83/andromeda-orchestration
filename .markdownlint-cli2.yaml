@@ -20,7 +20,7 @@ globs:
   - "!third_party/**"
   - "!reports/**"
   - "!.claude/**"
-  - "!docs/ai-docs/**"
+  - "!docs/resources/ai-assistants/**"
   - "!docs/archive/**"
 # Use the existing .markdownlint.json for rules
 config: .markdownlint.json
