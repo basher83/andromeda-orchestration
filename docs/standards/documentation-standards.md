@@ -12,17 +12,37 @@ Documentation is not an afterthought—it's a first-class citizen in this reposi
 
 ```
 docs/
-├── standards/          # WHY - Standards and decisions
-├── implementation/     # HOW - Technical implementation guides
-├── operations/        # WHAT - Day-to-day procedures
-├── troubleshooting/   # WHEN - Problem resolution
-├── project-management/# WHERE - Planning and tracking
-└── diagrams/         # VISUAL - Architecture and flows
+├── standards/          # WHY - Standards, decisions, patterns
+├── implementation/     # HOW - Technical setup and configuration
+│   ├── consul/        # Service-specific implementation
+│   ├── nomad/         # guides grouped by service
+│   ├── vault/
+│   └── dns-ipam/
+├── operations/        # WHAT - Day-to-day procedures and runbooks
+│   ├── runbooks/      # Step-by-step operational procedures
+│   └── maintenance/   # Routine maintenance tasks
+├── troubleshooting/   # WHEN - Problem resolution guides
+├── project-management/# WHERE - Planning, tracking, decisions
+│   ├── phases/        # Implementation phase documentation
+│   ├── completed/     # Completed work records
+│   └── archive/       # Historical project artifacts
+├── diagrams/         # VISUAL - Architecture and flows
+├── getting-started/   # NEW USER - Onboarding and basics
+├── migration/         # CHANGE - Migration guides and procedures
+├── resources/         # REFERENCE - External links, standards
+└── archive/          # HISTORICAL - Deprecated but preserved content
 
 [service-directory]/
 ├── README.md         # Service-specific documentation only
 ├── .testing/        # Work in progress
 └── .archive/        # Historical versions
+
+Root Level Files:
+├── README.md         # Project overview and quick start
+├── ROADMAP.md        # Vision and major milestones
+├── CLAUDE.md         # AI assistant context (project-specific)
+├── WARP.md           # Terminal assistant context
+└── CHANGELOG.md      # Version history and changes
 ```
 
 ### Placement Rules
@@ -31,6 +51,39 @@ docs/
 2. **Technical docs in docs/** - Never scatter .md files in code directories
 3. **Service docs stay local** - Service-specific README in service directory
 4. **Standards before implementation** - Document decisions before coding
+5. **AI/Assistant docs belong in resources/** - Tool-specific context files
+6. **Implementation-specific guides in implementation/{service}/** - Group by service
+
+### Content Placement Guidelines
+
+**docs/standards/** - Principles and patterns
+- Architecture standards
+- Development workflows
+- Documentation standards
+- Security policies
+
+**docs/implementation/** - Technical how-to guides
+- Service setup procedures
+- Configuration examples
+- Integration patterns
+- Deployment guides
+
+**docs/operations/** - Day-to-day procedures
+- Runbooks and SOPs
+- Maintenance procedures
+- Monitoring guides
+- Backup/restore procedures
+
+**docs/troubleshooting/** - Problem resolution
+- Common issues and solutions
+- Debug procedures
+- Error code references
+
+**docs/project-management/** - Project tracking
+- Phase documentation
+- Task lists and progress
+- Decision records
+- Meeting notes
 
 ### README Requirements
 
@@ -239,6 +292,7 @@ To meet these standards:
 3. **Move systematically** - One category at a time
 4. **Update references** - Fix all links
 5. **Archive old locations** - Leave forwarding notes
+
 
 ## References
 

@@ -324,4 +324,5 @@ mv *-test*.nomad.hcl .archive/
 - [Nomad Storage Configuration](../implementation/nomad/storage-configuration.md)
 - [Port Allocation](../implementation/nomad/port-allocation.md)
 - [Service Identity Issues](../troubleshooting/service-identity-issues.md)
+- [Nomad Workloads Authentication](../implementation/consul/nomad-workloads-auth.md)
 - [Nomad Jobs README](../../nomad-jobs/README.md)

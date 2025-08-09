@@ -22,7 +22,7 @@
 - NetBox bootstrap and population (Aug 7)
 - Netdata monitoring optimization (Aug 4)
 - Traefik load balancer deployment (Aug 2)
-- PowerDNS deployment to Nomad (Aug 1)
+- PowerDNS deployment to Nomad (Aug 1) [FIXME]: We rolled back to this point. Still need to complete
 - Vault deployed in dev mode across nomad-server nodes (Aug 6)
 
 ## 📊 Sprint Metrics
