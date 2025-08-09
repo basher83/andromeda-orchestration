@@ -17,7 +17,8 @@ Each Nomad job should clearly define its storage requirements:
 Format: `{service}-{type}`
 
 Examples:
-- `powerdns-mysql` - PowerDNS MySQL database
+- `postgres-data` - PostgreSQL data directory
+- `mysql-data` - MySQL/MariaDB data directory
 - `traefik-certs` - Traefik SSL certificates
 - `prometheus-data` - Prometheus metrics storage
 - `grafana-config` - Grafana dashboards and settings
@@ -71,6 +72,13 @@ Examples:
                   ▼
             Static Host Volume
 ```
+
+## Encryption at Rest
+
+- Host volumes: use LUKS for sensitive data and ensure systemd mounts are ready before jobs start.
+- CSI volumes: prefer drivers that support native encryption; configure keys per driver guidance.
+
+See also: [Security Considerations in Storage Strategy](./storage-strategy.md#security-considerations)
 
 ## Job Configuration Examples
 
@@ -175,6 +183,19 @@ job "shared-app" {
 ```
 
 ## Volume Lifecycle Management
+
+### Ownership and Permissions
+
+Ensure host volume ownership matches the container user IDs used by your images:
+
+| Service  | Default UID:GID | Path inside container                  |
+|----------|------------------|----------------------------------------|
+| Postgres | 999:999          | /var/lib/postgresql/data               |
+| MySQL    | 999:999          | /var/lib/mysql                         |
+| Netdata  | 201:201          | /etc/netdata                           |
+| Traefik  | 0:0              | /data/certs                            |
+
+Note: Verify actual IDs for your images and adjust Ansible provisioning accordingly.
 
 ### Pre-deployment Checklist
 
@@ -287,6 +308,7 @@ job "app-blue" {
       source = "app-shared-data"
 
       # Both blue and green access same data
+  attachment_mode = "file-system"
       access_mode = "multi-node-multi-writer"
     }
   }
@@ -298,6 +320,7 @@ job "app-green" {
       type   = "csi"
       source = "app-shared-data"
 
+  attachment_mode = "file-system"
       access_mode = "multi-node-multi-writer"
     }
   }
@@ -353,6 +376,7 @@ nomad node status -verbose
    - Don't use CSI for single-node apps
    - Don't use ephemeral for persistent data
    - Consider performance vs cost
+  - For hot I/O paths (e.g., databases), tag SSD/NVMe nodes (e.g., node.meta.storage=nvme) and add a job constraint to target them
 
 3. **Implement Backup Strategies**
    - Regular automated backups
@@ -403,8 +427,13 @@ task "mysql" {
 3. Update job specification
 4. Start job with new volume
 
+Note on dynamic host volumes:
+- Ensure Nomad client is configured with `host_volume { dynamic = true; plugin = "ext4-volume" }` (see `roles/nomad/templates/client-dynamic-volume.hcl.example.j2`).
+- Request size in the `volume_mount { size = "<GiB>" }` where supported (Nomad 1.6+).
+- Use the provided systemd template to remount volumes on boot (see `docs/implementation/nomad/dynamic-volumes/nomad-dynvol@.service`).
+
 ## Related Documentation
 
-- [Nomad Storage Strategy](../docs/implementation/nomad-storage-strategy.md)
-- [Storage Implementation Patterns](../docs/implementation/nomad-storage-patterns.md)
-- [Volume Provisioning Playbooks](../playbooks/infrastructure/nomad/volumes/)
+- [Nomad Storage Strategy](./storage-strategy.md)
+- [Storage Implementation Patterns](./storage-patterns.md)
+- [Volume Provisioning Playbooks](../../../playbooks/infrastructure/nomad/volumes/)

@@ -1,0 +1,13 @@
+# /etc/systemd/system/nomad-dynvol@.service
+[Unit]
+Description=Mount Nomad dynamic volume %i
+After=local-fs.target
+ConditionPathExists=/opt/nomad/volumes/dynamic/%i.img
+
+[Service]
+Type=oneshot
+ExecStart=/opt/nomad/plugins/ext4-volume remount %i
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

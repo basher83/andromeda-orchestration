@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "deepwiki",
+    "grep",
+    "infisical",
+    "context7",
+    "firecrawl",
+    "netdata"
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(tailscale:*)",
+      "Bash(ansible:*)",
+      "Bash(git add:*)",
+      "Bash(uv run pre-commit run:*)",
+      "Bash(git reset:*)"
+    ]
+  }
+}

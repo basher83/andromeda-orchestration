@@ -65,6 +65,17 @@ job "my-service" {
 }
 ```
 
+#### Nomad port environment variables (quick reference)
+
+When you define a port label (e.g., "http"), Nomad injects helpful env vars:
+
+- NOMAD_PORT_http – The allocated host port for this label
+- NOMAD_HOST_PORT_http – Same as above (alias)
+- NOMAD_IP_http – The host IP bound for this label
+- NOMAD_ADDR_http – Convenience "IP:PORT" string
+
+Use these to wire the app at runtime without hardcoding. For multiple labels, repeat with each label name.
+
 ### Multiple Ports
 
 ```hcl
@@ -80,6 +91,25 @@ network {
   }
 }
 ```
+
+Naming tips:
+- Use short, lowercase labels (http, grpc, metrics, admin)
+- Prefer one label per externally reachable purpose; keep admin ports internal
+
+### Port label glossary
+
+| Label   | Purpose                  | Exposed?         | Typical container port | Notes |
+|---------|--------------------------|------------------|------------------------|-------|
+| http    | Primary HTTP traffic     | Via LB (Traefik) | 3000/8080              | Tag with traefik router rules |
+| https   | TLS entrypoint (LB only) | Host (LB nodes)  | 443                    | Static on LB; not for app pods |
+| grpc    | gRPC endpoint            | Internal/LB      | 9090                   | Consider Connect/mesh first |
+| metrics | Prometheus metrics       | Internal only    | 2112/9090              | Tag service with prometheus |
+| admin   | Admin/management         | Internal only    | 8081/9000              | Do not expose publicly |
+| health  | Health checks            | Internal only    | 8086                   | Keep lightweight handler |
+| db      | Database protocol        | Internal only    | 5432/3306              | Prefer internal DNS over static ports |
+
+Use these labels consistently to simplify service discovery, routing, and dashboards.
+
 
 ## Static Port Allocation (Exceptions)
 
@@ -118,6 +148,18 @@ network {
   port "https" {
     static = 443
   }
+}
+```
+
+Placement notes:
+- If you run more than one LB for HA, static ports 80/443 are fine across different nodes; conflicts only occur per-node.
+- Constrain LBs to ingress-capable nodes (public IPs) using node metadata.
+
+```hcl
+# Example LB placement
+constraint {
+  attribute = "${node.class}"
+  value     = "ingress"
 }
 ```
 
@@ -175,6 +217,10 @@ service {
   }
 }
 ```
+
+Notes on Connect sidecars:
+- The sidecar proxy uses its own dynamically allocated ports; you typically expose only the service label used by the proxy.
+- For mesh-only services, you may not need any host-exposed ports at all.
 
 ## Port Configuration Patterns
 
@@ -252,6 +298,9 @@ job "postgres" {
 }
 ```
 
+Caveat with static + scale:
+- If count > number of eligible nodes, Nomad cannot place all allocations (per-node port conflict). Keep count <= eligible nodes or use dynamic ports behind a proxy.
+
 ## Container Configuration
 
 ### Configurable Port Applications
@@ -289,6 +338,8 @@ task "legacy-app" {
 }
 ```
 
+If the container absolutely cannot change its listen port, prefer using `to` with a dynamic host port rather than statically claiming the host port.
+
 ## Common Issues and Solutions
 
 ### Issue 1: Port Conflicts
@@ -310,6 +361,8 @@ ss -tlnp | grep :<port>
 1. Check firewall allows dynamic range (20000-32000)
 2. Verify service registration in Consul
 3. Ensure health checks are passing
+4. Confirm Traefik/Consul Catalog sees the correct port label and address
+5. If using host networking, verify the service is binding 0.0.0.0 (not only 127.0.0.1)
 
 ### Issue 3: Container Can't Bind Port
 
@@ -321,6 +374,15 @@ port "http" {
   to = 8080  # Container expects this port
 }
 ```
+
+Also check for per-node reserved ports in the Nomad client configuration.
+
+### Issue 4: Dynamic Port Collides with Local Firewall Rules
+
+Open the dynamic range in host firewalls and upstream security groups:
+
+- Default dynamic range: 20000-32000 (unless customized)
+- Ensure outbound health checks and LB probes can reach allocated ports
 
 ## Migration Guide
 
@@ -356,6 +418,19 @@ service {
 #### Step 3: Update DNS/Documentation
 - Change from `node-ip:8080` to `app.lab.local`
 - Update any hardcoded references
+ - Document the port label(s) in your service README
+
+### Optional: Adjust Nomad client reserved ports
+
+Reserve well-known ports on nodes so dynamic allocation never uses them:
+
+```hcl
+# /etc/nomad.d/client.hcl
+client {
+  reserved_ports = "22,25,53,80,443,8500,8600,4646,4647,4648"
+  # reserved_networks = "10.0.0.0/24"  # Optional, avoid binding to specific subnets
+}
+```
 
 ## Testing Port Allocation
 
@@ -383,6 +458,9 @@ dig @localhost -p 8600 my-service.service.consul
 
 # Test connectivity
 curl http://<node-ip>:<dynamic-port>/health
+
+# Verify the app received env vars
+nomad alloc exec <alloc-id> env | grep -E "NOMAD_(PORT|ADDR|IP)_"
 ```
 
 ## Best Practices Summary

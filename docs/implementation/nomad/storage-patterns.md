@@ -6,6 +6,16 @@ This document provides practical implementation patterns and code examples for e
 
 ### MySQL/MariaDB with Static Host Volume
 
+Client configuration hint:
+```hcl
+client {
+  host_volume "mysql-data" {
+    path      = "/opt/nomad/volumes/mysql-data"
+    read_only = false
+  }
+}
+```
+
 ```hcl
 job "mysql" {
   datacenters = ["dc1"]
@@ -37,13 +47,13 @@ job "mysql" {
       }
 
       volume_mount {
-        volume      = "mysql-data"
-        destination = "/var/lib/mysql"
+  volume      = "mysql-data"
+  destination = "/var/lib/mysql"
       }
 
       env {
-        MYSQL_ROOT_PASSWORD = "{{ keyOrDefault \"mysql/root_password\" \"\" }}"
-        MYSQL_DATABASE      = "app_db"
+  MYSQL_ROOT_PASSWORD = "{{ keyOrDefault \"mysql/root_password\" \"\" }}"
+  MYSQL_DATABASE      = "app_db"
       }
 
       resources {
@@ -52,7 +62,7 @@ job "mysql" {
       }
 
       service {
-        name = "mysql"
+  name = "mysql"
         port = "mysql"
 
         check {
@@ -135,6 +145,35 @@ EOF
   }
 }
 ```
+
+#### Encryption at Rest
+
+- Host volumes: use LUKS for sensitive data and mount via systemd before Nomad starts the job.
+- CSI volumes: enable driver-level encryption when supported (e.g., ZFS, RBD, cloud-backed providers).
+
+#### Placement tip: SSD/NVMe for hot paths
+
+Tag storage-capable nodes and constrain jobs to them for better IOPS/latency:
+
+```hcl
+# On Nomad clients (example meta)
+# client { meta { storage = "nvme" } }
+
+# In your job spec
+job "postgresql" {
+  datacenters = ["dc1"]
+
+  constraint {
+    attribute = "${node.meta.storage}"
+    value     = "nvme"
+  }
+
+  group "database" {
+    # ...
+  }
+}
+```
+
 
 ## Pattern 2: Application Cache with Ephemeral Storage
 
@@ -247,6 +286,8 @@ EOF
 ## Pattern 3: Stateful Applications with CSI
 
 ### GitLab with NFS CSI
+
+Note on RWX (ReadWriteMany): For multi-writer volumes, NFS is the simplest CSI target but be mindful of file locking semantics and latency. Back NFS with a reliable export (e.g., TrueNAS), enable root-squash, and use reserved ports.
 
 ```hcl
 # First, register the CSI volume
@@ -386,15 +427,10 @@ job "prometheus" {
   group "monitoring" {
     count = 1
 
-    # Request dynamic volume
+  # Request dynamic volume
     volume "prometheus-data" {
       type   = "host"
       source = "dynamic-data"
-
-      # Request specific size
-      volume_options {
-        size = "50GB"
-      }
     }
 
     task "prometheus" {
@@ -412,6 +448,8 @@ job "prometheus" {
       volume_mount {
         volume      = "prometheus-data"
         destination = "/prometheus"
+  # Nomad 1.6+: request size for dynamic host volume
+  size        = "50GiB"
       }
 
       template {
@@ -433,6 +471,42 @@ EOF
   }
 }
 ```
+
+#### Reboot Safety for Dynamic Volumes
+
+Dynamic loop-mounted volumes require a remount step after node reboot. Use a systemd template unit and extend the plugin with a `remount` action:
+
+```ini
+# /etc/systemd/system/nomad-dynvol@.service
+[Unit]
+Description=Mount Nomad dynamic volume %i
+After=local-fs.target
+ConditionPathExists=/opt/nomad/volumes/dynamic/%i.img
+
+[Service]
+Type=oneshot
+ExecStart=/opt/nomad/plugins/ext4-volume remount %i
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Update the plugin script to support `remount` and to enable/disable the unit in `create`/`delete`:
+
+```bash
+case "$1" in
+  remount)
+    VOLUME_ID="$2"
+    mount -o loop \
+      "/opt/nomad/volumes/dynamic/${VOLUME_ID}.img" \
+      "/opt/nomad/volumes/dynamic/${VOLUME_ID}"
+    ;;
+esac
+```
+
+See also:
+- Dynamic volumes plugin, unit, and installer: `docs/implementation/nomad/dynamic-volumes/`
 
 ## Pattern 5: Migration Between Storage Types
 
@@ -565,9 +639,10 @@ job "backup-volumes" {
    - CSI: Multi-node access, advanced features
 
 2. **Security Considerations**
-   - Always set appropriate permissions
-   - Use volume encryption for sensitive data
-   - Implement access controls
+  - Always set appropriate permissions (correct uid:gid ownership)
+  - Host volumes: use LUKS for sensitive data and mount via systemd at boot
+  - CSI volumes: enable driver-level encryption when supported
+  - Implement access controls (Nomad ACLs, SELinux/AppArmor)
 
 3. **Performance Optimization**
    - Use local storage for high IOPS

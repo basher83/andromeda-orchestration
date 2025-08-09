@@ -1,0 +1,28 @@
+# Example Nomad client config for dynamic host volumes
+# Place under /etc/nomad.d/ and reload nomad after changes.
+
+client {
+  # Dynamic host volume for loopback ext4 volumes
+  host_volume "dynamic-data" {
+    path    = "/opt/nomad/volumes/dynamic"
+    dynamic = true
+    plugin  = "ext4-volume"
+  }
+}
+
+# Usage in jobs (reference):
+# group "g" {
+#   volume "alloc-data" {
+#     type   = "host"
+#     source = "dynamic-data"
+#   }
+#   task "t" {
+#     driver = "docker"
+#     volume_mount {
+#       volume      = "alloc-data"
+#       destination = "/data"
+#       # Optional on Nomad 1.6+: per-allocation size request
+#       size        = "10GiB"
+#     }
+#   }
+# }
