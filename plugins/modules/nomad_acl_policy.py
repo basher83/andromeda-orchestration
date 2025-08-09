@@ -13,33 +13,33 @@ from ..module_utils.utils import del_none, is_subset
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
-    job_acl_spec = dict(
-        namespace=dict(type="str", aliases=["Namespace"], default=""),
-        job_id=dict(type="str", aliases=["JobID"], default=""),
-        group=dict(type="str", aliases=["Group"], default=""),
-        task=dict(type="str", aliases=["Task"], default=""),
-    )
-    module_args = dict(
-        state=dict(type="str", choices=["present", "absent"], default="present"),
-        url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
-        validate_certs=dict(type="bool", default=True),
-        connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str",
-            required=True,
-            no_log=True,
-            fallback=(env_fallback, ["NOMAD_TOKEN"]),
-        ),
-        name=dict(type="str", required=True),
-        description=dict(type="str"),
-        rules=dict(type="str"),
-        job_acl=dict(type="dict", default={}, options=job_acl_spec),
-    )
+    job_acl_spec = {
+        "namespace": {"type": "str", "aliases": ["Namespace"], "default": ""},
+        "job_id": {"type": "str", "aliases": ["JobID"], "default": ""},
+        "group": {"type": "str", "aliases": ["Group"], "default": ""},
+        "task": {"type": "str", "aliases": ["Task"], "default": ""},
+    }
+    module_args = {
+        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
+        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "validate_certs": {"type": "bool", "default": True},
+        "connection_timeout": {"type": "int", "default": 10},
+        "management_token": {
+            "type": "str",
+            "required": True,
+            "no_log": True,
+            "fallback": (env_fallback, ["NOMAD_TOKEN"]),
+        },
+        "name": {"type": "str", "required": True},
+        "description": {"type": "str"},
+        "rules": {"type": "str"},
+        "job_acl": {"type": "dict", "default": {}, "options": job_acl_spec},
+    }
 
     # seed the final result dict in the object. Default nothing changed ;)
-    result = dict(
-        changed=False,
-    )
+    result = {
+        "changed": False,
+    }
 
     # the AnsibleModule object
     module = AnsibleModule(
@@ -54,23 +54,22 @@ def run_module():
     policy_name = module.params.get("name")
     existing_policy = nomad.get_acl_policy(policy_name)
     desired_policy_body = del_none(
-        dict(
-            Name=policy_name,
-            Description=module.params.get("description"),
-            Rules=module.params.get("rules"),
-            JobACL=dict(
-                Namespace=module.params.get("job_acl").get("namespace"),
-                JobID=module.params.get("job_acl").get("job_id"),
-                Group=module.params.get("job_acl").get("group"),
-                Task=module.params.get("job_acl").get("task"),
-            ),
-        )
+        {
+            "Name": policy_name,
+            "Description": module.params.get("description"),
+            "Rules": module.params.get("rules"),
+            "JobACL": {
+                "Namespace": module.params.get("job_acl").get("namespace"),
+                "JobID": module.params.get("job_acl").get("job_id"),
+                "Group": module.params.get("job_acl").get("group"),
+                "Task": module.params.get("job_acl").get("task"),
+            },
+        }
     )
 
-    if module.params.get("state") == "absent":
-        if existing_policy is not None:
-            nomad.delete_acl_policy(policy_name)
-            result["changed"] = True
+    if module.params.get("state") == "absent" and existing_policy is not None:
+        nomad.delete_acl_policy(policy_name)
+        result["changed"] = True
 
     if module.params.get("state") == "present":
         if existing_policy is None:

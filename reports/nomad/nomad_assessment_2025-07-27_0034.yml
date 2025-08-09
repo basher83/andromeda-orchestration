@@ -3,7 +3,7 @@ nomad_assessment:
   cluster:
     servers: 3
     clients: 3
-    leader: ""192.168.11.12:4647""
+    leader: "192.168.11.12:4647"
   servers:
     - name: "nomad-server-1"
       ip: "192.168.11.11"

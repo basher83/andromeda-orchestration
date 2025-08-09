@@ -13,33 +13,33 @@ from ..module_utils.utils import del_none, is_subset
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
-    module_args = dict(
-        state=dict(type="str", choices=["present", "absent"], default="present"),
-        url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
-        validate_certs=dict(type="bool", default=True),
-        connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str",
-            required=True,
-            no_log=True,
-            fallback=(env_fallback, ["NOMAD_TOKEN"]),
-        ),
-        type=dict(type="str", choices=["client", "management"], default="client"),
-        name=dict(type="str"),
-        match_on_name=dict(type="bool", default=True),
-        is_global=dict(type="bool", default=False),
-        policies=dict(
-            type="list",
-            elements="str",
-        ),
-        expiration_ttl=dict(type="str"),
-        accessor_id=dict(type="str"),
-    )
+    module_args = {
+        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
+        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "validate_certs": {"type": "bool", "default": True},
+        "connection_timeout": {"type": "int", "default": 10},
+        "management_token": {
+            "type": "str",
+            "required": True,
+            "no_log": True,
+            "fallback": (env_fallback, ["NOMAD_TOKEN"]),
+        },
+        "type": {"type": "str", "choices": ["client", "management"], "default": "client"},
+        "name": {"type": "str"},
+        "match_on_name": {"type": "bool", "default": True},
+        "is_global": {"type": "bool", "default": False},
+        "policies": {
+            "type": "list",
+            "elements": "str",
+        },
+        "expiration_ttl": {"type": "str"},
+        "accessor_id": {"type": "str"},
+    }
 
     # seed the final result dict in the object. Default nothing changed ;)
-    result = dict(
-        changed=False,
-    )
+    result = {
+        "changed": False,
+    }
 
     # the AnsibleModule object
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
@@ -54,14 +54,14 @@ def run_module():
     nomad = NomadAPI(module)
 
     desired_token_body = del_none(
-        dict(
-            AccessorID=module.params.get("accessor_id"),
-            Name=module.params.get("name"),
-            Type=module.params.get("type"),
-            Policies=module.params.get("policies"),
-            Global=module.params.get("is_global"),
-            ExpirationTTL=module.params.get("expiration_ttl"),
-        )
+        {
+            "AccessorID": module.params.get("accessor_id"),
+            "Name": module.params.get("name"),
+            "Type": module.params.get("type"),
+            "Policies": module.params.get("policies"),
+            "Global": module.params.get("is_global"),
+            "ExpirationTTL": module.params.get("expiration_ttl"),
+        }
     )
 
     # find an existing token by name is we match by name
@@ -73,10 +73,9 @@ def run_module():
     if module.params.get("accessor_id") is not None:
         existing_token = nomad.get_acl_token(module.params.get("accessor_id"))
 
-    if module.params.get("state") == "absent":
-        if existing_token is not None:
-            nomad.delete_acl_token(existing_token.get("AccessorID"))
-            result["changed"] = True
+    if module.params.get("state") == "absent" and existing_token is not None:
+        nomad.delete_acl_token(existing_token.get("AccessorID"))
+        result["changed"] = True
 
     if module.params.get("state") == "present":
         if existing_token is None:

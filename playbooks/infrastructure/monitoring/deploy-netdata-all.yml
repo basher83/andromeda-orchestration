@@ -10,7 +10,6 @@
   ansible.builtin.import_playbook: deploy-netdata-og.yml
   when: deploy_cluster is undefined or deploy_cluster == "og" or deploy_cluster == "all"
 
----
 # Generate combined infrastructure report
 - name: Generate infrastructure-wide Netdata report
   hosts: localhost

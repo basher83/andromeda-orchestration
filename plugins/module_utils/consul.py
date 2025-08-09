@@ -39,7 +39,9 @@ class ConsulAPI:
             "User-Agent": "ansible-module-consul",
         }
 
-    def api_request(self, url, method, headers=None, body=None, json_response=True, ignore_codes=[]):
+    def api_request(self, url, method, headers=None, body=None, json_response=True, ignore_codes=None):
+        if ignore_codes is None:
+            ignore_codes = []
         if headers is None:
             headers = self.headers
         try:
@@ -64,7 +66,7 @@ class ConsulAPI:
                 try:
                     return json.loads(to_native(response_body))
                 except ValueError as e:
-                    self.module.fail_json(msg="API returned invalid JSON: %s" % (str(e)))
+                    self.module.fail_json(msg=f"API returned invalid JSON: {str(e)}")
             return response_body
 
         except HTTPError as e:
@@ -82,14 +84,14 @@ class ConsulAPI:
 
             if e.code == 401 or e.code == 403:
                 self.module.fail_json(
-                    msg="Not Authorized: status=%s [%s] %s ->\n%s" % (e.code, method, url, response_body)
+                    msg=f"Not Authorized: status={e.code} [{method}] {url} ->\n{response_body}"
                 )
 
-            self.module.fail_json(msg="Error: status=%s [%s] %s ->\n%s" % (e.code, method, url, response_body))
+            self.module.fail_json(msg=f"Error: status={e.code} [{method}] {url} ->\n{response_body}")
 
         except Exception as e:
             print("here")
-            self.module.fail_json(msg="Could not make API call: [%s] %s ->\n%s" % (method, url, str(e)))
+            self.module.fail_json(msg=f"Could not make API call: [{method}] {url} ->\n{str(e)}")
 
     #
     # ACL Policies
@@ -201,7 +203,7 @@ class ConsulAPI:
         return self.api_request(
             url=URL_ACL_BOOTSTRAP.format(url=self.url),
             method="PUT",
-            body=json.dumps(dict(BootstrapSecret=self.management_token)),
+            body=json.dumps({"BootstrapSecret": self.management_token}),
             json_response=True,
         )
 

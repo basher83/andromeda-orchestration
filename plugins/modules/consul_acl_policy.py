@@ -13,28 +13,28 @@ from ..module_utils.utils import del_none, is_subset
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
-    module_args = dict(
-        state=dict(type="str", choices=["present", "absent"], default="present"),
-        url=dict(type="str", required=True, fallback=(env_fallback, ["CONSUL_HTTP_ADDR"])),
-        validate_certs=dict(type="bool", default=True),
-        connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str",
-            required=True,
-            no_log=True,
-            fallback=(env_fallback, ["CONSUL_HTTP_TOKEN"]),
-        ),
-        id=dict(type="str"),
-        name=dict(type="str", required=True),
-        description=dict(type="str"),
-        rules=dict(type="str", required=True),
-        datacenters=dict(type="list", elements="str"),
-    )
+    module_args = {
+        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
+        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["CONSUL_HTTP_ADDR"])},
+        "validate_certs": {"type": "bool", "default": True},
+        "connection_timeout": {"type": "int", "default": 10},
+        "management_token": {
+            "type": "str",
+            "required": True,
+            "no_log": True,
+            "fallback": (env_fallback, ["CONSUL_HTTP_TOKEN"]),
+        },
+        "id": {"type": "str"},
+        "name": {"type": "str", "required": True},
+        "description": {"type": "str"},
+        "rules": {"type": "str", "required": True},
+        "datacenters": {"type": "list", "elements": "str"},
+    }
 
     # seed the final result dict in the object. Default nothing changed ;)
-    result = dict(
-        changed=False,
-    )
+    result = {
+        "changed": False,
+    }
 
     # the AnsibleModule object
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
@@ -47,12 +47,12 @@ def run_module():
 
     existing_policy = None
     desired_policy_body = del_none(
-        dict(
-            Name=policy_name,
-            Description=module.params.get("description"),
-            Rules=module.params.get("rules"),
-            Datacenters=module.params.get("datacenters"),
-        )
+        {
+            "Name": policy_name,
+            "Description": module.params.get("description"),
+            "Rules": module.params.get("rules"),
+            "Datacenters": module.params.get("datacenters"),
+        }
     )
 
     # try to find an existing policy.

@@ -22,21 +22,21 @@ if nomad_diff_spec is not None:
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
-    module_args = dict(
-        state=dict(type="str", choices=["present", "absent", "purged"], default="present"),
-        url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
-        validate_certs=dict(type="bool", default=True),
-        connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str",
-            required=True,
-            no_log=True,
-            fallback=(env_fallback, ["NOMAD_TOKEN"]),
-        ),
-        name=dict(type="str"),
-        namespace=dict(type="str", default="default"),
-        hcl_spec=dict(type="str"),
-    )
+    module_args = {
+        "state": {"type": "str", "choices": ["present", "absent", "purged"], "default": "present"},
+        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "validate_certs": {"type": "bool", "default": True},
+        "connection_timeout": {"type": "int", "default": 10},
+        "management_token": {
+            "type": "str",
+            "required": True,
+            "no_log": True,
+            "fallback": (env_fallback, ["NOMAD_TOKEN"]),
+        },
+        "name": {"type": "str"},
+        "namespace": {"type": "str", "default": "default"},
+        "hcl_spec": {"type": "str"},
+    }
 
     # the AnsibleModule object
     module = AnsibleModule(
@@ -48,9 +48,9 @@ def run_module():
     )
 
     # seed the final result dict in the object. Default nothing changed ;)
-    result = dict(
-        changed=False,
-    )
+    result = {
+        "changed": False,
+    }
 
     # the NomadAPI can init itself via the module args
     nomad = NomadAPI(module)
@@ -61,7 +61,7 @@ def run_module():
     if module.params.get("name") is not None:
         job_id = module.params.get("name")
     else:
-        parsed_job = nomad.parse_job(json.dumps(dict(JobHCL=module.params.get("hcl_spec"))))
+        parsed_job = nomad.parse_job(json.dumps({"JobHCL": module.params.get("hcl_spec")}))
         job_id = parsed_job["ID"]
 
     existing_job = nomad.get_job(job_id)
@@ -75,10 +75,10 @@ def run_module():
         # job has Stop set to True
         if (existing_job is not None and purged) or (existing_job is not None and not existing_job["Stop"]):
             result["changed"] = True
-            result["diff"] = dict(
-                before="Job ID {} in namespace {} will be STOPPED!\n".format(job_id, module.params.get("namespace")),
-                after="",
-            )
+            result["diff"] = {
+                "before": "Job ID {} in namespace {} will be STOPPED!\n".format(job_id, module.params.get("namespace")),
+                "after": "",
+            }
             # exit now if in check mode
             if module.check_mode:
                 module.exit_json(**result)
@@ -90,17 +90,17 @@ def run_module():
         plan = nomad.plan_job(
             job_id,
             json.dumps(
-                dict(
-                    Job=parsed_job,
-                    Diff=True,
-                )
+                {
+                    "Job": parsed_job,
+                    "Diff": True,
+                }
             ),
         )
 
         # do a nice diff if the system has nomad_diff available
         if _nomad_diff_available and plan.get("Diff") is not None:
             try:
-                result["diff"] = dict(prepared=nomad_diff.format(plan["Diff"], colors=True, verbose=False))
+                result["diff"] = {"prepared": nomad_diff.format(plan["Diff"], colors=True, verbose=False)}
             except:
                 # if we can't get a diff, it's not a big deal...
                 pass
@@ -112,10 +112,10 @@ def run_module():
                 existing_job.get("Version", 1),
             )
             if submission is not None:
-                result["diff"] = dict(
-                    before=submission.get("Source"),
-                    after=module.params.get("hcl_spec"),
-                )
+                result["diff"] = {
+                    "before": submission.get("Source"),
+                    "after": module.params.get("hcl_spec"),
+                }
 
         if plan["Diff"].get("Type") != "None":
             result["changed"] = True
@@ -126,13 +126,13 @@ def run_module():
             result["submit_response"] = nomad.create_or_update_job(
                 job_id,
                 json.dumps(
-                    dict(
-                        Job=parsed_job,
-                        Submission=dict(
-                            Format="hcl2",
-                            Source=module.params.get("hcl_spec"),
-                        ),
-                    )
+                    {
+                        "Job": parsed_job,
+                        "Submission": {
+                            "Format": "hcl2",
+                            "Source": module.params.get("hcl_spec"),
+                        },
+                    }
                 ),
             )
 

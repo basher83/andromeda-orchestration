@@ -10,22 +10,22 @@ from ..module_utils.nomad import NomadAPI
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
-    module_args = dict(
-        url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
-        validate_certs=dict(type="bool", default=True),
-        connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str",
-            required=True,
-            no_log=True,
-            fallback=(env_fallback, ["NOMAD_TOKEN"]),
-        ),
-    )
+    module_args = {
+        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "validate_certs": {"type": "bool", "default": True},
+        "connection_timeout": {"type": "int", "default": 10},
+        "management_token": {
+            "type": "str",
+            "required": True,
+            "no_log": True,
+            "fallback": (env_fallback, ["NOMAD_TOKEN"]),
+        },
+    }
 
     # seed the final result dict in the object. Default nothing changed ;)
-    result = dict(
-        changed=False,
-    )
+    result = {
+        "changed": False,
+    }
 
     # the AnsibleModule object
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)

@@ -74,7 +74,7 @@ class NomadAPI:
                 try:
                     return json.loads(to_native(response_body))
                 except ValueError as e:
-                    self.module.fail_json(msg="API returned invalid JSON: %s" % (str(e)))
+                    self.module.fail_json(msg=f"API returned invalid JSON: {str(e)}")
             return response_body
 
         except HTTPError as e:
@@ -89,15 +89,15 @@ class NomadAPI:
             )
             if e.code == 401 or e.code == 403:
                 self.module.fail_json(
-                    msg="Not Authorized: status=%s [%s] %s ->\n%s" % (e.code, method, url, response_body)
+                    msg=f"Not Authorized: status={e.code} [{method}] {url} ->\n{response_body}"
                 )
             if e.code == 404 and accept_404:
                 return None
 
-            self.module.fail_json(msg="Error: status=%s [%s] %s ->\n%s" % (e.code, method, url, response_body))
+            self.module.fail_json(msg=f"Error: status={e.code} [{method}] {url} ->\n{response_body}")
 
         except Exception as e:
-            self.module.fail_json(msg="Could not make API call: [%s] %s ->\n%s" % (method, url, str(e)))
+            self.module.fail_json(msg=f"Could not make API call: [{method}] {url} ->\n{str(e)}")
 
     #
     # ACL Policies
@@ -192,7 +192,7 @@ class NomadAPI:
         return self.api_request(
             url=URL_ACL_BOOTSTRAP.format(url=self.url),
             method="POST",
-            body=json.dumps(dict(BootstrapSecret=self.management_token)),
+            body=json.dumps({"BootstrapSecret": self.management_token}),
             json_response=True,
         )
 
