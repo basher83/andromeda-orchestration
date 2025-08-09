@@ -74,7 +74,7 @@
    - Workaround in place, monitoring for fixes
 
 2. **Test Coverage Gap** (NEW)
-   - Zero test coverage for 14 custom modules
+   - Zero test coverage for 14 custom modules [TODO]: Evaluate if we actually need these custom modules
    - 7 critical roles lack Molecule tests
    - Risk to production stability
 

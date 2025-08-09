@@ -263,4 +263,3 @@ go.d:
 - [Vault Production Hardening](https://developer.hashicorp.com/vault/tutorials/operations/production-hardening)
 - [Nomad Vault Integration](https://developer.hashicorp.com/nomad/docs/integrations/vault)
 - [Vault Storage Backends](https://developer.hashicorp.com/vault/docs/configuration/storage)
-- Research findings: `docs/ai-docs/research_results/`

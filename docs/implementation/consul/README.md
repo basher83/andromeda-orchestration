@@ -12,6 +12,14 @@ Comprehensive guide for Consul ACL (Access Control List) configuration:
 - Integration with Nomad and other services
 - Security best practices
 
+### 🔑 [nomad-workloads-auth.md](nomad-workloads-auth.md)
+JWT authentication method configuration for Nomad workloads:
+- Service identity token validation
+- JWKS endpoint configuration
+- Claims mapping and role binding
+- Verification and troubleshooting commands
+- Configuration history and evolution
+
 ### 📊 [telemetry-setup.md](telemetry-setup.md)
 Configure Consul telemetry and monitoring:
 - Prometheus integration

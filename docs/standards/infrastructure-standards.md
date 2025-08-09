@@ -262,6 +262,7 @@ upstream app {
 - [Firewall Strategy](../operations/firewall-port-strategy.md)
 - [Netdata Architecture](../operations/netdata-architecture.md)
 - [Service Identity](../troubleshooting/service-identity-issues.md)
+- [Nomad Workloads Authentication](../implementation/consul/nomad-workloads-auth.md)
 
 ### Related Repositories
 
