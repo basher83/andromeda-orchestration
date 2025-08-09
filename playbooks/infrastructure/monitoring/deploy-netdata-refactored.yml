@@ -1,0 +1,78 @@
+---
+- name: Deploy Netdata with modular roles
+  hosts: all
+  become: true
+  
+  tasks:
+    - name: Install Netdata
+      ansible.builtin.include_role:
+        name: netdata_install
+      vars:
+        netdata_install_method: "{{ install_method | default('repository') }}"
+        netdata_repository_channel: "{{ channel | default('stable') }}"
+      tags:
+        - netdata
+        - netdata-install
+
+    - name: Configure Netdata
+      ansible.builtin.include_role:
+        name: netdata_configure
+      vars:
+        netdata_bind_to: "{{ bind_address | default('0.0.0.0') }}"
+        netdata_memory_mode: "{{ memory_mode | default('dbengine') }}"
+        netdata_history: "{{ history_seconds | default(3600) }}"
+      tags:
+        - netdata
+        - netdata-configure
+
+    - name: Configure streaming for child nodes
+      ansible.builtin.include_role:
+        name: netdata_streaming
+      vars:
+        netdata_node_type: "child"
+        netdata_streaming_destination: "{{ parent_node }}"
+        netdata_streaming_api_key: "{{ streaming_api_key }}"
+        netdata_use_infisical: true
+      when: 
+        - inventory_hostname in groups.get('netdata_children', [])
+        - parent_node is defined
+      tags:
+        - netdata
+        - netdata-streaming
+
+    - name: Configure streaming for parent nodes
+      ansible.builtin.include_role:
+        name: netdata_streaming
+      vars:
+        netdata_node_type: "parent"
+        netdata_parent_api_key: "{{ parent_api_key }}"
+        netdata_parent_allow_from: "{{ allow_from | default('*') }}"
+        netdata_use_infisical: true
+      when: inventory_hostname in groups.get('netdata_parents', [])
+      tags:
+        - netdata
+        - netdata-streaming
+
+    - name: Configure Consul integration
+      ansible.builtin.include_role:
+        name: netdata_consul
+      vars:
+        netdata_consul_enabled: true
+        netdata_consul_service_name: "netdata-{{ ansible_hostname }}"
+      when: consul_enabled | default(false)
+      tags:
+        - netdata
+        - netdata-consul
+
+    - name: Claim to Netdata Cloud
+      ansible.builtin.include_role:
+        name: netdata_cloud
+      vars:
+        netdata_cloud_enabled: true
+        netdata_use_infisical: true
+      when:
+        - claim_to_cloud | default(false)
+        - netdata_claim_token is defined or use_infisical | default(false)
+      tags:
+        - netdata
+        - netdata-cloud
