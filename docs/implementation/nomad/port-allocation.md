@@ -1,19 +1,35 @@
 # Nomad Port Allocation Best Practices
 
+> Policy: Default to dynamic ports; use static ports only for standard protocol ports and the cluster load balancer(s).
+
+### Prerequisites
+
+- Nomad 1.6+
+- Consul for service discovery (optional but recommended)
+- Firewall allows dynamic range 20000-32000 (or your configured range)
+- Nomad CLI configured:
+
+```bash
+export NOMAD_ADDR=http://nomad.service.consul:4646
+```
+
 This guide provides best practices for port allocation in Nomad jobs to avoid conflicts and ensure smooth deployments.
 
 ## Quick Reference
 
 ### Port Allocation Decision Tree
 
-```
-Does your service need a specific port?
-├─ No (99% of services) → Use Dynamic Ports
-│   └─ Access via Load Balancer
-└─ Yes → Why?
-    ├─ Standard Protocol (DNS, SMTP) → Use Static Port
-    ├─ Direct User Access → Use Load Balancer Instead!
-    └─ Legacy Requirement → Document & Plan Migration
+```mermaid
+flowchart TD
+  A["Does your service need a specific port?"] -->|No (99% of services)| B["Use Dynamic Ports"]
+  B --> C["Access via Load Balancer"]
+  A -->|Yes| D["Why?"]
+  D --> E["Standard Protocol (DNS, SMTP)"]
+  E --> F["Use Static Port"]
+  D --> G["Direct User Access"]
+  G --> H["Use Load Balancer Instead!"]
+  D --> I["Legacy Requirement"]
+  I --> J["Document & Plan Migration"]
 ```
 
 ## Dynamic Port Allocation (Default)
@@ -65,6 +81,12 @@ job "my-service" {
 }
 ```
 
+Validation
+
+- Job validates: `nomad job validate my-service.hcl`
+- Allocation binds dynamic port: `nomad alloc status <alloc> | grep Port`
+- Service reachable through LB using routing rule
+
 #### Nomad port environment variables (quick reference)
 
 When you define a port label (e.g., "http"), Nomad injects helpful env vars:
@@ -92,24 +114,29 @@ network {
 }
 ```
 
+Validation
+
+- All labels appear in alloc ports
+- Internal-only ports are not exposed externally
+
 Naming tips:
+
 - Use short, lowercase labels (http, grpc, metrics, admin)
 - Prefer one label per externally reachable purpose; keep admin ports internal
 
 ### Port label glossary
 
-| Label   | Purpose                  | Exposed?         | Typical container port | Notes |
-|---------|--------------------------|------------------|------------------------|-------|
-| http    | Primary HTTP traffic     | Via LB (Traefik) | 3000/8080              | Tag with traefik router rules |
-| https   | TLS entrypoint (LB only) | Host (LB nodes)  | 443                    | Static on LB; not for app pods |
-| grpc    | gRPC endpoint            | Internal/LB      | 9090                   | Consider Connect/mesh first |
-| metrics | Prometheus metrics       | Internal only    | 2112/9090              | Tag service with prometheus |
-| admin   | Admin/management         | Internal only    | 8081/9000              | Do not expose publicly |
-| health  | Health checks            | Internal only    | 8086                   | Keep lightweight handler |
+| Label   | Purpose                  | Exposed?         | Typical container port | Notes                                 |
+| ------- | ------------------------ | ---------------- | ---------------------- | ------------------------------------- |
+| http    | Primary HTTP traffic     | Via LB (Traefik) | 3000/8080              | Tag with traefik router rules         |
+| https   | TLS entrypoint (LB only) | Host (LB nodes)  | 443                    | Static on LB; not for app pods        |
+| grpc    | gRPC endpoint            | Internal/LB      | 9090                   | Consider Connect/mesh first           |
+| metrics | Prometheus metrics       | Internal only    | 2112/9090              | Tag service with prometheus           |
+| admin   | Admin/management         | Internal only    | 8081/9000              | Do not expose publicly                |
+| health  | Health checks            | Internal only    | 8086                   | Keep lightweight handler              |
 | db      | Database protocol        | Internal only    | 5432/3306              | Prefer internal DNS over static ports |
 
 Use these labels consistently to simplify service discovery, routing, and dashboards.
-
 
 ## Static Port Allocation (Exceptions)
 
@@ -135,6 +162,11 @@ network {
 }
 ```
 
+Validation
+
+- Node eligible and port free: `ss -tlnp | grep :53` (example)
+- Service registered in Consul and reachable internally
+
 #### 2. Load Balancer (One Per Cluster)
 
 ```hcl
@@ -151,7 +183,13 @@ network {
 }
 ```
 
+Validation
+
+- LBs constrained to ingress nodes
+- Only one service claims 80/443 per node
+
 Placement notes:
+
 - If you run more than one LB for HA, static ports 80/443 are fine across different nodes; conflicts only occur per-node.
 - Constrain LBs to ingress-capable nodes (public IPs) using node metadata.
 
@@ -219,6 +257,7 @@ service {
 ```
 
 Notes on Connect sidecars:
+
 - The sidecar proxy uses its own dynamically allocated ports; you typically expose only the service label used by the proxy.
 - For mesh-only services, you may not need any host-exposed ports at all.
 
@@ -299,6 +338,7 @@ job "postgres" {
 ```
 
 Caveat with static + scale:
+
 - If count > number of eligible nodes, Nomad cannot place all allocations (per-node port conflict). Keep count <= eligible nodes or use dynamic ports behind a proxy.
 
 ## Container Configuration
@@ -321,6 +361,10 @@ task "app" {
   }
 }
 ```
+
+Validation
+
+- App reads `${NOMAD_PORT_http}` and binds successfully
 
 ### Fixed Port Applications
 
@@ -347,6 +391,7 @@ If the container absolutely cannot change its listen port, prefer using `to` wit
 **Symptom**: Allocation fails with "port already in use"
 
 **Solution**: Check for static port conflicts
+
 ```bash
 # Find what's using the port
 nomad job status | grep "static ="
@@ -358,6 +403,7 @@ ss -tlnp | grep :<port>
 **Symptom**: Service running but can't connect
 
 **Solutions**:
+
 1. Check firewall allows dynamic range (20000-32000)
 2. Verify service registration in Consul
 3. Ensure health checks are passing
@@ -369,6 +415,7 @@ ss -tlnp | grep :<port>
 **Symptom**: Container fails to start, "address already in use"
 
 **Solution**: Use the `to` parameter
+
 ```hcl
 port "http" {
   to = 8080  # Container expects this port
@@ -389,6 +436,7 @@ Open the dynamic range in host firewalls and upstream security groups:
 ### Moving from Static to Dynamic Ports
 
 #### Step 1: Update Job Specification
+
 ```hcl
 # Before
 network {
@@ -406,6 +454,7 @@ network {
 ```
 
 #### Step 2: Add Load Balancer Routing
+
 ```hcl
 service {
   tags = [
@@ -416,9 +465,10 @@ service {
 ```
 
 #### Step 3: Update DNS/Documentation
+
 - Change from `node-ip:8080` to `app.lab.local`
 - Update any hardcoded references
- - Document the port label(s) in your service README
+- Document the port label(s) in your service README
 
 ### Optional: Adjust Nomad client reserved ports
 
@@ -475,7 +525,7 @@ nomad alloc exec <alloc-id> env | grep -E "NOMAD_(PORT|ADDR|IP)_"
 
 ## Related Resources
 
-- [Firewall and Port Strategy](../operations/firewall-port-strategy.md)
+- [Firewall and Port Strategy](../../operations/firewall-port-strategy.md)
 - [Nomad Network Stanza](https://www.nomadproject.io/docs/job-specification/network)
 - [Consul Service Discovery](https://www.consul.io/docs/discovery/services)
 - [Traefik Dynamic Configuration](https://doc.traefik.io/traefik/providers/consul-catalog/)

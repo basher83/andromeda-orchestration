@@ -2,16 +2,35 @@
 
 HashiCorp Nomad configuration and deployment patterns for container orchestration.
 
+### Prerequisites
+
+- Nomad 1.6+; Consul 1.16+; Vault 1.15+
+- uv + Ansible installed (see `docs/getting-started/uv-ansible-notes.md`)
+- Environment set for Nomad CLI:
+
+```bash
+export NOMAD_ADDR=http://nomad.service.consul:4646
+```
+
+### How these docs are organized
+
+- [Storage Strategy](storage-strategy.md): decision criteria and architecture
+- [Port Allocation](port-allocation.md): dynamic vs. static, patterns, validation
+- [Dynamic Volumes](dynamic-volumes.md): plugin, systemd unit, installer, checks
+
 ## 📚 Documentation
 
 ### Storage Configuration
+
 - **[storage-configuration.md](storage-configuration.md)** - Complete guide for Nomad job storage
+
   - Volume types and use cases
   - CSI plugin configuration
   - Host volume setup
   - Best practices and examples
 
 - **[storage-strategy.md](storage-strategy.md)** - Strategic approach to Nomad storage
+
   - Storage architecture decisions
   - Data persistence patterns
   - Migration strategies
@@ -24,6 +43,7 @@ HashiCorp Nomad configuration and deployment patterns for container orchestratio
   - Backup and recovery patterns
 
 ### Network Configuration
+
 - **[port-allocation.md](port-allocation.md)** - Port allocation best practices
   - Dynamic vs static ports
   - Port range management
@@ -33,14 +53,16 @@ HashiCorp Nomad configuration and deployment patterns for container orchestratio
 ## 🚀 Quick Start
 
 ### Deploy a Job
+
 ```bash
 # Deploy a Nomad job
 uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml \
-  -e job=nomad-jobs/applications/example.nomad.hcl
+  -e job=nomad-jobs/applications/example-app.nomad.hcl
 ```
 
 ### Check Job Status
+
 ```bash
 # Set Nomad address
 export NOMAD_ADDR=http://nomad.service.consul:4646
@@ -55,16 +77,19 @@ nomad job status <job-name>
 ## 📋 Implementation Status
 
 ### ✅ Completed
+
 - Port allocation strategy
 - Storage configuration patterns
 - Host volume documentation
 - CSI plugin guidance
 
 ### 🚧 In Progress
+
 - NFS CSI driver deployment
 - Volume migration procedures
 
 ### ⏳ Planned
+
 - Multi-region job patterns
 - Advanced scheduling constraints
 - Autoscaling configuration
@@ -72,25 +97,19 @@ nomad job status <job-name>
 ## 🏗️ Architecture Overview
 
 ### Storage Architecture
-```
-┌─────────────────────────────────────┐
-│         Nomad Job                   │
-├─────────────────────────────────────┤
-│  ┌─────────┐  ┌─────────┐          │
-│  │ Task 1  │  │ Task 2  │          │
-│  └────┬────┘  └────┬────┘          │
-│       │            │                │
-│  ┌────▼────────────▼────┐          │
-│  │   Shared Volume      │          │
-│  └──────────────────────┘          │
-└─────────────────────────────────────┘
-           │
-    ┌──────▼──────┐
-    │ Host Volume │ or │ CSI Volume │
-    └─────────────┘
+
+```mermaid
+graph TD
+  A["Nomad Job"] --> B["Task 1"]
+  A --> C["Task 2"]
+  B --> D["Shared Volume"]
+  C --> D
+  D --> E["Host Volume"]
+  D --> F["CSI Volume"]
 ```
 
 ### Port Allocation Strategy
+
 - **Dynamic Ports** (20000-32000): Default for most services
 - **Static Ports**: Only for:
   - DNS (53)
@@ -99,39 +118,44 @@ nomad job status <job-name>
   - Legacy services requiring specific ports
 
 ### Integration Points
+
 - **Consul**: Service registration and health checks
 - **Vault**: Dynamic secrets and workload identity
 - **Traefik**: Load balancing and routing
 
 ## 📁 Job Organization
 
-```
-nomad-jobs/
-├── core-infrastructure/    # Essential services
-│   ├── traefik.nomad.hcl  # Load balancer
-│   └── vault.nomad.hcl    # Reference only (DO NOT USE)
-├── platform-services/      # Infrastructure services
-│   ├── powerdns.nomad.hcl
-│   └── netbox.nomad.hcl
-└── applications/          # User-facing applications
-    └── example.nomad.hcl
+```mermaid
+graph TD
+  A["nomad-jobs/"]
+  A --> B["core-infrastructure/"]
+  B --> B1["traefik.nomad.hcl"]
+  B --> B2["vault-reference.nomad.hcl (reference only)"]
+  A --> C["platform-services/"]
+  C --> C1["powerdns.nomad.hcl"]
+  C --> C2["netbox.nomad.hcl"]
+  A --> D["applications/"]
+  D --> D1["example-app.nomad.hcl"]
 ```
 
 ## 🔑 Key Decisions
 
 ### Why Dynamic Ports?
+
 - Avoids port conflicts
 - Enables multiple instances
 - Simplifies deployment
 - Works with service discovery
 
 ### Why Host Volumes Initially?
+
 - Simple to implement
 - No additional infrastructure
 - Good for single-node testing
 - Clear migration path to CSI
 
 ### Why Separate Job Categories?
+
 - Clear deployment priorities
 - Different update strategies
 - Distinct security policies
@@ -139,18 +163,19 @@ nomad-jobs/
 
 ## 📊 Storage Decision Matrix
 
-| Storage Type | Use Case | Persistence | Performance | Complexity |
-|-------------|----------|-------------|-------------|------------|
-| Ephemeral | Temp data, caches | None | High | Low |
-| Host Volume | Single node apps | Node-local | High | Low |
-| CSI Volume | Distributed apps | Cluster-wide | Medium | Medium |
-| NFS | Shared data | Network | Low-Medium | Medium |
+| Storage Type | Use Case          | Persistence  | Performance | Complexity |
+| ------------ | ----------------- | ------------ | ----------- | ---------- |
+| Ephemeral    | Temp data, caches | None         | High        | Low        |
+| Host Volume  | Single node apps  | Node-local   | High        | Low        |
+| CSI Volume   | Distributed apps  | Cluster-wide | Medium      | Medium     |
+| NFS          | Shared data       | Network      | Low-Medium  | Medium     |
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
 
 #### Job Fails to Start
+
 ```bash
 # Check allocation status
 nomad alloc status <alloc-id>
@@ -163,6 +188,7 @@ nomad job plan <job.nomad>
 ```
 
 #### Port Conflicts
+
 ```bash
 # Find used ports
 ss -tlnp | grep <port>
@@ -172,6 +198,7 @@ nomad alloc status -json | jq '.TaskStates'
 ```
 
 #### Volume Mount Issues
+
 ```bash
 # Check host volume configuration
 nomad node status -verbose <node-id>

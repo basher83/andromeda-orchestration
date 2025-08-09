@@ -7,6 +7,7 @@ This document provides practical implementation patterns and code examples for e
 ### MySQL/MariaDB with Static Host Volume
 
 Client configuration hint:
+
 ```hcl
 client {
   host_volume "mysql-data" {
@@ -173,7 +174,6 @@ job "postgresql" {
   }
 }
 ```
-
 
 ## Pattern 2: Application Cache with Ephemeral Storage
 
@@ -506,7 +506,8 @@ esac
 ```
 
 See also:
-- Dynamic volumes plugin, unit, and installer: `docs/implementation/nomad/dynamic-volumes/`
+
+- Dynamic volumes: `docs/implementation/nomad/dynamic-volumes.md`
 
 ## Pattern 5: Migration Between Storage Types
 
@@ -633,23 +634,27 @@ job "backup-volumes" {
 ## Best Practices Summary
 
 1. **Choose the Right Storage Type**
+
    - Ephemeral: Cache, temp files, logs
    - Static Host: Databases, single-node apps
    - Dynamic Host: Per-allocation persistent data
    - CSI: Multi-node access, advanced features
 
 2. **Security Considerations**
-  - Always set appropriate permissions (correct uid:gid ownership)
-  - Host volumes: use LUKS for sensitive data and mount via systemd at boot
-  - CSI volumes: enable driver-level encryption when supported
-  - Implement access controls (Nomad ACLs, SELinux/AppArmor)
+
+- Always set appropriate permissions (correct uid:gid ownership)
+- Host volumes: use LUKS for sensitive data and mount via systemd at boot
+- CSI volumes: enable driver-level encryption when supported
+- Implement access controls (Nomad ACLs, SELinux/AppArmor)
 
 3. **Performance Optimization**
+
    - Use local storage for high IOPS
    - Consider SSD for databases
    - Implement caching layers
 
 4. **Backup Strategy**
+
    - Regular automated backups
    - Test restore procedures
    - Off-site backup storage
