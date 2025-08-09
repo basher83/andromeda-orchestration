@@ -14,9 +14,11 @@ Each Nomad job should clearly define its storage requirements:
 ## Volume Naming Conventions
 
 ### Static Host Volumes
+
 Format: `{service}-{type}`
 
 Examples:
+
 - `postgres-data` - PostgreSQL data directory
 - `mysql-data` - MySQL/MariaDB data directory
 - `traefik-certs` - Traefik SSL certificates
@@ -24,53 +26,31 @@ Examples:
 - `grafana-config` - Grafana dashboards and settings
 
 ### Dynamic Host Volumes
+
 Format: `{service}-{type}-${NOMAD_ALLOC_ID}`
 
 The allocation ID is automatically appended for uniqueness.
 
 ### CSI Volumes
+
 Format: `{service}-{type}-{environment}`
 
 Examples:
+
 - `gitlab-data-production`
 - `nextcloud-files-staging`
 - `minio-objects-development`
 
 ## Storage Type Selection Guide
 
-```
-┌─────────────────────────────────────────┐
-│ Does your data need to persist?         │
-└─────────────────┬───────────────────────┘
-                  │
-        ┌─────────▼─────────┐
-        │       No          │ ──► Ephemeral Disk
-        └───────────────────┘
-                  │
-                  │ Yes
-                  │
-        ┌─────────▼─────────┐
-        │ Multi-node access?│
-        └─────────┬─────────┘
-                  │
-        ┌─────────▼─────────┐
-        │       Yes         │ ──► CSI Volume
-        └───────────────────┘
-                  │
-                  │ No
-                  │
-        ┌─────────▼─────────────────┐
-        │ Frequent config changes?  │
-        └─────────┬─────────────────┘
-                  │
-        ┌─────────▼─────────┐
-        │       Yes         │ ──► Dynamic Host Volume
-        └───────────────────┘
-                  │
-                  │ No
-                  │
-                  ▼
-            Static Host Volume
+```mermaid
+flowchart TD
+  A["Does your data need to persist?"] -->|No| B["Ephemeral Disk"]
+  A -->|Yes| C["Multi-node access?"]
+  C -->|Yes| D["CSI Volume"]
+  C -->|No| E["Frequent config changes?"]
+  E -->|Yes| F["Dynamic Host Volume"]
+  E -->|No| G["Static Host Volume"]
 ```
 
 ## Encryption at Rest
@@ -188,18 +168,19 @@ job "shared-app" {
 
 Ensure host volume ownership matches the container user IDs used by your images:
 
-| Service  | Default UID:GID | Path inside container                  |
-|----------|------------------|----------------------------------------|
-| Postgres | 999:999          | /var/lib/postgresql/data               |
-| MySQL    | 999:999          | /var/lib/mysql                         |
-| Netdata  | 201:201          | /etc/netdata                           |
-| Traefik  | 0:0              | /data/certs                            |
+| Service  | Default UID:GID | Path inside container    |
+| -------- | --------------- | ------------------------ |
+| Postgres | 999:999         | /var/lib/postgresql/data |
+| MySQL    | 999:999         | /var/lib/mysql           |
+| Netdata  | 201:201         | /etc/netdata             |
+| Traefik  | 0:0             | /data/certs              |
 
 Note: Verify actual IDs for your images and adjust Ansible provisioning accordingly.
 
 ### Pre-deployment Checklist
 
 1. **For Static Host Volumes:**
+
    - [ ] Volume directory created on all potential nodes
    - [ ] Correct ownership/permissions set
    - [ ] Added to Nomad client configuration
@@ -368,6 +349,7 @@ nomad node status -verbose
 ## Best Practices
 
 1. **Always Define Storage Requirements**
+
    - Document why each volume is needed
    - Specify size requirements
    - Note performance needs
@@ -376,14 +358,17 @@ nomad node status -verbose
    - Don't use CSI for single-node apps
    - Don't use ephemeral for persistent data
    - Consider performance vs cost
-  - For hot I/O paths (e.g., databases), tag SSD/NVMe nodes (e.g., node.meta.storage=nvme) and add a job constraint to target them
+
+- For hot I/O paths (e.g., databases), tag SSD/NVMe nodes (e.g., node.meta.storage=nvme) and add a job constraint to target them
 
 3. **Implement Backup Strategies**
+
    - Regular automated backups
    - Test restore procedures
    - Off-site backup for critical data
 
 4. **Monitor Storage Health**
+
    - Disk usage alerts
    - I/O performance metrics
    - Volume availability checks
@@ -428,9 +413,10 @@ task "mysql" {
 4. Start job with new volume
 
 Note on dynamic host volumes:
+
 - Ensure Nomad client is configured with `host_volume { dynamic = true; plugin = "ext4-volume" }` (see `roles/nomad/templates/client-dynamic-volume.hcl.example.j2`).
 - Request size in the `volume_mount { size = "<GiB>" }` where supported (Nomad 1.6+).
-- Use the provided systemd template to remount volumes on boot (see `docs/implementation/nomad/dynamic-volumes/nomad-dynvol@.service`).
+- Use the provided systemd template to remount volumes on boot (see `roles/nomad/files/nomad-dynvol@.service` and the guide in `./dynamic-volumes.md`).
 
 ## Related Documentation
 

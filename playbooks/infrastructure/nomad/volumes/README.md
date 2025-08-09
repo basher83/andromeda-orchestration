@@ -11,6 +11,7 @@ Provisions static host volumes on Nomad client nodes.
 **Purpose**: Create persistent storage directories for services like databases and certificate storage.
 
 **Usage**:
+
 ```bash
 # Provision default volumes (PowerDNS, Traefik, Prometheus, etc.)
 uv run ansible-playbook playbooks/infrastructure/nomad/volumes/provision-host-volumes.yml \
@@ -26,6 +27,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/volumes/provision-host-vo
 ```
 
 **Default Volumes Created**:
+
 - `powerdns-mysql` - MySQL data for PowerDNS
 - `traefik-certs` - SSL certificates
 - `prometheus-data` - Metrics storage
@@ -40,6 +42,7 @@ Configures Nomad clients to support dynamic volume provisioning.
 **Purpose**: Enable on-demand volume creation for per-allocation storage needs.
 
 **Usage (uv)**:
+
 ```sh
 uv run ansible-playbook -i inventory/localhost.yml \
   playbooks/infrastructure/nomad/volumes/enable-dynamic-volumes.yml --check
@@ -48,6 +51,7 @@ uv run ansible-playbook -i inventory/localhost.yml \
 Remove `--check` to apply.
 
 **What it does now** (role-based):
+
 - Ensures base directories: `/opt/nomad/volumes/dynamic/.registry` and `/opt/nomad/plugins`
 - Installs the ext4 dynamic volume plugin to `/opt/nomad/plugins/ext4-volume`
 - Installs `nomad-dynvol@.service` and reloads systemd
@@ -60,6 +64,7 @@ Note: Legacy inline XFS plugin/cleanup scripts were removed to avoid drift. If y
 Deploys CSI drivers for advanced storage features.
 
 **Planned CSI Drivers**:
+
 - NFS CSI - For shared file storage
 - Democratic CSI - For iSCSI/NFS
 - Ceph CSI - For distributed storage
@@ -75,27 +80,33 @@ Deploys CSI drivers for advanced storage features.
 
 ### Storage Types Comparison
 
-| Type | Use Case | Persistence | Multi-Node | Dynamic |
-|------|----------|-------------|------------|---------|
-| Ephemeral | Cache, temp files | Until alloc stops | No | N/A |
-| Static Host | Databases | Permanent | No | No |
-| Dynamic Host | Per-alloc data | Permanent | No | Yes |
-| CSI | Shared storage | Permanent | Yes | Yes |
+| Type         | Use Case          | Persistence       | Multi-Node | Dynamic |
+| ------------ | ----------------- | ----------------- | ---------- | ------- |
+| Ephemeral    | Cache, temp files | Until alloc stops | No         | N/A     |
+| Static Host  | Databases         | Permanent         | No         | No      |
+| Dynamic Host | Per-alloc data    | Permanent         | No         | Yes     |
+| CSI          | Shared storage    | Permanent         | Yes        | Yes     |
 
 ## Volume Naming Conventions
 
 ### Static Volumes
+
 Format: `{service}-{type}`
+
 - `mysql-data`
 - `redis-backup`
 - `nginx-config`
 
 ### Dynamic Volumes
+
 Format: `{service}-{type}-{alloc_id}`
+
 - Allocation ID is automatically appended
 
 ### CSI Volumes
+
 Format: `{service}-{type}-{environment}`
+
 - `gitlab-data-production`
 - `minio-objects-staging`
 
@@ -143,6 +154,7 @@ client {
 ```
 
 Then restart Nomad:
+
 ```bash
 ansible tag_client -i inventory/doggos-homelab/infisical.proxmox.yml \
   -m systemd -a "name=nomad state=restarted" -b
@@ -231,15 +243,18 @@ journalctl -u nomad | grep volume
 ## Best Practices
 
 1. **Always Set Correct Permissions**
+
    - Database volumes need specific UIDs
    - Use the service's container UID/GID
 
 2. **Plan for Growth**
+
    - Size volumes appropriately
    - Monitor disk usage
    - Implement cleanup policies
 
 3. **Backup Critical Data**
+
    - Use the provided backup script
    - Test restore procedures
    - Consider off-site backups
@@ -253,4 +268,4 @@ journalctl -u nomad | grep volume
 
 - [Nomad Storage Strategy](../../../../docs/implementation/nomad/storage-strategy.md)
 - [Storage Implementation Patterns](../../../../docs/implementation/nomad/storage-patterns.md)
-- [Dynamic Volumes Implementation](../../../../docs/implementation/nomad/dynamic-volumes/README.md)
+- [Dynamic Volumes Implementation](../../../../docs/implementation/nomad/dynamic-volumes.md)

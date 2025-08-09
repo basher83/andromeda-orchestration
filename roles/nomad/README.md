@@ -14,7 +14,8 @@ sudo cp roles/nomad/templates/client-dynamic-volume.hcl.example.j2 /etc/nomad.d/
 sudo systemctl reload nomad
 ```
 
-See `docs/implementation/nomad/dynamic-volumes/README.md` for background and sanity checks.
+See `docs/implementation/nomad/dynamic-volumes.md` for background and sanity checks.
+
 # Nomad Role
 
 This Ansible role manages HashiCorp Nomad installation and configuration in a cluster with dual network interfaces.

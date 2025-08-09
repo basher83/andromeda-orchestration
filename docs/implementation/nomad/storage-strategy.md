@@ -13,19 +13,20 @@ Nomad provides four distinct storage types, each optimized for different use cas
 
 ## Storage Type Comparison
 
-| Feature | Ephemeral | Static Host | Dynamic Host | CSI |
-|---------|-----------|-------------|--------------|-----|
-| **Persistence** | Until alloc stops | Permanent | Permanent | Permanent |
-| **Multi-node Access** | No | No | No | Yes* |
-| **Dynamic Provisioning** | N/A | No | Yes | Yes |
-| **Snapshots/Cloning** | No | No | No | Yes (driver-dependent) |
-| **Performance** | Fastest | Fast | Fast | Backend-dependent |
-| **Configuration** | None | Agent config | Plugin script | Plugin job |
-| **Use Case** | Cache, temp | Databases | Per-alloc data | Shared storage |
+| Feature                  | Ephemeral         | Static Host  | Dynamic Host   | CSI                    |
+| ------------------------ | ----------------- | ------------ | -------------- | ---------------------- |
+| **Persistence**          | Until alloc stops | Permanent    | Permanent      | Permanent              |
+| **Multi-node Access**    | No                | No           | No             | Yes\*                  |
+| **Dynamic Provisioning** | N/A               | No           | Yes            | Yes                    |
+| **Snapshots/Cloning**    | No                | No           | No             | Yes (driver-dependent) |
+| **Performance**          | Fastest           | Fast         | Fast           | Backend-dependent      |
+| **Configuration**        | None              | Agent config | Plugin script  | Plugin job             |
+| **Use Case**             | Cache, temp       | Databases    | Per-alloc data | Shared storage         |
 
-*Depends on CSI driver capabilities
+\*Depends on CSI driver capabilities
 
 **Encryption at Rest:**
+
 - Host volumes – Use LUKS for sensitive data, mounted via systemd at boot.
 - CSI – Enable driver-level encryption if supported (e.g., ZFS, RBD, cloud-backed).
 
@@ -60,6 +61,7 @@ graph TD
 ### 1. Ephemeral Disk
 
 **Best For:**
+
 - Application caches
 - Temporary build artifacts
 - Log files (before shipping)
@@ -67,6 +69,7 @@ graph TD
 - Scratch space
 
 **Configuration:**
+
 ```hcl
 task "cache-service" {
   driver = "docker"
@@ -84,6 +87,7 @@ task "cache-service" {
 ```
 
 **Characteristics:**
+
 - Automatically cleaned up
 - No persistence guarantees
 - Fastest performance (local disk)
@@ -92,26 +96,29 @@ task "cache-service" {
 ### 2. Static Host Volumes
 
 **Current Implementation:**
+
 - PowerDNS PostgreSQL data
 - Traefik certificates
 
 **Service↔Volume Map:**
-| Service  | Type   | Node Class       | Volume Name       | Mount Path                          | Owner (uid:gid) |
+| Service | Type | Node Class | Volume Name | Mount Path | Owner (uid:gid) |
 |----------|--------|------------------|-------------------|--------------------------------------|-----------------|
-| Postgres | Static | storage=ssd/nvme | postgres-data     | /var/lib/postgresql/data             | 999:999         |
-| MySQL    | Static | storage=ssd/nvme | mysql-data        | /var/lib/mysql                       | 999:999         |
-| Traefik  | Static | any              | traefik-certs     | /data/certs                          | 0:0             |
-| Netdata  | Static | any              | netdata-config    | /etc/netdata                         | 201:201         |
+| Postgres | Static | storage=ssd/nvme | postgres-data | /var/lib/postgresql/data | 999:999 |
+| MySQL | Static | storage=ssd/nvme | mysql-data | /var/lib/mysql | 999:999 |
+| Traefik | Static | any | traefik-certs | /data/certs | 0:0 |
+| Netdata | Static | any | netdata-config | /etc/netdata | 201:201 |
 
 Note: UID:GID values reflect typical container image defaults; verify the exact IDs for the images you use and adjust ownership accordingly.
 
 **Best For:**
+
 - Database storage
 - Certificate storage
 - Application state (single-node)
 - Development environments
 
 **Client Configuration:**
+
 ```hcl
 client {
   host_volume "postgres-data" {
@@ -132,6 +139,7 @@ client {
 ```
 
 **Job Configuration:**
+
 ```hcl
 group "database" {
   volume "data" {
@@ -150,6 +158,7 @@ group "database" {
 ```
 
 **Provisioning Playbook:**
+
 ```yaml
 # playbooks/infrastructure/nomad/volumes/provision-host-volumes.yml
 ---
@@ -182,7 +191,7 @@ group "database" {
       file:
         path: "{{ nomad_volumes_base }}"
         state: directory
-        mode: '0755'
+        mode: "0755"
 
     - name: Create volume directories
       file:
@@ -190,13 +199,14 @@ group "database" {
         state: directory
         owner: "{{ item.owner }}"
         group: "{{ item.group }}"
-        mode: '0755'
+        mode: "0755"
       loop: "{{ volumes }}"
 ```
 
 ### 3. Dynamic Host Volumes
 
 **Best For:**
+
 - Per-allocation persistent data
 - Dynamic workloads
 - Prometheus/metrics storage
@@ -205,6 +215,7 @@ group "database" {
 **Reboot Safety:**
 Dynamic loop-mounted volumes require a remount step after node reboot.
 Use a `systemd` template unit:
+
 ```ini
 # /etc/systemd/system/nomad-dynvol@.service
 [Unit]
@@ -218,9 +229,11 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 ```
+
 Modify the plugin’s `create`/`delete` to enable/disable this unit, and add a `remount` case to the script.
 
 **Client Configuration:**
+
 ```hcl
 client {
   host_volume "dynamic-data" {
@@ -236,6 +249,7 @@ client {
 ```
 
 **Plugin Script Example:**
+
 ```bash
 #!/bin/bash
 # /opt/nomad/plugins/ext4-volume
@@ -271,11 +285,13 @@ esac
 ```
 
 Reference implementation:
-- Scripts, unit, and Ansible installer live in `docs/implementation/nomad/dynamic-volumes/`
+
+- Role-based implementation: see `roles/nomad/tasks/dynamic-volumes.yml` and the guide `docs/implementation/nomad/dynamic-volumes.md`
 
 ### 4. CSI Volumes
 
 **Best For:**
+
 - Multi-node shared storage
 - High availability requirements
 - Advanced features (snapshots, cloning)
@@ -288,6 +304,7 @@ Always back with a reliable export (e.g., TrueNAS), root-squash enabled, and res
 **CSI Driver Options:**
 
 #### NFS CSI Driver
+
 ```hcl
 job "nfs-csi-plugin" {
   datacenters = ["dc1"]
@@ -320,6 +337,7 @@ job "nfs-csi-plugin" {
 ```
 
 **Volume Registration:**
+
 ```hcl
 type         = "csi"
 id           = "shared-data"
@@ -343,19 +361,25 @@ parameters {
 ## Volume Naming Conventions
 
 ### Static Host Volumes
+
 Format: `{service}-{type}`
+
 - `postgres-data`
 - `mysql-data`
 - `traefik-certs`
 - `prometheus-data`
 
 ### Dynamic Host Volumes
+
 Format: `{service}-{type}-{alloc_id}`
+
 - `prometheus-data-${NOMAD_ALLOC_ID}`
 - `elasticsearch-index-${NOMAD_ALLOC_ID}`
 
 ### CSI Volumes
+
 Format: `{service}-{type}-{environment}`
+
 - `gitlab-data-production`
 - `nextcloud-files-staging`
 
@@ -364,12 +388,14 @@ Format: `{service}-{type}-{environment}`
 ### From Static to Dynamic Host Volumes
 
 1. **Assess Current Usage**
+
    ```bash
    # List all static volumes in use
    nomad node status -verbose | grep host_volume
    ```
 
 2. **Create Migration Job**
+
    ```hcl
    job "migrate-volume" {
      type = "batch"
@@ -401,6 +427,7 @@ Format: `{service}-{type}-{environment}`
 ## Backup Strategies
 
 ### Host Volumes
+
 ```yaml
 # playbooks/infrastructure/nomad/volumes/backup-volumes.yml
 ---
@@ -433,6 +460,7 @@ retention:
 ```
 
 ### CSI Volumes
+
 - Use CSI driver snapshot capabilities
 - Schedule regular snapshot jobs
 - Test restore procedures
@@ -440,6 +468,7 @@ retention:
 ## Monitoring and Alerts
 
 ### Key Metrics
+
 1. **Disk Usage**
    ```promql
    node_filesystem_avail_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
@@ -447,11 +476,13 @@ retention:
    ```
 
 SLO examples:
+
 - Disk usage < 80% sustained for 15m
 - Mount path present for all running allocations
 - CSI attach/detach success > 99.9% over 24h
 
 2. **Volume Health**
+
    - Mount status
    - I/O errors
    - Permission issues
@@ -463,10 +494,12 @@ SLO examples:
 ## Security Considerations
 
 1. **Encryption**
+
    - Use LUKS for host volumes containing sensitive data
    - Enable encryption in CSI drivers where available
 
 2. **Access Control**
+
    - Set appropriate file permissions
    - Use Nomad ACLs to control volume access
    - Implement SELinux/AppArmor policies
@@ -480,10 +513,12 @@ SLO examples:
 ### Common Issues
 
 1. **Permission Denied**
+
    - Check volume ownership matches container user
    - Verify SELinux context if enabled
 
 2. **Volume Not Found**
+
    - Ensure volume is defined in client config
    - Check volume name matches exactly
 
@@ -493,6 +528,7 @@ SLO examples:
    - Review plugin logs
 
 ### Debug Commands
+
 ```bash
 # Check volume mounts
 nomad alloc status -verbose <alloc-id> | grep -A5 "Volume"
@@ -507,10 +543,12 @@ nomad volume status <volume-id>
 ## Future Considerations
 
 1. **Multi-Region Storage**
+
    - Implement geo-replicated CSI solutions
    - Consider storage federation
 
 2. **Performance Optimization**
+
    - SSD-backed host volumes for databases
    - NVMe for high-IOPS workloads
 
