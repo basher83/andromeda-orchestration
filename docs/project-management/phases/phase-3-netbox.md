@@ -6,8 +6,7 @@
 
 ---
 
-Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 4](./phase-4-multisite.md)
----
+## Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Next Phase](./phase-4-dns-integration.md)
 
 ## Phase Overview
 
@@ -31,12 +30,12 @@ Integrate NetBox as the source of truth for DNS and IPAM, migrating existing DNS
 Tasks:
 
 - [✅] Deploy NetBox to infrastructure (Complete - LXC 213 on pve1)
-- [ ] Access NetBox at <https://192.168.30.213/>
-- [ ] Configure NetBox IPAM and DCIM modules
-- [ ] Identify critical DNS records (proxmox hosts, core services)
-- [ ] Create minimal NetBox data model
-- [ ] Import essential records manually
-- [ ] Test PowerDNS sync with limited dataset
+- [✅] Access NetBox at <https://192.168.30.213/>
+- [✅] Configure NetBox IPAM and DCIM modules
+- [✅] Identify critical DNS records (proxmox hosts, core services)
+- [✅] Create minimal NetBox data model
+- [✅] Import essential records manually
+- [] Test PowerDNS sync with limited dataset
 - [ ] Plan incremental data migration approach
 
 ### DNS Record Migration
@@ -62,7 +61,7 @@ Tasks:
 
 Tasks:
 
-- [ ] Install NetBox DNS plugin
+- [✅] Install NetBox DNS plugin
 - [ ] Configure PowerDNS API integration
 - [ ] Set up sync schedules
 - [ ] Test record propagation
@@ -79,11 +78,11 @@ Tasks:
 
 Tasks:
 
-- [ ] Define network segments
-- [ ] Allocate service ranges
-- [ ] Reserve growth capacity
-- [ ] Document in NetBox IPAM
-- [ ] Create visual network diagrams
+- [✅] Define network segments
+- [✅] Allocate service ranges
+- [✅] Reserve growth capacity
+- [✅] Document in NetBox IPAM
+- [] Create visual network diagrams
 - [ ] Define naming conventions
 
 ### 22. Integration Testing
@@ -113,11 +112,13 @@ Tasks:
 ## Risk Mitigation
 
 1. **Data Loss During Migration**
+
    - Export full Pi-hole backup before starting
    - Implement staged migration with validation
    - Maintain Pi-hole as fallback during transition
 
 2. **Service Disruption**
+
    - Use weighted DNS during transition
    - Implement health checks at each stage
    - Document immediate rollback procedures

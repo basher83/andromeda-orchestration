@@ -6,12 +6,61 @@
 
 ---
 
-Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 3](./phase-3-netbox.md) | [Phase 5](./phase-5-optimization.md)
----
+## Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Prev Phase](./phase-3-netbox.md) | [Next Phase](./phase-5-multisite.md)
 
 ## Phase Overview
 
 Integrate PowerDNS with NetBox to establish NetBox as the authoritative source for DNS records, enabling automatic synchronization and management.
+
+## Implementation Plan Update (2025-08-09)
+
+We are pivoting the PowerDNS implementation to the production-ready architecture described in the PowerDNS implementation docs. This supersedes the earlier MariaDB prototype.
+
+- New baseline: PowerDNS Authoritative (Mode A) with external PostgreSQL backend
+- Secrets: Vault; configuration: Consul KV
+- API: Dynamic port via Traefik; DNS: static port 53
+- High availability: count ≥ 2, distinct hosts, health checks on :53
+
+References:
+
+- PowerDNS Overview: [docs/implementation/powerdns/README.md](../../implementation/powerdns/README.md)
+- Deployment Architecture: [docs/implementation/powerdns/deployment-architecture.md](../../implementation/powerdns/deployment-architecture.md)
+
+### Mode A Implementation Tasks
+
+1. Database provisioning (PostgreSQL)
+
+   - [ ] Deploy Nomad job: `nomad-jobs/platform-services/.testing/postgresql/postgresql.nomad.hcl`
+   - [ ] Configure host volume for persistence
+   - [ ] Initialize PowerDNS schema
+
+2. Secrets and configuration
+
+   - [ ] Write Consul KV entries for DB host/port/name/user
+   - [ ] Store `db_password` and `api_key` in Vault (Infisical references as needed)
+
+3. Deploy PowerDNS Auth (Mode A)
+
+   - [ ] Use Mode A job: `nomad-jobs/platform-services/.testing/mode-a/powerdns-testing.nomad.hcl`
+   - [ ] Expose DNS on port 53 (TCP/UDP), API via dynamic port
+   - [ ] Register Consul services (`powerdns-auth`, `powerdns-auth-api`)
+
+4. Ingress and health
+
+   - [ ] Configure Traefik routing for API access
+   - [ ] Enable health checks for :53 and API
+   - [ ] Scale to count=2 with distinct hosts
+
+5. Migration from prototype
+
+   - [ ] Decommission MariaDB-based prototype jobs
+   - [ ] Migrate any initial data (if applicable)
+   - [ ] Validate no consumers depend on old endpoints
+
+6. Validation
+   - [ ] Verify DNS queries resolve from PowerDNS
+   - [ ] Verify API operations and metrics
+   - [ ] Document runbook updates
 
 ## Current Progress
 
@@ -30,21 +79,25 @@ Integrate PowerDNS with NetBox to establish NetBox as the authoritative source f
 ### 📅 Upcoming Tasks
 
 1. **Configure DNS Zones in NetBox**
+
    - Create forward zones (homelab.local, etc.)
    - Configure reverse zones for all subnets
    - Set up zone delegation if needed
 
 2. **PowerDNS API Integration**
+
    - Configure PowerDNS backend to query NetBox
    - Set up API authentication
    - Test connectivity between services
 
 3. **Synchronization Setup**
+
    - Create sync script for NetBox → PowerDNS
    - Configure webhooks for real-time updates
    - Implement validation and rollback logic
 
 4. **DNS Record Migration**
+
    - Export existing DNS records from Pi-hole
    - Import records into NetBox
    - Verify all records transferred correctly
@@ -54,6 +107,38 @@ Integrate PowerDNS with NetBox to establish NetBox as the authoritative source f
    - Verify automatic PTR record generation
    - Check sync performance and reliability
    - Validate DNSSEC if enabled
+
+## Detailed Checklist
+
+### NetBox DNS Zones
+
+- [ ] Create primary forward zones (e.g., homelab.local)
+- [ ] Create reverse zones for all managed prefixes
+- [ ] Configure SOA/NS records and TTLs per standard
+- [ ] Define zone delegation if applicable
+
+### PowerDNS API Integration
+
+- [ ] Confirm NetBox DNS plugin v1.3.5 installed and enabled
+- [ ] Configure PowerDNS backend to pull from NetBox
+- [ ] Set API key/credentials (store in Infisical/Vault)
+- [ ] Verify PowerDNS ↔ NetBox connectivity
+
+### Sync and Automation
+
+- [ ] Implement NetBox → PowerDNS sync script
+- [ ] Configure NetBox webhooks for record changes
+- [ ] Add validation and rollback safeguards
+- [ ] Enable automatic PTR record generation
+- [ ] Configure zone transfers if required
+- [ ] Enable automatic DNS updates where needed
+
+### Functional Testing
+
+- [ ] Forward lookups resolve against PowerDNS
+- [ ] Reverse lookups resolve with correct PTRs
+- [ ] Changes in NetBox propagate to PowerDNS
+- [ ] Performance and reliability validated
 
 ## Technical Details
 
@@ -84,11 +169,13 @@ Clients
 ### Configuration Files Needed
 
 1. **NetBox DNS Configuration**
+
    - Plugin settings in NetBox configuration
    - DNS zone templates
    - Record templates
 
 2. **PowerDNS Backend Configuration**
+
    - API backend settings
    - NetBox connection parameters
    - Cache settings
@@ -119,6 +206,7 @@ Clients
 ## Next Phase
 
 Once Phase 4 is complete, we'll move to Phase 5 (Optimization) which includes:
+
 - Multi-site DNS strategy
 - High availability configuration
 - Performance tuning

@@ -1,4 +1,4 @@
-# Phase 5: Post-Implementation and Continuous Improvement
+# Phase 6: Post-Implementation and Continuous Improvement
 
 **Target Timeline**: 2026
 **Status**: Future Planning
@@ -6,8 +6,7 @@
 
 ---
 
-Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 4](./phase-4-multisite.md)
----
+## Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 5](./phase-5-multisite.md)
 
 ## Phase Overview
 
@@ -130,7 +129,7 @@ Tasks:
 Tasks:
 
 - [ ] DNS-01 ACME challenge setup via PowerDNS API
-- [ ] Let's Encrypt wildcard certificates for *.lab.example.com
+- [ ] Let's Encrypt wildcard certificates for \*.lab.example.com
 - [ ] Vault PKI integration for internal certificates
 - [ ] Consul Connect mTLS for service encryption
 - [ ] Nomad periodic jobs for renewal

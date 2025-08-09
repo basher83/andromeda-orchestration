@@ -111,8 +111,8 @@ Tasks:
 Tasks:
 
 - [x] Create Consul ACL tokens (completed 2025-07-29)
-  - Server token: 00b57268-c5f9-edb4-bc90-639fb4ab3232
-  - Client token: [REDACTED_NOMAD_TOKEN]
+  - Server token: <redacted>
+  - Client token: <redacted>
 - [x] Store tokens in Infisical at /apollo-13/consul/
 - [x] Create playbook to apply tokens (apply-consul-tokens-to-nomad.yml)
 - [x] Execute playbook to apply tokens to all Nomad nodes (completed 2025-07-29)
@@ -188,7 +188,7 @@ Tasks:
 - [x] Validate metrics collection is working
 - [x] Create documentation for telemetry setup
 
-**Documentation**: [Consul Telemetry Setup Guide](consul-telemetry-setup.md)
+**Documentation**: [Consul Telemetry Setup Guide](../../implementation/consul/telemetry-setup.md)
 
 #### 10. Phase 1: Cement Consul Foundation ✅
 
@@ -349,7 +349,7 @@ Tasks:
 - [ ] ~~Set up test clients~~ (not needed)
 - [ ] ~~Document access procedures~~ (not needed)
 
-#### 17. Design IP Address Schema
+### Design IP Address Schema
 
 **Description**: Create comprehensive IP addressing plan for all networks
 **Status**: Not Started
@@ -363,7 +363,7 @@ Tasks:
 - [ ] Plan for growth
 - [ ] Document in NetBox
 
-#### 18. Develop Service Templates
+### Develop Service Templates
 
 **Description**: Create Ansible templates for service configurations
 **Status**: Not Started
@@ -377,7 +377,7 @@ Tasks:
 - [ ] NetBox custom fields
 - [ ] Integration scripts
 
-#### 17. Implement Monitoring Strategy
+### Implement Monitoring Strategy
 
 **Description**: Deploy monitoring for DNS/IPAM services
 **Status**: Not Started
@@ -391,7 +391,7 @@ Tasks:
 - [ ] Create Grafana dashboards
 - [ ] Configure alerts
 
-#### 18. Create Migration Runbooks
+### Create Migration Runbooks
 
 **Description**: Detailed procedures for each migration phase
 **Status**: Not Started
@@ -405,7 +405,7 @@ Tasks:
 - [ ] Phase 3 migration checklist
 - [ ] Rollback procedures
 
-#### 19. Establish Change Management Process
+### Establish Change Management Process
 
 **Description**: Define how changes will be tracked and approved
 **Status**: Not Started
@@ -419,7 +419,7 @@ Tasks:
 - [ ] Set up change tracking
 - [ ] Document in project wiki
 
-#### 20. Bootstrap NetBox with Essential Records
+### Bootstrap NetBox with Essential Records
 
 **Description**: Seed NetBox with critical DNS records to enable early PowerDNS sync
 **Status**: Not Started
@@ -711,14 +711,14 @@ Tasks:
 
 ## Related Documentation
 
-- [DNS & IPAM Implementation Plan](dns-ipam-implementation-plan.md) - Master implementation roadmap
-- [Phase 1 Implementation Guide](phase1-implementation-guide.md) - Consul DNS setup guide
-- [Imported Infrastructure](imported-infrastructure.md) - Documentation of imported roles and modules
-- [Repository Structure](repository-structure.md) - Updated project organization
-- [NetBox Integration Patterns](netbox.md) - NetBox configuration and usage
-- [Infisical Setup and Migration](infisical-setup-and-migration.md) - Secret management transition
-- [Troubleshooting Guide](troubleshooting.md) - Common issues and solutions
-- [1Password Integration (Archived)](archive/1password-integration.md) - Legacy secret management (archived 2025-07-29)
+- [DNS & IPAM Implementation Plan](../../implementation/dns-ipam/implementation-plan.md) - Master implementation roadmap
+- [Phase 1 Implementation Guide](../../implementation/dns-ipam/phase1-guide.md) - Consul DNS setup guide
+- [Imported Infrastructure](../imported-infrastructure.md) - Documentation of imported roles and modules
+- [Repository Structure](../../getting-started/repository-structure.md) - Updated project organization
+- [NetBox Integration Patterns](../../implementation/dns-ipam/netbox-integration-patterns.md) - NetBox configuration and usage
+- [Infisical Setup and Migration](../../implementation/infisical/infisical-setup.md) - Secret management transition
+- [Troubleshooting Guide](../../troubleshooting/README.md) - Common issues and solutions
+- [1Password Integration (Archived)](../../archive/1PASSWORD_ARCHIVE_SUMMARY.md) - Legacy secret management (archived 2025-07-29)
 
 ## Maintenance Notes
 

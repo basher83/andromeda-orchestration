@@ -14,6 +14,14 @@ DNS and IP Address Management implementation documentation (including NetBox IPA
 - **netbox-integration-patterns.md** - Comprehensive NetBox automation patterns with Ansible
 - **testing-strategy.md** - Testing approach for DNS/IPAM changes
 
+### 🌐 [powerdns/](powerdns/)
+
+PowerDNS deployment architecture and configuration
+
+- **deployment-architecture.md** - Architecture decision (Mode A vs Mode B) and implementation guide
+- Complete deployment steps with PostgreSQL backend
+- Migration strategies and operational considerations
+
 ### 🔐 [consul/](consul/)
 
 HashiCorp Consul configuration and integration
