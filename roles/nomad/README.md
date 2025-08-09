@@ -1,5 +1,22 @@
 # Nomad Role
 
+This role installs and configures HashiCorp Nomad.
+
+## Dynamic Host Volumes
+
+- Task: `tasks/dynamic-volumes.yml` installs the `ext4-volume` plugin to `/opt/nomad/plugins/` and the `nomad-dynvol@.service` unit.
+- Client config example: `templates/client-dynamic-volume.hcl.example.j2`
+
+After applying, copy the example to your Nomad client config and reload Nomad:
+
+```sh
+sudo cp roles/nomad/templates/client-dynamic-volume.hcl.example.j2 /etc/nomad.d/20-dynamic-volume.hcl
+sudo systemctl reload nomad
+```
+
+See `docs/implementation/nomad/dynamic-volumes/README.md` for background and sanity checks.
+# Nomad Role
+
 This Ansible role manages HashiCorp Nomad installation and configuration in a cluster with dual network interfaces.
 
 ## Architecture Overview

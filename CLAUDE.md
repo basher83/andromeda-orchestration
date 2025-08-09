@@ -86,8 +86,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
   - Proxmox dynamic inventory using `community.general.proxmox` plugin
   - Two clusters configured: `og-homelab` and `doggos-homelab`
   - Dual inventory files per cluster:
-    - `infisical.proxmox.yml` - Uses Infisical for secrets (recommended)
-    - `1password.proxmox.yml` - Uses 1Password for secrets (legacy)
+    - `infisical.proxmox.yml` - Uses Infisical for secrets
 - **In Progress**: DNS & IPAM infrastructure deployment (see `docs/implementation/dns-ipam/implementation-plan.md`)
 - **Planned**: NetBox dynamic inventory integration (see `docs/implementation/dns-ipam/netbox-integration-patterns.md` for patterns)
 - **Authentication**:
@@ -165,7 +164,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 
 ### Clusters
 
-- **og-homelab**: Original Proxmox cluster (details pending assessment)
+- **og-homelab**: Original Proxmox cluster (proxmoxt430, pve1) mixed workload LXCs and VMs
 - **doggos-homelab**: 3-node Proxmox cluster (lloyd, holly, mable) running Nomad
   - 3 Nomad servers (one per node)
   - 3 Nomad clients (one per node)

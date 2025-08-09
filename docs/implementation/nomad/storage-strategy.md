@@ -6,10 +6,10 @@ This document provides a comprehensive strategy for storage management in Nomad,
 
 Nomad provides four distinct storage types, each optimized for different use cases:
 
-1. **Ephemeral Disk** - Temporary storage in `/alloc/data`
-2. **Static Host Volumes** - Pre-configured volumes on Nomad clients
-3. **Dynamic Host Volumes** - On-demand provisioned volumes
-4. **CSI Volumes** - Plugin-based storage with advanced features
+1. **Ephemeral Disk** – Temporary storage in `/alloc/data`
+2. **Static Host Volumes** – Pre-configured volumes on Nomad clients (fixed location, fixed name)
+3. **Dynamic Host Volumes** – On-demand provisioned volumes, reboot-safe via systemd remount
+4. **CSI Volumes** – Plugin-based storage with advanced features, multi-node access, and optional encryption
 
 ## Storage Type Comparison
 
@@ -18,12 +18,16 @@ Nomad provides four distinct storage types, each optimized for different use cas
 | **Persistence** | Until alloc stops | Permanent | Permanent | Permanent |
 | **Multi-node Access** | No | No | No | Yes* |
 | **Dynamic Provisioning** | N/A | No | Yes | Yes |
-| **Snapshots/Cloning** | No | No | No | Yes |
-| **Performance** | Fastest | Fast | Fast | Varies |
+| **Snapshots/Cloning** | No | No | No | Yes (driver-dependent) |
+| **Performance** | Fastest | Fast | Fast | Backend-dependent |
 | **Configuration** | None | Agent config | Plugin script | Plugin job |
 | **Use Case** | Cache, temp | Databases | Per-alloc data | Shared storage |
 
 *Depends on CSI driver capabilities
+
+**Encryption at Rest:**
+- Host volumes – Use LUKS for sensitive data, mounted via systemd at boot.
+- CSI – Enable driver-level encryption if supported (e.g., ZFS, RBD, cloud-backed).
 
 ## Decision Matrix
 
@@ -88,8 +92,18 @@ task "cache-service" {
 ### 2. Static Host Volumes
 
 **Current Implementation:**
-- PowerDNS MySQL data
+- PowerDNS PostgreSQL data
 - Traefik certificates
+
+**Service↔Volume Map:**
+| Service  | Type   | Node Class       | Volume Name       | Mount Path                          | Owner (uid:gid) |
+|----------|--------|------------------|-------------------|--------------------------------------|-----------------|
+| Postgres | Static | storage=ssd/nvme | postgres-data     | /var/lib/postgresql/data             | 999:999         |
+| MySQL    | Static | storage=ssd/nvme | mysql-data        | /var/lib/mysql                       | 999:999         |
+| Traefik  | Static | any              | traefik-certs     | /data/certs                          | 0:0             |
+| Netdata  | Static | any              | netdata-config    | /etc/netdata                         | 201:201         |
+
+Note: UID:GID values reflect typical container image defaults; verify the exact IDs for the images you use and adjust ownership accordingly.
 
 **Best For:**
 - Database storage
@@ -100,8 +114,13 @@ task "cache-service" {
 **Client Configuration:**
 ```hcl
 client {
-  host_volume "powerdns-mysql" {
-    path      = "/opt/nomad/volumes/powerdns-mysql"
+  host_volume "postgres-data" {
+    path      = "/opt/nomad/volumes/postgres-data"
+    read_only = false
+  }
+
+  host_volume "mysql-data" {
+    path      = "/opt/nomad/volumes/mysql-data"
     read_only = false
   }
 
@@ -117,14 +136,14 @@ client {
 group "database" {
   volume "data" {
     type      = "host"
-    source    = "powerdns-mysql"
+    source    = "postgres-data"
     read_only = false
   }
 
-  task "mysql" {
+  task "postgres" {
     volume_mount {
       volume      = "data"
-      destination = "/var/lib/mysql"
+      destination = "/var/lib/postgresql/data"
     }
   }
 }
@@ -141,7 +160,10 @@ group "database" {
   vars:
     nomad_volumes_base: /opt/nomad/volumes
     volumes:
-      - name: powerdns-mysql
+      - name: postgres-data
+        owner: 999
+        group: 999
+      - name: mysql-data
         owner: 999
         group: 999
       - name: traefik-certs
@@ -150,6 +172,10 @@ group "database" {
       - name: prometheus-data
         owner: 65534
         group: 65534
+
+  # Optional: enforce placement on SSD/NVMe nodes for hot paths
+  # client { meta { storage = "nvme" } }
+  # constraint { attribute = "${node.meta.storage}" value = "nvme" }
 
   tasks:
     - name: Create volumes directory
@@ -175,6 +201,24 @@ group "database" {
 - Dynamic workloads
 - Prometheus/metrics storage
 - User home directories
+
+**Reboot Safety:**
+Dynamic loop-mounted volumes require a remount step after node reboot.
+Use a `systemd` template unit:
+```ini
+# /etc/systemd/system/nomad-dynvol@.service
+[Unit]
+Description=Mount Nomad dynamic volume %i
+After=local-fs.target
+ConditionPathExists=/opt/nomad/volumes/dynamic/%i.img
+[Service]
+Type=oneshot
+ExecStart=/opt/nomad/plugins/ext4-volume remount %i
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target
+```
+Modify the plugin’s `create`/`delete` to enable/disable this unit, and add a `remount` case to the script.
 
 **Client Configuration:**
 ```hcl
@@ -226,6 +270,9 @@ case "$1" in
 esac
 ```
 
+Reference implementation:
+- Scripts, unit, and Ansible installer live in `docs/implementation/nomad/dynamic-volumes/`
+
 ### 4. CSI Volumes
 
 **Best For:**
@@ -233,6 +280,10 @@ esac
 - High availability requirements
 - Advanced features (snapshots, cloning)
 - Cloud storage integration
+
+**RWX Reality:**
+For multi-writer volumes, NFS is the simplest CSI target but watch locking and latency.
+Always back with a reliable export (e.g., TrueNAS), root-squash enabled, and reserved ports.
 
 **CSI Driver Options:**
 
@@ -293,7 +344,8 @@ parameters {
 
 ### Static Host Volumes
 Format: `{service}-{type}`
-- `powerdns-mysql`
+- `postgres-data`
+- `mysql-data`
 - `traefik-certs`
 - `prometheus-data`
 
@@ -361,6 +413,23 @@ Format: `{service}-{type}-{environment}`
         path: /opt/nomad/volumes/{{ volume_name }}
         dest: /backup/nomad/{{ volume_name }}-{{ ansible_date_time.epoch }}.tar.gz
         format: gz
+
+# Example inventory of volumes to back up
+volumes:
+  - name: postgres-data
+    path: /opt/nomad/volumes/postgres-data
+    mode: snapshot
+  - name: mysql-data
+    path: /opt/nomad/volumes/mysql-data
+    mode: snapshot
+  - name: traefik-certs
+    path: /opt/nomad/volumes/traefik-certs
+    mode: rsync
+schedule: daily@02:00
+retention:
+  daily: 7
+  weekly: 4
+  monthly: 6
 ```
 
 ### CSI Volumes
@@ -376,6 +445,11 @@ Format: `{service}-{type}-{environment}`
    node_filesystem_avail_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
    / node_filesystem_size_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
    ```
+
+SLO examples:
+- Disk usage < 80% sustained for 15m
+- Mount path present for all running allocations
+- CSI attach/detach success > 99.9% over 24h
 
 2. **Volume Health**
    - Mount status

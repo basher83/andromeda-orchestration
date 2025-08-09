@@ -39,17 +39,21 @@ Configures Nomad clients to support dynamic volume provisioning.
 
 **Purpose**: Enable on-demand volume creation for per-allocation storage needs.
 
-**Usage**:
-```bash
-uv run ansible-playbook playbooks/infrastructure/nomad/volumes/enable-dynamic-volumes.yml \
-  -i inventory/doggos-homelab/infisical.proxmox.yml
+**Usage (uv)**:
+```sh
+uv run ansible-playbook -i inventory/localhost.yml \
+  playbooks/infrastructure/nomad/volumes/enable-dynamic-volumes.yml --check
 ```
 
-**Features**:
-- Installs ext4 and XFS volume plugins
-- Creates loop-backed volumes on demand
-- Provides cleanup scripts for orphaned volumes
-- Generates example Nomad configuration
+Remove `--check` to apply.
+
+**What it does now** (role-based):
+- Ensures base directories: `/opt/nomad/volumes/dynamic/.registry` and `/opt/nomad/plugins`
+- Installs the ext4 dynamic volume plugin to `/opt/nomad/plugins/ext4-volume`
+- Installs `nomad-dynvol@.service` and reloads systemd
+- Delegates the work to the Nomad role task `roles/nomad/tasks/dynamic-volumes.yml`
+
+Note: Legacy inline XFS plugin/cleanup scripts were removed to avoid drift. If you need XFS, open an issue and we can add a compatible plugin.
 
 ### deploy-csi-driver.yml (Coming Soon)
 
@@ -119,7 +123,7 @@ ansible tag_client -i inventory/doggos-homelab/infisical.proxmox.yml \
 
 ### Update Nomad Configuration
 
-After provisioning volumes, update the Nomad client configuration:
+After provisioning volumes, update the Nomad client configuration. An example is provided by the Nomad role at `roles/nomad/templates/client-dynamic-volume.hcl.example.j2`.
 
 ```hcl
 client {
@@ -130,11 +134,10 @@ client {
   }
 
   # Dynamic host volume
-  host_volume "dynamic-ext4" {
-    path = "/opt/nomad/volumes/dynamic/volumes"
+  host_volume "dynamic-data" {
+    path    = "/opt/nomad/volumes/dynamic"
     dynamic = true
-    dynamic_plugin = "ext4-volume"
-    plugin_path = "/opt/nomad/plugins/ext4-volume"
+    plugin  = "ext4-volume"
   }
 }
 ```
@@ -175,17 +178,15 @@ job "prometheus" {
   group "monitoring" {
     volume "data" {
       type   = "host"
-      source = "dynamic-ext4"
-
-      parameters {
-        size = "50G"
-      }
+      source = "dynamic-data"
     }
 
     task "prometheus" {
       volume_mount {
         volume      = "data"
         destination = "/prometheus"
+        # Optional on Nomad 1.6+
+        size        = "50GiB"
       }
     }
   }
@@ -250,6 +251,6 @@ journalctl -u nomad | grep volume
 
 ## Related Documentation
 
-- [Nomad Storage Strategy](../../../../docs/implementation/nomad-storage-strategy.md)
-- [Storage Implementation Patterns](../../../../docs/implementation/nomad-storage-patterns.md)
-- [Nomad Jobs Storage Guide](../../../../nomad-jobs/STORAGE.md)
+- [Nomad Storage Strategy](../../../../docs/implementation/nomad/storage-strategy.md)
+- [Storage Implementation Patterns](../../../../docs/implementation/nomad/storage-patterns.md)
+- [Dynamic Volumes Implementation](../../../../docs/implementation/nomad/dynamic-volumes/README.md)

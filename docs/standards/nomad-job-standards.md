@@ -57,6 +57,17 @@ service {
 
 ### Port Allocation
 
+Use standardized port labels across jobs to simplify routing and observability. See the Port label glossary for recommended names: [Port Allocation: Port label glossary](../implementation/nomad/port-allocation.md#port-label-glossary).
+
+Recommended labels (keep lowercase and consistent):
+- http – primary HTTP traffic (via LB)
+- https – TLS entrypoint (LB only)
+- grpc – gRPC endpoint (internal/LB)
+- metrics – Prometheus scrape (internal)
+- admin – admin/management (internal)
+- health – health checks (internal)
+- db – database protocol (internal)
+
 ```hcl
 network {
   # Static ports - ONLY for special cases
@@ -87,7 +98,7 @@ volume "service-data" {
 
 # Naming: {service}-{purpose}
 # Examples:
-#   powerdns-mysql
+#   postgres-data
 #   traefik-certs
 #   prometheus-data
 ```
@@ -310,7 +321,7 @@ mv *-test*.nomad.hcl .archive/
 
 ## References
 
-- [Nomad Storage Configuration](../implementation/nomad-storage-configuration.md)
-- [Port Allocation](../implementation/nomad-port-allocation.md)
+- [Nomad Storage Configuration](../implementation/nomad/storage-configuration.md)
+- [Port Allocation](../implementation/nomad/port-allocation.md)
 - [Service Identity Issues](../troubleshooting/service-identity-issues.md)
 - [Nomad Jobs README](../../nomad-jobs/README.md)
