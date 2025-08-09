@@ -1,0 +1,47 @@
+---
+- name: Check if Consul integration is enabled
+  ansible.builtin.assert:
+    that:
+      - netdata_consul_enabled | bool
+    fail_msg: "Consul integration is not enabled. Set netdata_consul_enabled to true."
+  tags:
+    - netdata
+    - netdata-consul
+
+- name: Check if Consul is available
+  ansible.builtin.uri:
+    url: "{{ netdata_consul_url }}/v1/agent/self"
+    method: GET
+    headers:
+      X-Consul-Token: "{{ netdata_consul_acl_token | default(omit) }}"
+    validate_certs: "{{ not netdata_consul_tls_skip_verify }}"
+  register: consul_check
+  failed_when: false
+  changed_when: false
+  tags:
+    - netdata
+    - netdata-consul
+
+- name: Validate Consul availability
+  ansible.builtin.assert:
+    that:
+      - consul_check.status == 200
+    fail_msg: "Consul is not available at {{ netdata_consul_url }}"
+  tags:
+    - netdata
+    - netdata-consul
+
+- name: Register Netdata service in Consul
+  ansible.builtin.include_tasks: register-service.yml
+  tags:
+    - netdata
+    - netdata-consul
+    - netdata-consul-service
+
+- name: Configure Consul collector for Netdata
+  ansible.builtin.include_tasks: configure-collector.yml
+  when: netdata_consul_collector_enabled
+  tags:
+    - netdata
+    - netdata-consul
+    - netdata-consul-collector

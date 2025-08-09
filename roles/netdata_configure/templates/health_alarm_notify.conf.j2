@@ -1,0 +1,47 @@
+# Health alarm notification configuration
+# {{ ansible_managed }}
+
+# -----------------------------------------------------------------------------
+# General settings
+
+# All alerts will be sent to this email address
+DEFAULT_RECIPIENT_EMAIL="root"
+
+# If enabled, send all clear notifications
+SEND_CLEAR="{{ netdata_send_clear_notifications | default('YES') }}"
+
+# -----------------------------------------------------------------------------
+# Email notifications
+
+# Enable/disable email notifications
+SEND_EMAIL="{{ netdata_alarm_email_enabled | default('YES') }}"
+
+# Email settings
+EMAIL_SENDER="{{ netdata_alarm_email_sender | default('netdata') }}"
+DEFAULT_RECIPIENT_EMAIL="{{ netdata_alarm_email_recipients | default('root') }}"
+EMAIL_PLAINTEXT_ONLY="{{ netdata_alarm_email_plaintext_only | default('YES') }}"
+
+# -----------------------------------------------------------------------------
+# External notification services
+# Add additional notification methods as needed
+
+{% if netdata_alarm_discord_enabled is defined and netdata_alarm_discord_enabled != 'NO' %}
+# Discord notifications
+SEND_DISCORD="{{ netdata_alarm_discord_enabled }}"
+DISCORD_WEBHOOK_URL="{{ netdata_alarm_discord_webhook_url }}"
+DEFAULT_RECIPIENT_DISCORD="{{ netdata_alarm_discord_recipients }}"
+{% endif %}
+
+{% if netdata_alarm_slack_enabled is defined and netdata_alarm_slack_enabled != 'NO' %}
+# Slack notifications
+SEND_SLACK="{{ netdata_alarm_slack_enabled }}"
+SLACK_WEBHOOK_URL="{{ netdata_alarm_slack_webhook_url }}"
+DEFAULT_RECIPIENT_SLACK="{{ netdata_alarm_slack_recipients }}"
+{% endif %}
+
+{% if netdata_alarm_telegram_enabled is defined and netdata_alarm_telegram_enabled != 'NO' %}
+# Telegram notifications
+SEND_TELEGRAM="{{ netdata_alarm_telegram_enabled }}"
+TELEGRAM_BOT_TOKEN="{{ netdata_alarm_telegram_bot_token }}"
+DEFAULT_RECIPIENT_TELEGRAM="{{ netdata_alarm_telegram_recipients }}"
+{% endif %}

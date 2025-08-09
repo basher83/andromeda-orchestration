@@ -1,0 +1,14 @@
+---
+- name: Validate parent node configuration
+  ansible.builtin.assert:
+    that:
+      - netdata_parent_api_key | length > 0 or netdata_parent_children | length > 0
+    fail_msg: "Parent node requires at least netdata_parent_api_key or netdata_parent_children configuration"
+
+- name: Set parent enabled
+  ansible.builtin.set_fact:
+    netdata_parent_enabled: true
+
+- name: Display parent node configuration
+  ansible.builtin.debug:
+    msg: "Configuring Netdata parent node to accept connections from: {{ netdata_parent_allow_from }}"

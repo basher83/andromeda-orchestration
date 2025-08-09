@@ -1,0 +1,52 @@
+---
+- name: Include distribution-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution | lower }}{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      paths:
+        - ../vars
+      skip: true
+  tags:
+    - netdata
+    - netdata-install
+
+- name: Include architecture-specific variables
+  ansible.builtin.include_vars: "{{ ansible_architecture | lower }}.yml"
+  failed_when: false
+  tags:
+    - netdata
+    - netdata-install
+
+- name: Install from repository
+  ansible.builtin.include_tasks: install-repository.yml
+  when: netdata_install_method == "repository"
+  tags:
+    - netdata
+    - netdata-install
+
+- name: Install from package manager
+  ansible.builtin.include_tasks: install-package.yml
+  when: netdata_install_method == "package"
+  tags:
+    - netdata
+    - netdata-install
+
+- name: Install from script
+  ansible.builtin.include_tasks: install-script.yml
+  when: netdata_install_method == "script"
+  tags:
+    - netdata
+    - netdata-install
+
+- name: Ensure Netdata service is started and enabled
+  ansible.builtin.systemd:
+    name: netdata
+    state: started
+    enabled: true
+    daemon_reload: true
+  tags:
+    - netdata
+    - netdata-service

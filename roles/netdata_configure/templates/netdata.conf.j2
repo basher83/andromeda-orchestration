@@ -1,0 +1,60 @@
+# Netdata configuration
+# {{ ansible_managed }}
+
+[global]
+    run as user = {{ netdata_user }}
+    update every = {{ netdata_update_every }}
+    memory mode = {{ netdata_memory_mode }}
+    history = {{ netdata_history }}
+
+    # Error logging
+    debug log = {{ netdata_debug_log }}
+    error log = {{ netdata_error_log }}
+    access log = {{ netdata_access_log }}
+
+    # Process scheduling
+    process scheduling policy = {{ netdata_process_scheduling_policy }}
+    OOM score = {{ netdata_oom_score }}
+
+[web]
+    bind to = {{ netdata_bind_to }}
+    default port = {{ netdata_port }}
+    enable gzip compression = {{ netdata_web_gzip_enabled | lower }}
+    gzip compression level = {{ netdata_web_gzip_level }}
+
+[db]
+    mode = {{ netdata_memory_mode }}
+{% if netdata_memory_mode == 'dbengine' %}
+    storage tiers = 1
+    update every = {{ netdata_update_every }}
+    dbengine multihost disk space MB = {{ netdata_dbengine_disk_space }}
+    dbengine page cache size MB = {{ netdata_page_cache_size }}
+{% endif %}
+
+[ml]
+    enabled = {{ netdata_ml_enabled | lower }}
+
+[health]
+    enabled = {{ netdata_alarms_enabled | lower }}
+
+[plugins]
+    # Enable or disable plugins
+    apps = {{ netdata_plugins.apps | lower }}
+    cgroups = {{ netdata_plugins.cgroups | lower }}
+    charts.d = {{ netdata_plugins.charts_d | default(true) | lower }}
+    checks = {{ netdata_plugins.checks | lower }}
+    diskspace = {{ netdata_plugins.diskspace | lower }}
+    ebpf = {{ netdata_plugins.ebpf | lower }}
+    fping = {{ netdata_plugins.fping | lower }}
+    go.d = {{ netdata_plugins.go_d | default(true) | lower }}
+    idlejitter = {{ netdata_plugins.idlejitter | lower }}
+    proc = {{ netdata_plugins.proc | lower }}
+    python.d = {{ netdata_plugins.python_d | default(true) | lower }}
+    tc = {{ netdata_plugins.tc | lower }}
+
+{% if netdata_additional_config %}
+# Additional configuration
+{% for key, value in netdata_additional_config.items() %}
+{{ key }} = {{ value }}
+{% endfor %}
+{% endif %}

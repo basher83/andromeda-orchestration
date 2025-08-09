@@ -1,0 +1,11 @@
+---
+- name: Install Netdata from distribution package manager
+  ansible.builtin.package:
+    name: "{{ netdata_package_name }}"
+    state: present
+  register: netdata_package_install
+
+- name: Display installation result
+  ansible.builtin.debug:
+    msg: "Netdata installed from package manager: {{ netdata_package_install.changed }}"
+  when: netdata_package_install is defined

@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  author: Infrastructure Team
+  description: Install Netdata monitoring agent
+  company: Andromeda Orchestration
+  license: MIT
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "7"
+        - "8"
+        - "9"
+  galaxy_tags:
+    - monitoring
+    - netdata
+    - metrics
+    - observability
+
+dependencies: []

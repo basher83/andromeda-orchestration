@@ -1,0 +1,38 @@
+---
+- name: Ensure cloud.d directory exists
+  ansible.builtin.file:
+    path: /var/lib/netdata/cloud.d
+    state: directory
+    owner: netdata
+    group: netdata
+    mode: '0750'
+
+- name: Configure node labels for cloud
+  when: netdata_cloud_node_labels | length > 0
+  block:
+    - name: Create labels configuration
+      ansible.builtin.copy:
+        content: |
+          # Node labels for Netdata Cloud
+          {% for key, value in netdata_cloud_node_labels.items() %}
+          {{ key }}={{ value }}
+          {% endfor %}
+        dest: /var/lib/netdata/cloud.d/labels.conf
+        owner: netdata
+        group: netdata
+        mode: '0640'
+      notify: restart netdata
+
+- name: Check cloud connection status
+  ansible.builtin.command:
+    cmd: netdatacli aclk-state
+  register: aclk_state
+  changed_when: false
+  failed_when: false
+
+- name: Display cloud connection status
+  ansible.builtin.debug:
+    msg: |
+      Cloud connection status:
+      {{ aclk_state.stdout }}
+  when: aclk_state.rc == 0

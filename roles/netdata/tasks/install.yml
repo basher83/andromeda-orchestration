@@ -11,6 +11,7 @@
     state: present
   when: netdata_install_method == "script"
 
+# [FIXME]: The installation script task isn't fully idempotent
 - name: Download and run Netdata installation script
   ansible.builtin.shell: |
     bash <(curl -Ss https://my-netdata.io/kickstart.sh) \
@@ -21,6 +22,7 @@
     creates: /usr/sbin/netdata
   when: netdata_install_method == "script"
 
+# [FIXME]: Why are we creating directories? The installer does that
 - name: Create Netdata directories
   ansible.builtin.file:
     path: "{{ item }}"

@@ -1,0 +1,99 @@
+---
+- name: Check if cloud claiming is enabled
+  ansible.builtin.assert:
+    that:
+      - netdata_cloud_enabled | bool
+    fail_msg: "Netdata Cloud claiming is not enabled. Set netdata_cloud_enabled to true."
+  tags:
+    - netdata
+    - netdata-cloud
+
+- name: Retrieve claim credentials from Infisical
+  when: netdata_use_infisical
+  block:
+    - name: Get Infisical secrets
+      infisical.vault.read_secrets:
+        path: "{{ netdata_infisical_path }}"
+        env_slug: "{{ infisical_environment | default('prod') }}"
+      register: netdata_secrets
+      no_log: true
+
+    - name: Set claim token from Infisical
+      ansible.builtin.set_fact:
+        netdata_claim_token: "{{ netdata_secrets.secrets.NETDATA_CLAIM_TOKEN }}"
+      when: netdata_secrets.secrets.NETDATA_CLAIM_TOKEN is defined
+      no_log: true
+
+    - name: Set claim rooms from Infisical
+      ansible.builtin.set_fact:
+        netdata_claim_rooms: "{{ netdata_secrets.secrets.NETDATA_CLAIM_ROOMS }}"
+      when: netdata_secrets.secrets.NETDATA_CLAIM_ROOMS is defined
+      no_log: true
+  tags:
+    - netdata
+    - netdata-cloud
+    - netdata-secrets
+
+- name: Validate claim configuration
+  ansible.builtin.assert:
+    that:
+      - netdata_claim_token | length > 0
+      - netdata_claim_rooms | length > 0
+    fail_msg: "Both netdata_claim_token and netdata_claim_rooms are required for claiming"
+  tags:
+    - netdata
+    - netdata-cloud
+
+- name: Check if already claimed
+  ansible.builtin.stat:
+    path: /var/lib/netdata/cloud.d/claimed_id
+  register: claimed_id_file
+  tags:
+    - netdata
+    - netdata-cloud
+
+- name: Display claim status
+  ansible.builtin.debug:
+    msg: "Node is {{ 'already' if claimed_id_file.stat.exists else 'not' }} claimed to Netdata Cloud"
+  tags:
+    - netdata
+    - netdata-cloud
+
+- name: Claim node to Netdata Cloud
+  when: not claimed_id_file.stat.exists or netdata_claim_force
+  block:
+    - name: Build claim command
+      ansible.builtin.set_fact:
+        claim_command: >-
+          netdata-claim.sh
+          -token={{ netdata_claim_token }}
+          -rooms={{ netdata_claim_rooms }}
+          -url={{ netdata_claim_url }}
+          {{ '-proxy=' + netdata_claim_proxy if netdata_claim_proxy else '' }}
+          {{ '-insecure' if netdata_claim_insecure else '' }}
+      no_log: true
+
+    - name: Execute claim command
+      ansible.builtin.command:
+        cmd: "{{ claim_command }}"
+      register: claim_result
+      failed_when: claim_result.rc != 0 and "already claimed" not in claim_result.stderr
+      changed_when: claim_result.rc == 0
+      no_log: true
+
+    - name: Display claim result
+      ansible.builtin.debug:
+        msg: "Claim {{ 'successful' if claim_result.rc == 0 else 'failed or already claimed' }}"
+      when: claim_result is defined
+  tags:
+    - netdata
+    - netdata-cloud
+    - netdata-claim
+
+- name: Configure cloud settings
+  ansible.builtin.include_tasks: configure-cloud.yml
+  when: claimed_id_file.stat.exists or (claim_result is defined and claim_result.rc == 0)
+  tags:
+    - netdata
+    - netdata-cloud
+    - netdata-cloud-config

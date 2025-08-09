@@ -1,0 +1,105 @@
+# Netdata streaming configuration
+# {{ ansible_managed }}
+# Node type: {{ netdata_node_type }}
+
+{% if netdata_node_type in ['child', 'proxy'] %}
+# -----------------------------------------------------------------------------
+# SENDING DATA (Child/Proxy node configuration)
+
+[stream]
+    enabled = {{ netdata_streaming_enabled | lower }}
+    destination = {{ netdata_streaming_destination }}
+    api key = {{ netdata_streaming_api_key }}
+
+    # Buffering and reconnection
+    buffer size bytes = {{ netdata_streaming_buffer_size_bytes }}
+    reconnect delay seconds = {{ netdata_streaming_reconnect_delay }}
+    initial clock resync iterations = {{ netdata_streaming_initial_clock_resync_iterations }}
+
+    # Compression
+    enable compression = {{ netdata_streaming_compression | lower }}
+
+    # Charts to send
+    send charts matching = {{ netdata_streaming_send_charts_matching }}
+
+{% if netdata_streaming_ssl_enabled %}
+    # SSL/TLS configuration
+    CApath = {{ netdata_streaming_ssl_ca_path }}
+{% if netdata_streaming_ssl_ca_file %}
+    CAfile = {{ netdata_config_dir }}/ssl/ca.pem
+{% endif %}
+{% if netdata_streaming_ssl_cert %}
+    ssl certificate = {{ netdata_config_dir }}/ssl/cert.pem
+{% endif %}
+{% if netdata_streaming_ssl_key %}
+    ssl key = {{ netdata_config_dir }}/ssl/key.pem
+{% endif %}
+{% endif %}
+
+{% if netdata_streaming_parents | length > 0 %}
+# Multiple parent configuration
+{% for parent in netdata_streaming_parents %}
+[{{ parent.destination }}]
+    enabled = yes
+    api key = {{ parent.api_key }}
+{% if parent.send_charts_matching is defined %}
+    send charts matching = {{ parent.send_charts_matching }}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+{% endif %}
+
+{% if netdata_node_type in ['parent', 'proxy'] %}
+# -----------------------------------------------------------------------------
+# RECEIVING DATA (Parent/Proxy node configuration)
+
+# Default settings for all children
+[{{ netdata_parent_api_key | default('DEFAULT_API_KEY') }}]
+    enabled = yes
+    allow from = {{ netdata_parent_allow_from }}
+    default history = {{ netdata_parent_default_history }}
+    default memory mode = {{ netdata_parent_default_memory_mode }}
+    health enabled by default = {{ netdata_parent_health_enabled }}
+    default postpone alarms on connect seconds = {{ netdata_parent_postpone_alarms_on_connect }}
+
+{% if netdata_streaming_ssl_enabled %}
+    # SSL/TLS configuration for receiving
+    CApath = {{ netdata_streaming_ssl_ca_path }}
+{% if netdata_streaming_ssl_ca_file %}
+    CAfile = {{ netdata_config_dir }}/ssl/ca.pem
+{% endif %}
+{% if netdata_streaming_ssl_cert %}
+    ssl certificate = {{ netdata_config_dir }}/ssl/cert.pem
+{% endif %}
+{% if netdata_streaming_ssl_key %}
+    ssl key = {{ netdata_config_dir }}/ssl/key.pem
+{% endif %}
+{% endif %}
+
+{% if netdata_parent_children | length > 0 %}
+# Specific children configuration
+{% for child in netdata_parent_children %}
+[{{ child.api_key }}]
+    enabled = yes
+{% if child.allow_from is defined %}
+    allow from = {{ child.allow_from }}
+{% else %}
+    allow from = *
+{% endif %}
+{% if child.name is defined %}
+    # Child: {{ child.name }}
+{% endif %}
+{% if child.default_history is defined %}
+    default history = {{ child.default_history }}
+{% endif %}
+{% if child.default_memory_mode is defined %}
+    default memory mode = {{ child.default_memory_mode }}
+{% endif %}
+{% if child.health_enabled is defined %}
+    health enabled by default = {{ child.health_enabled }}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+{% endif %}

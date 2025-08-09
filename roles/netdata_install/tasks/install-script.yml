@@ -1,0 +1,41 @@
+---
+- name: Check if Netdata is already installed
+  ansible.builtin.stat:
+    path: /usr/sbin/netdata
+  register: netdata_binary
+
+- name: Install Netdata using kickstart script
+  when: not netdata_binary.stat.exists
+  block:
+    - name: Download Netdata installation script
+      ansible.builtin.get_url:
+        url: "{{ netdata_install_script_url }}"
+        dest: /tmp/netdata-kickstart.sh
+        mode: '0755'
+        timeout: 30
+
+    - name: Run Netdata installation script
+      ansible.builtin.command:
+        cmd: "/tmp/netdata-kickstart.sh {{ netdata_install_flags }} {{ '--nightly-channel' if netdata_version == 'nightly' else '' }} {{ '--stable-channel' if netdata_version == 'stable' else '' }}"
+        creates: /usr/sbin/netdata
+      environment:
+        NETDATA_CLAIM_TOKEN: ""
+        NETDATA_CLAIM_ROOMS: ""
+        NETDATA_CLAIM_URL: ""
+
+    - name: Clean up installation script
+      ansible.builtin.file:
+        path: /tmp/netdata-kickstart.sh
+        state: absent
+
+- name: Verify Netdata installation
+  ansible.builtin.command:
+    cmd: netdata -V
+  register: netdata_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Display Netdata version
+  ansible.builtin.debug:
+    msg: "Netdata version: {{ netdata_version_output.stdout }}"
+  when: netdata_version_output.rc == 0

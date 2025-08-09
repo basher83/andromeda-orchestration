@@ -1,0 +1,58 @@
+---
+# Netdata streaming configuration
+netdata_config_dir: /etc/netdata
+netdata_user: netdata
+netdata_group: netdata
+
+# Node type configuration
+netdata_node_type: "standalone"  # standalone, child, parent, or proxy
+
+# Child node streaming settings
+netdata_streaming_enabled: false
+netdata_streaming_destination: ""  # parent:port or parent1:port|parent2:port
+netdata_streaming_api_key: ""
+netdata_streaming_buffer_size_bytes: 10485760
+netdata_streaming_reconnect_delay: 5
+netdata_streaming_initial_clock_resync_iterations: 60
+netdata_streaming_compression: true
+netdata_streaming_send_charts_matching: "*"
+
+# Parent node settings
+netdata_parent_enabled: false
+netdata_parent_api_key: ""
+netdata_parent_allow_from: "*"
+netdata_parent_default_history: 3600
+netdata_parent_default_memory_mode: "dbengine"
+netdata_parent_health_enabled: "auto"
+netdata_parent_postpone_alarms_on_connect: 60
+
+# SSL/TLS configuration
+netdata_streaming_ssl_enabled: false
+netdata_streaming_ssl_ca_path: "/etc/ssl/certs/"
+netdata_streaming_ssl_ca_file: ""
+netdata_streaming_ssl_cert: ""
+netdata_streaming_ssl_key: ""
+
+# Infisical integration for API keys
+netdata_use_infisical: false
+netdata_infisical_path: "/apollo-13/services/netdata"
+
+# Multiple parent support (for child nodes)
+netdata_streaming_parents: []
+# Example:
+# netdata_streaming_parents:
+#   - destination: "parent1.example.com:19999"
+#     api_key: "unique-key-1"
+#   - destination: "parent2.example.com:19999"
+#     api_key: "unique-key-2"
+
+# Children configuration (for parent nodes)
+netdata_parent_children: []
+# Example:
+# netdata_parent_children:
+#   - name: "child1"
+#     api_key: "child1-api-key"
+#     allow_from: "192.168.1.0/24"
+#   - name: "child2"
+#     api_key: "child2-api-key"
+#     allow_from: "*"
