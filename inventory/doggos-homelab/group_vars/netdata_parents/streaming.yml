@@ -23,22 +23,28 @@ netdata_streaming_destination: |
 netdata_streaming_api_key: "{{ vault_netdata_mesh_api_key }}"
 
 # Parent nodes also accept streams from other parents
-netdata_parent_children:
-  # Accept streams from other doggos parents
+netdata_parent_children: |
+  {% set children = [] %}
   {% for host in groups['netdata_parents'] | default([]) %}
-  {% if host != inventory_hostname %}
-  - api_key: "{{ vault_netdata_mesh_api_key }}"
-    allow_from: "{{ hostvars[host]['ansible_default_ipv4']['address'] }}"
-    history: 86400
-    memory_mode: "dbengine"
-    health_enabled: "auto"
-    multiple_connections: "allow"
-  {% endif %}
+    {% if host != inventory_hostname %}
+      {% set child_config = {
+        'api_key': vault_netdata_mesh_api_key,
+        'allow_from': hostvars[host]['ansible_default_ipv4']['address'],
+        'history': 86400,
+        'memory_mode': 'dbengine',
+        'health_enabled': 'auto',
+        'multiple_connections': 'allow'
+      } %}
+      {% set _ = children.append(child_config) %}
+    {% endif %}
   {% endfor %}
-  # Accept streams from og-homelab parent
-  - api_key: "{{ vault_netdata_mesh_api_key }}"
-    allow_from: "{{ hostvars['pve1']['ansible_host'] | default('192.168.30.50') }}"
-    history: 86400
-    memory_mode: "dbengine"
-    health_enabled: "auto"
-    multiple_connections: "allow"
+  {% set og_child_config = {
+    'api_key': vault_netdata_mesh_api_key,
+    'allow_from': hostvars['pve1']['ansible_host'] | default('192.168.30.50'),
+    'history': 86400,
+    'memory_mode': 'dbengine',
+    'health_enabled': 'auto',
+    'multiple_connections': 'allow'
+  } %}
+  {% set _ = children.append(og_child_config) %}
+  {{ children | to_nice_yaml }}

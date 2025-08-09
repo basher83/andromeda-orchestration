@@ -39,6 +39,9 @@ table inet filter {
         # Allow Netdata monitoring
         tcp dport 19999 accept
 
+        # Allow Vault API
+        tcp dport 8200 accept
+
         # Drop everything else
         drop
     }

@@ -46,7 +46,7 @@ table inet filter {
         # Well-known service ports (for static port allocations)
         tcp dport 53 accept                # DNS (must be on standard port)
         udp dport 53 accept                # DNS
-        
+
         # Service-specific static ports (only when absolutely necessary)
         tcp dport 8081 accept              # PowerDNS API (currently using static allocation)
 

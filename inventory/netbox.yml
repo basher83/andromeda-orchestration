@@ -3,7 +3,7 @@
 # This inventory connects to NetBox as the source of truth for infrastructure
 
 plugin: netbox.netbox.nb_inventory
-api_endpoint: http://192.168.30.213  # NetBox URL (LXC 213 on pve1)
+api_endpoint: https://192.168.30.213  # NetBox URL (LXC 213 on pve1)
 validate_certs: false  # Set to true in production with proper certs
 
 # API token will be set via environment variable: NETBOX_TOKEN

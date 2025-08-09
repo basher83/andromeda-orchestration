@@ -13,34 +13,34 @@ from ..module_utils.utils import del_none, is_subset
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
-    policies_and_roles_spec = dict(
-        id=dict(type="str", aliases=["ID"]),
-        name=dict(type="str", aliases=["Name"]),
-    )
-    module_args = dict(
-        state=dict(type="str", choices=["present", "absent"], default="present"),
-        url=dict(type="str", required=True, fallback=(env_fallback, ["NOMAD_ADDR"])),
-        validate_certs=dict(type="bool", default=True),
-        connection_timeout=dict(type="int", default=10),
-        management_token=dict(
-            type="str",
-            required=True,
-            no_log=True,
-            fallback=(env_fallback, ["NOMAD_TOKEN"]),
-        ),
-        accessor_id=dict(type="str"),
-        secret_id=dict(type="str"),
-        description=dict(type="str"),
-        policies=dict(type="list", elements="dict", options=policies_and_roles_spec),
-        roles=dict(type="list", elements="dict", options=policies_and_roles_spec),
-        is_local=dict(type="bool", default=False),
-        expiration_ttl=dict(type="str"),
-    )
+    policies_and_roles_spec = {
+        "id": {"type": "str", "aliases": ["ID"]},
+        "name": {"type": "str", "aliases": ["Name"]},
+    }
+    module_args = {
+        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
+        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "validate_certs": {"type": "bool", "default": True},
+        "connection_timeout": {"type": "int", "default": 10},
+        "management_token": {
+            "type": "str",
+            "required": True,
+            "no_log": True,
+            "fallback": (env_fallback, ["NOMAD_TOKEN"]),
+        },
+        "accessor_id": {"type": "str"},
+        "secret_id": {"type": "str"},
+        "description": {"type": "str"},
+        "policies": {"type": "list", "elements": "dict", "options": policies_and_roles_spec},
+        "roles": {"type": "list", "elements": "dict", "options": policies_and_roles_spec},
+        "is_local": {"type": "bool", "default": False},
+        "expiration_ttl": {"type": "str"},
+    }
 
     # seed the final result dict in the object. Default nothing changed ;)
-    result = dict(
-        changed=False,
-    )
+    result = {
+        "changed": False,
+    }
 
     # the AnsibleModule object
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
@@ -49,14 +49,14 @@ def run_module():
     consul = ConsulAPI(module)
 
     desired_token_body = del_none(
-        dict(
-            AccessorID=module.params.get("accessor_id"),
-            Description=module.params.get("description"),
-            ExpirationTTL=module.params.get("expiration_ttl"),
-            Local=module.params.get("local"),
-            SecretID=module.params.get("secret_id"),
-            ServiceIdentities=module.params.get("service_identities"),
-        )
+        {
+            "AccessorID": module.params.get("accessor_id"),
+            "Description": module.params.get("description"),
+            "ExpirationTTL": module.params.get("expiration_ttl"),
+            "Local": module.params.get("local"),
+            "SecretID": module.params.get("secret_id"),
+            "ServiceIdentities": module.params.get("service_identities"),
+        }
     )
 
     # populate any policies or roles defined
@@ -65,10 +65,10 @@ def run_module():
         for p in module.params.get("policies"):
             policies.append(
                 del_none(
-                    dict(
-                        ID=p.get("id"),
-                        Name=p.get("name"),
-                    )
+                    {
+                        "ID": p.get("id"),
+                        "Name": p.get("name"),
+                    }
                 )
             )
         desired_token_body["Policies"] = policies
@@ -78,10 +78,10 @@ def run_module():
         for r in module.params.get("roles"):
             roles.append(
                 del_none(
-                    dict(
-                        ID=r.get("id"),
-                        Name=r.get("name"),
-                    )
+                    {
+                        "ID": r.get("id"),
+                        "Name": r.get("name"),
+                    }
                 )
             )
         desired_token_body["Roles"] = roles
@@ -93,10 +93,9 @@ def run_module():
         existing_token = consul.get_acl_token(accessor_id)
 
     # delete token only when it exists
-    if module.params.get("state") == "absent":
-        if existing_token is not None:
-            consul.delete_acl_token(accessor_id)
-            result["changed"] = True
+    if module.params.get("state") == "absent" and existing_token is not None:
+        consul.delete_acl_token(accessor_id)
+        result["changed"] = True
 
     if module.params.get("state") == "present":
         # decide to create a token if accessor_id is not set

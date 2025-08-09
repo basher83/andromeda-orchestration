@@ -7,7 +7,7 @@ consul {
 {% if netdata_consul_acl_token is defined %}
   token = "{{ netdata_consul_acl_token }}"
 {% endif %}
-  
+
   retry {
     enabled = true
     attempts = 10
@@ -26,7 +26,7 @@ template {
   destination = "{{ template.destination }}"
   command = "{{ template.command | default('systemctl restart netdata') }}"
   perms = {{ template.perms | default('0644') }}
-  
+
   # Prevent flapping
   wait {
     min = "{{ template.wait_min | default('2s') }}"
@@ -42,7 +42,7 @@ template {
   destination = "/etc/netdata/health.d/cpu.conf"
   command = "systemctl restart netdata"
   perms = 0644
-  
+
   wait {
     min = "5s"
     max = "30s"
