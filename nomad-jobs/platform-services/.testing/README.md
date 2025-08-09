@@ -4,19 +4,19 @@ Nomad job templates that match your standards (static :53, everything else dynam
 
 # Deployment Options
 
-Mode A (nomad-jobs/platform-services/.testing/mode-a) (Simple / Production-friendly): pdns-auth serves :53 directly.
+[Mode A](./mode-a/) (Simple / Production-friendly): pdns-auth serves :53 directly.
 
-Mode B (nomad-jobs/platform-services/.testing/mode-b) (Full stack): dnsdist on :53 in front of pdns-auth and pdns-recursor (cleanest when you want both auth + recursion anywhere in the cluster). Why: clean split of concerns; dnsdist routes auth zones to pdns-auth and everything else to pdns-recursor. Lets you scale components independently and keep :53 consistent.
-
+[Mode B](./mode-b/) (Full stack): dnsdist on :53 in front of pdns-auth and pdns-recursor (cleanest when you want both auth + recursion anywhere in the cluster). Why: clean split of concerns; dnsdist routes auth zones to pdns-auth and everything else to pdns-recursor. Lets you scale components independently and keep :53 consistent.
 
 ## Assumptions
+
 Storage: PostgreSQL backend for PDNS Auth (already reachable from Nomad nodes).
 
 Secrets:
 
 Vault path kv/pdns: db_password, api_key
 
-Consul KV pdns/db/*: host, port, name, user
+Consul KV pdns/db/\*: host, port, name, user
 
 Networking:
 
@@ -30,15 +30,14 @@ Ingress: Traefik (Consul Catalog provider) picks up API via tags
 
 ## Mode A
 
-[powerdns-testing.nomad.hcl](nomad-jobs/platform-services/.testing/mode-a/powerdns-testing.nomad.hcl)
-
+[powerdns-testing.nomad.hcl](./mode-a/powerdns-testing.nomad.hcl)
 
 ## Mode B
 
-[powerdns-testing.nomad.hcl](nomad-jobs/platform-services/.testing/mode-b/powerdns-testing.nomad.hcl)
-
+[powerdns-testing.nomad.hcl](./mode-b/powerdns-testing.nomad.hcl)
 
 ## Consul KV / Vault bootstrap (quick sketch)
+
 Consul KV
 
 ```bash

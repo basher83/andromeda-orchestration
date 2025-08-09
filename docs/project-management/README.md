@@ -55,6 +55,7 @@ All tasks follow this standard format:
 
 ```markdown
 ### [Number]. Task Title
+
 **Description**: Clear, actionable description
 **Status**: Not Started | In Progress | Completed | Blocked
 **Priority**: Critical | High | Medium | Low
@@ -62,6 +63,7 @@ All tasks follow this standard format:
 **Related**: Links to docs
 
 Tasks:
+
 - [ ] Subtask 1
 - [ ] Subtask 2
 ```
@@ -86,3 +88,19 @@ grep -c "✅" completed/2025-08.md
 - [Project Management Standards](../standards/project-management-standards.md)
 - [DNS/IPAM Implementation Plan](../implementation/dns-ipam/implementation-plan.md)
 - [Repository Structure](../getting-started/repository-structure.md)
+
+## 🧭 Phases Legend
+
+- **Phase 3: NetBox Integration and DNS Migration** — Integrate NetBox as source of truth; prep DNS migration
+- **Phase 4: PowerDNS-NetBox Integration** — Configure zones, API integration, synchronization
+- **Phase 5: Multi-Site Expansion and Optimization** — Extend to multiple sites; hardening and HA
+- **Phase 6: Post-Implementation & Continuous Improvement** — Operations, automation, and maturity
+
+See: [Phases Index](./phases/README.md)
+
+## 🔖 Status Icons Legend
+
+- ✅ Completed
+- 🚧 In Progress
+- ⏳ Not Started
+- ⛔ Blocked
