@@ -1,0 +1,34 @@
+# Consul collector configuration for Netdata go.d plugin
+# {{ ansible_managed }}
+
+jobs:
+  - name: local
+    url: {{ netdata_consul_url }}
+{% if netdata_consul_acl_token %}
+    token: {{ netdata_consul_acl_token }}
+{% endif %}
+{% if netdata_consul_datacenter %}
+    datacenter: {{ netdata_consul_datacenter }}
+{% endif %}
+    update_every: {{ netdata_consul_update_every }}
+    timeout: {{ netdata_consul_timeout }}
+    autodetection_retry: {{ netdata_consul_autodetection_retry }}
+
+    # Metrics collection
+    collect_node_metadata: {{ netdata_consul_collect_node_metadata | lower }}
+    collect_service_metadata: {{ netdata_consul_collect_service_metadata | lower }}
+    collect_checks: {{ netdata_consul_collect_checks | lower }}
+
+{% if netdata_consul_tls_enabled %}
+    # TLS configuration
+    tls_skip_verify: {{ netdata_consul_tls_skip_verify | lower }}
+{% if netdata_consul_tls_ca %}
+    tls_ca: {{ netdata_consul_tls_ca }}
+{% endif %}
+{% if netdata_consul_tls_cert %}
+    tls_cert: {{ netdata_consul_tls_cert }}
+{% endif %}
+{% if netdata_consul_tls_key %}
+    tls_key: {{ netdata_consul_tls_key }}
+{% endif %}
+{% endif %}

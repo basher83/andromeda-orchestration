@@ -1,0 +1,60 @@
+---
+# Basic Netdata configuration
+netdata_config_dir: /etc/netdata
+netdata_user: netdata
+netdata_group: netdata
+
+# Web interface settings
+netdata_bind_to: "0.0.0.0"
+netdata_port: 19999
+netdata_web_enabled: true
+
+# Memory mode
+netdata_memory_mode: "dbengine"  # save, map, ram, none, alloc, dbengine
+
+# History settings
+netdata_history: 3600  # seconds of history to keep
+
+# Update frequency
+netdata_update_every: 1  # seconds between data collection
+
+# Database engine settings (when using dbengine)
+netdata_page_cache_size: 32
+netdata_dbengine_disk_space: 256
+
+# Machine Learning
+netdata_ml_enabled: true
+
+# Alarms
+netdata_alarms_enabled: true
+
+# Error logging
+netdata_debug_log: "none"
+netdata_error_log: "syslog"
+netdata_access_log: "none"
+
+# Web compression
+netdata_web_gzip_enabled: true
+netdata_web_gzip_level: 3
+
+# Process scheduling
+netdata_process_scheduling_policy: "idle"  # idle, other, batch, rr, fifo
+netdata_oom_score: 1000
+
+# Plugins to enable/disable
+netdata_plugins:
+  apps: true
+  cgroups: true
+  charts.d: true
+  checks: true
+  diskspace: true
+  ebpf: false
+  fping: true
+  go.d: true
+  idlejitter: true
+  proc: true
+  python.d: true
+  tc: true
+
+# Additional configuration (key-value pairs)
+netdata_additional_config: {}

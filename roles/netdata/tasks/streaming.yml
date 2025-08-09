@@ -1,4 +1,11 @@
 ---
+- name: Retrieve streaming API key from Infisical
+  infisical.vault.read_secrets:
+    path: "{{ netdata_infisical_path }}"
+    env_slug: "{{ infisical_environment }}"
+  register: netdata_secrets
+  when: netdata_use_infisical
+
 - name: Configure Netdata streaming
   ansible.builtin.template:
     src: stream.conf.j2

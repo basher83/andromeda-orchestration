@@ -1,0 +1,15 @@
+---
+- name: Validate child node configuration
+  ansible.builtin.assert:
+    that:
+      - netdata_streaming_destination | length > 0
+      - netdata_streaming_api_key | length > 0
+    fail_msg: "Child node requires netdata_streaming_destination and netdata_streaming_api_key"
+
+- name: Set child streaming enabled
+  ansible.builtin.set_fact:
+    netdata_streaming_enabled: true
+
+- name: Display child node configuration
+  ansible.builtin.debug:
+    msg: "Configuring Netdata child node to stream to: {{ netdata_streaming_destination }}"

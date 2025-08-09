@@ -1,0 +1,18 @@
+{
+  "service": {
+    "id": "{{ netdata_consul_service_name }}-{{ ansible_hostname }}",
+    "name": "{{ netdata_consul_service_name }}",
+    "tags": {{ netdata_consul_service_tags | to_json }},
+    "meta": {{ netdata_consul_service_meta | to_json }},
+    "port": {{ netdata_consul_service_port | int }},
+    "address": "{{ ansible_default_ipv4.address }}",
+    "enable_tag_override": {{ netdata_consul_enable_tag_override | lower }},
+{% if netdata_consul_health_check_enabled %}
+    "check": {
+      "http": "{{ netdata_consul_health_check_http }}",
+      "interval": "{{ netdata_consul_health_check_interval }}",
+      "timeout": "{{ netdata_consul_health_check_timeout }}"
+    }
+{% endif %}
+  }
+}

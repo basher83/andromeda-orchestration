@@ -1,0 +1,38 @@
+---
+- name: Create SSL directory for streaming
+  ansible.builtin.file:
+    path: "{{ netdata_config_dir }}/ssl"
+    state: directory
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0700'
+
+- name: Deploy SSL certificate
+  ansible.builtin.copy:
+    content: "{{ netdata_streaming_ssl_cert }}"
+    dest: "{{ netdata_config_dir }}/ssl/cert.pem"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0600'
+  when: netdata_streaming_ssl_cert | length > 0
+  no_log: true
+
+- name: Deploy SSL key
+  ansible.builtin.copy:
+    content: "{{ netdata_streaming_ssl_key }}"
+    dest: "{{ netdata_config_dir }}/ssl/key.pem"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0600'
+  when: netdata_streaming_ssl_key | length > 0
+  no_log: true
+
+- name: Deploy CA certificate
+  ansible.builtin.copy:
+    content: "{{ netdata_streaming_ssl_ca_file }}"
+    dest: "{{ netdata_config_dir }}/ssl/ca.pem"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0600'
+  when: netdata_streaming_ssl_ca_file | length > 0
+  no_log: true

@@ -1,0 +1,59 @@
+---
+- name: Ensure Netdata configuration directory exists
+  ansible.builtin.file:
+    path: "{{ netdata_config_dir }}"
+    state: directory
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0755'
+  tags:
+    - netdata
+    - netdata-config
+
+- name: Configure main Netdata settings
+  ansible.builtin.template:
+    src: netdata.conf.j2
+    dest: "{{ netdata_config_dir }}/netdata.conf"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0644'
+    backup: true
+  notify: restart netdata
+  tags:
+    - netdata
+    - netdata-config
+
+- name: Configure health alarm notifications
+  ansible.builtin.template:
+    src: health_alarm_notify.conf.j2
+    dest: "{{ netdata_config_dir }}/health_alarm_notify.conf"
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0640'
+    backup: true
+  when: netdata_alarms_enabled
+  notify: reload netdata
+  tags:
+    - netdata
+    - netdata-config
+    - netdata-alarms
+
+- name: Ensure health.d directory exists
+  ansible.builtin.file:
+    path: "{{ netdata_config_dir }}/health.d"
+    state: directory
+    owner: "{{ netdata_user }}"
+    group: "{{ netdata_group }}"
+    mode: '0755'
+  when: netdata_alarms_enabled
+  tags:
+    - netdata
+    - netdata-config
+    - netdata-alarms
+
+- name: Configure plugin settings
+  ansible.builtin.include_tasks: configure-plugins.yml
+  tags:
+    - netdata
+    - netdata-config
+    - netdata-plugins

@@ -1,0 +1,20 @@
+---
+- name: Validate proxy node configuration
+  ansible.builtin.assert:
+    that:
+      - netdata_streaming_destination | length > 0
+      - netdata_streaming_api_key | length > 0
+      - netdata_parent_api_key | length > 0 or netdata_parent_children | length > 0
+    fail_msg: "Proxy node requires both child and parent configurations"
+
+- name: Set proxy configuration
+  ansible.builtin.set_fact:
+    netdata_streaming_enabled: true
+    netdata_parent_enabled: true
+
+- name: Display proxy node configuration
+  ansible.builtin.debug:
+    msg: |
+      Configuring Netdata proxy node:
+      - Accepting connections from: {{ netdata_parent_allow_from }}
+      - Forwarding to: {{ netdata_streaming_destination }}

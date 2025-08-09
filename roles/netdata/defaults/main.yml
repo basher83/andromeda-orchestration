@@ -1,4 +1,8 @@
 ---
+# Get secrets from Infisical
+netdata_use_infisical: true
+netdata_infisical_path: "/apollo-13/services/netdata"
+
 # Netdata installation method
 netdata_install_method: "package"  # package or script
 netdata_version: "latest"
