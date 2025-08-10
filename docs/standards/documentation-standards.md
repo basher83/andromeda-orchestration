@@ -111,6 +111,38 @@ Every README must include:
 [Descriptive Links](relative/path.md) not [click here](path)
 ```
 
+#### Linting Exceptions
+
+When markdown linting rules need to be bypassed for legitimate reasons (e.g., raw terminal output, intentional formatting), use inline disable comments:
+
+```markdown
+<!-- markdownlint-disable-next-line MD040 -->
+```
+Some raw terminal output without language
+```
+
+<!-- markdownlint-disable-next-line MD013 -->
+This line is intentionally longer than 80 characters because it contains a very important URL that should not be broken: https://example.com/very/long/path
+
+<!-- markdownlint-disable MD033 -->
+<details>
+  <summary>HTML details are sometimes necessary</summary>
+  Content here
+</details>
+<!-- markdownlint-enable MD033 -->
+```
+
+**Rules for linting exceptions:**
+- Use sparingly - fix the content first if possible
+- Always include a comment explaining why the exception is needed
+- Use `disable-next-line` for single line exceptions
+- Use `disable`/`enable` pairs for multi-line exceptions
+- Common scenarios:
+  - `MD040`: Terminal output or intentionally unlabeled code blocks
+  - `MD013`: Long URLs that shouldn't be broken
+  - `MD033`: HTML elements when markdown syntax is insufficient
+  - `MD046`: Mixed code fence styles in examples
+
 ### Tagging Standards
 
 Use consistent tags for tracking tasks, issues, and important notes across both documentation and code.
