@@ -90,19 +90,19 @@ uv pip install requests proxmoxer
    nslookup proxmox.example.com
    ```
 
-2. **Test port connectivity:**
+1. **Test port connectivity:**
 
    ```bash
    nc -zv proxmox.example.com 8006
    ```
 
-3. **Test with curl:**
+1. **Test with curl:**
 
    ```bash
    curl -k https://proxmox.example.com:8006
    ```
 
-4. **Check for VPN interference:**
+1. **Check for VPN interference:**
    - Disconnect VPN and test again
    - Check routing table: `netstat -rn`
 
@@ -131,13 +131,13 @@ ANSIBLE_DEBUG=1 ansible-playbook -vvvv playbook.yml
    ansible localhost -m debug -a "msg={{ lookup('infisical', 'Test Item') }}"
    ```
 
-2. **Test inventory plugin:**
+1. **Test inventory plugin:**
 
    ```bash
    ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
    ```
 
-3. **Test connectivity:**
+1. **Test connectivity:**
 
    ```bash
    ansible all -i inventory/og-homelab/infisical.proxmox.yml -m ping
@@ -154,9 +154,9 @@ ANSIBLE_DEBUG=1 ansible-playbook -vvvv playbook.yml
 If you're still experiencing issues:
 
 1. Check the [Ansible documentation](https://docs.ansible.com)
-2. Review [Infisical developer docs](https://infisical.com/docs)
-3. Search existing issues in the repository
-4. Create a new issue with:
+1. Review [Infisical developer docs](https://infisical.com/docs)
+1. Search existing issues in the repository
+1. Create a new issue with:
    - Error messages
    - Steps to reproduce
    - Environment details (OS, versions)
@@ -225,7 +225,7 @@ VM names may not resolve, causing connectivity tests to fail.
     - hostvars[item]['ansible_default_ipv4']['address'] is defined
 ```
 
-2. **Add temporary hosts entries:**
+1. **Add temporary hosts entries:**
 
 ```yaml
 - name: Add temporary hosts entries
