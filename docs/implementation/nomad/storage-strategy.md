@@ -471,10 +471,11 @@ retention:
 ### Key Metrics
 
 1. **Disk Usage**
-   ```promql
-   node_filesystem_avail_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
-   / node_filesystem_size_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
-   ```
+
+```promql
+node_filesystem_avail_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
+/ node_filesystem_size_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
+```
 
 SLO examples:
 

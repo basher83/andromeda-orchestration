@@ -122,7 +122,7 @@ nomad job run postgresql.nomad.hcl
 # Connect to PostgreSQL and run PowerDNS schema
 ```
 
-2. **Phase 2: Configure Secrets**
+1. **Phase 2: Configure Secrets**
 
    ```bash
    # Set up Consul KV values
@@ -143,7 +143,7 @@ nomad job run postgresql.nomad.hcl
    nomad job run nomad-jobs/platform-services/powerdns.nomad.hcl
    ```
 
-4. **Phase 4: Verify Deployment**
+1. **Phase 4: Verify Deployment**
 
    ```bash
    # Check service registration
