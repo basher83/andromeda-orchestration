@@ -181,7 +181,7 @@ When deploying a new service:
 vim playbooks/infrastructure/network/templates/nftables-nomad-client.conf.j2
 ```
 
-3. **Apply Changes**
+1. **Apply Changes**
 
 ```bash
 uv run ansible-playbook playbooks/infrastructure/network/update-nftables-nomad.yml \

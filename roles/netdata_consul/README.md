@@ -215,23 +215,26 @@ When the Consul collector is enabled, Netdata collects:
 ### Service Not Registered
 
 1. Check Consul agent is running:
-   ```bash
-   systemctl status consul
-   ```
+
+```bash
+systemctl status consul
+```
 
 2. Verify connectivity:
-   ```bash
-   curl http://localhost:8500/v1/agent/self
-   ```
+
+```bash
+curl http://localhost:8500/v1/agent/self
+```
 
 3. Check ACL permissions if using tokens
 
 ### Health Check Failing
 
 1. Verify Netdata is accessible:
-   ```bash
-   curl http://localhost:19999/api/v1/info
-   ```
+
+```bash
+curl http://localhost:19999/api/v1/info
+```
 
 2. Check firewall rules
 3. Verify health check URL is correct
