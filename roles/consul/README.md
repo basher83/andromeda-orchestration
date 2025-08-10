@@ -315,7 +315,7 @@ To generate the inventory file for your Consul deployment, use the `generate_inv
 python scripts/generate_inventory.py
 ```
 
-## This script helps create a dynamic inventory based on your network layout and host configurations.
+## This script helps create a dynamic inventory based on your network layout and host configurations
 
 ## Handlers
 

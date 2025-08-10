@@ -46,6 +46,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 
 **Service Discovery**:
 Services register with Traefik by adding tags to their Consul service registration:
+
 ```hcl
 service {
   name = "myapp"
@@ -68,11 +69,13 @@ service {
 ```
 
 **Monitoring**:
+
 - Prometheus metrics available at: `http://<node>:<admin_port>/metrics`
 - Health check: `http://<node>:<admin_port>/ping`
 - Dashboard: `https://traefik.lab.local` (when configured)
 
 **Important Notes**:
+
 - Requires CONSUL_HTTP_ADDR environment variable set to reach Consul
 - Uses node's Consul agent via `${attr.unique.consul.name}.node.consul:8500`
 - All service blocks MUST include identity blocks when service_identity is enabled
@@ -80,6 +83,7 @@ service {
 ## Archived Files
 
 The `.archive/` directory contains previous iterations and test versions:
+
 - `traefik-minimal.nomad.hcl` - Basic test configuration
 - `traefik-no-identity.nomad.hcl` - Version without service identity (pre-migration)
 - `traefik-simple.nomad.hcl` - Simplified test version
@@ -89,11 +93,13 @@ The `.archive/` directory contains previous iterations and test versions:
 ## Future Services
 
 ### Consul Connect Gateway (Planned)
+
 - Service mesh ingress/egress gateways
 - mTLS between services
 - Advanced traffic management
 
 ### Vault (Planned)
+
 - Secret management
 - Dynamic credentials
 - PKI infrastructure for proper TLS certificates

@@ -13,7 +13,7 @@ The active authentication method `nomad-workloads` is configured with the follow
   "BoundAudiences": ["consul.io"],
   "ClaimMappings": {
     "nomad_job_id": "nomad_job_id",
-    "nomad_namespace": "nomad_namespace", 
+    "nomad_namespace": "nomad_namespace",
     "nomad_task": "nomad_task"
   },
   "JWKSURL": "http://192.168.11.11:4646/.well-known/jwks.json",
@@ -29,12 +29,14 @@ The active authentication method `nomad-workloads` is configured with the follow
 ## Purpose and Function
 
 ### What This Enables
+
 - **Service Identity**: Each Nomad workload gets unique JWT tokens
 - **Consul Access**: Workloads can authenticate to Consul API and KV store
 - **Zero Trust**: No shared secrets, tokens are automatically generated and rotated
 - **Audit Trail**: Consul can identify which specific service made requests
 
 ### How It Works
+
 1. **Token Generation**: Nomad generates JWT tokens for workloads with service identity configured
 2. **Token Validation**: Consul validates tokens using Nomad's JWKS endpoint
 3. **Claims Mapping**: JWT claims are mapped to Consul metadata for authorization
@@ -43,6 +45,7 @@ The active authentication method `nomad-workloads` is configured with the follow
 ## Verification Commands
 
 ### Check Current Configuration
+
 ```bash
 # View the complete auth method configuration
 consul acl auth-method read -name nomad-workloads
@@ -52,6 +55,7 @@ curl -s http://192.168.11.11:4646/.well-known/jwks.json | jq .
 ```
 
 ### Verify Associated Components
+
 ```bash
 # Check binding rules (links auth method to roles)
 consul acl binding-rule list -method nomad-workloads
@@ -64,6 +68,7 @@ consul acl policy list | grep nomad-workload
 ## Dependencies
 
 ### Nomad Configuration
+
 Nomad must have service identity enabled:
 
 ```hcl
@@ -78,13 +83,14 @@ consul {
 ```
 
 ### Job Requirements
+
 All services must include identity blocks when service_identity is enabled:
 
 ```hcl
 service {
   name = "service-name"
   port = "port-label"
-  
+
   identity {
     aud = ["consul.io"]  # REQUIRED - matches BoundAudiences
     ttl = "1h"          # Optional but recommended
@@ -110,7 +116,7 @@ curl -I http://192.168.11.11:4646/.well-known/jwks.json
 # Check Consul logs for auth failures
 journalctl -u consul -f
 
-# Check Nomad logs for token derivation issues  
+# Check Nomad logs for token derivation issues
 journalctl -u nomad -f
 ```
 
@@ -120,19 +126,22 @@ The final configuration was established on **August 2, 2025** after troubleshoot
 
 - `nomad-workloads.json` (02:32) - Original with localhost URL
 - `nomad-workloads-config.json` (02:33) - Config extraction
-- `nomad-workloads-updated.json` (02:46) - Added timing leeway settings  
+- `nomad-workloads-updated.json` (02:46) - Added timing leeway settings
 - `nomad-workloads-final.json` (02:46) - **ACTIVE CONFIG** - Simplified final version
 
 ## Related Components
 
 ### Consul Policies
+
 - `nomad-workload-identity` - Basic service identity permissions
 - `nomad-workload-kv` - KV store access for workloads
 
-### Consul Roles  
+### Consul Roles
+
 - `nomad-workload` - Role bound by the binding rule
 
 ### Files
+
 - **Active Config**: `roles/consul/files/auth-methods/nomad-workloads-final.json`
 - **Policy Files**: `roles/consul/files/policies/nomad-workload-*.hcl`
 
