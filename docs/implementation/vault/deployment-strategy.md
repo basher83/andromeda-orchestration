@@ -163,7 +163,6 @@ roles/vault/                       # Ansible role
 │   ├── config_dev.yml            # Dev mode setup
 │   ├── config_prod.yml           # Production setup
 │   └── nomad_integration.yml    # Nomad auth configuration
-```
 
 playbooks/infrastructure/vault/    # Deployment playbooks
 ├── deploy-vault-dev.yml          # Dev mode deployment
