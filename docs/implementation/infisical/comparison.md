@@ -415,7 +415,7 @@ services:
     - Verify sync is working
 ```
 
-3. **Test Dual Access**
+1. **Test Dual Access**
 
 - Access same secrets via 1Password (existing)
 - Access same secrets via Infisical (new)

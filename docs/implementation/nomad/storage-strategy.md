@@ -483,13 +483,13 @@ SLO examples:
 - Mount path present for all running allocations
 - CSI attach/detach success > 99.9% over 24h
 
-2. **Volume Health**
+1. **Volume Health**
 
    - Mount status
    - I/O errors
    - Permission issues
 
-3. **CSI Plugin Health**
+1. **CSI Plugin Health**
    - Plugin availability
    - Volume attach/detach success rate
 

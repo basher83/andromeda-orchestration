@@ -225,10 +225,11 @@ inventory/
    ```
 
 3. **Configure Mesh Topology:**
-   ```bash
-   ansible-playbook -i inventory/*/infisical.proxmox.yml \
-     playbooks/infrastructure/netdata-configure-mesh.yml
-   ```
+
+```bash
+ansible-playbook -i inventory/*/infisical.proxmox.yml \
+  playbooks/infrastructure/netdata-configure-mesh.yml
+```
 
 ## Troubleshooting
 

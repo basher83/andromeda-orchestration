@@ -97,7 +97,7 @@ consul kv put pdns/db/name powerdns
 consul kv put pdns/db/user pdns
 ```
 
-3. **Vault Secrets**
+1. **Vault Secrets**
 
 ```bash
 vault kv put kv/pdns \
