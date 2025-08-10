@@ -48,7 +48,7 @@ All branches follow a clear naming pattern that indicates their purpose and scop
 
 All commits follow the space-themed conventional commit format:
 
-```
+```text
 <emoji> <type>(<scope>): <description>
 
 <body>
@@ -96,7 +96,7 @@ All commits follow the space-themed conventional commit format:
 
 **Pull Request Title Format:**
 
-```
+```text
 🎯 feat(scope): Brief description of changes
 ```
 
@@ -204,7 +204,7 @@ git rebase -i main
 
 **Bug Fix with Investigation:**
 
-```bash
+```text
 git commit -m "🐛 fix(auth): resolve session timeout on mobile
 
 Investigation revealed token refresh logic was not triggering
@@ -219,7 +219,7 @@ Tested-on: iOS Safari, Android Chrome"
 
 **Documentation Update:**
 
-```bash
+```text
 git commit -m "📚 docs(api): add webhook endpoint documentation
 
 - Document all webhook event types

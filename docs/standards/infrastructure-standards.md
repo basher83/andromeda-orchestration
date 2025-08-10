@@ -51,7 +51,7 @@ Static Ports (Exceptions only):
 
 ### Infrastructure Layers
 
-```
+```text
 Application Layer
 ├── User Applications (Gitea, Windmill, etc.)
 └── Uses: Platform Services
@@ -73,7 +73,7 @@ Core Infrastructure Layer
 
 #### Multi-Layer Monitoring
 
-```
+```text
 Infrastructure Monitoring (Netdata)
 ├── Real-time metrics (1-second resolution)
 ├── Anomaly detection (ML-based)
@@ -99,7 +99,7 @@ Application Monitoring (Future Prometheus)
 
 **doggos-homelab Cluster:**
 
-```
+```text
 Management Network (192.168.10.0/24) - 1G
 ├── Proxmox hosts management
 ├── Infrastructure services
@@ -114,7 +114,7 @@ Data Network (192.168.11.0/24) - 10G
 
 **og-homelab Cluster:**
 
-```
+```text
 Combined Network (192.168.30.0/24) - 2.5G
 ├── All services (management + data)
 ├── Proxmox hosts
@@ -124,7 +124,7 @@ Combined Network (192.168.30.0/24) - 2.5G
 
 **Future Networks:**
 
-```
+```text
 Storage Network (TBD) [Ready to implement - NICs available]
 ├── Dedicated NFS/iSCSI traffic
 ├── Backup traffic isolation
@@ -157,7 +157,7 @@ DMZ Network (TBD) [Future]
 
 #### Service HA
 
-```
+```text
 Active-Active Services:
 ├── Traefik (multiple instances)
 ├── Consul (3-5 servers)
@@ -241,18 +241,18 @@ upstream app {
 ### To Dynamic Infrastructure
 
 1. **Enable Service Discovery**: Deploy Consul
-2. **Add Health Checks**: Define for each service
-3. **Implement Load Balancing**: Deploy Traefik
-4. **Migrate Services**: One at a time
-5. **Update DNS**: Point to new infrastructure
+1. **Add Health Checks**: Define for each service
+1. **Implement Load Balancing**: Deploy Traefik
+1. **Migrate Services**: One at a time
+1. **Update DNS**: Point to new infrastructure
 
 ### To Monitoring
 
 1. **Deploy Netdata**: Immediate visibility
-2. **Configure Streaming**: Parent-child architecture
-3. **Add Dashboards**: Key metrics visible
-4. **Plan Prometheus**: For application metrics
-5. **Implement Alerting**: Critical issues only
+1. **Configure Streaming**: Parent-child architecture
+1. **Add Dashboards**: Key metrics visible
+1. **Plan Prometheus**: For application metrics
+1. **Implement Alerting**: Critical issues only
 
 ## References
 

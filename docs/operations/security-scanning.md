@@ -7,8 +7,8 @@ This document covers the security scanning tools and procedures used in the andr
 The project uses multiple security scanning tools to detect and prevent security issues:
 
 1. **Infisical CLI** - Secret detection in code and commits
-2. **KICS** - Infrastructure as Code security scanning
-3. **Pre-commit hooks** - Automated checks before commits
+1. **KICS** - Infrastructure as Code security scanning
+1. **Pre-commit hooks** - Automated checks before commits
 
 ## Infisical Secret Scanning
 
@@ -17,6 +17,7 @@ The project uses multiple security scanning tools to detect and prevent security
 Infisical CLI secret scanning is configured to detect exposed secrets in the codebase.
 
 **Installation**:
+
 ```bash
 # Install via Homebrew (macOS/Linux)
 brew install infisical/get-cli/infisical
@@ -71,6 +72,7 @@ KICS (Keeping Infrastructure as Code Secure) scans for security issues in infras
 **Configuration File**: `kics.config` (YAML format)
 
 Key settings:
+
 - Exclusions for test containers and documentation
 - Output formats: JSON and SARIF
 - Results directory: `kics-results/`
@@ -92,6 +94,7 @@ docker run -t -v "$(pwd)":/path checkmarx/kics scan \
 ### Results
 
 Scan results are saved to:
+
 - `kics-results/results.json` - JSON format for analysis
 - `kics-results/results.sarif` - SARIF format for IDE integration
 
@@ -105,8 +108,9 @@ task security
 ```
 
 This executes:
+
 1. Infisical secret detection
-2. KICS infrastructure scanning
+1. KICS infrastructure scanning
 
 ## False Positive Management
 
@@ -197,8 +201,8 @@ jobs:
 
 ### Getting Help
 
-- Infisical Docs: https://infisical.com/docs
-- KICS Docs: https://docs.kics.io
+- Infisical Docs: [https://infisical.com/docs](https://infisical.com/docs)
+- KICS Docs: [https://docs.kics.io](https://docs.kics.io)
 - Project Issues: Report in repository
 
 ## Related Documentation
