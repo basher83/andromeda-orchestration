@@ -22,7 +22,7 @@ Our infrastructure has evolved from static, manually-configured systems to dynam
 
 #### Implementation
 
-```
+```text
 Service Registration → Consul → DNS/API → Service Discovery
                           ↓
                      Health Checks
@@ -34,7 +34,7 @@ Service Registration → Consul → DNS/API → Service Discovery
 
 #### Port Allocation Strategy
 
-```
+```text
 Static Ports (Exceptions only):
 ├── 53   - DNS (PowerDNS)
 ├── 80   - HTTP (Traefik)
