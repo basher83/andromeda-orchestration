@@ -6,6 +6,7 @@
 ## Summary
 
 PowerDNS has been successfully deployed on the Nomad cluster with the following configuration:
+
 - **Backend**: SQLite3 (for simplicity and reliability)
 - **API**: Enabled and listening on port 8081 (inside container)
 - **DNS**: Listening on port 53 (static)
@@ -14,6 +15,7 @@ PowerDNS has been successfully deployed on the Nomad cluster with the following 
 ## Current Configuration
 
 ### Allocation Details
+
 - **Allocation ID**: c19fb3f1-2a08-00ee-9317-84ce3ad2b8f3
 - **Node**: nomad-client-2 (192.168.11.21)
 - **Status**: Running and healthy
@@ -21,24 +23,28 @@ PowerDNS has been successfully deployed on the Nomad cluster with the following 
 - **API Port**: 21421 (dynamic, mapped to container port 8081)
 
 ### Services Registered in Consul
+
 - `powerdns-dns` - DNS service on port 53
 - `powerdns-api` - API service with Traefik routing
 
 ## Key Learnings
 
 ### 1. MySQL Backend Challenges
+
 - Docker container networking makes MySQL connectivity complex
 - Authentication between containers requires careful configuration
 - Environment variables alone don't override config files in PowerDNS image
 - Command-line arguments are needed to override default settings
 
 ### 2. PowerDNS Configuration
+
 - The official Docker image uses `/etc/powerdns/pdns.conf` with defaults
 - Command-line arguments must be passed via `args` in Nomad job
 - Don't specify `command` - the container has correct entrypoint
 - API must be enabled with `--api=yes` and `--webserver=yes`
 
 ### 3. SQLite Backend Benefits
+
 - No external dependencies
 - Simpler deployment and maintenance
 - Sufficient for homelab DNS needs
@@ -92,6 +98,7 @@ job "powerdns" {
 ## DNS Testing
 
 DNS queries work correctly:
+
 ```bash
 # Test DNS resolution
 dig @192.168.11.21 -p 53 test.local
@@ -102,10 +109,12 @@ dig @192.168.11.21 -p 53 test.local
 ## API Access
 
 The API is running and accessible from within the container network:
-- Internal: http://localhost:8081/api/v1/servers
-- External: http://192.168.11.21:21421/api/v1/servers (may require firewall rules)
+
+- Internal: [http://localhost:8081/api/v1/servers](http://localhost:8081/api/v1/servers)
+- External: [http://192.168.11.21:21421/api/v1/servers](http://192.168.11.21:21421/api/v1/servers) (may require firewall rules)
 
 ### API Key
+
 - Current: `changeme789xyz`
 - Should be moved to Vault/Infisical in production
 
@@ -120,11 +129,13 @@ The API is running and accessible from within the container network:
 ## Files Created/Modified
 
 ### New Files
+
 - `/nomad-jobs/platform-services/powerdns-sqlite.nomad.hcl` - Working SQLite configuration
 - `/nomad-jobs/platform-services/powerdns.nomad.hcl` - MySQL attempt (for reference)
 - `/docs/operations/powerdns-deployment-final.md` - This documentation
 
 ### Updated Files
+
 - `/playbooks/infrastructure/netbox/dns/sync-to-powerdns.yml` - Updated with correct API endpoint
 - `/CLAUDE.md` - Added critical insights about deployment
 
@@ -155,6 +166,7 @@ curl -H "X-API-Key: changeme789xyz" http://192.168.11.21:21421/api/v1/servers
 PowerDNS is successfully deployed and operational. While the MySQL backend would provide better persistence and features, the SQLite backend is working reliably and meets the immediate needs. The API is enabled and ready for zone synchronization from NetBox.
 
 The main outstanding issue is external API access due to firewall/network configuration, which can be resolved by:
+
 1. Opening the dynamic port range in nftables
 2. Using Traefik for proxying
 3. Or accessing via Consul Connect mesh
