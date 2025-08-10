@@ -16,7 +16,7 @@ Template failed: kv.get(powerdns/mysql/password): Unexpected response code: 403
 lacks permission 'key:read' on "powerdns/mysql/password")
 ```
 
-2. **Service Registration Errors**:
+1. **Service Registration Errors**:
 
 ```text
 failed to derive Consul token for service powerdns:
@@ -72,7 +72,7 @@ service {
 Service identity must provide at least one target aud value
 ```
 
-3. **Why Traefik Works**: The Traefik job must have been deployed before service_identity was enabled, or it includes the required identity blocks.
+1. **Why Traefik Works**: The Traefik job must have been deployed before service_identity was enabled, or it includes the required identity blocks.
 
 ## Solution
 

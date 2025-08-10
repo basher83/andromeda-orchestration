@@ -143,8 +143,8 @@ curl -s http://localhost:19999/api/v1/allmetrics?format=json | grep -i "nomad-cl
 
 ### 3. Parent Mesh Not Replicating
 
-
 #### Issue
+
 Parents aren't sharing data with each other in the mesh topology.
 
 #### Debugging Steps

@@ -267,27 +267,29 @@ The role sets up the following:
 
 2. **Kernel Parameters**:
 
-   - `net.bridge.bridge-nf-call-arptables = 1`
-   - `net.bridge.bridge-nf-call-iptables = 1`
-   - `net.bridge.bridge-nf-call-ip6tables = 1`
+```text
+net.bridge.bridge-nf-call-arptables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+```
 
-3. **Nomad Configuration**:
+1. **Nomad Configuration**:
 
-   ```hcl
-   # CNI configuration
-   cni_path = "/opt/cni/bin"
-   cni_config_dir = "/etc/cni/net.d"
+```hcl
+# CNI configuration
+cni_path = "/opt/cni/bin"
+cni_config_dir = "/etc/cni/net.d"
 
-   # Bridge network setup
-   bridge_network_name = "nomad"
-   bridge_network_subnet = "172.26.64.0/20"
+# Bridge network setup
+bridge_network_name = "nomad"
+bridge_network_subnet = "172.26.64.0/20"
 
-   # Host network for direct access
-   host_network "public" {
-     cidr = "0.0.0.0/0"
-     reserved_ports = "22,80,443"
-   }
-   ```
+# Host network for direct access
+host_network "public" {
+  cidr = "0.0.0.0/0"
+  reserved_ports = "22,80,443"
+}
+```
 
 ### Using Bridge Networking in Jobs
 
@@ -378,11 +380,12 @@ For Consul Service Mesh to function properly, the role configures:
    ```
 
 2. Kernel parameters:
-   ```
-   net.bridge.bridge-nf-call-arptables = 1
-   net.bridge.bridge-nf-call-iptables = 1
-   net.ipv4.ip_forward = 1
-   ```
+
+```text
+net.bridge.bridge-nf-call-arptables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+```
 
 These enable transparent proxying between services in the mesh.
 
@@ -483,20 +486,22 @@ After deploying the Nomad role, verify the setup using the following steps:
 - **Purpose**: Specifies the version of Nomad to install.
 - **Default Value**: `latest`
 - **Example**:
-  ```yaml
-  nomad_version: 1.4.0
-  ```
+
+```yaml
+nomad_version: 1.4.0
+```
 
 ### `nomad_config`
 
 - **Purpose**: Configuration settings for Nomad.
 - **Default Value**: `{}` (empty dictionary)
 - **Example**:
-  ```yaml
-  nomad_config:
-    data_dir: /opt/nomad
-    bind_addr: 0.0.0.0
-  ```
+
+```yaml
+nomad_config:
+  data_dir: /opt/nomad
+  bind_addr: 0.0.0.0
+```
 
 ## Usage
 

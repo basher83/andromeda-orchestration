@@ -220,13 +220,13 @@ When the Consul collector is enabled, Netdata collects:
 systemctl status consul
 ```
 
-2. Verify connectivity:
+1. Verify connectivity:
 
 ```bash
 curl http://localhost:8500/v1/agent/self
 ```
 
-3. Check ACL permissions if using tokens
+1. Check ACL permissions if using tokens
 
 ### Health Check Failing
 
@@ -236,8 +236,8 @@ curl http://localhost:8500/v1/agent/self
 curl http://localhost:19999/api/v1/info
 ```
 
-2. Check firewall rules
-3. Verify health check URL is correct
+1. Check firewall rules
+1. Verify health check URL is correct
 
 ### No Consul Metrics in Netdata
 
@@ -247,13 +247,13 @@ curl http://localhost:19999/api/v1/info
 grep "go.d" /etc/netdata/netdata.conf
 ```
 
-2. Check collector configuration:
+1. Check collector configuration:
 
 ```bash
 cat /etc/netdata/go.d/consul.conf
 ```
 
-3. Verify Consul API accessibility:
+1. Verify Consul API accessibility:
 
 ```bash
 curl -H "X-Consul-Token: your-token" http://localhost:8500/v1/agent/metrics
@@ -282,6 +282,7 @@ curl -H "X-Consul-Token: your-token" http://localhost:8500/v1/agent/services
 ## Integration with Other Roles
 
 This role works well with:
+
 - `netdata_streaming` - Stream Consul metrics to parent nodes
 - `consul` - Deploy and configure Consul
 - `netdata_cloud` - Send Consul metrics to Netdata Cloud
@@ -289,10 +290,10 @@ This role works well with:
 ## Best Practices
 
 1. **Use Service Tags** - Tag services appropriately for filtering
-2. **Set Meaningful Metadata** - Include version, environment, owner
-3. **Configure Health Checks** - Ensure services are monitored
-4. **Secure with ACLs** - Use tokens in production
-5. **Enable TLS** - Encrypt communication in production
+1. **Set Meaningful Metadata** - Include version, environment, owner
+1. **Configure Health Checks** - Ensure services are monitored
+1. **Secure with ACLs** - Use tokens in production
+1. **Enable TLS** - Encrypt communication in production
 
 ## License
 
