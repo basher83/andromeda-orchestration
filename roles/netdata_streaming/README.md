@@ -13,7 +13,7 @@ This role configures Netdata streaming between parent and child nodes, enabling 
 
 ## Architecture
 
-```
+```text
 ┌─────────────┐     Stream      ┌─────────────┐
 │ Child Node  │ ──────────────> │ Parent Node │
 │  (Collector)│                  │  (Storage)  │
@@ -206,23 +206,29 @@ netdata_infisical_path: "/apollo-13/services/netdata"
 ## Streaming Topologies
 
 ### Star Topology
+
 All children stream to one parent:
-```
+
+```text
 Child1 ─┐
 Child2 ──┼──> Parent
 Child3 ─┘
 ```
 
 ### Redundant Parents
+
 Children stream to multiple parents:
-```
+
+```text
 Child1 ──┬──> Parent1
          └──> Parent2
 ```
 
 ### Hierarchical
+
 Multi-tier with proxy nodes:
-```
+
+```text
 Edge ──> Regional Proxy ──> Central Parent
 ```
 
@@ -231,32 +237,34 @@ Edge ──> Regional Proxy ──> Central Parent
 ### Child Not Connecting
 
 1. Check API key matches between child and parent
-2. Verify network connectivity: `telnet parent-host 19999`
-3. Check parent allows child's IP in `allow from`
-4. Review logs: `journalctl -u netdata -f`
+1. Verify network connectivity: `telnet parent-host 19999`
+1. Check parent allows child's IP in `allow from`
+1. Review logs: `journalctl -u netdata -f`
 
 ### Missing Metrics on Parent
 
 1. Verify `send charts matching` pattern
-2. Check streaming is enabled in child's stream.conf
-3. Ensure parent has sufficient history/memory configured
+1. Check streaming is enabled in child's stream.conf
+1. Ensure parent has sufficient history/memory configured
 
 ### SSL/TLS Issues
 
 1. Verify certificate paths and permissions
-2. Check certificate validity and chain
-3. Ensure CA certificate is trusted
-4. Test with `netdata_streaming_ssl_skip_verify: true` (not for production)
+1. Check certificate validity and chain
+1. Ensure CA certificate is trusted
+1. Test with `netdata_streaming_ssl_skip_verify: true` (not for production)
 
 ## Performance Tuning
 
 ### For Children
+
 ```yaml
 netdata_streaming_buffer_size_bytes: 10485760  # 10MB buffer
 netdata_streaming_compression: true             # Reduce bandwidth
 ```
 
 ### For Parents
+
 ```yaml
 netdata_parent_default_memory_mode: "dbengine"
 netdata_parent_default_history: 86400  # 24 hours

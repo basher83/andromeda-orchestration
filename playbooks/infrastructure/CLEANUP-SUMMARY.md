@@ -4,7 +4,7 @@
 
 ### New Structure
 
-```
+```text
 infrastructure/
 ├── netbox/                         # All NetBox-related playbooks
 │   ├── dns/                       # DNS management
@@ -35,7 +35,6 @@ infrastructure/
    - Test and intermediate playbooks
    - Manual setup attempts
    - Old NetBox connection tests
-   - Redundant VM creation playbooks
 
 3. **Removed**:
    - Python sync script (will use API backend instead)

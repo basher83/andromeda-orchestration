@@ -239,19 +239,22 @@ When the Consul collector is enabled, Netdata collects:
 ### No Consul Metrics in Netdata
 
 1. Ensure go.d plugin is enabled:
-   ```bash
-   grep "go.d" /etc/netdata/netdata.conf
-   ```
+
+```bash
+grep "go.d" /etc/netdata/netdata.conf
+```
 
 2. Check collector configuration:
-   ```bash
-   cat /etc/netdata/go.d/consul.conf
-   ```
+
+```bash
+cat /etc/netdata/go.d/consul.conf
+```
 
 3. Verify Consul API accessibility:
-   ```bash
-   curl -H "X-Consul-Token: your-token" http://localhost:8500/v1/agent/metrics
-   ```
+
+```bash
+curl -H "X-Consul-Token: your-token" http://localhost:8500/v1/agent/metrics
+```
 
 ### ACL Token Issues
 

@@ -43,11 +43,12 @@ TrueNAS: 192.168.30.6
 
 #### Problem
 
-```
+```text
 STREAM RCV 'hostname' [from [IP]:PORT]: rejecting streaming connection; API key is not allowed from this IP (DENIED)
 ```
 
 #### Root Cause
+
 The stream.conf API key configuration is incorrectly formatted or too restrictive.
 
 #### Solution
@@ -176,9 +177,11 @@ ss -tan | grep :19999 | grep ESTAB | wc -l
 ### 4. Web Interface Issues
 
 #### Problem
+
 Netdata web interface not accessible after configuration changes.
 
 #### Solution
+
 Ensure web server is enabled in `/etc/netdata/netdata.conf`:
 
 ```ini

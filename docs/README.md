@@ -174,4 +174,6 @@ When adding or updating documentation:
 
 ---
 
-_Last reorganization: 2025-08-01 - Improved navigation and categorization_
+### Last reorganization
+
+2025-08-01 - Improved navigation and categorization

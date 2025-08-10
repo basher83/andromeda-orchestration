@@ -58,6 +58,7 @@ References:
    - [ ] Validate no consumers depend on old endpoints
 
 6. Validation
+
    - [ ] Verify DNS queries resolve from PowerDNS
    - [ ] Verify API operations and metrics
    - [ ] Document runbook updates
@@ -66,7 +67,7 @@ References:
 
 ### ✅ Completed
 
-- NetBox operational at https://192.168.30.213/
+- NetBox operational at [https://192.168.30.213/](https://192.168.30.213/)
 - PowerDNS deployed and running on nomad-client-1
 - Infrastructure fully documented in NetBox (3 sites, 8 devices, 6 VMs, 29 IPs)
 - NetBox DNS plugin v1.3.5 installed and operational (Aug 8)
@@ -103,6 +104,7 @@ References:
    - Verify all records transferred correctly
 
 5. **Testing & Validation**
+
    - Test forward and reverse lookups
    - Verify automatic PTR record generation
    - Check sync performance and reliability
@@ -157,7 +159,7 @@ References:
 
 ### Integration Architecture
 
-```
+```text
 NetBox (LXC 213)
   ↓ API/Webhook
   ↓ Sync Script

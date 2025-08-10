@@ -91,7 +91,7 @@ Every README must include:
 - Lists with proper spacing
 - Blank lines around blocks
 
-```language
+```text
 # Fenced code blocks with language
 ```
 
