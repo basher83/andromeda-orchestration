@@ -23,32 +23,32 @@ This directory contains Ansible playbooks for deploying and managing PowerDNS as
 
 ### Automated Setup
 
-4. **`powerdns-setup-consul-kv.yml`**
+1. **`powerdns-setup-consul-kv.yml`**
    - Automatically creates PowerDNS secrets in Consul KV
    - Retrieves Consul management token from Infisical
    - Creates keys: `powerdns/mysql/root_password`, `powerdns/mysql/password`, `powerdns/api/key`
    - Checks for existing secrets to prevent overwriting
 
-5. **`powerdns-setup-secrets.yml`**
+2. **`powerdns-setup-secrets.yml`**
    - Alternative secret setup playbook
    - Stores secrets in both Consul KV and Infisical
    - Creates comprehensive secret structure
 
 ### Access Control
 
-6. **`powerdns-consul-acl.yml`**
+1. **`powerdns-consul-acl.yml`**
    - Creates Consul ACL policy and token for PowerDNS
    - Grants read access to `powerdns/` KV path
    - Enables service registration permissions
 
-7. **`powerdns-anonymous-acl.yml`**
+2. **`powerdns-anonymous-acl.yml`**
    - Updates Consul anonymous token policy
    - Adds DNS query permissions for PowerDNS service
    - Required for unauthenticated DNS queries
 
 ### Post-deployment Configuration
 
-8. **`powerdns-configure-nomad-volumes.yml`**
+1. **`powerdns-configure-nomad-volumes.yml`**
    - Configures CSI volumes for PowerDNS in Nomad
    - Sets up persistent storage for MySQL database
    - Run after initial deployment if using CSI
@@ -104,6 +104,7 @@ consul catalog services | grep powerdns
 ## Secret Management
 
 Secrets are stored in Consul KV under the `powerdns/` prefix:
+
 - `powerdns/mysql/root_password` - MySQL root password
 - `powerdns/mysql/password` - PowerDNS MySQL user password
 - `powerdns/api/key` - PowerDNS API key

@@ -9,43 +9,50 @@ When deploying services with Consul service blocks in Nomad, the workload identi
 ## Symptoms
 
 1. **PowerDNS Deployment Failures**:
-   ```
-   Template failed: kv.get(powerdns/mysql/password): Unexpected response code: 403
-   (rpc error making call: Permission denied: token with AccessorID '05081fff-66cc-58ba-2bb3-88f9cd4f1780'
-   lacks permission 'key:read' on "powerdns/mysql/password")
-   ```
+
+```text
+Template failed: kv.get(powerdns/mysql/password): Unexpected response code: 403
+(rpc error making call: Permission denied: token with AccessorID '05081fff-66cc-58ba-2bb3-88f9cd4f1780'
+lacks permission 'key:read' on "powerdns/mysql/password")
+```
 
 2. **Service Registration Errors**:
-   ```
-   failed to derive Consul token for service powerdns:
-   Unexpected response code: 403 (rpc error making call: ACL not found:
-   auth method "nomad-workloads" not found)
-   ```
+
+```text
+failed to derive Consul token for service powerdns:
+Unexpected response code: 403 (rpc error making call: ACL not found:
+auth method "nomad-workloads" not found)
+```
 
 ## Current Configuration
 
 ### Nomad Configuration
+
 - Service identities enabled in Nomad servers and clients:
-  ```hcl
-  consul {
-    service_identity {
-      enabled = true
-    }
-    task_identity {
-      enabled = true
-    }
+
+```hcl
+consul {
+  service_identity {
+    enabled = true
   }
-  ```
+  task_identity {
+    enabled = true
+  }
+}
+```
 
 ### Consul Auth Method
+
 - Created JWT auth method "nomad-workloads"
-- JWKS URL: http://192.168.11.11:4646/.well-known/jwks.json
+- JWKS URL: [http://192.168.11.11:4646/.well-known/jwks.json](http://192.168.11.11:4646/.well-known/jwks.json)
 - Bound audiences: ["consul.io"]
 - Binding rule: Role binding to "nomad-workload" role
 - Role has policies: nomad-workload-identity, nomad-workload-kv
 
 ### Service Configuration
+
 Jobs require identity blocks with aud values:
+
 ```hcl
 service {
   name = "myservice"
@@ -60,9 +67,10 @@ service {
 1. **Service Identity Requirement**: When `service_identity { enabled = true }` is set in Nomad's consul configuration, ALL service blocks MUST include an identity block with at least one aud value.
 
 2. **Validation Failure**: Jobs without identity blocks in their service definitions fail validation with:
-   ```
-   Service identity must provide at least one target aud value
-   ```
+
+```text
+Service identity must provide at least one target aud value
+```
 
 3. **Why Traefik Works**: The Traefik job must have been deployed before service_identity was enabled, or it includes the required identity blocks.
 
@@ -86,6 +94,7 @@ service {
 ## Current Workaround
 
 For PowerDNS: Deployed without service blocks entirely to avoid validation errors. This means:
+
 - No automatic service registration in Consul
 - No health checks
 - Manual service discovery required
@@ -103,6 +112,7 @@ For PowerDNS: Deployed without service blocks entirely to avoid validation error
 **ROOT CAUSE IDENTIFIED**: When `service_identity { enabled = true }` is configured in Nomad, ALL service blocks MUST include an identity block with the `aud` parameter.
 
 **SOLUTION VERIFIED**: Added identity blocks to all service definitions:
+
 ```hcl
 service {
   name = "service-name"
@@ -118,6 +128,7 @@ service {
 ```
 
 **TEST RESULTS**: Successfully deployed PowerDNS test job with:
+
 - All services registered in Consul
 - Workload-specific tokens created via auth method
 - Health checks functioning properly
@@ -127,7 +138,7 @@ service {
 After thorough investigation using Netdata monitoring and direct system checks:
 
 1. **Consul Auth Method Status**: The `nomad-workloads` auth method is properly configured:
-   - JWKS URL is accessible: http://192.168.11.11:4646/.well-known/jwks.json
+   - JWKS URL is accessible: [http://192.168.11.11:4646/.well-known/jwks.json](http://192.168.11.11:4646/.well-known/jwks.json)
    - Bound audiences: ["consul.io"]
    - Binding rule links to `nomad-workload` role
    - Role has appropriate policies for KV read access

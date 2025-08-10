@@ -473,12 +473,14 @@ Brief description of what this role does.
 ## Role Variables
 
 ### Required Variables
+
 ```yaml
 service_version: "1.15.2"          # Service version
 service_datacenter: "dc1"           # Datacenter name
 ```
 
 ### Optional Variables
+
 ```yaml
 service_port: 8500                  # Default port
 service_bind_address: "0.0.0.0"     # Bind address
@@ -486,18 +488,21 @@ service_enable_tls: false           # TLS configuration
 ```
 
 ## Dependencies
+
 - system_base (for common setup)
 
 ## Example Playbook
+
 ```yaml
 - hosts: consul_servers
   roles:
     - role: consul
-      consul_node_role: server
+      consul_node_role: "{{ datacenter }}"
       consul_datacenter: "{{ datacenter }}"
 ```
 
 ## Testing
+
 ```bash
 # Run molecule tests
 cd roles/service_name
@@ -508,10 +513,13 @@ molecule test -s docker
 ```
 
 ## License
+
 MIT
 
 ## Author
+
 Your Organization
+
 ```
 
 #### Role Variable Standards
