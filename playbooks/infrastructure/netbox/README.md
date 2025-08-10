@@ -66,7 +66,7 @@ uv run ansible-playbook playbooks/infrastructure/netbox/netbox-populate-infrastr
 
 ## NetBox Access
 
-- URL: https://192.168.30.213
+- URL: [https://192.168.30.213](https://192.168.30.213)
 - DNS Plugin: v1.3.5 (installed and operational as of Aug 8, 2025)
 
 ## PowerDNS Integration

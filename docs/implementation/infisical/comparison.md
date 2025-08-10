@@ -129,6 +129,7 @@ Annual Cost (5 Pro identities): $1,080 + infrastructure
 ### Ansible Integration
 
 #### 1Password Connect
+
 ```yaml
 # Current implementation
 - name: Retrieve secret
@@ -142,6 +143,7 @@ Annual Cost (5 Pro identities): $1,080 + infrastructure
 ```
 
 #### Infisical
+
 ```yaml
 # Native collection usage
 - name: Retrieve secret
@@ -164,10 +166,12 @@ Annual Cost (5 Pro identities): $1,080 + infrastructure
 ### Terraform Integration
 
 #### 1Password Connect
+
 - No native Terraform provider
 - Must use external data sources or scripts
 
 #### Infisical
+
 ```hcl
 # Terraform Provider Configuration
 terraform {
@@ -197,7 +201,9 @@ data "infisical_secret" "api_key" {
 ### Recent Infisical Enhancements (2024)
 
 #### Dynamic Secrets
+
 Infisical now supports dynamic secret generation for:
+
 - **Databases**: PostgreSQL, MySQL, MongoDB, MS SQL, OracleDB
 - **Cache Systems**: Redis, Elasticsearch
 - **Cloud Providers**: AWS IAM, GCP Service Accounts
@@ -214,6 +220,7 @@ Infisical now supports dynamic secret generation for:
 ```
 
 #### Advanced Access Controls
+
 - **Temporary Access Provisioning**: Grant time-limited access to secrets
 - **Access Requests**: Approval workflows for sensitive operations
 - **Access Tree Visualization**: Visual representation of permissions
@@ -229,13 +236,16 @@ Infisical now supports dynamic secret generation for:
 ```
 
 #### Secret Rotation
+
 Automatic rotation capabilities for:
+
 - API keys and tokens
 - Database passwords
 - SSL certificates
 - Custom credentials
 
 #### Enhanced Terraform Integration
+
 ```hcl
 # Project templates for consistent structure
 resource "infisical_project" "standard" {
@@ -252,6 +262,7 @@ resource "infisical_secret" "imported" {
 #### Game-Changing New Integrations
 
 ##### 1Password Sync
+
 - **Bi-directional synchronization** with 1Password vaults
 - **Zero-downtime migration** from 1Password to Infisical
 - Keep using 1Password UI while leveraging Infisical's automation features
@@ -267,6 +278,7 @@ resource "infisical_secret" "imported" {
 ```
 
 ##### MCP (Model Context Protocol) Server
+
 - **AI/LLM Integration**: Let AI assistants securely access secrets
 - **Claude/ChatGPT Integration**: Safe secret handling in AI workflows
 - **Use Case**: Automated infrastructure management with AI assistance
@@ -278,6 +290,7 @@ export INFISICAL_MCP_TOKEN="your-machine-identity-token"
 ```
 
 ##### Packer Integration
+
 - **Native Packer plugin** for image building
 - Inject secrets during AMI/VM image creation
 - Perfect for immutable infrastructure patterns
@@ -292,11 +305,13 @@ source "amazon-ebs" "ubuntu" {
 ```
 
 ##### Zabbix Integration
+
 - Monitor secret expiration and rotation
 - Alert on access anomalies
 - Track secret usage patterns
 
 ##### ACME Certificate Authority (Let's Encrypt) 🔥
+
 - **Automated SSL/TLS certificates** from Let's Encrypt
 - **DNS-01 challenge** support with Route53 integration
 - **Automatic renewal** before expiration (90-day certs)
@@ -317,6 +332,7 @@ source "amazon-ebs" "ubuntu" {
 ```
 
 **Use Cases for Your Infrastructure**:
+
 - PowerDNS admin interface SSL
 - Consul UI certificates
 - Nomad UI certificates
@@ -326,6 +342,7 @@ source "amazon-ebs" "ubuntu" {
 ### Deployment Options
 
 #### 1Password Connect
+
 ```yaml
 # Docker Compose deployment
 version: '3.8'
@@ -342,6 +359,7 @@ services:
 ```
 
 #### Infisical
+
 ```yaml
 # Docker Compose deployment
 version: '3.8'
@@ -386,20 +404,22 @@ services:
    - Configure authentication methods
 
 2. **Enable 1Password Sync** ⭐ **NEW - Zero Migration Effort!**
-   ```yaml
-   # Set up bi-directional sync
-   - name: Configure 1Password sync
-     tasks:
-       - Enable Infisical 1Password integration
-       - Map 1Password vaults to Infisical projects
-       - Set sync interval (recommended: 5 minutes)
-       - Verify sync is working
-   ```
+
+```yaml
+# Set up bi-directional sync
+- name: Configure 1Password sync
+  tasks:
+    - Enable Infisical 1Password integration
+    - Map 1Password vaults to Infisical projects
+    - Set sync interval (recommended: 5 minutes)
+    - Verify sync is working
+```
 
 3. **Test Dual Access**
-   - Access same secrets via 1Password (existing)
-   - Access same secrets via Infisical (new)
-   - Verify consistency between both systems
+
+- Access same secrets via 1Password (existing)
+- Access same secrets via Infisical (new)
+- Verify consistency between both systems
 
 ### Phase 2: Feature Parity (Week 3-4)
 
@@ -500,6 +520,7 @@ For this project, **Infisical Cloud free tier is recommended** because:
 4. **Same Features**: Cloud free tier includes all core functionality
 
 Consider self-hosting only if you:
+
 - Need more than 3 projects or 5 identities
 - Require complete network isolation
 - Have strict data residency requirements
@@ -540,6 +561,7 @@ Consider self-hosting only if you:
 ### Sample Configurations
 
 Available in `examples/infisical/` directory (to be created):
+
 - Docker Compose setup
 - Ansible playbook examples
 - Terraform configuration

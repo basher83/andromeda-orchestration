@@ -11,17 +11,20 @@ Successfully integrated NetBox as the IPAM solution for the homelab infrastructu
 ## Completed Tasks
 
 ### 1. Initial Setup ✅
+
 - Created homelab sites (OG Homelab, Doggos Homelab)
 - Configured IP prefixes for all networks
 - Set up device roles and types
 - Created manufacturers and device types
 
 ### 2. Physical Infrastructure ✅
+
 - Added 3 Proxmox hosts (lloyd, holly, mable)
 - Configured network interfaces for each host
 - Assigned IP addresses on 10G network (192.168.11.x)
 
 ### 3. Virtual Infrastructure ✅
+
 - Created Proxmox cluster configuration
 - Added 6 Nomad VMs (3 servers, 3 clients)
 - Configured dual network interfaces per VM
@@ -29,7 +32,7 @@ Successfully integrated NetBox as the IPAM solution for the homelab infrastructu
 
 ## NetBox Current State
 
-```
+```text
 === NetBox Current Configuration ===
 Sites: 3
 Device Roles: 6
@@ -41,11 +44,13 @@ VLANs: 0
 ```
 
 ### Sites
+
 - **OG Homelab** (og-homelab): Original homelab Proxmox cluster
 - **Doggos Homelab** (doggos-homelab): 3-node Proxmox cluster with Nomad
 - **Slurp'it** (slurpit): Unifi network devices (auto-imported)
 
 ### Network Prefixes
+
 - `192.168.1.0/24` - Unifi network (from slurpit)
 - `192.168.10.0/24` - 2.5G Management Network (doggos-homelab)
 - `192.168.11.0/24` - 10G Data Network (doggos-homelab)
@@ -133,7 +138,7 @@ Discovery playbook to verify NetBox configuration and contents.
 
 ## Access Information
 
-- **NetBox URL**: https://192.168.30.213
+- **NetBox URL**: [https://192.168.30.213](https://192.168.30.213)
 - **API Token**: Stored in Infisical at `/apollo-13/services/netbox`
 - **Username**: Retrieved from Infisical
 
