@@ -54,7 +54,7 @@ Each service README.md MUST include:
 - **Troubleshooting**: Common issues and solutions
 - **Archived Files**: Brief description of archived versions
 
-5. **Cleanup Process**:
+1. **Cleanup Process**:
 
 After successful production deployment:
 

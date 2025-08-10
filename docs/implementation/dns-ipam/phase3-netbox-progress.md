@@ -52,12 +52,14 @@ VLANs: 0
 - `192.168.30.0/24` - Management Network (og-homelab)
 
 ### Physical Devices
+
 - lloyd (Proxmox host) - 192.168.11.11
 - holly (Proxmox host) - 192.168.11.12
 - mable (Proxmox host) - 192.168.11.13
 - Plus 5 Unifi devices from slurpit
 
 ### Virtual Machines
+
 - nomad-server-1-lloyd (192.168.10.11)
 - nomad-server-2-holly (192.168.10.12)
 - nomad-server-3-mable (192.168.10.13)
@@ -68,15 +70,19 @@ VLANs: 0
 ## Playbooks Created
 
 ### netbox-setup.yml
+
 Initial NetBox configuration with sites, prefixes, roles, and device types.
 
 ### netbox-populate-infrastructure.yml
+
 Populates NetBox with physical hosts, interfaces, and IP assignments.
 
 ### netbox-create-vms.yml
+
 Creates virtual machines with proper cluster configuration and network assignments.
 
 ### netbox-discover.yml
+
 Discovery playbook to verify NetBox configuration and contents.
 
 ## Technical Achievements
