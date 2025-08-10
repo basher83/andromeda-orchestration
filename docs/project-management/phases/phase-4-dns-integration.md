@@ -30,7 +30,7 @@ References:
 
 1. Database provisioning (PostgreSQL)
 
-   - [ ] Deploy Nomad job: `nomad-jobs/platform-services/.testing/postgresql/postgresql.nomad.hcl`
+   - [x] Deploy Nomad job: `nomad-jobs/platform-services/postgresql.nomad.hcl`
    - [ ] Configure host volume for persistence
    - [ ] Initialize PowerDNS schema
 
@@ -41,7 +41,7 @@ References:
 
 3. Deploy PowerDNS Auth (Mode A)
 
-   - [ ] Use Mode A job: `nomad-jobs/platform-services/.testing/mode-a/powerdns-testing.nomad.hcl`
+   - [ ] Deploy/update PowerDNS job: `nomad-jobs/platform-services/powerdns.nomad.hcl` (configure for PostgreSQL backend)
    - [ ] Expose DNS on port 53 (TCP/UDP), API via dynamic port
    - [ ] Register Consul services (`powerdns-auth`, `powerdns-auth-api`)
 
@@ -205,7 +205,7 @@ Clients
 
 ## Next Phase
 
-Once Phase 4 is complete, we'll move to Phase 5 (Optimization) which includes:
+Once Phase 4 is complete, we'll move to Phase 5 (Multi-Site Expansion and Optimization) which includes:
 
 - Multi-site DNS strategy
 - High availability configuration

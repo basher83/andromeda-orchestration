@@ -15,8 +15,8 @@ The 700+ line task list has been split into manageable chunks:
 
 - **[phases/](./phases/)** - Future phase planning
   - [Phase 3: NetBox Integration](./phases/phase-3-netbox.md)
-  - [Phase 4: Multi-Site](./phases/phase-4-multisite.md)
-  - [Phase 5: Optimization](./phases/phase-5-optimization.md)
+  - [Phase 5: Multi-Site](./phases/phase-5-multisite.md)
+  - [Phase 6: Post-Implementation & Continuous Improvement](./phases/phase-6-post-implementation-continuous-improvement.md)
 
 ### History
 
@@ -35,7 +35,7 @@ The 700+ line task list has been split into manageable chunks:
 ## 📊 Current Status
 
 - **Project Phase**: Phase 2 Complete, Preparing for Phase 3
-- **Active Tasks**: 1 (HashiCorp Vault deployment) [FIXME]: Already completed
+- **Active Tasks**: 2 (PowerDNS Mode A Adoption, Testing & QA Initiative)
 - **Blocked**: 1 (Service identity tokens)
 - **Overall Progress**: 14/33 tasks (42%)
 

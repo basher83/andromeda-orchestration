@@ -13,8 +13,8 @@ This directory contains all project tracking documentation for the andromeda-orc
 
 - **[phases/](./phases/)** - Future phase planning documents
   - `phase-3-netbox.md` - NetBox integration and DNS migration
-  - `phase-4-multisite.md` - Multi-site expansion
-  - `phase-5-optimization.md` - Performance and automation
+  - `phase-5-multisite.md` - Multi-site expansion and hardening
+  - `phase-6-post-implementation-continuous-improvement.md` - Performance, automation, and maturity
 
 ### For History
 
