@@ -22,7 +22,10 @@
 - NetBox bootstrap and population (Aug 7)
 - Netdata monitoring optimization (Aug 4)
 - Traefik load balancer deployment (Aug 2)
-- PowerDNS deployment to Nomad (Aug 1) [FIXME]: We rolled back to this point. Still need to complete
+- PowerDNS Mode A baseline established (Aug 1)
+  - PostgreSQL backend deployed via `nomad-jobs/platform-services/postgresql.nomad.hcl`
+  - Vault Database Secrets Engine configured (connection + role)
+  - Next: Configure PowerDNS job to use Vault dynamic credentials and integrate NetBox sync (tracked in Phase 4)
 - Vault deployed in dev mode across nomad-server nodes (Aug 6)
 
 ## 📊 Sprint Metrics

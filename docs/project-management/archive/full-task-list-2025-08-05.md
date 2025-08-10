@@ -706,7 +706,7 @@ Tasks:
 
 1. **Complete Phase 3 NetBox integration** - DNS record migration
 2. **Establish monitoring** for PowerDNS performance
-3. **Begin Phase 4** - Multi-site DNS strategy
+3. **Begin Phase 5** - Multi-Site Expansion
 4. **Create operational documentation** for DNS management
 
 ## Related Documentation
