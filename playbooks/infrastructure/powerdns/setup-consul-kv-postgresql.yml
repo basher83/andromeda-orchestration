@@ -1,0 +1,77 @@
+---
+# PowerDNS PostgreSQL Consul KV Setup
+# This playbook creates the necessary Consul KV entries for PowerDNS PostgreSQL deployment
+
+- name: Set up PowerDNS PostgreSQL configuration in Consul KV
+  hosts: nomad-server-1
+  gather_facts: no
+
+  vars:
+    # Get Consul management token from Infisical
+    consul_mgmt_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_MANAGEMENT_TOKEN')).value }}
+
+    # PostgreSQL connection details
+    postgres_service_name: "postgres.service.consul"
+    postgres_port: "5432"  # Will resolve to actual dynamic port via Consul
+    postgres_database: "powerdns"
+    postgres_user: "pdns"
+
+  tasks:
+    - name: Check if PowerDNS Consul KV entries already exist
+      command: consul kv get -token={{ consul_mgmt_token }} pdns/db/host
+      register: existing_config
+      failed_when: false
+      changed_when: false
+      no_log: true
+
+    - name: Display warning if configuration exists
+      debug:
+        msg: "WARNING: PowerDNS Consul KV configuration already exists. It will NOT be overwritten."
+      when: existing_config.rc == 0
+
+    - name: Create PowerDNS database configuration in Consul KV
+      command: "consul kv put -token={{ consul_mgmt_token }} {{ item.key }} {{ item.value }}"
+      loop:
+        - { key: "pdns/db/host", value: "{{ postgres_service_name }}" }
+        - { key: "pdns/db/port", value: "{{ postgres_port }}" }
+        - { key: "pdns/db/name", value: "{{ postgres_database }}" }
+        - { key: "pdns/db/user", value: "{{ postgres_user }}" }
+      when: existing_config.rc != 0
+      no_log: true
+
+    - name: Verify Consul KV entries were created
+      command: "consul kv get -token={{ consul_mgmt_token }} {{ item }}"
+      loop:
+        - pdns/db/host
+        - pdns/db/port
+        - pdns/db/name
+        - pdns/db/user
+      register: verify_config
+      failed_when: verify_config.rc != 0
+      changed_when: false
+
+    - name: Display Consul KV configuration
+      debug:
+        msg: |
+          ✅ PowerDNS PostgreSQL configuration in Consul KV:
+
+          Database connection settings:
+          - pdns/db/host: {{ postgres_service_name }}
+          - pdns/db/port: {{ postgres_port }}
+          - pdns/db/name: {{ postgres_database }}
+          - pdns/db/user: {{ postgres_user }}
+
+          These entries will be used by the PowerDNS Nomad job templates.
+          The database password is stored separately in Vault at kv/pdns.
+
+          Next steps:
+          1. Ensure Vault secrets are configured (run setup-vault-secrets.yml)
+          2. Deploy PostgreSQL: nomad job run nomad-jobs/platform-services/postgresql.nomad.hcl
+          3. Deploy PowerDNS: nomad job run nomad-jobs/platform-services/powerdns-auth.nomad.hcl
