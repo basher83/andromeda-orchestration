@@ -96,28 +96,28 @@ network {
 ## Common Pitfalls to Avoid
 
 ### ❌ Don't: Request Static Ports for Web Services
+
 ```hcl
 # BAD: Creates conflicts
 network {
   port "http" {
-    static = 80  # Will conflict with load balancer!
+    static = 8080
   }
 }
 ```
 
 ### ✅ Do: Use Dynamic Ports with Service Discovery
+
 ```hcl
-# GOOD: No conflicts
-network {
-  port "http" {
-    to = 3000  # Internal port
-  }
+service {
+  name = "app"
+  port = "http"
 }
 
-service {
-  name = "my-app"
-  port = "http"
-  tags = ["urlprefix-/myapp"]  # For load balancer routing
+task {
+  env = {
+    CONSUL_SERVICE_NAME = "app"
+  }
 }
 ```
 
@@ -249,50 +249,39 @@ job "grafana" {
 ## Load Balancer Options
 
 ### Recommended: Traefik
+
 - Native Consul integration
-- Automatic service discovery
-- Built-in Let's Encrypt support
-- Dynamic configuration
+- First-class Nomad support
+- Powerful routing and middlewares
 
 ### Alternative: Caddy
+
 - Simple configuration
-- Automatic HTTPS
-- Good for basic routing
+- Good TLS automation
 
 ### Alternative: nginx
+
 - Familiar to many users
-- Requires manual configuration
-- Use with consul-template for automation
+- Flexible configuration
 
 ## Troubleshooting
 
 ### Port Conflicts
-```bash
-# Check what's using a port
-ss -tlnp | grep :80
 
-# Find Nomad allocation using a port
-nomad job status <job-name>
-nomad alloc status <alloc-id>
+```bash
+ss -tulpn | grep -E ":(80|443|53)"
 ```
 
 ### Service Discovery Issues
-```bash
-# Verify service registration
-consul catalog services
-dig @localhost -p 8600 service.service.consul
 
-# Check service health
-consul watch -type=service -service=<service-name>
+```bash
+consul catalog services
 ```
 
 ### Firewall Blocking
-```bash
-# Test connectivity
-nc -zv <node-ip> <port>
 
-# Check nftables logs
-journalctl -u nftables -f
+```bash
+nft list ruleset | less
 ```
 
 ## Related Documentation
