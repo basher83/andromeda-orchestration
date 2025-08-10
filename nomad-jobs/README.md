@@ -4,7 +4,7 @@ This directory contains all Nomad job specifications for the homelab infrastruct
 
 ## Directory Structure
 
-```
+```text
 nomad-jobs/
 ├── core-infrastructure/    # Essential platform services (load balancers, service mesh)
 │   ├── traefik.nomad.hcl  # Production job file
@@ -42,31 +42,36 @@ nomad-jobs/
    - Keep for reference and rollback purposes
 
 4. **Documentation Requirements**:
-   Each service README.md MUST include:
-   - **Current Status**: Production/Testing/Planned
-   - **File**: Name of production job file
-   - **Version**: Container version or tag
-   - **Last Updated**: Date of last production change
-   - **Configuration**: Key settings and requirements
-   - **Access**: How to reach the service
-   - **Troubleshooting**: Common issues and solutions
-   - **Archived Files**: Brief description of archived versions
+
+Each service README.md MUST include:
+
+- **Current Status**: Production/Testing/Planned
+- **File**: Name of production job file
+- **Version**: Container version or tag
+- **Last Updated**: Date of last production change
+- **Configuration**: Key settings and requirements
+- **Access**: How to reach the service
+- **Troubleshooting**: Common issues and solutions
+- **Archived Files**: Brief description of archived versions
 
 5. **Cleanup Process**:
-   After successful production deployment:
-   ```bash
-   # Move test files to archive
-   mv .testing/*.nomad.hcl .archive/
 
-   # Rename final version to service name
-   mv {service}-final.nomad.hcl {service}.nomad.hcl
+After successful production deployment:
 
-   # Update README.md with production details
-   ```
+```bash
+# Move test files to archive
+mv .testing/*.nomad.hcl .archive/
+
+# Rename final version to service name
+mv {service}-final.nomad.hcl {service}.nomad.hcl
+
+# Update README.md with production details
+```
 
 ## Currently Deployed Services
 
 ### Core Infrastructure
+
 - **Traefik** (v3.0) - ✅ Production
   - Load balancer and reverse proxy
   - Owns ports 80/443
@@ -74,6 +79,7 @@ nomad-jobs/
   - Consul service discovery active
 
 ### Platform Services
+
 - **PowerDNS** (pdns-auth-48) - ✅ Production
   - Authoritative DNS server
   - API enabled with MySQL backend

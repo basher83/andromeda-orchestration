@@ -5,7 +5,9 @@ This directory contains documentation for secrets management implementation usin
 ## Documents
 
 ### 🔑 [infisical-setup.md](infisical-setup.md)
+
 General guide for Infisical setup:
+
 - Core concepts and project types
 - Authentication methods
 - Ansible integration patterns
@@ -13,7 +15,9 @@ General guide for Infisical setup:
 - Migration guidance
 
 ### 🚀 [andromeda-infisical-config.md](andromeda-infisical-config.md)
+
 Project-specific Infisical configuration:
+
 - Current project details and IDs
 - Secret organization structure
 - Usage patterns in inventory and playbooks
@@ -21,7 +25,9 @@ Project-specific Infisical configuration:
 - Future considerations
 
 ### 📊 [comparison.md](comparison.md)
+
 Detailed comparison between secrets management solutions:
+
 - 1Password Connect vs Infisical
 - Feature comparison
 - Security considerations
@@ -36,7 +42,8 @@ Detailed comparison between secrets management solutions:
 ## Secret Organization
 
 Current Infisical structure:
-```
+
+```text
 Production Environment
 └── /apollo-13/
     ├── consul/          # Consul tokens and credentials
@@ -49,6 +56,7 @@ Production Environment
 ## Usage Examples
 
 ### In Inventory Files
+
 ```yaml
 # inventory/og-homelab/infisical.proxmox.yml
 plugin: community.general.proxmox
@@ -63,6 +71,7 @@ api_password: >-
 ```
 
 ### In Playbooks
+
 ```yaml
 vars:
   consul_token: >-
