@@ -14,7 +14,7 @@ After migrating from static inventories and hardcoded credentials to dynamic inf
 
 #### Role-First Architecture
 
-```
+```text
 roles/                 # PRIMARY automation logic
 ├── consul/           # Service roles (reusable)
 │   ├── tasks/
@@ -45,7 +45,8 @@ inventory/
 ```
 
 #### Anti-Pattern to Avoid
-```
+
+```text
 ❌ playbooks/infrastructure/consul/deploy-consul.yml
 ❌ playbooks/infrastructure/consul/configure-consul.yml
 ❌ playbooks/infrastructure/consul/backup-consul.yml

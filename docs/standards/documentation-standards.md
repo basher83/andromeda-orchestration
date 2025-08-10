@@ -1,16 +1,18 @@
 # Documentation Standards
 
 ## Purpose
+
 Establish consistent documentation practices that ensure knowledge is preserved, discoverable, and actionable.
 
 ## Background
+
 Documentation is not an afterthought—it's a first-class citizen in this repository. We've learned that undocumented systems become unmaintainable, and scattered documentation becomes useless.
 
 ## Standard
 
 ### Documentation Hierarchy
 
-```
+```text
 docs/
 ├── standards/          # WHY - Standards, decisions, patterns
 ├── implementation/     # HOW - Technical setup and configuration
@@ -28,21 +30,6 @@ docs/
 │   └── archive/       # Historical project artifacts
 ├── diagrams/         # VISUAL - Architecture and flows
 ├── getting-started/   # NEW USER - Onboarding and basics
-├── migration/         # CHANGE - Migration guides and procedures
-├── resources/         # REFERENCE - External links, standards
-└── archive/          # HISTORICAL - Deprecated but preserved content
-
-[service-directory]/
-├── README.md         # Service-specific documentation only
-├── .testing/        # Work in progress
-└── .archive/        # Historical versions
-
-Root Level Files:
-├── README.md         # Project overview and quick start
-├── ROADMAP.md        # Vision and major milestones
-├── CLAUDE.md         # AI assistant context (project-specific)
-├── WARP.md           # Terminal assistant context
-└── CHANGELOG.md      # Version history and changes
 ```
 
 ### Placement Rules
