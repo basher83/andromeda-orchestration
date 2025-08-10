@@ -14,6 +14,7 @@ This directory contains Nomad job specifications for infrastructure services tha
 **Purpose**: Authoritative DNS server for the homelab infrastructure.
 
 **Key Features**:
+
 - Runs on standard DNS port 53 (static allocation required)
 - API accessible on dynamic port with webserver on port 8081 internally
 - MySQL backend (MariaDB 10) for zone storage
@@ -21,6 +22,7 @@ This directory contains Nomad job specifications for infrastructure services tha
 - Service discovery via Consul
 
 **Current Configuration**:
+
 - Static port: 53 (DNS)
 - Dynamic port for API (maps to container port 8081)
 - MySQL on dynamic port (maps to container port 3306)
@@ -28,17 +30,20 @@ This directory contains Nomad job specifications for infrastructure services tha
 - Persistent volume for MySQL data: `powerdns-mysql`
 
 **Services Registered**:
+
 - `powerdns-dns` - DNS service on port 53
 - `powerdns-api` - REST API for zone management
 - `powerdns-mysql` - MySQL database backend
 
 **Access**:
+
 - DNS queries: `<node-ip>:53` or `dig @<node-ip> domain.com`
 - API: `http://<node-ip>:<dynamic-port>/api/v1/servers`
 - API Key: `changeme789xyz` (TODO: Move to Vault/Infisical)
-- Traefik route: https://powerdns.lab.local (when configured)
+- Traefik route: [https://powerdns.lab.local](https://powerdns.lab.local)
 
 **Deployment**:
+
 ```bash
 # Deploy PowerDNS
 nomad job run nomad-jobs/platform-services/powerdns.nomad.hcl
@@ -51,6 +56,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
 
 **API Configuration**:
 The PowerDNS API requires explicit command-line arguments to enable:
+
 ```hcl
 args = [
   "--webserver=yes",
@@ -64,11 +70,13 @@ args = [
 
 **MySQL Schema**:
 The job automatically creates the required PowerDNS tables:
+
 - `domains` - DNS zones
 - `records` - DNS records
 - Includes necessary indexes for performance
 
 **Important Notes**:
+
 - API webserver MUST be enabled via command-line args, not just environment variables
 - All service blocks MUST include identity blocks with `aud = ["consul.io"]`
 - MySQL credentials are currently hardcoded (TODO: Move to secrets management)
@@ -76,6 +84,7 @@ The job automatically creates the required PowerDNS tables:
 
 **Traefik Integration**:
 PowerDNS API service includes Traefik tags for routing:
+
 ```hcl
 tags = [
   "traefik.enable=true",
@@ -89,6 +98,7 @@ tags = [
 ## Archived Files
 
 The `.archive/` directory contains previous iterations and test versions:
+
 - `powerdns.nomad.hcl` - Original version without service registration
 - `powerdns-minimal.nomad.hcl` - Basic test configuration
 - `powerdns-no-services.nomad.hcl` - Workaround version without service blocks
@@ -101,23 +111,27 @@ The `.archive/` directory contains previous iterations and test versions:
 ## Planned Services
 
 ### NetBox (Phase 3)
+
 - IPAM and DCIM
 - Source of truth for infrastructure
 - PowerDNS integration for automatic DNS updates
 - Dynamic inventory for Ansible
 
 ### Monitoring Stack
+
 - Prometheus for metrics collection (Traefik metrics ready)
 - Grafana for visualization
 - AlertManager for notifications
 - Integration with existing Netdata infrastructure
 
 ### Logging Stack
+
 - Loki for log aggregation
 - Promtail for log shipping
 - Integration with Grafana
 
 ### Secrets Management
+
 - Vault or enhanced Infisical integration
 - Dynamic database credentials for PowerDNS
 - API key rotation

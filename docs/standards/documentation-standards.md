@@ -150,6 +150,7 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 #### Format Standards
 
 **In Documentation (Markdown):**
+
 ```markdown
 [TODO]: Description of task to complete
 [FIXME]: This section has incorrect information about X
@@ -158,6 +159,7 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 ```
 
 **In Code (Comments):**
+
 ```python
 # TODO: Add retry logic for network failures
 # FIXME: This breaks when count > 100
@@ -194,6 +196,7 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 #### Searching and Tracking
 
 **Find all tags:**
+
 ```bash
 # In documentation
 rg '\[(TODO|FIXME|BUG|HACK|WARNING|NOTE|DEPRECATED|SECURITY)\]:'
@@ -209,6 +212,7 @@ rg '\[FIXME\]:|# FIXME:'
 ```
 
 **Generate reports:**
+
 ```bash
 # Count by type
 rg '(\[|# )(TODO|FIXME|BUG|WARNING)' --no-filename | \
@@ -222,6 +226,7 @@ rg '(\[|# )(TODO|FIXME|BUG)' --vimgrep
 #### Examples
 
 **Good Examples:**
+
 ```markdown
 [TODO]: Add monitoring dashboard after Netdata deployment is complete
 [FIXME]: This link is broken - should point to /docs/operations/runbooks.md
@@ -236,6 +241,7 @@ rg '(\[|# )(TODO|FIXME|BUG)' --vimgrep
 ```
 
 **Bad Examples:**
+
 ```markdown
 [TODO]: Fix this            # Too vague
 TODO: Add tests             # Missing brackets
@@ -249,6 +255,7 @@ TODO: Add tests             # Missing brackets
 ```
 
 #### Why Unified Tagging?
+
 - **Consistency**: Same patterns in code and docs
 - **Searchability**: Easy to find all issues project-wide
 - **Prioritization**: Clear severity levels
@@ -259,12 +266,14 @@ TODO: Add tests             # Missing brackets
 ## Rationale
 
 ### Why This Structure?
+
 - **Discoverability**: Related docs are grouped together
 - **Maintainability**: Clear ownership and placement rules
 - **Scalability**: Structure works for 10 or 1000 documents
 - **Git-friendly**: Changes are localized and reviewable
 
 ### Why Not Scatter Documentation?
+
 - Hard to find related information
 - Difficult to maintain consistency
 - Increases cognitive load
@@ -273,7 +282,8 @@ TODO: Add tests             # Missing brackets
 ## Examples
 
 ### Good Example
-```
+
+```text
 nomad-jobs/
 ├── platform-services/
 │   ├── README.md           # Documents PowerDNS deployment
@@ -286,7 +296,8 @@ docs/
 ```
 
 ### Bad Example
-```
+
+```text
 nomad-jobs/
 ├── platform-services/
 │   ├── README.md
