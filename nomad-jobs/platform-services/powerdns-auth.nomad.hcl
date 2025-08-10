@@ -7,11 +7,19 @@ job "powerdns-auth" {
 
     network {
       mode = "host"
-      port "dns" { static = 53, to = 53 }
+      port "dns" {
+        static = 53
+        to = 53
+      }
       port "api" {}     # dynamic (Nomad alloc)
     }
 
-    restart { attempts = 3, interval = "30s", delay = "10s", mode = "fail" }
+    restart {
+      attempts = 3
+      interval = "30s"
+      delay = "10s"
+      mode = "fail"
+    }
 
     task "pdns-auth" {
       driver = "docker"
@@ -37,7 +45,7 @@ job "powerdns-auth" {
           gpgsql-port={{ key "pdns/db/port" }}
           gpgsql-dbname={{ key "pdns/db/name" }}
           gpgsql-user={{ key "pdns/db/user" }}
-          gpgsql-password={{ with secret "kv/pdns" }}{{ .Data.db_password }}{{ end }}
+          gpgsql-password={{ with secret "secret/data/pdns" }}{{ .Data.data.db_password }}{{ end }}
           gpgsql-dnssec=yes
           gpgsql-prepared-statements=yes
 
@@ -48,7 +56,7 @@ job "powerdns-auth" {
 
           # HTTP API (dynamic)
           api=yes
-          api-key={{ with secret "kv/pdns" }}{{ .Data.api_key }}{{ end }}
+          api-key={{ with secret "secret/data/pdns" }}{{ .Data.data.api_key }}{{ end }}
           webserver=yes
           webserver-address=0.0.0.0
           webserver-port={{ env "NOMAD_PORT_api" }}
@@ -101,10 +109,16 @@ job "powerdns-auth" {
         }
       }
 
-      resources { cpu = 200, memory = 256 }
+      resources {
+        cpu = 200
+        memory = 256
+      }
     }
 
     # Spread across hosts
-    affinity { attribute = "${node.unique.id}", operator = "distinct_hosts", weight = 100 }
+    spread {
+      attribute = "${node.unique.id}"
+      weight    = 100
+    }
   }
 }

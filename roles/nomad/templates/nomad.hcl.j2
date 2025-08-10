@@ -10,9 +10,9 @@ datacenter = "{{ nomad_datacenter | default('dc1') }}"
 
 # Advertise on high-speed interface
 advertise {
-  http = "{{ inter_device_interface }}:4646"
-  rpc  = "{{ inter_device_interface }}:4647"
-  serf = "{{ inter_device_interface }}:4648"
+  http = "{{ inter_device_interface | default(ansible_default_ipv4.address) }}:4646"
+  rpc  = "{{ inter_device_interface | default(ansible_default_ipv4.address) }}:4647"
+  serf = "{{ inter_device_interface | default(ansible_default_ipv4.address) }}:4648"
 }
 
 ui {
@@ -120,18 +120,43 @@ client {
 }
 {% endif %}
 
-{% if nomad_consul_integration | default(false) %}
+{% if nomad_consul_integration | default(true) %}
 # === Consul integration ===
 consul {
   address = "{{ nomad_consul_address | default('127.0.0.1:8500') }}"
-  {% if consul_acl_agent_token is defined %}
-  token   = "{{ consul_acl_agent_token }}"
+
+  # Use appropriate token based on server vs client role
+  {% if nomad_server_enabled | bool %}
+  {% if consul_acl_nomad_server_token is defined %}
+  token = "{{ consul_acl_nomad_server_token }}"
+  {% elif consul_acl_agent_token is defined %}
+  token = "{{ consul_acl_agent_token }}"
+  {% endif %}
+  {% elif nomad_client_enabled | bool %}
+  {% if consul_acl_nomad_client_token is defined %}
+  token = "{{ consul_acl_nomad_client_token }}"
+  {% elif consul_acl_agent_token is defined %}
+  token = "{{ consul_acl_agent_token }}"
+  {% endif %}
   {% endif %}
 
+  # Enable service registration and discovery
+  auto_advertise = {{ nomad_consul_auto_advertise | default(true) | ternary('true', 'false') }}
+  server_auto_join = {{ nomad_consul_server_auto_join | default(true) | ternary('true', 'false') }}
+  client_auto_join = {{ nomad_consul_client_auto_join | default(true) | ternary('true', 'false') }}
+
+  # Service names
+  server_service_name = "{{ nomad_consul_server_service_name | default('nomad') }}"
+  client_service_name = "{{ nomad_consul_client_service_name | default('nomad-client') }}"
+
+  # Enable service checks
+  checks_use_advertise = {{ nomad_consul_checks_use_advertise | default(true) | ternary('true', 'false') }}
+
+  # Service and task identity for workloads
   service_identity {
     enabled = true
     {% if nomad_consul_service_mesh | default(false) %}
-    auto      = true
+    auto = true
     {% if consul_namespace is defined %}
     namespace = "{{ consul_namespace }}"
     {% endif %}
