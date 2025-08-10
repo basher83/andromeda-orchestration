@@ -259,20 +259,22 @@ curl -H "X-Consul-Token: your-token" http://localhost:8500/v1/agent/metrics
 ### ACL Token Issues
 
 1. Verify token has required permissions:
-   ```hcl
-   # Minimum ACL policy needed
-   agent_prefix "" {
-     policy = "read"
-   }
-   service_prefix "" {
-     policy = "write"
-   }
-   ```
 
-2. Test token:
-   ```bash
-   curl -H "X-Consul-Token: your-token" http://localhost:8500/v1/agent/services
-   ```
+```hcl
+# Minimum ACL policy needed
+agent_prefix "" {
+  policy = "read"
+}
+service_prefix "" {
+  policy = "write"
+}
+```
+
+1. Test token:
+
+```bash
+curl -H "X-Consul-Token: your-token" http://localhost:8500/v1/agent/services
+```
 
 ## Integration with Other Roles
 

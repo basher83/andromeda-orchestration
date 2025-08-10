@@ -436,7 +436,7 @@ jobs:
 
 **Ignore File Format (.ansible-lint-ignore):**
 
-```
+```text
 # Format: path/to/file rule-id
 # Legacy playbook - will refactor in PROJ-123
 playbooks/legacy-app.yml name[casing]

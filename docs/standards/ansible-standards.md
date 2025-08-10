@@ -419,7 +419,7 @@ jobs:
 
 #### Role Structure (Required)
 
-```
+```text
 roles/service_name/
 ├── README.md              # REQUIRED - Usage documentation
 ├── meta/

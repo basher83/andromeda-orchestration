@@ -50,6 +50,7 @@ Project: andromeda-orchestration-homelab (7b832220-24c0-45bc-a5f1-ce9794a31259)
 ## Authentication
 
 Using Universal Auth with machine identity:
+
 - `INFISICAL_UNIVERSAL_AUTH_CLIENT_ID` - Set via environment
 - `INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET` - Set via environment
 

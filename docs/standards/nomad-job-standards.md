@@ -1,16 +1,18 @@
 # Nomad Job Standards
 
 ## Purpose
+
 Define consistent patterns for Nomad job development, testing, and deployment that ensure reliable and maintainable container orchestration.
 
 ## Background
+
 Through iterative development of services like Traefik and PowerDNS, we've established patterns that separate production from development, maintain clean histories, and ensure consistent deployments.
 
 ## Standard
 
 ### Directory Organization
 
-```
+```text
 nomad-jobs/
 ├── core-infrastructure/
 │   ├── traefik.nomad.hcl      # Production file ONLY
