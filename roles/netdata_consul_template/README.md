@@ -20,7 +20,7 @@ This role configures Consul Template to dynamically manage Netdata configuration
 
 ## Architecture
 
-```
+```text
 ┌─────────────┐     Watch KV      ┌─────────────┐     Update      ┌─────────────┐
 │ Consul KV   │ <──────────────── │   Consul    │ ──────────────> │   Netdata   │
 │    Store    │                   │   Template  │                  │    Config   │
