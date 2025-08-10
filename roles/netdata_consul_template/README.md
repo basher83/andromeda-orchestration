@@ -193,7 +193,7 @@ consul kv get -recurse netdata/alarms/
 
 ### Via Consul UI
 
-1. Navigate to Consul UI (http://consul-server:8500)
+1. Navigate to Consul UI ([http://consul-server:8500](http://consul-server:8500))
 2. Go to Key/Value section
 3. Navigate to `netdata/alarms/`
 4. Edit values as needed
