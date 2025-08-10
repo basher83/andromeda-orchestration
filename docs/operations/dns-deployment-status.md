@@ -1,4 +1,5 @@
 # DNS Deployment Status Report
+
 **Date**: August 8, 2025
 **Phase**: 4 - DNS Integration
 
@@ -9,12 +10,15 @@ Successfully deployed DNS zones to NetBox, but PowerDNS integration requires fix
 ## Completed Tasks ✅
 
 ### 1. NetBox DNS Plugin Setup
+
 - Plugin v1.3.5 installed and operational
-- API accessible at https://192.168.30.213
+- API accessible at [https://192.168.30.213](https://192.168.30.213)
 - Token stored in Infisical at `/apollo-13/services/netbox/NETBOX_API_KEY`
 
 ### 2. DNS Zones Created in NetBox
+
 **Forward Zones:**
+
 - `homelab.local` - Primary homelab domain
 - `doggos.local` - Doggos cluster domain
 - `og.local` - OG homelab cluster domain
