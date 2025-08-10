@@ -82,6 +82,8 @@ nomad job status <job-name>
 - Storage configuration patterns
 - Host volume documentation
 - CSI plugin guidance
+- **Consul ACL integration** (Aug 10, 2025) - KV access for job templating
+- Enhanced Nomad role with automated ACL policy management
 
 ### 🚧 In Progress
 
@@ -119,9 +121,26 @@ graph TD
 
 ### Integration Points
 
-- **Consul**: Service registration and health checks
+- **Consul**: Service registration, health checks, and KV templating
 - **Vault**: Dynamic secrets and workload identity
 - **Traefik**: Load balancing and routing
+
+### Consul KV Access for Jobs
+
+Nomad jobs can access Consul's KV store for configuration templating:
+
+```hcl
+template {
+  data = <<EOT
+    database_host={{ key "app/database/host" }}
+    database_port={{ key "app/database/port" }}
+    api_key={{ with secret "secret/data/app" }}{{ .Data.data.api_key }}{{ end }}
+  EOT
+  destination = "local/config.env"
+}
+```
+
+**Requirements**: Nomad agents must have proper Consul ACL permissions (`key_prefix` read access) - automatically configured by the enhanced Nomad role.
 
 ## 📁 Job Organization
 

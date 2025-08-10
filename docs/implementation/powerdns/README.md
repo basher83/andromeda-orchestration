@@ -48,7 +48,9 @@ For deploying PowerDNS in production:
 
 1. Review the [deployment architecture](deployment-architecture.md) to understand the chosen pattern
 2. Follow the implementation guide for prerequisites
-3. Deploy using the Mode A configuration from `nomad-jobs/platform-services/.testing/mode-a/`
+3. Deploy using Mode A with PostgreSQL backend
+   - Deploy PostgreSQL: `nomad-jobs/platform-services/postgresql.nomad.hcl`
+   - Deploy/update PowerDNS job: `nomad-jobs/platform-services/powerdns.nomad.hcl` (configure to use PostgreSQL per integration docs)
 
 ## Related Documentation
 
@@ -58,8 +60,7 @@ For deploying PowerDNS in production:
 
 ## Job Files
 
-The actual Nomad job specifications are located at:
+The relevant Nomad job specifications are located at:
 
-- **Mode A (Chosen)**: `nomad-jobs/platform-services/.testing/mode-a/powerdns-testing.nomad.hcl`
-- **Mode B (Alternative)**: `nomad-jobs/platform-services/.testing/mode-b/`
 - **PostgreSQL Backend**: `nomad-jobs/platform-services/postgresql.nomad.hcl`
+- **PowerDNS Auth (configure for PostgreSQL)**: `nomad-jobs/platform-services/powerdns.nomad.hcl`

@@ -16,7 +16,7 @@ andromeda-orchestration/
 ├── inventory/                  # Ansible inventories
 │   ├── og-homelab/           # Original homelab cluster
 │   └── doggos-homelab/       # Doggos cluster (3-node)
-├── jobs/                       # Nomad job specifications
+├── nomad-jobs/                 # Nomad job specifications
 ├── playbooks/                  # Ansible playbooks
 │   ├── assessment/           # Infrastructure assessment
 │   ├── consul/               # Consul service management

@@ -1,19 +1,22 @@
 # PowerDNS Deployment - Final Status
 
 **Date**: August 8, 2025
-**Status**: ✅ Successfully Deployed
+**Status**: ⚠️ Outdated Prototype (SQLite) — superseded by PostgreSQL + Vault deployment
 
 ## Summary
 
-PowerDNS has been successfully deployed on the Nomad cluster with the following configuration:
-- **Backend**: SQLite3 (for simplicity and reliability)
-- **API**: Enabled and listening on port 8081 (inside container)
-- **DNS**: Listening on port 53 (static)
-- **Location**: Running on nomad-client-2 (holly, 192.168.11.21)
+This document describes an early SQLite-based prototype. The current production path is Mode A with a PostgreSQL backend and Vault dynamic credentials.
+
+For the current deployment, see:
+
+- `nomad-jobs/platform-services/postgresql.nomad.hcl`
+- `docs/implementation/powerdns/postgresql-vault-integration.md`
+- `docs/implementation/powerdns/postgresql-vault-quickstart.md`
 
 ## Current Configuration
 
 ### Allocation Details
+
 - **Allocation ID**: c19fb3f1-2a08-00ee-9317-84ce3ad2b8f3
 - **Node**: nomad-client-2 (192.168.11.21)
 - **Status**: Running and healthy
@@ -21,28 +24,31 @@ PowerDNS has been successfully deployed on the Nomad cluster with the following 
 - **API Port**: 21421 (dynamic, mapped to container port 8081)
 
 ### Services Registered in Consul
+
 - `powerdns-dns` - DNS service on port 53
 - `powerdns-api` - API service with Traefik routing
 
 ## Key Learnings
 
 ### 1. MySQL Backend Challenges
+
 - Docker container networking makes MySQL connectivity complex
 - Authentication between containers requires careful configuration
 - Environment variables alone don't override config files in PowerDNS image
 - Command-line arguments are needed to override default settings
 
 ### 2. PowerDNS Configuration
+
 - The official Docker image uses `/etc/powerdns/pdns.conf` with defaults
 - Command-line arguments must be passed via `args` in Nomad job
 - Don't specify `command` - the container has correct entrypoint
 - API must be enabled with `--api=yes` and `--webserver=yes`
 
-### 3. SQLite Backend Benefits
-- No external dependencies
-- Simpler deployment and maintenance
-- Sufficient for homelab DNS needs
-- Avoids complex container networking issues
+### 3. Why prototype used SQLite
+
+- Simplified initial validation without external DB
+- Allowed rapid iteration on API and port wiring
+  > Replaced by PostgreSQL for persistence, security, and integration with Vault dynamic credentials
 
 ## Working Configuration
 
@@ -92,6 +98,7 @@ job "powerdns" {
 ## DNS Testing
 
 DNS queries work correctly:
+
 ```bash
 # Test DNS resolution
 dig @192.168.11.21 -p 53 test.local
@@ -102,10 +109,12 @@ dig @192.168.11.21 -p 53 test.local
 ## API Access
 
 The API is running and accessible from within the container network:
+
 - Internal: http://localhost:8081/api/v1/servers
 - External: http://192.168.11.21:21421/api/v1/servers (may require firewall rules)
 
 ### API Key
+
 - Current: `changeme789xyz`
 - Should be moved to Vault/Infisical in production
 
@@ -120,11 +129,13 @@ The API is running and accessible from within the container network:
 ## Files Created/Modified
 
 ### New Files
+
 - `/nomad-jobs/platform-services/powerdns-sqlite.nomad.hcl` - Working SQLite configuration
 - `/nomad-jobs/platform-services/powerdns.nomad.hcl` - MySQL attempt (for reference)
 - `/docs/operations/powerdns-deployment-final.md` - This documentation
 
 ### Updated Files
+
 - `/playbooks/infrastructure/netbox/dns/sync-to-powerdns.yml` - Updated with correct API endpoint
 - `/CLAUDE.md` - Added critical insights about deployment
 
@@ -152,9 +163,4 @@ curl -H "X-API-Key: changeme789xyz" http://192.168.11.21:21421/api/v1/servers
 
 ## Conclusion
 
-PowerDNS is successfully deployed and operational. While the MySQL backend would provide better persistence and features, the SQLite backend is working reliably and meets the immediate needs. The API is enabled and ready for zone synchronization from NetBox.
-
-The main outstanding issue is external API access due to firewall/network configuration, which can be resolved by:
-1. Opening the dynamic port range in nftables
-2. Using Traefik for proxying
-3. Or accessing via Consul Connect mesh
+This SQLite deployment is archived as historical reference. The active implementation uses PostgreSQL with Vault dynamic credentials (Mode A). Refer to the integration docs for current procedures and troubleshooting.

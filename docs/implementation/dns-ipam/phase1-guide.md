@@ -44,7 +44,7 @@ Run the Phase 1 playbook to configure DNS resolution:
 
 ```bash
 # Using the role-based approach (recommended)
-uv run ansible-playbook playbooks/infrastructure/phase1-consul-dns.yml \
+uv run ansible-playbook playbooks/infrastructure/consul/phase1-consul-dns.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml
 
 # Or use the detailed playbook with more control
@@ -197,7 +197,7 @@ consul_register_services: false
 Run the validation tasks separately:
 
 ```bash
-uv run ansible-playbook playbooks/infrastructure/phase1-consul-dns.yml \
+uv run ansible-playbook playbooks/infrastructure/consul/phase1-consul-dns.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml \
   --tags validate
 ```

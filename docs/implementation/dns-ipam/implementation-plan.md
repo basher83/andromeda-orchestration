@@ -5,14 +5,14 @@ infrastructure using Consul, PowerDNS, NetBox, and Nomad.
 
 ## Current Status (August 2025)
 
-| Phase | Status | Description | Timeline |
-|-------|--------|-------------|----------|
-| **Phase 0** | ✅ Complete | Infrastructure Assessment | July 2025 |
-| **Phase 1** | ✅ Complete | Consul DNS Foundation | August 2025 |
-| **Phase 2** | ✅ Complete | PowerDNS Deployment | August 2025 |
-| **Phase 3** | 🚀 Accelerated | NetBox Integration (NetBox deployed!) | In Progress |
-| **Phase 4** | ⏳ Planned | Phase Out Pi-hole | Next |
-| **Phase 5** | ⏳ Future | Scale, Harden & Automate | Future |
+| Phase       | Status         | Description                                                                  | Timeline    |
+| ----------- | -------------- | ---------------------------------------------------------------------------- | ----------- |
+| **Phase 0** | ✅ Complete    | Infrastructure Assessment                                                    | July 2025   |
+| **Phase 1** | ✅ Complete    | Consul DNS Foundation                                                        | August 2025 |
+| **Phase 2** | ✅ Complete    | PowerDNS Deployment (Mode A, PostgreSQL backend + Vault dynamic credentials) | August 2025 |
+| **Phase 3** | 🚀 Accelerated | NetBox Integration (NetBox deployed!)                                        | In Progress |
+| **Phase 4** | ⏳ Planned     | Phase Out Pi-hole                                                            | Next        |
+| **Phase 5** | ⏳ Future      | Scale, Harden & Automate                                                     | Future      |
 
 **🎉 Major Milestone**: NetBox is already deployed at `https://192.168.30.213/` (LXC 213 on pve1)
 
