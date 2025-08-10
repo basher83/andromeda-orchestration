@@ -16,8 +16,6 @@ sudo systemctl reload nomad
 
 See `docs/implementation/nomad/dynamic-volumes.md` for background and sanity checks.
 
-# Nomad Role
-
 This Ansible role manages HashiCorp Nomad installation and configuration in a cluster with dual network interfaces.
 
 ## Architecture Overview

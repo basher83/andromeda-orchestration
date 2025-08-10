@@ -46,18 +46,21 @@ playbooks/infrastructure/netbox/
 ## Issues Found 🔧
 
 ### 1. PowerDNS Configuration Problems
+
 - **Issue**: PowerDNS is using SQLite3 backend instead of MySQL
 - **Cause**: Environment variables in Nomad job not being applied
 - **Impact**: No persistent storage, zones lost on restart
 - **Fix Needed**: Update Nomad job to properly configure MySQL backend
 
 ### 2. PowerDNS API Not Accessible
+
 - **Issue**: API on port 8081 not responding to requests
-- **Expected**: http://192.168.11.21:26406/api/v1/
+- **Expected**: [http://192.168.11.21:26406/api/v1/](http://192.168.11.21:26406/api/v1/)
 - **Impact**: Cannot sync zones from NetBox to PowerDNS
 - **Fix Needed**: Verify API is enabled via command-line arguments
 
 ### 3. macOS mDNS Interference
+
 - **Issue**: `.local` domains reserved for mDNS on macOS
 - **Impact**: DNS queries from Mac don't reach PowerDNS
 - **Workaround**: Use `.lab` TLD or test from Linux hosts
@@ -65,14 +68,17 @@ playbooks/infrastructure/netbox/
 ## Critical Insights 💡
 
 ### Infisical Integration
+
 - **Always use** `uv run ansible-playbook` for proper Python environment
 - Infisical Ansible collection has "worker dead state" issues
 - **Workaround**: Use CLI to export tokens as environment variables
+
 ```bash
 export NETBOX_TOKEN=$(infisical run --env=staging --path="/apollo-13/services/netbox" -- printenv NETBOX_API_KEY)
 ```
 
 ### PowerDNS Requirements
+
 - API must be enabled via command-line args, not just environment variables
 - MySQL backend requires proper PDNS_gmysql_* environment variables
 - Persistent volume needed for database storage
