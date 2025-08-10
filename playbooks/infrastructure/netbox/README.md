@@ -4,7 +4,7 @@ This directory contains playbooks for managing NetBox as the source of truth for
 
 ## Directory Structure
 
-```
+```text
 netbox/
 ├── dns/                    # DNS zone and record management
 │   ├── discover-zones.yml  # Discover current DNS configuration in NetBox

@@ -7,21 +7,26 @@ This directory contains Nomad job specifications for core infrastructure service
 ### Traefik (PRODUCTION)
 
 **File**: `traefik.nomad.hcl`
+
 **Status**: ✅ Deployed and Running
+
 **Version**: v3.0
+
 **Last Updated**: 2025-08-04
 
 **Purpose**: Load balancer and reverse proxy for all HTTP/HTTPS traffic in the cluster.
 
 **Key Features**:
+
 - Owns ports 80 and 443 (the ONLY service that should use these ports)
 - Automatic service discovery via Consul Catalog
 - Automatic HTTPS with self-signed certificates
-- Dashboard available at https://traefik.lab.local (port 8080 internally)
+- Dashboard available at [https://traefik.lab.local](https://traefik.lab.local) (port 8080 internally)
 - Prometheus metrics endpoint at /metrics on admin port
 - Health check endpoint at /ping on admin port
 
 **Current Configuration**:
+
 - Static ports: 80 (HTTP), 443 (HTTPS)
 - Dynamic admin port (maps to container port 8080)
 - Consul integration with service identity enabled
@@ -29,6 +34,7 @@ This directory contains Nomad job specifications for core infrastructure service
 - Persistent volume for certificate storage
 
 **Deployment**:
+
 ```bash
 # Deploy Traefik
 nomad job run nomad-jobs/core-infrastructure/traefik.nomad.hcl
