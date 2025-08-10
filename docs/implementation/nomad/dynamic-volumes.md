@@ -1,6 +1,6 @@
 # Nomad Dynamic Volumes
 
-### Prerequisites
+## Prerequisites
 
 - Linux host with loop device support
 - mkfs.ext4 available

@@ -154,8 +154,8 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 #### Standards and Rules
 
 **Format Requirements:**
-- Documentation: `[TAG]: ` (brackets, colon, space)
-- Code: `# TAG: ` (hash, space, tag, colon, space)
+- Documentation: `[TAG]:` (brackets, colon)
+- Code: `# TAG:` (hash, space optional before tag, colon)
 - Always include descriptive text after the tag
 - Keep descriptions concise but complete
 - Include ticket/issue numbers when applicable: `[TODO]: (PROJ-123) Implement feature`
@@ -292,7 +292,6 @@ To meet these standards:
 3. **Move systematically** - One category at a time
 4. **Update references** - Fix all links
 5. **Archive old locations** - Leave forwarding notes
-
 
 ## References
 

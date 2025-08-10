@@ -4,10 +4,7 @@
 **Status**: Planning
 **Prerequisites**: Core infrastructure stable (Phase 2 Complete ✅)
 
----
-
-Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 3](./phase-3-netbox.md)
----
+> Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 3](./phase-3-netbox.md)
 
 ## Initiative Overview
 

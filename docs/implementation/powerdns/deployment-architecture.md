@@ -103,7 +103,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    ```bash
    # Deploy PostgreSQL
    nomad job run postgresql.nomad.hcl
-   
+
    # Initialize PowerDNS schema
    # Connect to PostgreSQL and run PowerDNS schema
    ```
@@ -112,7 +112,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    ```bash
    # Set up Consul KV values
    ./scripts/setup-pdns-consul-kv.sh
-   
+
    # Configure Vault secrets
    ./scripts/setup-pdns-vault.sh
    ```
@@ -127,10 +127,10 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    ```bash
    # Check service registration
    consul catalog services | grep powerdns
-   
+
    # Test DNS resolution
    dig @<node-ip> example.lab
-   
+
    # Check API access via Traefik
    curl -H "X-API-Key: <api-key>" https://pdns-api.internal/api/v1/servers
    ```

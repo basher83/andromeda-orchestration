@@ -544,7 +544,7 @@ service_memory_limit: "512M"
 service_cpu_limit: "1.0"
 ```
 
-#### Role Task Organization
+### Role Task Organization
 
 ```yaml
 # tasks/main.yml - Orchestrates role execution
