@@ -215,64 +215,69 @@ VM names may not resolve, causing connectivity tests to fail.
 #### Solutions
 
 1. **Use IP addresses directly (recommended for assessments):**
-   ```yaml
-   - name: Test connectivity
-     ansible.builtin.command:
-       cmd: "ping -c 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
-     when:
-       - hostvars[item]['ansible_default_ipv4'] is defined
-       - hostvars[item]['ansible_default_ipv4']['address'] is defined
-   ```
+
+```yaml
+- name: Test connectivity
+  ansible.builtin.command:
+    cmd: "ping -c 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
+  when:
+    - hostvars[item]['ansible_default_ipv4'] is defined
+    - hostvars[item]['ansible_default_ipv4']['address'] is defined
+```
 
 2. **Add temporary hosts entries:**
-   ```yaml
-   - name: Add temporary hosts entries
-     ansible.builtin.lineinfile:
-       path: /etc/hosts
-       line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{ item }}"
-     loop: "{{ groups['all'] }}"
-     when: item != inventory_hostname
-     become: true
-   ```
+
+```yaml
+- name: Add temporary hosts entries
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{ item }}"
+  loop: "{{ groups['all'] }}"
+  when: item != inventory_hostname
+  become: true
+```
 
 ### Best Practices for Robust Playbooks
 
 1. **Use `failed_when: false` for discovery tasks:**
-   ```yaml
-   - name: Check service status
-     ansible.builtin.command:
-       cmd: systemctl status service
-     register: result
-     changed_when: false
-     failed_when: false
-   ```
+
+```yaml
+- name: Check service status
+  ansible.builtin.command:
+    cmd: systemctl status service
+  register: result
+  changed_when: false
+  failed_when: false
+```
 
 2. **Implement error handling blocks:**
-   ```yaml
-   - name: Task with fallback
-     block:
-       - name: Primary method
-         ansible.builtin.command: primary-tool
-     rescue:
-       - name: Fallback method
-         ansible.builtin.command: fallback-tool
-     always:
-       - name: Cleanup
-         ansible.builtin.file:
-           path: /tmp/temp-file
-           state: absent
-   ```
+
+```yaml
+- name: Task with fallback
+  block:
+    - name: Primary method
+      ansible.builtin.command: primary-tool
+  rescue:
+    - name: Fallback method
+      ansible.builtin.command: fallback-tool
+  always:
+    - name: Cleanup
+      ansible.builtin.file:
+        path: /tmp/temp-file
+        state: absent
+```
 
 3. **Validate connectivity before tests:**
-   ```yaml
-   - name: Ensure target is reachable
-     ansible.builtin.wait_for:
-       host: "{{ target_host }}"
-       port: 22
-       timeout: 5
-     register: host_reachable
-     failed_when: false
-   ```
+
+```yaml
+- name: Ensure target is reachable
+  ansible.builtin.wait_for:
+    host: "{{ target_host }}"
+    port: 22
+    timeout: 5
+  register: host_reachable
+  failed_when: false
+```
 
 ## 1Password Connection Issues
 
@@ -310,6 +315,7 @@ ansible-inventory -i inventory/og-homelab/netbox.yml --host some-hostname
 ```
 
 If using NetBox inventory:
+
 - Confirm NetBox URL and token in `inventory/netbox.yml`
 - Test API accessibility from control host
 - Ensure device roles and tags in NetBox match inventory filters
