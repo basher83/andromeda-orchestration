@@ -520,7 +520,7 @@ MIT
 
 Your Organization
 
-#### Role Variable Standards
+### Role Variable Standards
 
 ```yaml
 # defaults/main.yml - Always document variables
