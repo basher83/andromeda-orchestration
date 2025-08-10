@@ -131,7 +131,7 @@ seal "transit" {
 
 ### Secrets Management Hybrid Approach
 
-```
+```text
 ┌─────────────────┐
 │   Infisical     │ ← Static secrets (API keys, passwords)
 │  (Existing)     │

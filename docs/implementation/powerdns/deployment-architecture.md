@@ -6,7 +6,7 @@ This document captures the architectural decision for PowerDNS deployment on Nom
 
 ## Decision Summary
 
-**Chosen Architecture: Mode A (Simple/Production-Ready)**
+### Chosen Architecture: Mode A (Simple/Production-Ready)
 
 After evaluating deployment patterns, we selected the simpler Mode A architecture that deploys PowerDNS Authoritative Server directly on port 53 with an external PostgreSQL backend.
 
@@ -14,7 +14,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 
 ### Mode A: Direct Authoritative DNS
 
-```
+```text
 ┌─────────────┐     :53      ┌─────────────┐     DB      ┌─────────────┐
 │ DNS Clients │ ──────────> │ PowerDNS    │ <────────> │ PostgreSQL  │
 └─────────────┘              │   Auth      │            │  (External) │
@@ -30,7 +30,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 
 ### Mode B: Full Stack with dnsdist
 
-```
+```text
 ┌─────────────┐     :53      ┌─────────────┐     :5301     ┌─────────────┐
 │ DNS Clients │ ──────────> │   dnsdist   │ ──────────> │ PowerDNS    │
 └─────────────┘              │   (Proxy)   │              │   Auth      │
@@ -99,11 +99,12 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    ```
 
 3. **Vault Secrets**
-   ```bash
-   vault kv put kv/pdns \
-     db_password="<secure-password>" \
-     api_key="<secure-api-key>"
-   ```
+
+```bash
+vault kv put kv/pdns \
+  db_password="<secure-password>" \
+  api_key="<secure-api-key>"
+```
 
 ### Deployment Steps
 
@@ -113,9 +114,13 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    # Deploy PostgreSQL
    nomad job run postgresql.nomad.hcl
 
-   # Initialize PowerDNS schema
-   # Connect to PostgreSQL and run PowerDNS schema
-   ```
+```bash
+# Deploy PostgreSQL
+nomad job run postgresql.nomad.hcl
+
+# Initialize PowerDNS schema
+# Connect to PostgreSQL and run PowerDNS schema
+```
 
 2. **Phase 2: Configure Secrets**
 
@@ -123,9 +128,13 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    # Set up Consul KV values
    ./scripts/setup-pdns-consul-kv.sh
 
-   # Configure Vault secrets
-   ./scripts/setup-pdns-vault.sh
-   ```
+```bash
+# Set up Consul KV values
+./scripts/setup-pdns-consul-kv.sh
+
+# Configure Vault secrets
+./scripts/setup-pdns-vault.sh
+```
 
 3. **Phase 3: Deploy/Configure PowerDNS** (Configure for PostgreSQL backend)
 
@@ -143,11 +152,11 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    # Test DNS resolution
    dig @<node-ip> example.spaceships.work
 
-   # Check API access via Traefik
-   curl -H "X-API-Key: <api-key>" https://pdns-api.internal/api/v1/servers
-   ```
+# Test DNS resolution
+dig @<node-ip> example.lab
+```
 
-## Key Configuration Details
+## Configuration
 
 ### Network Configuration
 
@@ -169,27 +178,16 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 ### Security
 
 - Database credentials via Vault
-- API key authentication
-- TLS termination at Traefik for API access
-
-## Migration Path to Mode B
-
-If recursive DNS becomes a requirement:
-
-1. **Keep Mode A Running** - No downtime during migration
-2. **Deploy Recursor** - Add PowerDNS Recursor service
-3. **Deploy dnsdist** - Configure with backend pools
-4. **Update DNS** - Point clients to dnsdist
-5. **Decommission Mode A** - After validation
-
-## Monitoring and Operations
+- API key stored in Vault
+- Read-only tokens for CI where applicable
 
 ### Health Checks
 
 ```hcl
 check {
-  name     = "dns-tcp-53"
-  type     = "tcp"
+  name     = "api"
+  type     = "http"
+  path     = "/api/v1/servers/localhost"
   interval = "10s"
   timeout  = "2s"
 }

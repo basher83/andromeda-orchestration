@@ -9,16 +9,19 @@ Our infrastructure uses a combination of static and dynamic port allocation to p
 ## Core Principles
 
 ### 1. Dynamic Ports by Default
+
 - **Range**: 20000-32000 (Nomad's default dynamic range)
 - **Usage**: All web services, APIs, and containerized applications
 - **Access**: Via load balancer using service discovery
 
 ### 2. Static Ports Only When Required
+
 - **DNS (53)**: Must be on standard port for resolver compatibility
 - **Load Balancer (80/443)**: ONE service owns these for all HTTP/HTTPS traffic
 - **Legacy Services**: Only when absolutely necessary
 
 ### 3. Service Discovery over Direct Access
+
 - Services register with Consul
 - Load balancer routes based on hostname/path
 - Internal communication uses `.consul` domains
