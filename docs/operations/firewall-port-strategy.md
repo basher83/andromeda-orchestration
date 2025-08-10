@@ -121,17 +121,20 @@ service {
 ## Service Access Patterns
 
 ### External Access (Users)
-```
+
+```text
 User → Load Balancer (80/443) → Consul Discovery → Service (dynamic port)
 ```
 
 ### Internal Access (Service-to-Service)
-```
+
+```text
 Service A → service-b.service.consul:port → Service B
 ```
 
 ### Direct Access (Debugging)
-```
+
+```text
 Admin → node-ip:dynamic-port → Service
 ```
 
@@ -170,15 +173,17 @@ When deploying a new service:
    - Are there alternatives?
 
 2. **Update nftables Template**
-   ```bash
-   vim playbooks/infrastructure/network/templates/nftables-nomad-client.conf.j2
-   ```
+
+```bash
+vim playbooks/infrastructure/network/templates/nftables-nomad-client.conf.j2
+```
 
 3. **Apply Changes**
-   ```bash
-   uv run ansible-playbook playbooks/infrastructure/network/update-nftables-nomad.yml \
-     -i inventory/doggos-homelab/infisical.proxmox.yml
-   ```
+
+```bash
+uv run ansible-playbook playbooks/infrastructure/network/update-nftables-nomad.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml
+```
 
 ### Monitoring Port Usage
 
@@ -188,9 +193,6 @@ nft list ruleset
 
 # Check Nomad port allocations
 nomad node status -verbose <node-id>
-
-# List Consul services
-consul catalog services
 ```
 
 ## Examples
