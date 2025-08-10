@@ -111,14 +111,14 @@ The main firewall template for Nomad clients includes:
 nomad alloc status <alloc-id> | grep "Allocated Ports"
 ```
 
-2. Check if custom static port is needed:
+1. Check if custom static port is needed:
 
 ```bash
 # Add to template if justified
 tcp dport <port> accept  # Service name
 ```
 
-3. Restart nftables if manual changes made:
+1. Restart nftables if manual changes made:
 
 ```bash
 systemctl restart nftables
@@ -132,13 +132,13 @@ systemctl restart nftables
 ss -tlnp | grep :<port>
 ```
 
-2. Find Nomad job using static port:
+1. Find Nomad job using static port:
 
 ```bash
 nomad job status | xargs -I {} nomad job inspect {} | grep -B5 "static"
 ```
 
-3. Convert to dynamic allocation (see best practices guide)
+1. Convert to dynamic allocation (see best practices guide)
 
 ## Related Documentation
 

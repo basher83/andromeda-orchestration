@@ -250,7 +250,7 @@ VM names may not resolve, causing connectivity tests to fail.
   failed_when: false
 ```
 
-2. **Implement error handling blocks:**
+1. **Implement error handling blocks:**
 
 ```yaml
 - name: Task with fallback
@@ -267,7 +267,7 @@ VM names may not resolve, causing connectivity tests to fail.
         state: absent
 ```
 
-3. **Validate connectivity before tests:**
+1. **Validate connectivity before tests:**
 
 ```yaml
 - name: Ensure target is reachable

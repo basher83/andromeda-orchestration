@@ -110,6 +110,7 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 ## Migration Status
 
 ### Completed
+
 - ✅ All Proxmox credentials migrated
 - ✅ Consul tokens migrated
 - ✅ Nomad tokens migrated
@@ -120,22 +121,26 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 - ✅ Inventory files updated to use new paths
 
 ### Pending
+
 - ⏳ PowerDNS credentials (when deployed)
 - ⏳ Complete deprecation of 1Password files
 
 ## Future Considerations
 
 ### Certificate Management
+
 - Plan to create separate `cert-manager` type project: `andromeda-orchestration-certificates`
 - Will handle internal PKI and TLS certificates
 - Supports ACME/Let's Encrypt integration
 
 ### SSH Management
+
 - Could create `ssh` type project for ephemeral SSH certificates
 - Would replace static SSH keys with short-lived certificates
 - Free tier supports basic features; host groups require Pro
 
 ### Key Management
+
 - If encryption-at-rest is needed, create `kms` type project
 - Would handle database encryption keys, backup encryption
 - Core features available in free tier

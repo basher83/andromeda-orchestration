@@ -37,11 +37,13 @@ This guide documents the integration between NetBox DNS plugin and PowerDNS, est
 Zones created in NetBox:
 
 **Forward Zones:**
+
 - `homelab.local` - Primary homelab domain
 - `doggos.local` - Doggos cluster domain
 - `og.local` - OG homelab cluster domain
 
 **Reverse Zones:**
+
 - `10.168.192.in-addr.arpa` - 192.168.10.0/24
 - `11.168.192.in-addr.arpa` - 192.168.11.0/24
 - `30.168.192.in-addr.arpa` - 192.168.30.0/24
@@ -49,6 +51,7 @@ Zones created in NetBox:
 ### 2. Synchronization Script
 
 The `netbox-powerdns-sync.py` script provides:
+
 - Full zone synchronization
 - Record management (A, AAAA, CNAME, PTR, etc.)
 - Dry-run mode for testing
@@ -57,6 +60,7 @@ The `netbox-powerdns-sync.py` script provides:
 ### 3. PowerDNS Configuration
 
 PowerDNS configured with:
+
 - MySQL backend for zone storage
 - API enabled on port 8081
 - DNS service on port 53
