@@ -24,19 +24,23 @@ Successfully deployed DNS zones to NetBox, but PowerDNS integration requires fix
 - `og.local` - OG homelab cluster domain
 
 **Reverse Zones:**
+
 - `10.168.192.in-addr.arpa` - 192.168.10.0/24
 - `11.168.192.in-addr.arpa` - 192.168.11.0/24
 - `30.168.192.in-addr.arpa` - 192.168.30.0/24
 
 **DNS Records:**
+
 - Nameserver: `ns1.homelab.local` (192.168.11.20)
 - NS records for all zones
 - SOA records configured
 - Total: 6 zones, 11 records
 
 ### 3. Playbook Organization
+
 Reorganized into clean structure:
-```
+
+```text
 playbooks/infrastructure/netbox/
 ├── dns/
 │   ├── discover-zones.yml      # Working ✅

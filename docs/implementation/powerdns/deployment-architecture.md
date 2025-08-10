@@ -6,7 +6,7 @@ This document captures the architectural decision for PowerDNS deployment on Nom
 
 ## Decision Summary
 
-**Chosen Architecture: Mode A (Simple/Production-Ready)**
+### Chosen Architecture: Mode A (Simple/Production-Ready)
 
 After evaluating deployment patterns, we selected the simpler Mode A architecture that deploys PowerDNS Authoritative Server directly on port 53 with an external PostgreSQL backend.
 
@@ -14,7 +14,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 
 ### Mode A: Direct Authoritative DNS
 
-```
+```text
 ┌─────────────┐     :53      ┌─────────────┐     DB      ┌─────────────┐
 │ DNS Clients │ ──────────> │ PowerDNS    │ <────────> │ PostgreSQL  │
 └─────────────┘              │   Auth      │            │  (External) │
@@ -22,6 +22,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 ```
 
 **Characteristics:**
+
 - PowerDNS Auth serves directly on port 53
 - External PostgreSQL for zone data
 - Simple, single-service deployment
@@ -29,7 +30,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 
 ### Mode B: Full Stack with dnsdist
 
-```
+```text
 ┌─────────────┐     :53      ┌─────────────┐     :5301     ┌─────────────┐
 │ DNS Clients │ ──────────> │   dnsdist   │ ──────────> │ PowerDNS    │
 └─────────────┘              │   (Proxy)   │              │   Auth      │
@@ -44,6 +45,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 ```
 
 **Characteristics:**
+
 - dnsdist proxy on port 53
 - Separate auth and recursive resolvers
 - Complex, multi-service deployment
@@ -52,23 +54,27 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 ## Why Mode A Was Chosen
 
 ### 1. Simplicity
+
 - Single service to deploy and manage
 - Direct DNS serving without proxy overhead
 - Fewer failure points
 
 ### 2. Alignment with Standards
+
 - Static port 53 (as per our Nomad standards)
 - Dynamic API ports (20000-32000)
 - Consul service discovery
 - Traefik for API ingress
 
 ### 3. Production Readiness
+
 - External PostgreSQL for better data persistence
 - Proper secrets management via Vault
 - Host networking for optimal DNS performance
 - Built-in HA with count=2 and distinct_hosts affinity
 
 ### 4. Operational Benefits
+
 - Easier troubleshooting
 - Lower latency (no proxy layer)
 - Simpler monitoring requirements
@@ -83,102 +89,101 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    - Ensure host volume configured for data persistence
 
 2. **Consul KV Configuration**
-   ```bash
-   consul kv put pdns/db/host postgres.service.consul
-   consul kv put pdns/db/port 5432
-   consul kv put pdns/db/name powerdns
-   consul kv put pdns/db/user pdns
-   ```
+
+```bash
+consul kv put pdns/db/host postgres.service.consul
+consul kv put pdns/db/port 5432
+consul kv put pdns/db/name powerdns
+consul kv put pdns/db/user pdns
+```
 
 3. **Vault Secrets**
-   ```bash
-   vault kv put kv/pdns \
-     db_password="<secure-password>" \
-     api_key="<secure-api-key>"
-   ```
+
+```bash
+vault kv put kv/pdns \
+  db_password="<secure-password>" \
+  api_key="<secure-api-key>"
+```
 
 ### Deployment Steps
 
 1. **Phase 1: Database Setup**
-   ```bash
-   # Deploy PostgreSQL
-   nomad job run postgresql.nomad.hcl
 
-   # Initialize PowerDNS schema
-   # Connect to PostgreSQL and run PowerDNS schema
-   ```
+```bash
+# Deploy PostgreSQL
+nomad job run postgresql.nomad.hcl
+
+# Initialize PowerDNS schema
+# Connect to PostgreSQL and run PowerDNS schema
+```
 
 2. **Phase 2: Configure Secrets**
-   ```bash
-   # Set up Consul KV values
-   ./scripts/setup-pdns-consul-kv.sh
 
-   # Configure Vault secrets
-   ./scripts/setup-pdns-vault.sh
-   ```
+```bash
+# Set up Consul KV values
+./scripts/setup-pdns-consul-kv.sh
+
+# Configure Vault secrets
+./scripts/setup-pdns-vault.sh
+```
 
 3. **Phase 3: Deploy PowerDNS**
-   ```bash
-   # Deploy Mode A configuration
-   nomad job run nomad-jobs/platform-services/.testing/mode-a/powerdns-testing.nomad.hcl
-   ```
+
+```bash
+# Deploy Mode A configuration
+nomad job run nomad-jobs/platform-services/.testing/mode-a/powerdns-testing.nomad.hcl
+```
 
 4. **Phase 4: Verify Deployment**
-   ```bash
-   # Check service registration
-   consul catalog services | grep powerdns
 
-   # Test DNS resolution
-   dig @<node-ip> example.lab
+```bash
+# Check service registration
+consul catalog services | grep powerdns
 
-   # Check API access via Traefik
-   curl -H "X-API-Key: <api-key>" https://pdns-api.internal/api/v1/servers
-   ```
+# Test DNS resolution
+dig @<node-ip> example.lab
+```
 
-## Key Configuration Details
+## Configuration
 
 ### Network Configuration
-- **DNS Port**: Static port 53 (TCP/UDP)
-- **API Port**: Dynamic allocation (20000-32000)
-- **Network Mode**: Host networking for optimal performance
+
+- **DNS Port**: Static port 53 on host network
+- **API**: Exposed via Traefik on dynamic port
+- **Mesh**: Consul service discovery
 
 ### High Availability
-- **Instance Count**: 2 (configurable)
-- **Placement**: Distinct hosts via affinity rules
-- **Health Checks**: TCP checks on port 53
+
+- **Instance Count**: 2 (configured via count)
+- **Placement**: `distinct_hosts = true`
+- **Failure Domain**: Spread across nodes
 
 ### Service Discovery
-- **DNS Service**: `powerdns-auth` in Consul
-- **API Service**: `powerdns-auth-api` with Traefik tags
+
+- **DNS Service**: `powerdns-auth` registered in Consul
+- **API Service**: `powerdns-api` registered in Consul
+- **Tags**: `expose`, `public`
 
 ### Security
+
 - Database credentials via Vault
-- API key authentication
-- TLS termination at Traefik for API access
-
-## Migration Path to Mode B
-
-If recursive DNS becomes a requirement:
-
-1. **Keep Mode A Running** - No downtime during migration
-2. **Deploy Recursor** - Add PowerDNS Recursor service
-3. **Deploy dnsdist** - Configure with backend pools
-4. **Update DNS** - Point clients to dnsdist
-5. **Decommission Mode A** - After validation
-
-## Monitoring and Operations
+- API key stored in Vault
+- Read-only tokens for CI where applicable
 
 ### Health Checks
+
 ```hcl
 check {
-  name     = "dns-tcp-53"
-  type     = "tcp"
+  name     = "api"
+  type     = "http"
+  path     = "/api/v1/servers/localhost"
   interval = "10s"
   timeout  = "2s"
 }
 ```
 
 ### Metrics Collection
+
 - Integrate with Netdata for DNS metrics
 - PowerDNS API provides statistics endpoint
 - Consul health status monitoring
@@ -186,16 +191,19 @@ check {
 ### Troubleshooting
 
 **Service Not Starting:**
+
 - Check PostgreSQL connectivity
 - Verify Vault secrets accessible
 - Review Nomad allocation logs
 
 **DNS Not Responding:**
+
 - Verify port 53 binding
 - Check firewall rules
 - Test with `dig` directly to node
 
 **API Inaccessible:**
+
 - Check Traefik routing
 - Verify API key in Vault
 - Test API directly on dynamic port
@@ -203,12 +211,14 @@ check {
 ## Future Considerations
 
 ### Potential Mode B Adoption Triggers
+
 - Need for recursive DNS resolution
 - Requirement for complex routing rules
 - Multiple DNS backend integration
 - Advanced caching requirements
 
 ### Enhancement Opportunities
+
 - DNS-over-HTTPS via Traefik
 - DNSSEC key management
 - Automated zone provisioning from NetBox
