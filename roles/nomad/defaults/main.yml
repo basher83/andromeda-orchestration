@@ -15,6 +15,7 @@ nomad_data_dir: "/opt/nomad/data"
 nomad_config_dir: "/etc/nomad.d"
 nomad_cni_path: "/opt/cni/bin"
 nomad_log_level: "INFO"
+nomad_environment: "prod"  # Default environment (prod, dev, etc.)
 nomad_bind_addr: "0.0.0.0"
 nomad_datacenter: "dc1"
 
@@ -62,3 +63,18 @@ fabio_proxy_strategy: "rr"
 fabio_tags: "fabio,lb"
 consul_service_name: "consul.service.consul"
 fabio_routes: "" # Default empty, can be populated with custom route definitions
+
+# Consul ACL Integration
+nomad_consul_integration: true # Enable Consul integration by default
+nomad_consul_address: "127.0.0.1:8500"
+nomad_consul_acl_enabled: true # Enable ACL token management
+nomad_consul_auto_advertise: true
+nomad_consul_server_auto_join: true
+nomad_consul_client_auto_join: true
+nomad_consul_checks_use_advertise: true
+
+# Consul ACL token management
+nomad_consul_manage_acls: true # Whether this role should manage Consul ACLs
+nomad_consul_management_token: "" # Management token for creating policies/tokens (should be set in vault/secrets)
+nomad_consul_server_service_name: "nomad"
+nomad_consul_client_service_name: "nomad-client"

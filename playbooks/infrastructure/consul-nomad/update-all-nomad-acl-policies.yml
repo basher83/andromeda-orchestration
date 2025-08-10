@@ -1,0 +1,138 @@
+---
+# Update both nomad-server and nomad-client ACL policies to include KV read access
+# This ensures all Nomad nodes can handle jobs with Consul KV templating
+#
+# Usage:
+#   uv run ansible-playbook playbooks/infrastructure/consul-nomad/update-all-nomad-acl-policies.yml \
+#     -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Update All Nomad ACL Policies with KV Access
+  hosts: nomad-server-1-lloyd
+  vars:
+    consul_api: "http://127.0.0.1:8500"
+    consul_management_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='dev',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_MASTER_TOKEN')).value | trim }}
+
+  tasks:
+    - name: Get current nomad-server policy
+      ansible.builtin.uri:
+        url: "{{ consul_api }}/v1/acl/policy/name/nomad-server"
+        method: GET
+        headers:
+          X-Consul-Token: "{{ consul_management_token }}"
+      register: server_policy
+
+    - name: Get current nomad-client policy
+      ansible.builtin.uri:
+        url: "{{ consul_api }}/v1/acl/policy/name/nomad-client"
+        method: GET
+        headers:
+          X-Consul-Token: "{{ consul_management_token }}"
+      register: client_policy
+
+    - name: Show current policies
+      ansible.builtin.debug:
+        msg:
+          - "=== Current Policies ==="
+          - "Server Policy has KV access: {{ 'key_prefix' in server_policy.json.Rules }}"
+          - "Client Policy has KV access: {{ 'key_prefix' in client_policy.json.Rules }}"
+
+    - name: Update nomad-server ACL policy with KV access
+      ansible.builtin.uri:
+        url: "{{ consul_api }}/v1/acl/policy/{{ server_policy.json.ID }}"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ consul_management_token }}"
+        body_format: json
+        body:
+          Name: "nomad-server"
+          Description: "Policy for Nomad servers with KV access"
+          Rules: "{{ lookup('file', '../../../roles/nomad/files/consul-policies/nomad-server.hcl') }}"
+      register: server_policy_update
+      when: "'key_prefix' not in server_policy.json.Rules"
+
+    - name: Update nomad-client ACL policy with KV access
+      ansible.builtin.uri:
+        url: "{{ consul_api }}/v1/acl/policy/{{ client_policy.json.ID }}"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ consul_management_token }}"
+        body_format: json
+        body:
+          Name: "nomad-client"
+          Description: "Policy for Nomad clients with KV access"
+          Rules: "{{ lookup('file', '../../../roles/nomad/files/consul-policies/nomad-client.hcl') }}"
+      register: client_policy_update
+      when: "'key_prefix' not in client_policy.json.Rules"
+
+    - name: Display server policy update result
+      ansible.builtin.debug:
+        msg:
+          - "=== Nomad Server Policy Updated ==="
+          - "Policy ID: {{ server_policy_update.json.ID }}"
+          - "Description: {{ server_policy_update.json.Description }}"
+      when: server_policy_update is not skipped
+
+    - name: Display client policy update result
+      ansible.builtin.debug:
+        msg:
+          - "=== Nomad Client Policy Updated ==="
+          - "Policy ID: {{ client_policy_update.json.ID }}"
+          - "Description: {{ client_policy_update.json.Description }}"
+      when: client_policy_update is not skipped
+
+    - name: Verify all policies now have KV access
+      ansible.builtin.uri:
+        url: "{{ consul_api }}/v1/acl/policy/name/{{ item }}"
+        method: GET
+        headers:
+          X-Consul-Token: "{{ consul_management_token }}"
+      register: verified_policies
+      loop:
+        - nomad-server
+        - nomad-client
+
+    - name: Final verification
+      ansible.builtin.debug:
+        msg:
+          - "=== Final Verification ==="
+          - "✅ nomad-server policy has KV access: {{ 'key_prefix' in verified_policies.results[0].json.Rules }}"
+          - "✅ nomad-client policy has KV access: {{ 'key_prefix' in verified_policies.results[1].json.Rules }}"
+          - ""
+          - "All Nomad nodes should now be able to handle jobs with Consul KV templating!"
+          - "Ready to test PowerDNS deployment across the cluster."
+
+- name: Verify Nomad Agent Status Across All Nodes
+  hosts: tag_nomad
+  tasks:
+    - name: Check Nomad agent status
+      ansible.builtin.command: systemctl status nomad.service --no-pager -l
+      register: nomad_status
+      failed_when: false
+      changed_when: false
+
+    - name: Display agent status
+      ansible.builtin.debug:
+        msg:
+          - "=== {{ inventory_hostname }} Nomad Status ==="
+          - "Service Active: {{ 'active (running)' in nomad_status.stdout }}"
+          - "Type: {{ 'server' if 'nomad-server' in inventory_hostname else 'client' }}"
+
+    - name: Check Consul integration
+      ansible.builtin.shell: |
+        nomad agent-info | grep -A 10 -i consul || echo "No consul integration info found"
+      register: consul_integration
+      failed_when: false
+      changed_when: false
+
+    - name: Display Consul integration status
+      ansible.builtin.debug:
+        msg:
+          - "=== {{ inventory_hostname }} Consul Integration ==="
+          - "{{ consul_integration.stdout_lines }}"

@@ -19,6 +19,10 @@
   ansible.builtin.import_tasks: dynamic-volumes.yml
   when: nomad_client_enabled | bool
 
+- name: Include Consul ACL management (if enabled)
+  ansible.builtin.import_tasks: consul-acl.yml
+  when: nomad_consul_manage_acls | default(true)
+
 - name: Include configuration templating
   ansible.builtin.import_tasks: config.yml
 
