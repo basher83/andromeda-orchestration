@@ -5,6 +5,7 @@
 This document provides a comprehensive comparison between 1Password Connect (current implementation) and Infisical (proposed alternative) for secrets management in our Ansible automation project. Based on thorough research, Infisical emerges as the recommended solution due to its open-source nature, cost efficiency, and superior infrastructure-as-code integration capabilities.
 
 **Update**: Infisical has recently added game-changing features including:
+
 - **1Password Sync**: Seamless migration with bi-directional synchronization
 - **MCP Server**: AI/LLM integration for Claude and other AI assistants
 - **ACME/Let's Encrypt**: Automated SSL certificates with DNS-01 validation
@@ -76,11 +77,13 @@ Our project currently uses 1Password Connect with the following configuration:
 ### Authentication Methods
 
 #### 1Password Connect
+
 - API Token authentication only
 - Environment variables for configuration
 - No service account or OIDC support
 
 #### Infisical (Recently Enhanced)
+
 - Universal Auth (Client ID/Secret)
 - OIDC (GitHub Actions, GitLab CI)
 - Cloud-native (AWS IAM, GCP, Azure) - **NEW**
@@ -93,7 +96,7 @@ Our project currently uses 1Password Connect with the following configuration:
 
 ### 1Password Connect
 
-```
+```text
 Base Requirements:
 - 1Password Teams: $8/user/month (minimum 10 users = $80/month)
 - OR 1Password Business: $8/user/month
@@ -105,7 +108,7 @@ Annual Minimum Cost: ~$960 + infrastructure
 
 ### Infisical
 
-```
+```text
 Self-Hosted Free Tier:
 - Up to 5 identities
 - Up to 3 projects
