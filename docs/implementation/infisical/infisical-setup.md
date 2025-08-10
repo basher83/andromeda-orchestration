@@ -382,6 +382,7 @@ Infisical offers specialized project types for different security needs:
 When choosing between Infisical's cert-manager and other PKI solutions (like Vault):
 
 **Infisical cert-manager**:
+
 - ✅ Integrated with existing secret management
 - ✅ ACME/Let's Encrypt automation
 - ✅ Simple certificate lifecycle management
@@ -389,6 +390,7 @@ When choosing between Infisical's cert-manager and other PKI solutions (like Vau
 - ❌ Less flexible than full PKI solutions
 
 **HashiCorp Vault PKI**:
+
 - ✅ Full-featured PKI engine
 - ✅ Complex certificate hierarchies
 - ✅ Custom certificate policies
