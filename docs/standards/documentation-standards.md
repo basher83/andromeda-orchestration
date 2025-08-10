@@ -44,29 +44,34 @@ docs/
 ### Content Placement Guidelines
 
 **docs/standards/** - Principles and patterns
+
 - Architecture standards
 - Development workflows
 - Documentation standards
 - Security policies
 
 **docs/implementation/** - Technical how-to guides
+
 - Service setup procedures
 - Configuration examples
 - Integration patterns
 - Deployment guides
 
 **docs/operations/** - Day-to-day procedures
+
 - Runbooks and SOPs
 - Maintenance procedures
 - Monitoring guides
 - Backup/restore procedures
 
 **docs/troubleshooting/** - Problem resolution
+
 - Common issues and solutions
 - Debug procedures
 - Error code references
 
 **docs/project-management/** - Project tracking
+
 - Phase documentation
 - Task lists and progress
 - Decision records
@@ -75,6 +80,7 @@ docs/
 ### README Requirements
 
 Every README must include:
+
 - **Purpose** - Why this exists
 - **Status** - Current state (Production/Testing/Planned)
 - **Configuration** - Key settings
@@ -318,10 +324,10 @@ nomad-jobs/
 To meet these standards:
 
 1. **Audit current docs** - Find all .md files
-2. **Categorize** - Determine correct location
-3. **Move systematically** - One category at a time
-4. **Update references** - Fix all links
-5. **Archive old locations** - Leave forwarding notes
+1. **Categorize** - Determine correct location
+1. **Move systematically** - One category at a time
+1. **Update references** - Fix all links
+1. **Archive old locations** - Leave forwarding notes
 
 ## References
 

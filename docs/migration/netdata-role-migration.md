@@ -158,6 +158,7 @@ If issues arise:
 ## Support
 
 For questions or issues during migration:
+
 - Check role documentation in each role's README.md
 - Review example playbooks in `playbooks/infrastructure/monitoring/`
 - Open issues in the repository for bugs or feature requests
