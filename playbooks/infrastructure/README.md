@@ -55,7 +55,7 @@ This directory contains organized Ansible playbooks for infrastructure managemen
 ### Hidden Directories
 
 - **`.debug/`** - Troubleshooting and debugging playbooks (10+ files)
-  - Various check-* and debug-* playbooks for Netdata troubleshooting
+  - Various `check-*` and `debug-*` playbooks for Netdata troubleshooting
   - Kept hidden to reduce clutter but available when needed
 
 - **`.archive/`** - Old/replaced playbooks kept for reference (8+ files)

@@ -9,6 +9,7 @@ This Ansible role manages HashiCorp Consul installation and configuration in a c
 - **Purpose**: Specifies the version of Consul to install.
 - **Default Value**: `latest`
 - **Example**:
+
   ```yaml
   consul_version: 1.11.4
   ```
@@ -18,6 +19,7 @@ This Ansible role manages HashiCorp Consul installation and configuration in a c
 - **Purpose**: Configuration settings for Consul.
 - **Default Value**: `{}` (empty dictionary)
 - **Example**:
+
   ```yaml
   consul_config:
     data_dir: /opt/consul

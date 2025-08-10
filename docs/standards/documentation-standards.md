@@ -180,6 +180,7 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 #### Standards and Rules
 
 **Format Requirements:**
+
 - Documentation: `[TAG]:` (brackets, colon)
 - Code: `# TAG:` (hash, space optional before tag, colon)
 - Always include descriptive text after the tag
@@ -187,11 +188,13 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 - Include ticket/issue numbers when applicable: `[TODO]: (PROJ-123) Implement feature`
 
 **Placement:**
+
 - Place tags at the relevant location in code/docs
 - For multi-line issues, place tag on first line
 - Group related tags together when possible
 
 **Priority Guidelines:**
+
 - `SECURITY` - Address immediately
 - `FIXME`, `BUG` - Address in current sprint
 - `TODO`, `HACK` - Address in next refactor
