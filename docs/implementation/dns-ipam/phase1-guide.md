@@ -168,6 +168,7 @@ consul_register_services: false
    ```
 
 3. Check resolved configuration:
+
    ```bash
    resolvectl status
    resolvectl query consul.service.consul
@@ -188,6 +189,7 @@ consul_register_services: false
    ```
 
 3. Review Consul logs:
+
    ```bash
    journalctl -u consul -f
    ```
