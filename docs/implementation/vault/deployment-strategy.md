@@ -155,7 +155,7 @@ seal "transit" {
 
 ## Deployment Files Structure
 
-```
+```text
 roles/vault/                       # Ansible role
 ├── defaults/main.yml              # Configuration variables
 ├── tasks/
@@ -163,11 +163,7 @@ roles/vault/                       # Ansible role
 │   ├── config_dev.yml            # Dev mode setup
 │   ├── config_prod.yml           # Production setup
 │   └── nomad_integration.yml    # Nomad auth configuration
-├── templates/
-│   ├── vault.hcl.j2             # Production config
-│   ├── vault-dev.hcl.j2         # Dev mode config
-│   └── policies/                # Vault policies
-└── handlers/main.yml             # Service management
+```
 
 playbooks/infrastructure/vault/    # Deployment playbooks
 ├── deploy-vault-dev.yml          # Dev mode deployment

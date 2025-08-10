@@ -57,6 +57,7 @@ The monolithic `netdata` role has been refactored into smaller, focused roles fo
 ### 2. Update Group Variables
 
 #### Old Structure
+
 ```yaml
 # group_vars/all/netdata.yml
 netdata_install_method: "package"
@@ -66,6 +67,7 @@ netdata_consul_enabled: true
 ```
 
 #### New Structure
+
 ```yaml
 # group_vars/all/netdata_install.yml
 netdata_install_method: "repository"
