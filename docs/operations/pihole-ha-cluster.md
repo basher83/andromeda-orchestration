@@ -18,7 +18,8 @@ The Pi-hole DNS infrastructure consists of a 3-node high-availability cluster us
 ### Keepalived Configuration
 
 **Master Node (192.168.30.136)**:
-```
+
+```ini
 vrrp_instance VI_1 {
   state MASTER
   interface eth0
@@ -43,11 +44,13 @@ vrrp_instance VI_1 {
 ### DNS Configuration
 
 #### Upstream DNS Servers
+
 1. Local Unbound (primary)
 2. Cloudflare (1.1.1.1)
 3. Google (8.8.8.8)
 
 #### DNS Zone
+
 **Domain**: `lab.spaceships.work`
 
 #### Local DNS Records
