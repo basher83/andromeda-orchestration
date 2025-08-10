@@ -647,19 +647,19 @@ job "backup-volumes" {
 - CSI volumes: enable driver-level encryption when supported
 - Implement access controls (Nomad ACLs, SELinux/AppArmor)
 
-3. **Performance Optimization**
+1. **Performance Optimization**
 
    - Use local storage for high IOPS
    - Consider SSD for databases
    - Implement caching layers
 
-4. **Backup Strategy**
+1. **Backup Strategy**
 
    - Regular automated backups
    - Test restore procedures
    - Off-site backup storage
 
-5. **Monitoring**
+1. **Monitoring**
    - Track disk usage
    - Monitor I/O performance
    - Alert on failures

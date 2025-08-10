@@ -520,8 +520,6 @@ MIT
 
 Your Organization
 
-```
-
 #### Role Variable Standards
 
 ```yaml

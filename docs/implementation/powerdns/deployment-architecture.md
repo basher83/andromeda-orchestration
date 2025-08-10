@@ -98,7 +98,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    consul kv put pdns/db/user pdns
    ```
 
-3. **Vault Secrets**
+1. **Vault Secrets**
 
 ```bash
 vault kv put kv/pdns \
