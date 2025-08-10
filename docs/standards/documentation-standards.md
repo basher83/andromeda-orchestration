@@ -102,7 +102,6 @@ Every README must include:
 ```
 
 [Descriptive Links](relative/path.md) not [click here](path)
-```
 
 #### Linting Exceptions
 
