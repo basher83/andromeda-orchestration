@@ -274,6 +274,46 @@ VM names may not resolve, causing connectivity tests to fail.
      failed_when: false
    ```
 
+## 1Password Connection Issues
+
+- Ensure 1Password CLI is installed and authenticated: `op --version` and `op account list`
+- If using 1Password Connect, verify environment variables are set:
+
+```bash
+export OP_CONNECT_HOST=https://connect.local
+export OP_CONNECT_TOKEN=...redacted...
+```
+
+- Validate connectivity from the Ansible control host:
+
+```bash
+curl -sSf "$OP_CONNECT_HOST/v1/health" | jq .
+```
+
+- For local CLI usage with Ansible, ensure `op run -- ansible-playbook ...` is used when referencing `op://` secrets.
+
+## Ansible Inventory Errors
+
+Common symptoms:
+
+- Hosts not found or wrong groups
+- Authentication or SSH failures targeted at incorrect IPs
+
+Quick checks:
+
+```bash
+# Validate inventory plugins
+ansible-inventory -i inventory/og-homelab/netbox.yml --list > /dev/null
+
+# View host vars resolution for a host
+ansible-inventory -i inventory/og-homelab/netbox.yml --host some-hostname
+```
+
+If using NetBox inventory:
+- Confirm NetBox URL and token in `inventory/netbox.yml`
+- Test API accessibility from control host
+- Ensure device roles and tags in NetBox match inventory filters
+
 ## Related Documentation
 
 - [Infisical Setup and Migration](infisical-setup-and-migration.md) - Complete secret management guide

@@ -295,7 +295,6 @@ uv run ansible-playbook playbooks/examples/infisical-demo.yml
 INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 ```
 
-
 ## Troubleshooting
 
 ### Common Issues

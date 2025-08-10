@@ -388,7 +388,7 @@ For Consul Service Mesh to function properly, the role configures:
 
 These enable transparent proxying between services in the mesh.
 
-For more details, refer to the [Consul Role Documentation](#).
+For more details, refer to the [Consul Role Documentation](../consul/README.md).
 
 ## TLS Validation
 

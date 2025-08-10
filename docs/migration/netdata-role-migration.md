@@ -41,11 +41,11 @@ The monolithic `netdata` role has been refactored into smaller, focused roles fo
     - name: Install Netdata
       ansible.builtin.include_role:
         name: netdata_install
-        
+
     - name: Configure Netdata
       ansible.builtin.include_role:
         name: netdata_configure
-        
+
     - name: Setup streaming
       ansible.builtin.include_role:
         name: netdata_streaming
@@ -104,17 +104,17 @@ Use role inclusion based on your needs:
         name: netdata_install
     - ansible.builtin.import_role:
         name: netdata_configure
-        
+
     # Only for streaming nodes
     - ansible.builtin.import_role:
         name: netdata_streaming
       when: netdata_node_type is defined
-      
+
     # Only if using Consul
     - ansible.builtin.import_role:
         name: netdata_consul
       when: consul_available | default(false)
-      
+
     # Only for cloud claiming
     - ansible.builtin.import_role:
         name: netdata_cloud

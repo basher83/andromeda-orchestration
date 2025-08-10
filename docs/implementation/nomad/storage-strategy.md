@@ -101,6 +101,7 @@ task "cache-service" {
 - Traefik certificates
 
 **Service↔Volume Map:**
+
 | Service | Type | Node Class | Volume Name | Mount Path | Owner (uid:gid) |
 |----------|--------|------------------|-------------------|--------------------------------------|-----------------|
 | Postgres | Static | storage=ssd/nvme | postgres-data | /var/lib/postgresql/data | 999:999 |
