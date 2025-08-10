@@ -21,7 +21,7 @@ Infrastructure automation inherently deals with sensitive data: credentials, net
 
 #### Handling Requirements
 
-```
+```text
 PUBLIC:       Can be committed to git
 INTERNAL:     Sanitize before committing
 SENSITIVE:    Never commit, use secret management
@@ -55,21 +55,21 @@ password: "{{ lookup('env', 'SERVICE_PASSWORD') }}"
 
 #### Automated Tools
 
-**1. Infisical Secret Detection**
+##### Infisical Secret Detection
 
 - **Config**: `.infisical-scan.toml`
 - **Git Hook**: Runs automatically on commit
 - **Manual**: `task security:secrets`
 - **Excludes**: Binary files, reports/, build artifacts
 
-**2. KICS Infrastructure Security**
+##### KICS Infrastructure Security
 
 - **Config**: `kics.config`
 - **Manual**: `task security:kics`
 - **Focus**: Ansible, Docker, Terraform security
 - **Fail On**: HIGH, CRITICAL findings
 
-**3. Python Security Scanning**
+##### Python Security Scanning
 
 - **Bandit** (Static Analysis):
   - **Config**: `.bandit`
@@ -80,7 +80,7 @@ password: "{{ lookup('env', 'SERVICE_PASSWORD') }}"
   - **Focus**: Known CVEs in dependencies
   - **Run**: `safety check --json`
 
-**4. Pre-commit Hooks**
+##### Pre-commit Hooks
 
 - **Config**: `.pre-commit-config.yaml`
 - **Features**:
@@ -162,9 +162,9 @@ git filter-branch --force --index-filter \
 git push --force --all
 ```
 
-2. **Rotate Credentials**: Change ALL exposed secrets immediately
-3. **Document**: Create incident report
-4. **Review**: Audit how it happened, improve process
+1. **Rotate Credentials**: Change ALL exposed secrets immediately
+1. **Document**: Create incident report
+1. **Review**: Audit how it happened, improve process
 
 ### Network Security
 
@@ -285,10 +285,10 @@ nodes:
 ### To Secure Practices
 
 1. **Audit existing code**: `task security:secrets`
-2. **Move secrets to Infisical**: Never store in code
-3. **Update .gitignore**: Block sensitive patterns
-4. **Enable pre-commit**: `uv run pre-commit install`
-5. **Train team**: Share these standards
+1. **Move secrets to Infisical**: Never store in code
+1. **Update .gitignore**: Block sensitive patterns
+1. **Enable pre-commit**: `uv run pre-commit install`
+1. **Train team**: Share these standards
 
 ### Finding Issues
 

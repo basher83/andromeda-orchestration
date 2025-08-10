@@ -160,7 +160,7 @@ For multi-cluster deployments, parent nodes can form a mesh topology for complet
 
 ### Architecture
 
-```
+```text
 Cluster A (3 parents)              Cluster B (1 parent)
 =====================              ====================
   Parent-A1 <----+----+--------->  Parent-B1
