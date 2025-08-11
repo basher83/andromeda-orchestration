@@ -33,4 +33,4 @@ collections:
   # HashiCorp Vault modules (for community.hashi_vault.vault_write/read)
   # Requires Python package 'hvac' on the controller/Execution Environment
   - name: community.hashi_vault
-    version: ">=6.0.0"
+    version: "==7.0.0"
