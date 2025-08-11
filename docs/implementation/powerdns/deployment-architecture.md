@@ -128,15 +128,10 @@ nomad job run postgresql.nomad.hcl
    ```bash
    # Set up Consul KV values
    ./scripts/setup-pdns-consul-kv.sh
+
+   # Configure Vault secrets
+   ./scripts/setup-pdns-vault.sh
    ```
-
-```bash
-# Set up Consul KV values
-./scripts/setup-pdns-consul-kv.sh
-
-# Configure Vault secrets
-./scripts/setup-pdns-vault.sh
-```
 
 1. **Phase 3: Deploy/Configure PowerDNS** (Configure for PostgreSQL backend)
 
