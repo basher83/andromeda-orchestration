@@ -4,7 +4,7 @@ This directory contains all Nomad job specifications for the homelab infrastruct
 
 ## Directory Structure
 
-```
+```text
 nomad-jobs/
 ├── core-infrastructure/    # Essential platform services (load balancers, service mesh)
 │   ├── traefik.nomad.hcl  # Production job file
@@ -42,31 +42,36 @@ nomad-jobs/
    - Keep for reference and rollback purposes
 
 4. **Documentation Requirements**:
-   Each service README.md MUST include:
-   - **Current Status**: Production/Testing/Planned
-   - **File**: Name of production job file
-   - **Version**: Container version or tag
-   - **Last Updated**: Date of last production change
-   - **Configuration**: Key settings and requirements
-   - **Access**: How to reach the service
-   - **Troubleshooting**: Common issues and solutions
-   - **Archived Files**: Brief description of archived versions
 
-5. **Cleanup Process**:
-   After successful production deployment:
-   ```bash
-   # Move test files to archive
-   mv .testing/*.nomad.hcl .archive/
+Each service README.md MUST include:
 
-   # Rename final version to service name
-   mv {service}-final.nomad.hcl {service}.nomad.hcl
+- **Current Status**: Production/Testing/Planned
+- **File**: Name of production job file
+- **Version**: Container version or tag
+- **Last Updated**: Date of last production change
+- **Configuration**: Key settings and requirements
+- **Access**: How to reach the service
+- **Troubleshooting**: Common issues and solutions
+- **Archived Files**: Brief description of archived versions
 
-   # Update README.md with production details
-   ```
+1. **Cleanup Process**:
+
+After successful production deployment:
+
+```bash
+# Move test files to archive
+mv .testing/*.nomad.hcl .archive/
+
+# Rename final version to service name
+mv {service}-final.nomad.hcl {service}.nomad.hcl
+
+# Update README.md with production details
+```
 
 ## Currently Deployed Services
 
 ### Core Infrastructure
+
 - **Traefik** (v3.0) - ✅ Production
   - Load balancer and reverse proxy
   - Owns ports 80/443
@@ -74,6 +79,7 @@ nomad-jobs/
   - Consul service discovery active
 
 ### Platform Services
+
 - **PowerDNS** (pdns-auth-48) - ✅ Production
   - Authoritative DNS server
   - API enabled with MySQL backend
@@ -119,6 +125,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 **CRITICAL**: When `service_identity { enabled = true }` is configured in Nomad:
 
 All service blocks MUST include identity configuration:
+
 ```hcl
 service {
   name = "myservice"
@@ -148,12 +155,14 @@ Following our [firewall and port strategy](../docs/operations/firewall-port-stra
 ### Core Infrastructure
 
 Services that other services depend on:
+
 - **traefik**: Load balancer and reverse proxy (owns ports 80/443)
 - **consul-connect**: Service mesh components (future)
 
 ### Platform Services
 
 Infrastructure services that provide functionality:
+
 - **powerdns**: Authoritative DNS server
 - **netbox**: IPAM and DCIM (Phase 3)
 - **monitoring**: Prometheus, Grafana, etc. (future)
@@ -161,6 +170,7 @@ Infrastructure services that provide functionality:
 ### Applications
 
 End-user facing services:
+
 - **windmill**: Workflow automation (future)
 - **gitea**: Git hosting (future)
 
@@ -176,6 +186,7 @@ End-user facing services:
    - Choose appropriate storage type (see [Storage Configuration Guide](../docs/implementation/nomad-storage-configuration.md))
    - Volume names: `{service}-{type}` (e.g., `powerdns-mysql`)
    - Provision volumes before deployment:
+
      ```bash
      ansible-playbook playbooks/infrastructure/nomad/volumes/provision-host-volumes.yml
      ```
@@ -203,6 +214,7 @@ End-user facing services:
 ### Common Issues
 
 1. **Port Already in Use**:
+
    ```bash
    # Check what's using a port
    ss -tlnp | grep :80
@@ -212,12 +224,14 @@ End-user facing services:
    ```
 
 2. **Service Not Accessible**:
+
    - Check firewall allows dynamic port range
    - Verify Consul registration: `consul catalog services`
    - Check Traefik routing: `curl -H "Host: service.lab.local" http://loadbalancer`
    - Verify from inside infrastructure: Services may not be accessible externally
 
 3. **Job Fails to Start**:
+
    ```bash
    # Check job status
    nomad job status <job-name>
@@ -230,6 +244,7 @@ End-user facing services:
    ```
 
 4. **Service Identity Issues**:
+
    - Ensure ALL service blocks have identity configuration
    - Check for error: "Service identity must provide at least one target aud value"
    - Verify Consul auth method is configured
@@ -245,14 +260,17 @@ End-user facing services:
 ## Related Documentation
 
 ### Nomad Implementation
+
 - [Nomad Storage Configuration Guide](../docs/implementation/nomad-storage-configuration.md)
 - [Nomad Storage Strategy](../docs/implementation/nomad-storage-strategy.md)
 - [Storage Implementation Patterns](../docs/implementation/nomad-storage-patterns.md)
 - [Nomad Port Allocation Best Practices](../docs/implementation/nomad-port-allocation.md)
 
 ### Operations & Architecture
+
 - [Firewall and Port Strategy](../docs/operations/firewall-port-strategy.md)
 - [Network Architecture Diagram](../docs/diagrams/network-port-architecture.md)
 
 ### Troubleshooting
+
 - [Service Identity Issues](../docs/troubleshooting/service-identity-issues.md)

@@ -142,10 +142,10 @@ netdata_infisical_path: "/apollo-13/services/netdata"
 ## Getting Claim Credentials
 
 1. Log in to [Netdata Cloud](https://app.netdata.cloud)
-2. Navigate to your Space
-3. Click "Add Nodes" or "Connect Nodes"
-4. Copy the claim token and room ID from the provided command
-5. Use these values in your playbook
+1. Navigate to your Space
+1. Click "Add Nodes" or "Connect Nodes"
+1. Copy the claim token and room ID from the provided command
+1. Use these values in your playbook
 
 ## Files and Directories
 
@@ -187,37 +187,43 @@ netdatacli aclk-state
    - Verify credentials from Netdata Cloud
    - Ensure token hasn't expired
 
-2. **Network Issues**
-   ```bash
-   # Test connectivity
-   curl -I https://app.netdata.cloud
-   ```
+1. **Network Issues**
 
-3. **Proxy Issues**
-   - Verify proxy settings
-   - Check proxy allows HTTPS traffic
+```bash
+# Test connectivity
+curl -I https://app.netdata.cloud
+```
 
-4. **Already Claimed**
-   - Use `netdata_claim_force: true` to reclaim
-   - Or manually remove `/var/lib/netdata/cloud.d/claimed_id`
+1. **Proxy Issues**
+
+- Verify proxy settings
+- Check proxy allows HTTPS traffic
+
+1. **Already Claimed**
+
+- Use `netdata_claim_force: true` to reclaim
+- Or manually remove `/var/lib/netdata/cloud.d/claimed_id`
 
 ### Node Not Appearing in Cloud
 
 1. Check ACLK (Agent Cloud Link) status:
-   ```bash
-   netdatacli aclk-state
-   ```
 
-2. Review Netdata logs:
-   ```bash
-   journalctl -u netdata | grep -i cloud
-   ```
+```bash
+netdatacli aclk-state
+```
 
-3. Ensure firewall allows outbound HTTPS (port 443)
+1. Review Netdata logs:
+
+```bash
+journalctl -u netdata | grep -i cloud
+```
+
+1. Ensure firewall allows outbound HTTPS (port 443)
 
 ### Labels Not Updating
 
 Labels are applied at claim time. To update:
+
 1. Modify `netdata_cloud_node_labels`
 2. Run playbook with `netdata_claim_force: true`
 
@@ -231,6 +237,7 @@ Labels are applied at claim time. To update:
 ## Netdata Cloud Features
 
 Once claimed, you can:
+
 - View all metrics in a unified dashboard
 - Set up alerts and notifications
 - Create custom dashboards

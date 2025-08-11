@@ -2,7 +2,7 @@
 
 Nomad job templates that match your standards (static :53, everything else dynamic, Consul service discovery, Traefik for API, KV/Vault-driven config). Two deployment modes:
 
-# Deployment Options
+## Deployment Options
 
 [Mode A](./mode-a/) (Simple / Production-friendly): pdns-auth serves :53 directly.
 
@@ -16,7 +16,7 @@ Secrets:
 
 Vault path kv/pdns: db_password, api_key
 
-Consul KV pdns/db/\*: host, port, name, user
+Consul KV pdns/db/*: host, port, name, user
 
 Networking:
 

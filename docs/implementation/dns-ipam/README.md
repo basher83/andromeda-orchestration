@@ -5,6 +5,7 @@ This directory contains comprehensive documentation for the DNS and IP Address M
 ## Overview
 
 The DNS & IPAM implementation is a 5-phase project to transition from ad-hoc DNS management to a robust, service-aware infrastructure using:
+
 - **Consul** - Service discovery and DNS
 - **PowerDNS** - Authoritative DNS server
 - **NetBox** - IPAM and source of truth
@@ -15,7 +16,9 @@ The DNS & IPAM implementation is a 5-phase project to transition from ad-hoc DNS
 ### Core Planning
 
 #### 📋 [implementation-plan.md](implementation-plan.md)
+
 The master implementation plan covering all 5 phases:
+
 - Current state analysis
 - Detailed phase descriptions
 - Risk assessments
@@ -23,7 +26,9 @@ The master implementation plan covering all 5 phases:
 - Implementation checklists
 
 #### 🧪 [testing-strategy.md](testing-strategy.md)
+
 Comprehensive testing approach:
+
 - Unit testing with Molecule
 - Integration testing patterns
 - Performance testing guidelines
@@ -32,14 +37,18 @@ Comprehensive testing approach:
 ### Phase-Specific Guides
 
 #### 🚀 [phase1-guide.md](phase1-guide.md)
+
 Phase 1 - Consul DNS Foundation:
+
 - Step-by-step instructions
 - Configuration examples
 - Validation procedures
 - Troubleshooting tips
 
 #### 🏗️ [phase3-netbox-deployment.md](phase3-netbox-deployment.md)
+
 Phase 3 - NetBox IPAM Deployment:
+
 - NetBox architecture overview
 - Deployment in Nomad
 - IPAM data model
@@ -47,7 +56,9 @@ Phase 3 - NetBox IPAM Deployment:
 - Migration from ad-hoc IPAM
 
 #### 🔧 [netbox-integration-patterns.md](netbox-integration-patterns.md)
+
 NetBox Integration Patterns:
+
 - Dynamic inventory configuration
 - State management with NetBox modules
 - Runtime data queries with nb_lookup
@@ -71,7 +82,7 @@ NetBox Integration Patterns:
 - **PowerDNS Playbooks**: [`../../../playbooks/infrastructure/powerdns/`](../../../playbooks/infrastructure/powerdns/)
 - **Assessment Reports**: [`../../../reports/dns-ipam/`](../../../reports/dns-ipam/)
 - **Roadmap**: [`../../../ROADMAP.md`](../../../ROADMAP.md)
-- **NetBox Instance**: `https://192.168.30.213/` (LXC 213 on pve1)
+- **NetBox Instance**: [https://192.168.30.213/](https://192.168.30.213/)
 
 ## Getting Started
 

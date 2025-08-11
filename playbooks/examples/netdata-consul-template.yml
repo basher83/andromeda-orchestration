@@ -51,8 +51,6 @@
     - name: Deploy Netdata with consul-template
       ansible.builtin.include_role:
         name: netdata
-
----
 # Example: Update alarm thresholds dynamically
 - name: Update Netdata alarm thresholds via Consul KV
   hosts: localhost
@@ -88,8 +86,6 @@
         headers:
           X-Consul-Token: "{{ consul_token }}"
       when: not is_virtualized | default(true)
-
----
 # Example: Create custom alarm templates
 - name: Create custom Netdata alarm templates
   hosts: localhost

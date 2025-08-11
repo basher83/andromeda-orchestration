@@ -55,7 +55,7 @@ This directory contains organized Ansible playbooks for infrastructure managemen
 ### Hidden Directories
 
 - **`.debug/`** - Troubleshooting and debugging playbooks (10+ files)
-  - Various check-* and debug-* playbooks for Netdata troubleshooting
+  - Various `check-*` and `debug-*` playbooks for Netdata troubleshooting
   - Kept hidden to reduce clutter but available when needed
 
 - **`.archive/`** - Old/replaced playbooks kept for reference (8+ files)
@@ -70,6 +70,7 @@ This directory contains organized Ansible playbooks for infrastructure managemen
 ## Usage Examples
 
 ### Deploy Netdata Monitoring
+
 ```bash
 # Deploy to all clusters
 uv run ansible-playbook playbooks/infrastructure/monitoring/deploy-netdata-all.yml \
@@ -85,6 +86,7 @@ uv run ansible-playbook playbooks/infrastructure/monitoring/netdata-configure-me
 ```
 
 ### Setting up Ansible User
+
 ```bash
 # Setup ansible user on all hosts in an inventory
 uv run ansible-playbook playbooks/infrastructure/user-management/setup-ansible-user.yml \
@@ -93,6 +95,7 @@ uv run ansible-playbook playbooks/infrastructure/user-management/setup-ansible-u
 ```
 
 ### Consul Configuration
+
 ```bash
 # Enable Consul DNS (Phase 1)
 uv run ansible-playbook playbooks/infrastructure/consul/phase1-consul-dns.yml \
@@ -104,6 +107,7 @@ uv run ansible-playbook playbooks/infrastructure/consul/consul-telemetry-setup.y
 ```
 
 ### Nomad Management
+
 ```bash
 # Check Nomad cluster status
 uv run ansible-playbook playbooks/infrastructure/nomad/cluster-status.yml \
@@ -120,6 +124,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 ```
 
 ### Consul-Nomad Integration
+
 ```bash
 # Enable Consul-Nomad integration
 uv run ansible-playbook playbooks/infrastructure/consul-nomad/consul-nomad-integration.yml \
@@ -127,6 +132,7 @@ uv run ansible-playbook playbooks/infrastructure/consul-nomad/consul-nomad-integ
 ```
 
 ### Network Configuration
+
 ```bash
 # Update nftables for Netdata
 uv run ansible-playbook playbooks/infrastructure/network/update-nftables-netdata.yml \
@@ -134,6 +140,7 @@ uv run ansible-playbook playbooks/infrastructure/network/update-nftables-netdata
 ```
 
 ### Maintenance Tasks
+
 ```bash
 # Backup Netdata configurations
 uv run ansible-playbook playbooks/infrastructure/maintenance/backup-netdata-config.yml \
@@ -144,24 +151,10 @@ uv run ansible-playbook playbooks/infrastructure/maintenance/netdata-update-stre
   -i inventory/*/infisical.proxmox.yml
 ```
 
-### PowerDNS Deployment
-```bash
-# Prepare volumes for PowerDNS
-uv run ansible-playbook playbooks/infrastructure/powerdns/powerdns-prepare-volumes.yml \
-  -i inventory/doggos-homelab/infisical.proxmox.yml
-
-# Setup PowerDNS secrets in Consul KV
-uv run ansible-playbook playbooks/infrastructure/powerdns/powerdns-setup-consul-kv.yml \
-  -i inventory/doggos-homelab/infisical.proxmox.yml
-
-# Configure Consul ACLs for PowerDNS
-uv run ansible-playbook playbooks/infrastructure/powerdns/powerdns-consul-acl.yml \
-  -i inventory/doggos-homelab/infisical.proxmox.yml
-```
-
 ## Debugging
 
 If you need to troubleshoot issues, check the `.debug/` directory for various debugging playbooks:
+
 ```bash
 # List debug playbooks
 ls -la playbooks/infrastructure/.debug/

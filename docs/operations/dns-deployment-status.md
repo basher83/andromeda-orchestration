@@ -12,7 +12,7 @@ Successfully deployed DNS zones to NetBox. PowerDNS integration now targets Mode
 ### 1. NetBox DNS Plugin Setup
 
 - Plugin v1.3.5 installed and operational
-- API accessible at https://192.168.30.213
+- API accessible at [https://192.168.30.213](https://192.168.30.213)
 - Token stored in Infisical at `/apollo-13/services/netbox/NETBOX_API_KEY`
 
 ### 2. DNS Zones Created in NetBox

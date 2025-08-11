@@ -5,11 +5,13 @@ This directory contains essential documentation for new users and developers wor
 ## Contents
 
 ### Setup and Configuration
+
 - **[repository-structure.md](repository-structure.md)** - Complete overview of the project directory structure and organization
 - **[pre-commit-setup.md](pre-commit-setup.md)** - Configure pre-commit hooks for code quality and security scanning
 - **[uv-ansible-notes.md](uv-ansible-notes.md)** - Important notes about using `uv` with Ansible in this project
 
 ### Help and Support
+
 - **[troubleshooting.md](troubleshooting.md)** - Common issues and their solutions, including macOS permissions and Infisical setup
 
 ## Quick Start Path
@@ -22,6 +24,7 @@ This directory contains essential documentation for new users and developers wor
 ## Next Steps
 
 After completing the getting started guides:
+
 - Review implementation guides in [`../implementation/`](../implementation/)
 - Check project status in [`../project-management/`](../project-management/)
 - Explore playbooks in [`../../playbooks/`](../../playbooks/)
@@ -29,6 +32,7 @@ After completing the getting started guides:
 ## Prerequisites
 
 Before starting:
+
 - Python 3.9+
 - Ansible 2.15+
 - Infisical account and machine identity

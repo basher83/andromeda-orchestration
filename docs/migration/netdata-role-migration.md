@@ -41,11 +41,11 @@ The monolithic `netdata` role has been refactored into smaller, focused roles fo
     - name: Install Netdata
       ansible.builtin.include_role:
         name: netdata_install
-        
+
     - name: Configure Netdata
       ansible.builtin.include_role:
         name: netdata_configure
-        
+
     - name: Setup streaming
       ansible.builtin.include_role:
         name: netdata_streaming
@@ -57,6 +57,7 @@ The monolithic `netdata` role has been refactored into smaller, focused roles fo
 ### 2. Update Group Variables
 
 #### Old Structure
+
 ```yaml
 # group_vars/all/netdata.yml
 netdata_install_method: "package"
@@ -66,6 +67,7 @@ netdata_consul_enabled: true
 ```
 
 #### New Structure
+
 ```yaml
 # group_vars/all/netdata_install.yml
 netdata_install_method: "repository"
@@ -104,17 +106,17 @@ Use role inclusion based on your needs:
         name: netdata_install
     - ansible.builtin.import_role:
         name: netdata_configure
-        
+
     # Only for streaming nodes
     - ansible.builtin.import_role:
         name: netdata_streaming
       when: netdata_node_type is defined
-      
+
     # Only if using Consul
     - ansible.builtin.import_role:
         name: netdata_consul
       when: consul_available | default(false)
-      
+
     # Only for cloud claiming
     - ansible.builtin.import_role:
         name: netdata_cloud
@@ -156,6 +158,7 @@ If issues arise:
 ## Support
 
 For questions or issues during migration:
+
 - Check role documentation in each role's README.md
 - Review example playbooks in `playbooks/infrastructure/monitoring/`
 - Open issues in the repository for bugs or feature requests

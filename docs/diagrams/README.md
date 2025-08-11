@@ -31,13 +31,13 @@ This directory contains Mermaid-based architecture and flow diagrams for the and
    - Service registration flow
    - Infrastructure port mappings including Vault
 
-6. **[Vault Architecture](vault-architecture.md)** *(New)*
+6. **[Vault Architecture](vault-architecture.md)** _(New)_
    - Complete Vault deployment architecture
    - Raft storage cluster topology
    - PKI hierarchy and certificate management
    - Secret rotation and backup flows
 
-7. **[HashiCorp Stack Integration](hashicorp-stack-integration.md)** *(New)*
+7. **[HashiCorp Stack Integration](hashicorp-stack-integration.md)** _(New)_
    - Integration between Consul, Vault, and Nomad
    - Authentication and authorization flows
    - Service lifecycle management

@@ -5,18 +5,21 @@ This directory contains playbooks for managing network configuration, including 
 ## Playbooks
 
 ### update-nftables-netdata.yml
+
 Updates nftables rules specifically for Netdata monitoring traffic.
 
 **Purpose**: Opens required ports for Netdata parent-child streaming
 **Target**: All hosts running Netdata
 
 ### update-nftables-nomad.yml
+
 Configures firewall rules optimized for Nomad client nodes.
 
 **Purpose**: Implements the dynamic port allocation strategy for Nomad workloads
 **Target**: All Nomad client nodes (tag_client)
 
 **Key Features**:
+
 - Opens dynamic port range (20000-32000) for Nomad allocations
 - Maintains static ports only for essential services (DNS)
 - Prevents port conflicts by following best practices
@@ -103,34 +106,39 @@ The main firewall template for Nomad clients includes:
 ### Service Unreachable After Update
 
 1. Verify the service port is in allowed range:
-   ```bash
-   nomad alloc status <alloc-id> | grep "Allocated Ports"
-   ```
 
-2. Check if custom static port is needed:
-   ```bash
-   # Add to template if justified
-   tcp dport <port> accept  # Service name
-   ```
+```bash
+nomad alloc status <alloc-id> | grep "Allocated Ports"
+```
 
-3. Restart nftables if manual changes made:
-   ```bash
-   systemctl restart nftables
-   ```
+1. Check if custom static port is needed:
+
+```bash
+# Add to template if justified
+tcp dport <port> accept  # Service name
+```
+
+1. Restart nftables if manual changes made:
+
+```bash
+systemctl restart nftables
+```
 
 ### Port Conflicts
 
 1. Check what's using a port:
-   ```bash
-   ss -tlnp | grep :<port>
-   ```
 
-2. Find Nomad job using static port:
-   ```bash
-   nomad job status | xargs -I {} nomad job inspect {} | grep -B5 "static"
-   ```
+```bash
+ss -tlnp | grep :<port>
+```
 
-3. Convert to dynamic allocation (see best practices guide)
+1. Find Nomad job using static port:
+
+```bash
+nomad job status | xargs -I {} nomad job inspect {} | grep -B5 "static"
+```
+
+1. Convert to dynamic allocation (see best practices guide)
 
 ## Related Documentation
 

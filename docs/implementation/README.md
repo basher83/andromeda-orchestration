@@ -54,7 +54,6 @@ Infisical secrets management implementation
 - **andromeda-infisical-config.md** - Project-specific configuration
 - **comparison.md** - Comparison between 1Password and Infisical approaches
 
-
 ## Implementation Phases
 
 Following the DNS & IPAM roadmap:

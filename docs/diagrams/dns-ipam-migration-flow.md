@@ -76,31 +76,37 @@ flowchart TD
 ## Migration Phases
 
 ### Phase 0: Infrastructure Assessment
+
 - Validate current infrastructure health
 - Document existing DNS configuration
 - Identify and fix any blocking issues
 
 ### Phase 1: Consul Foundation
+
 - Deploy Consul DNS on port 8600
 - Configure ACLs and encryption
 - Establish service discovery baseline
 
 ### Phase 2: PowerDNS Deployment
+
 - Deploy PowerDNS via Nomad jobs
 - Configure initial zones and forwarders
 - Validate DNS resolution functionality
 
 ### Phase 3: NetBox Integration
+
 - Import existing DNS records to NetBox
 - Configure PowerDNS to use NetBox as backend
 - Setup dynamic record management
 
 ### Phase 4: DNS Cutover
+
 - Update DHCP to point to new DNS servers
 - Monitor traffic and validate resolution
 - Decommission legacy Pi-hole infrastructure
 
 ### Phase 5: Production Hardening
+
 - Enable comprehensive monitoring
 - Configure automated backups
 - Create operational runbooks
@@ -108,6 +114,7 @@ flowchart TD
 ## Rollback Strategy
 
 Each phase includes specific rollback procedures:
+
 - **Phase 1**: Revert Consul configuration
 - **Phase 2**: Remove PowerDNS deployment
 - **Phase 3**: Disconnect NetBox integration
@@ -117,6 +124,7 @@ Each phase includes specific rollback procedures:
 ## Decision Points
 
 Critical go/no-go decisions occur at:
+
 1. End of Phase 0 assessment
 2. Consul health check (Phase 1)
 3. PowerDNS validation (Phase 2)

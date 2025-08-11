@@ -2,7 +2,7 @@
 
 > Policy: Default to dynamic ports; use static ports only for standard protocol ports and the cluster load balancer(s).
 
-### Prerequisites
+## Prerequisites
 
 - Nomad 1.6+
 - Consul for service discovery (optional but recommended)

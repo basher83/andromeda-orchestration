@@ -2,7 +2,7 @@
 
 HashiCorp Nomad configuration and deployment patterns for container orchestration.
 
-### Prerequisites
+## Prerequisites
 
 - Nomad 1.6+; Consul 1.16+; Vault 1.15+
 - uv + Ansible installed (see `docs/getting-started/uv-ansible-notes.md`)

@@ -101,6 +101,7 @@ task "cache-service" {
 - Traefik certificates
 
 **Service↔Volume Map:**
+
 | Service | Type | Node Class | Volume Name | Mount Path | Owner (uid:gid) |
 |----------|--------|------------------|-------------------|--------------------------------------|-----------------|
 | Postgres | Static | storage=ssd/nvme | postgres-data | /var/lib/postgresql/data | 999:999 |
@@ -470,10 +471,11 @@ retention:
 ### Key Metrics
 
 1. **Disk Usage**
-   ```promql
-   node_filesystem_avail_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
-   / node_filesystem_size_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
-   ```
+
+```promql
+node_filesystem_avail_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
+/ node_filesystem_size_bytes{mountpoint=~"/opt/nomad/volumes/.*"}
+```
 
 SLO examples:
 
@@ -481,13 +483,13 @@ SLO examples:
 - Mount path present for all running allocations
 - CSI attach/detach success > 99.9% over 24h
 
-2. **Volume Health**
+1. **Volume Health**
 
    - Mount status
    - I/O errors
    - Permission issues
 
-3. **CSI Plugin Health**
+1. **CSI Plugin Health**
    - Plugin availability
    - Volume attach/detach success rate
 

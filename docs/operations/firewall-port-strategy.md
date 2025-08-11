@@ -9,16 +9,19 @@ Our infrastructure uses a combination of static and dynamic port allocation to p
 ## Core Principles
 
 ### 1. Dynamic Ports by Default
+
 - **Range**: 20000-32000 (Nomad's default dynamic range)
 - **Usage**: All web services, APIs, and containerized applications
 - **Access**: Via load balancer using service discovery
 
 ### 2. Static Ports Only When Required
+
 - **DNS (53)**: Must be on standard port for resolver compatibility
 - **Load Balancer (80/443)**: ONE service owns these for all HTTP/HTTPS traffic
 - **Legacy Services**: Only when absolutely necessary
 
 ### 3. Service Discovery over Direct Access
+
 - Services register with Consul
 - Load balancer routes based on hostname/path
 - Internal communication uses `.consul` domains
@@ -93,45 +96,48 @@ network {
 ## Common Pitfalls to Avoid
 
 ### ❌ Don't: Request Static Ports for Web Services
+
 ```hcl
 # BAD: Creates conflicts
 network {
   port "http" {
-    static = 80  # Will conflict with load balancer!
+    static = 8080
   }
 }
 ```
 
 ### ✅ Do: Use Dynamic Ports with Service Discovery
+
 ```hcl
-# GOOD: No conflicts
-network {
-  port "http" {
-    to = 3000  # Internal port
-  }
+service {
+  name = "app"
+  port = "http"
 }
 
-service {
-  name = "my-app"
-  port = "http"
-  tags = ["urlprefix-/myapp"]  # For load balancer routing
+task {
+  env = {
+    CONSUL_SERVICE_NAME = "app"
+  }
 }
 ```
 
 ## Service Access Patterns
 
 ### External Access (Users)
-```
+
+```text
 User → Load Balancer (80/443) → Consul Discovery → Service (dynamic port)
 ```
 
 ### Internal Access (Service-to-Service)
-```
+
+```text
 Service A → service-b.service.consul:port → Service B
 ```
 
 ### Direct Access (Debugging)
-```
+
+```text
 Admin → node-ip:dynamic-port → Service
 ```
 
@@ -170,15 +176,17 @@ When deploying a new service:
    - Are there alternatives?
 
 2. **Update nftables Template**
-   ```bash
-   vim playbooks/infrastructure/network/templates/nftables-nomad-client.conf.j2
-   ```
 
-3. **Apply Changes**
-   ```bash
-   uv run ansible-playbook playbooks/infrastructure/network/update-nftables-nomad.yml \
-     -i inventory/doggos-homelab/infisical.proxmox.yml
-   ```
+```bash
+vim playbooks/infrastructure/network/templates/nftables-nomad-client.conf.j2
+```
+
+1. **Apply Changes**
+
+```bash
+uv run ansible-playbook playbooks/infrastructure/network/update-nftables-nomad.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml
+```
 
 ### Monitoring Port Usage
 
@@ -188,9 +196,6 @@ nft list ruleset
 
 # Check Nomad port allocations
 nomad node status -verbose <node-id>
-
-# List Consul services
-consul catalog services
 ```
 
 ## Examples
@@ -244,50 +249,39 @@ job "grafana" {
 ## Load Balancer Options
 
 ### Recommended: Traefik
+
 - Native Consul integration
-- Automatic service discovery
-- Built-in Let's Encrypt support
-- Dynamic configuration
+- First-class Nomad support
+- Powerful routing and middlewares
 
 ### Alternative: Caddy
+
 - Simple configuration
-- Automatic HTTPS
-- Good for basic routing
+- Good TLS automation
 
 ### Alternative: nginx
+
 - Familiar to many users
-- Requires manual configuration
-- Use with consul-template for automation
+- Flexible configuration
 
 ## Troubleshooting
 
 ### Port Conflicts
-```bash
-# Check what's using a port
-ss -tlnp | grep :80
 
-# Find Nomad allocation using a port
-nomad job status <job-name>
-nomad alloc status <alloc-id>
+```bash
+ss -tulpn | grep -E ":(80|443|53)"
 ```
 
 ### Service Discovery Issues
-```bash
-# Verify service registration
-consul catalog services
-dig @localhost -p 8600 service.service.consul
 
-# Check service health
-consul watch -type=service -service=<service-name>
+```bash
+consul catalog services
 ```
 
 ### Firewall Blocking
-```bash
-# Test connectivity
-nc -zv <node-ip> <port>
 
-# Check nftables logs
-journalctl -u nftables -f
+```bash
+nft list ruleset | less
 ```
 
 ## Related Documentation

@@ -182,21 +182,6 @@ uv run ansible nomad-server-1-lloyd -i inventory/doggos-homelab/infisical.proxmo
 ## Next Steps
 
 1. **Phase 1 Implementation**: Configure Consul DNS on all nodes
-2. **Service Registration**: Ensure all infrastructure services are registered
-3. **Phase 2 Preparation**: Prepare PowerDNS Nomad job specifications
-4. **NetBox Integration**: Plan service definitions for NetBox synchronization
-
-## Important Considerations
-
-1. **Firewall Rules**: Port 8600/udp is already open in the nftables configuration
-2. **ACL Tokens**: Required for all Consul operations - stored in Infisical
-3. **Network Interfaces**: Roles assume dual-network setup (eth0/eth1)
-4. **Service Discovery**: All services should be registered in Consul for DNS resolution
-
-## File Locations
-
-- **Imported Roles**: `/roles/{consul,nomad,system_base,nfs}/`
-- **Created Roles**: `/roles/consul_dns/`
-- **Custom Modules**: `/plugins/modules/`
-- **Module Utilities**: `/plugins/module_utils/`
-- **Phase 1 Playbooks**: `/playbooks/infrastructure/phase1-*.yml`
+2. **Phase 2 Planning**: PowerDNS Authoritative deployment for internal zones
+3. **Phase 3**: Integrate NetBox for IPAM/DCIM
+4. **Documentation**: Update role READMEs and playbooks with any changes

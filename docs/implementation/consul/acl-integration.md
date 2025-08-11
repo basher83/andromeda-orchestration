@@ -14,31 +14,38 @@ The Consul-Nomad integration is blocked by Consul ACL requirements. Consul is co
 ## Options
 
 ### Option 1: Retrieve Existing Management Token
+
 If you have access to the management token:
+
 1. Check Infisical: `/consul/tokens/management`
-2. Check your password manager (1Password, etc.)
-3. Check with the person who initially bootstrapped Consul
+1. Check your password manager (1Password, etc.)
+1. Check with the person who initially bootstrapped Consul
 
 ### Option 2: Disable ACLs Temporarily
+
 1. SSH to Consul servers
-2. Edit `/etc/consul.d/consul.hcl`
-3. Set `acl { enabled = false }`
-4. Restart Consul
-5. Configure integration
-6. Re-enable ACLs
+1. Edit `/etc/consul.d/consul.hcl`
+1. Set `acl { enabled = false }`
+1. Restart Consul
+1. Configure integration
+1. Re-enable ACLs
 
 ### Option 3: Reset ACL System
+
 **WARNING**: This will invalidate all existing tokens
+
 1. Stop Consul on all servers
-2. Delete ACL data: `rm -rf /opt/consul/data/acl-*`
-3. Start Consul
-4. Re-bootstrap ACL system
-5. Recreate all tokens
+1. Delete ACL data: `rm -rf /opt/consul/data/acl-*`
+1. Start Consul
+1. Re-bootstrap ACL system
+1. Recreate all tokens
 
 ### Option 4: Use Anonymous Token
+
 Configure Nomad to work without tokens (insecure):
+
 1. Update Consul ACL default policy to allow
-2. Not recommended for production
+1. Not recommended for production
 
 ## Recommended Approach
 
@@ -49,18 +56,19 @@ Since this is a homelab environment, the safest approach is:
    - Check Infisical
    - Check password managers
 
-2. **If token cannot be found**, temporarily disable ACLs:
-   ```bash
-   # On all Consul servers
-   sudo sed -i 's/enabled = true/enabled = false/' /etc/consul.d/consul.hcl
-   sudo systemctl restart consul
-   ```
+1. **If token cannot be found**, temporarily disable ACLs:
 
-3. **Configure integration without ACLs**:
+```bash
+# On all Consul servers
+sudo sed -i 's/enabled = true/enabled = false/' /etc/consul.d/consul.hcl
+sudo systemctl restart consul
+```
+
+1. **Configure integration without ACLs**:
    - Verify Nomad can register services
    - Test service discovery
 
-4. **Re-enable ACLs** with proper configuration:
+1. **Re-enable ACLs** with proper configuration:
    - Bootstrap new ACL system
    - Create appropriate policies
    - Generate tokens for all services
@@ -91,6 +99,6 @@ consul acl token create \
 ## Next Steps
 
 1. Decide on approach based on your access level
-2. If you have the management token, provide it when prompted
-3. If not, consider temporarily disabling ACLs
-4. Document the final token configuration for future reference
+1. If you have the management token, provide it when prompted
+1. If not, consider temporarily disabling ACLs
+1. Document the final token configuration for future reference

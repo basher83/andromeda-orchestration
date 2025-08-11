@@ -5,11 +5,13 @@ This directory contains all Ansible playbooks organized by their purpose and lif
 ## Directory Structure
 
 ### 📊 `assessment/`
+
 **Purpose**: Infrastructure assessment and validation playbooks
 
 These playbooks are used to evaluate the current state of infrastructure, identify issues, and verify readiness for changes. They are non-destructive and generate reports.
 
 **Key Playbooks**:
+
 - `infrastructure-readiness.yml` - Comprehensive infrastructure assessment
 - `consul-assessment.yml` - Consul cluster health evaluation
 - `dns-ipam-audit.yml` - DNS and IPAM configuration audit
@@ -21,11 +23,13 @@ These playbooks are used to evaluate the current state of infrastructure, identi
 ---
 
 ### 🏗️ `infrastructure/`
+
 **Purpose**: Production infrastructure deployment and management
 
 The main directory for operational playbooks that deploy, configure, and manage infrastructure components. Contains subdirectories for each major service or component.
 
 **Subdirectories**:
+
 - `consul/` - Consul service mesh and DNS configuration
 - `consul-nomad/` - Integration between Consul and Nomad
 - `monitoring/` - Netdata monitoring deployment
@@ -42,11 +46,13 @@ See [`infrastructure/README.md`](infrastructure/README.md) for detailed usage in
 ---
 
 ### 💡 `examples/`
+
 **Purpose**: Reference implementations and demos
 
 Contains example playbooks demonstrating specific features or integration patterns. These are educational and can be used as templates for custom playbooks.
 
 **Key Examples**:
+
 - `infisical-demo.yml` - Demonstrates Infisical secret management
 - `netdata-consul-template.yml` - Shows Consul Template integration
 
@@ -63,6 +69,7 @@ Contains example playbooks demonstrating specific features or integration patter
 ## Common Usage Patterns
 
 ### Running Assessment Playbooks
+
 ```bash
 # Run all assessments for a cluster
 uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml \
@@ -74,6 +81,7 @@ uv run ansible-playbook playbooks/assessment/consul-assessment.yml \
 ```
 
 ### Deploying Infrastructure
+
 ```bash
 # Deploy monitoring to all clusters
 uv run ansible-playbook playbooks/infrastructure/monitoring/deploy-netdata-all.yml \
@@ -85,6 +93,7 @@ uv run ansible-playbook playbooks/infrastructure/powerdns/powerdns-setup-consul-
 ```
 
 ### Using Examples
+
 ```bash
 # Test Infisical integration
 uv run ansible-playbook playbooks/examples/infisical-demo.yml \

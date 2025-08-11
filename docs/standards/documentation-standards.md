@@ -1,16 +1,18 @@
 # Documentation Standards
 
 ## Purpose
+
 Establish consistent documentation practices that ensure knowledge is preserved, discoverable, and actionable.
 
 ## Background
+
 Documentation is not an afterthought—it's a first-class citizen in this repository. We've learned that undocumented systems become unmaintainable, and scattered documentation becomes useless.
 
 ## Standard
 
 ### Documentation Hierarchy
 
-```
+```text
 docs/
 ├── standards/          # WHY - Standards, decisions, patterns
 ├── implementation/     # HOW - Technical setup and configuration
@@ -28,21 +30,6 @@ docs/
 │   └── archive/       # Historical project artifacts
 ├── diagrams/         # VISUAL - Architecture and flows
 ├── getting-started/   # NEW USER - Onboarding and basics
-├── migration/         # CHANGE - Migration guides and procedures
-├── resources/         # REFERENCE - External links, standards
-└── archive/          # HISTORICAL - Deprecated but preserved content
-
-[service-directory]/
-├── README.md         # Service-specific documentation only
-├── .testing/        # Work in progress
-└── .archive/        # Historical versions
-
-Root Level Files:
-├── README.md         # Project overview and quick start
-├── ROADMAP.md        # Vision and major milestones
-├── CLAUDE.md         # AI assistant context (project-specific)
-├── WARP.md           # Terminal assistant context
-└── CHANGELOG.md      # Version history and changes
 ```
 
 ### Placement Rules
@@ -57,29 +44,34 @@ Root Level Files:
 ### Content Placement Guidelines
 
 **docs/standards/** - Principles and patterns
+
 - Architecture standards
 - Development workflows
 - Documentation standards
 - Security policies
 
 **docs/implementation/** - Technical how-to guides
+
 - Service setup procedures
 - Configuration examples
 - Integration patterns
 - Deployment guides
 
 **docs/operations/** - Day-to-day procedures
+
 - Runbooks and SOPs
 - Maintenance procedures
 - Monitoring guides
 - Backup/restore procedures
 
 **docs/troubleshooting/** - Problem resolution
+
 - Common issues and solutions
 - Debug procedures
 - Error code references
 
 **docs/project-management/** - Project tracking
+
 - Phase documentation
 - Task lists and progress
 - Decision records
@@ -88,6 +80,7 @@ Root Level Files:
 ### README Requirements
 
 Every README must include:
+
 - **Purpose** - Why this exists
 - **Status** - Current state (Production/Testing/Planned)
 - **Configuration** - Key settings
@@ -104,12 +97,11 @@ Every README must include:
 - Lists with proper spacing
 - Blank lines around blocks
 
-```language
+```text
 # Fenced code blocks with language
 ```
 
 [Descriptive Links](relative/path.md) not [click here](path)
-```
 
 #### Linting Exceptions
 
@@ -118,11 +110,15 @@ When markdown linting rules need to be bypassed for legitimate reasons (e.g., ra
 ```markdown
 <!-- markdownlint-disable-next-line MD040 -->
 ```
+
 Some raw terminal output without language
+
+```text
+<command output omitted>
 ```
 
 <!-- markdownlint-disable-next-line MD013 -->
-This line is intentionally longer than 80 characters because it contains a very important URL that should not be broken: https://example.com/very/long/path
+This line is intentionally longer than 80 characters because it contains a very important URL that should not be broken: [https://example.com/very/long/path](https://example.com/very/long/path)
 
 <!-- markdownlint-disable MD033 -->
 <details>
@@ -130,9 +126,9 @@ This line is intentionally longer than 80 characters because it contains a very 
   Content here
 </details>
 <!-- markdownlint-enable MD033 -->
-```
 
 **Rules for linting exceptions:**
+
 - Use sparingly - fix the content first if possible
 - Always include a comment explaining why the exception is needed
 - Use `disable-next-line` for single line exceptions
@@ -163,6 +159,7 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 #### Format Standards
 
 **In Documentation (Markdown):**
+
 ```markdown
 [TODO]: Description of task to complete
 [FIXME]: This section has incorrect information about X
@@ -171,6 +168,7 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 ```
 
 **In Code (Comments):**
+
 ```python
 # TODO: Add retry logic for network failures
 # FIXME: This breaks when count > 100
@@ -186,18 +184,21 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 #### Standards and Rules
 
 **Format Requirements:**
-- Documentation: `[TAG]: ` (brackets, colon, space)
-- Code: `# TAG: ` (hash, space, tag, colon, space)
+
+- Documentation: `[TAG]:` (brackets, colon)
+- Code: `# TAG:` (hash, space optional before tag, colon)
 - Always include descriptive text after the tag
 - Keep descriptions concise but complete
 - Include ticket/issue numbers when applicable: `[TODO]: (PROJ-123) Implement feature`
 
 **Placement:**
+
 - Place tags at the relevant location in code/docs
 - For multi-line issues, place tag on first line
 - Group related tags together when possible
 
 **Priority Guidelines:**
+
 - `SECURITY` - Address immediately
 - `FIXME`, `BUG` - Address in current sprint
 - `TODO`, `HACK` - Address in next refactor
@@ -207,6 +208,7 @@ Use consistent tags for tracking tasks, issues, and important notes across both 
 #### Searching and Tracking
 
 **Find all tags:**
+
 ```bash
 # In documentation
 rg '\[(TODO|FIXME|BUG|HACK|WARNING|NOTE|DEPRECATED|SECURITY)\]:'
@@ -222,6 +224,7 @@ rg '\[FIXME\]:|# FIXME:'
 ```
 
 **Generate reports:**
+
 ```bash
 # Count by type
 rg '(\[|# )(TODO|FIXME|BUG|WARNING)' --no-filename | \
@@ -235,6 +238,7 @@ rg '(\[|# )(TODO|FIXME|BUG)' --vimgrep
 #### Examples
 
 **Good Examples:**
+
 ```markdown
 [TODO]: Add monitoring dashboard after Netdata deployment is complete
 [FIXME]: This link is broken - should point to /docs/operations/runbooks.md
@@ -249,6 +253,7 @@ rg '(\[|# )(TODO|FIXME|BUG)' --vimgrep
 ```
 
 **Bad Examples:**
+
 ```markdown
 [TODO]: Fix this            # Too vague
 TODO: Add tests             # Missing brackets
@@ -262,6 +267,7 @@ TODO: Add tests             # Missing brackets
 ```
 
 #### Why Unified Tagging?
+
 - **Consistency**: Same patterns in code and docs
 - **Searchability**: Easy to find all issues project-wide
 - **Prioritization**: Clear severity levels
@@ -272,12 +278,14 @@ TODO: Add tests             # Missing brackets
 ## Rationale
 
 ### Why This Structure?
+
 - **Discoverability**: Related docs are grouped together
 - **Maintainability**: Clear ownership and placement rules
 - **Scalability**: Structure works for 10 or 1000 documents
 - **Git-friendly**: Changes are localized and reviewable
 
 ### Why Not Scatter Documentation?
+
 - Hard to find related information
 - Difficult to maintain consistency
 - Increases cognitive load
@@ -286,7 +294,8 @@ TODO: Add tests             # Missing brackets
 ## Examples
 
 ### Good Example
-```
+
+```text
 nomad-jobs/
 ├── platform-services/
 │   ├── README.md           # Documents PowerDNS deployment
@@ -299,7 +308,8 @@ docs/
 ```
 
 ### Bad Example
-```
+
+```text
 nomad-jobs/
 ├── platform-services/
 │   ├── README.md
@@ -320,11 +330,10 @@ nomad-jobs/
 To meet these standards:
 
 1. **Audit current docs** - Find all .md files
-2. **Categorize** - Determine correct location
-3. **Move systematically** - One category at a time
-4. **Update references** - Fix all links
-5. **Archive old locations** - Leave forwarding notes
-
+1. **Categorize** - Determine correct location
+1. **Move systematically** - One category at a time
+1. **Update references** - Fix all links
+1. **Archive old locations** - Leave forwarding notes
 
 ## References
 

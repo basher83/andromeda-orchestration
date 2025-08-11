@@ -42,16 +42,19 @@ TrueNAS: 192.168.30.6
 ### 1. API Key Authentication Failures
 
 #### Problem
-```
+
+```text
 STREAM RCV 'hostname' [from [IP]:PORT]: rejecting streaming connection; API key is not allowed from this IP (DENIED)
 ```
 
 #### Root Cause
+
 The stream.conf API key configuration is incorrectly formatted or too restrictive.
 
 #### Solution
 
 **Correct stream.conf format for parents:**
+
 ```ini
 # Parent stream.conf accepting children and mesh replication
 [stream]
@@ -77,6 +80,7 @@ The stream.conf API key configuration is incorrectly formatted or too restrictiv
 ```
 
 **Common mistakes to avoid:**
+
 ```ini
 # WRONG - Don't use [API_KEY] as section name
 [API_KEY]
@@ -93,6 +97,7 @@ The stream.conf API key configuration is incorrectly formatted or too restrictiv
 #### Debugging Steps
 
 1. **Verify configuration on child:**
+
 ```bash
 # Check if streaming is enabled
 grep "enabled.*=.*yes" /etc/netdata/stream.conf
@@ -101,7 +106,8 @@ grep "enabled.*=.*yes" /etc/netdata/stream.conf
 grep "destination" /etc/netdata/stream.conf
 ```
 
-2. **Test connectivity:**
+1. **Test connectivity:**
+
 ```bash
 # From child to parent
 nc -zv 192.168.11.2 19999
@@ -112,7 +118,8 @@ sudo iptables -L -n | grep 19999
 sudo nft list ruleset | grep 19999
 ```
 
-3. **Monitor connection attempts:**
+1. **Monitor connection attempts:**
+
 ```bash
 # On child
 tcpdump -i any -n host 192.168.11.2 and port 19999
@@ -121,7 +128,8 @@ tcpdump -i any -n host 192.168.11.2 and port 19999
 journalctl -u netdata -f | grep -E "(STREAM|connect|api.key)"
 ```
 
-4. **Verify on parent:**
+1. **Verify on parent:**
+
 ```bash
 # Watch for incoming connections
 journalctl -u netdata -f | grep "STREAM"
@@ -136,17 +144,20 @@ curl -s http://localhost:19999/api/v1/allmetrics?format=json | grep -i "nomad-cl
 ### 3. Parent Mesh Not Replicating
 
 #### Issue
+
 Parents aren't sharing data with each other in the mesh topology.
 
 #### Debugging Steps
 
 1. **Verify outbound streaming:**
+
 ```bash
 # Check [stream] section on each parent
 grep -A 10 "^\[stream\]" /etc/netdata/stream.conf
 ```
 
-2. **Check cross-cluster connectivity:**
+1. **Check cross-cluster connectivity:**
+
 ```bash
 # From doggos parent to og parent
 ping -c 3 192.168.30.50
@@ -157,7 +168,8 @@ ping -c 3 192.168.11.2
 nc -zv 192.168.11.2 19999
 ```
 
-3. **Verify mesh connections:**
+1. **Verify mesh connections:**
+
 ```bash
 # Should show connections to other parents
 ss -tan | grep :19999 | grep ESTAB | wc -l
@@ -166,10 +178,13 @@ ss -tan | grep :19999 | grep ESTAB | wc -l
 ### 4. Web Interface Issues
 
 #### Problem
+
 Netdata web interface not accessible after configuration changes.
 
 #### Solution
+
 Ensure web server is enabled in `/etc/netdata/netdata.conf`:
+
 ```ini
 [web]
     mode = static-threaded
@@ -223,6 +238,7 @@ Ensure web server is enabled in `/etc/netdata/netdata.conf`:
 For nodes not in Proxmox dynamic inventory (like PBS):
 
 ### Option 1: Manual Configuration
+
 ```bash
 # SSH to the node
 ssh root@192.168.30.200
@@ -241,6 +257,7 @@ systemctl restart netdata
 ```
 
 ### Option 2: Ansible Playbook
+
 ```yaml
 - name: Configure PBS to stream to parent
   hosts: localhost
@@ -265,6 +282,7 @@ systemctl restart netdata
 ## Performance Optimization
 
 ### Reducing Child Resource Usage
+
 ```ini
 # /etc/netdata/netdata.conf on children
 [global]
@@ -280,6 +298,7 @@ systemctl restart netdata
 ```
 
 ### Parent Storage Management
+
 ```ini
 # /etc/netdata/netdata.conf on parents
 [db]
@@ -338,7 +357,7 @@ grep -A5 "^\[stream\]" /etc/netdata/stream.conf | grep "api key"
 ## Known Issues
 
 1. **Consul Health Checks**: netdata-parent-health checks don't apply to Proxmox parent nodes as they don't run Consul
-2. **Backup File Names**: Ansible creates backups with unwieldy names like `netdata.conf.3052946.2025-08-03@08:59:29~`
+1. **Backup File Names**: Ansible creates backups with unwieldy names like `netdata.conf.3052946.2025-08-03@08:59:29~`
 
 ## References
 

@@ -74,7 +74,7 @@ uv run ansible-playbook playbooks/infrastructure/netbox/populate-ipam.yml \
 
 ### NetBox as Source of Truth
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │            NetBox Database              │
 ├─────────────────────────────────────────┤

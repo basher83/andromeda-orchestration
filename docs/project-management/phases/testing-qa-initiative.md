@@ -4,10 +4,7 @@
 **Status**: Planning
 **Prerequisites**: Core infrastructure stable (Phase 2 Complete ✅)
 
----
-
-Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 3](./phase-3-netbox.md)
----
+> Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 3](./phase-3-netbox.md)
 
 ## Initiative Overview
 
@@ -24,6 +21,7 @@ Comprehensive testing improvements to ensure code quality, reliability, and main
 **Related**: modules/*, tests/unit/modules/
 
 Tasks:
+
 - [ ] Create test structure: `mkdir -p tests/unit/modules`
 - [ ] Add tests for 8 Consul modules:
   - [ ] consul_acl_token.py
@@ -56,6 +54,7 @@ Tasks:
 **Related**: roles/*/molecule/
 
 Tasks:
+
 - [ ] Initialize Molecule for HashiCorp stack roles (highest priority):
   - [ ] consul role - Service discovery foundation
   - [ ] nomad role - Orchestration platform
@@ -82,6 +81,7 @@ Tasks:
 **Related**: ansible.cfg, playbooks/infrastructure/monitoring/
 
 Tasks:
+
 - [ ] Add `deprecation_warnings=False` to ansible.cfg
 - [ ] Fix multi-document YAML issue in deploy-netdata-doggos.yml
 - [ ] Review and update all playbooks for syntax compliance
@@ -100,6 +100,7 @@ Tasks:
 **Related**: docs/standards/testing-standards.md
 
 Tasks:
+
 - [ ] Define when tests are required:
   - [ ] Mandate tests for all custom modules
   - [ ] Require Molecule for new roles

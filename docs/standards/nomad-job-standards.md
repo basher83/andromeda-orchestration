@@ -1,16 +1,18 @@
 # Nomad Job Standards
 
 ## Purpose
+
 Define consistent patterns for Nomad job development, testing, and deployment that ensure reliable and maintainable container orchestration.
 
 ## Background
+
 Through iterative development of services like Traefik and PowerDNS, we've established patterns that separate production from development, maintain clean histories, and ensure consistent deployments.
 
 ## Standard
 
 ### Directory Organization
 
-```
+```text
 nomad-jobs/
 ├── core-infrastructure/
 │   ├── traefik.nomad.hcl      # Production file ONLY
@@ -25,11 +27,12 @@ nomad-jobs/
 #### The .testing/.archive Pattern
 
 **Why This Pattern?**
+
 1. **Clean Production**: Only proven configs visible
-2. **Safe Experimentation**: Test without affecting production
-3. **Historical Context**: Learn from past attempts
-4. **Git Friendly**: Can gitignore .testing if desired
-5. **Self-Documenting**: Clear what's production vs development
+1. **Safe Experimentation**: Test without affecting production
+1. **Historical Context**: Learn from past attempts
+1. **Git Friendly**: Can gitignore .testing if desired
+1. **Self-Documenting**: Clear what's production vs development
 
 ### Service Identity Requirements
 
@@ -50,6 +53,7 @@ service {
 ```
 
 **Why Required?**
+
 - **Security**: Workload-specific tokens
 - **Audit**: Track which service accessed what
 - **Isolation**: Services can't impersonate each other
@@ -60,6 +64,7 @@ service {
 Use standardized port labels across jobs to simplify routing and observability. See the Port label glossary for recommended names: [Port Allocation: Port label glossary](../implementation/nomad/port-allocation.md#port-label-glossary).
 
 Recommended labels (keep lowercase and consistent):
+
 - http – primary HTTP traffic (via LB)
 - https – TLS entrypoint (LB only)
 - grpc – gRPC endpoint (internal/LB)
@@ -181,18 +186,21 @@ check {
 ## Rationale
 
 ### Why Strict File Organization?
+
 - **Clarity**: Immediately obvious what's production
 - **Safety**: Can't accidentally deploy test configs
 - **History**: Learn from past iterations
 - **Cleanliness**: Main directory stays minimal
 
 ### Why Dynamic Ports?
+
 - **No Conflicts**: Nomad manages allocation
 - **Flexibility**: Services can move nodes
 - **Security**: Ports change on redeploy
 - **Simplicity**: No port planning spreadsheet
 
 ### Why Service Identity?
+
 - **Zero Trust**: Every service authenticated
 - **Audit Trail**: Who accessed what when
 - **Automatic**: No manual token management
@@ -201,6 +209,7 @@ check {
 ## Examples
 
 ### Good Example: Production-Ready Job
+
 ```hcl
 job "api-service" {
   datacenters = ["dc1"]
@@ -253,6 +262,7 @@ job "api-service" {
 ```
 
 ### Bad Example: Development Patterns in Production
+
 ```hcl
 job "bad-service" {
   group "app" {
@@ -293,18 +303,21 @@ job "bad-service" {
 ## Migration
 
 ### From Static to Dynamic Ports
+
 1. Remove `static = XXXX` from port definitions
-2. Update service discovery tags with `${NOMAD_PORT_label}`
-3. Test service discovery and routing
-4. Update documentation
+1. Update service discovery tags with `${NOMAD_PORT_label}`
+1. Test service discovery and routing
+1. Update documentation
 
 ### Adding Service Identity
+
 1. Add identity block to all service definitions
-2. Ensure Consul auth method configured
-3. Test service registration
-4. Remove any manual token configuration
+1. Ensure Consul auth method configured
+1. Test service registration
+1. Remove any manual token configuration
 
 ### Organizing Existing Jobs
+
 ```bash
 # Create structure
 mkdir -p {core-infrastructure,platform-services,applications}/{.testing,.archive}

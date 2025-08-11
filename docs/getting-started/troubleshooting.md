@@ -90,19 +90,19 @@ uv pip install requests proxmoxer
    nslookup proxmox.example.com
    ```
 
-2. **Test port connectivity:**
+1. **Test port connectivity:**
 
    ```bash
    nc -zv proxmox.example.com 8006
    ```
 
-3. **Test with curl:**
+1. **Test with curl:**
 
    ```bash
    curl -k https://proxmox.example.com:8006
    ```
 
-4. **Check for VPN interference:**
+1. **Check for VPN interference:**
    - Disconnect VPN and test again
    - Check routing table: `netstat -rn`
 
@@ -131,13 +131,13 @@ ANSIBLE_DEBUG=1 ansible-playbook -vvvv playbook.yml
    ansible localhost -m debug -a "msg={{ lookup('infisical', 'Test Item') }}"
    ```
 
-2. **Test inventory plugin:**
+1. **Test inventory plugin:**
 
    ```bash
    ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
    ```
 
-3. **Test connectivity:**
+1. **Test connectivity:**
 
    ```bash
    ansible all -i inventory/og-homelab/infisical.proxmox.yml -m ping
@@ -154,9 +154,9 @@ ANSIBLE_DEBUG=1 ansible-playbook -vvvv playbook.yml
 If you're still experiencing issues:
 
 1. Check the [Ansible documentation](https://docs.ansible.com)
-2. Review [Infisical developer docs](https://infisical.com/docs)
-3. Search existing issues in the repository
-4. Create a new issue with:
+1. Review [Infisical developer docs](https://infisical.com/docs)
+1. Search existing issues in the repository
+1. Create a new issue with:
    - Error messages
    - Steps to reproduce
    - Environment details (OS, versions)
@@ -215,64 +215,110 @@ VM names may not resolve, causing connectivity tests to fail.
 #### Solutions
 
 1. **Use IP addresses directly (recommended for assessments):**
-   ```yaml
-   - name: Test connectivity
-     ansible.builtin.command:
-       cmd: "ping -c 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
-     when:
-       - hostvars[item]['ansible_default_ipv4'] is defined
-       - hostvars[item]['ansible_default_ipv4']['address'] is defined
-   ```
 
-2. **Add temporary hosts entries:**
-   ```yaml
-   - name: Add temporary hosts entries
-     ansible.builtin.lineinfile:
-       path: /etc/hosts
-       line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{ item }}"
-     loop: "{{ groups['all'] }}"
-     when: item != inventory_hostname
-     become: true
-   ```
+```yaml
+- name: Test connectivity
+  ansible.builtin.command:
+    cmd: "ping -c 2 {{ hostvars[item]['ansible_default_ipv4']['address'] }}"
+  when:
+    - hostvars[item]['ansible_default_ipv4'] is defined
+    - hostvars[item]['ansible_default_ipv4']['address'] is defined
+```
+
+1. **Add temporary hosts entries:**
+
+```yaml
+- name: Add temporary hosts entries
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{ item }}"
+  loop: "{{ groups['all'] }}"
+  when: item != inventory_hostname
+  become: true
+```
 
 ### Best Practices for Robust Playbooks
 
 1. **Use `failed_when: false` for discovery tasks:**
-   ```yaml
-   - name: Check service status
-     ansible.builtin.command:
-       cmd: systemctl status service
-     register: result
-     changed_when: false
-     failed_when: false
-   ```
 
-2. **Implement error handling blocks:**
-   ```yaml
-   - name: Task with fallback
-     block:
-       - name: Primary method
-         ansible.builtin.command: primary-tool
-     rescue:
-       - name: Fallback method
-         ansible.builtin.command: fallback-tool
-     always:
-       - name: Cleanup
-         ansible.builtin.file:
-           path: /tmp/temp-file
-           state: absent
-   ```
+```yaml
+- name: Check service status
+  ansible.builtin.command:
+    cmd: systemctl status service
+  register: result
+  changed_when: false
+  failed_when: false
+```
 
-3. **Validate connectivity before tests:**
-   ```yaml
-   - name: Ensure target is reachable
-     ansible.builtin.wait_for:
-       host: "{{ target_host }}"
-       port: 22
-       timeout: 5
-     register: host_reachable
-     failed_when: false
-   ```
+1. **Implement error handling blocks:**
+
+```yaml
+- name: Task with fallback
+  block:
+    - name: Primary method
+      ansible.builtin.command: primary-tool
+  rescue:
+    - name: Fallback method
+      ansible.builtin.command: fallback-tool
+  always:
+    - name: Cleanup
+      ansible.builtin.file:
+        path: /tmp/temp-file
+        state: absent
+```
+
+1. **Validate connectivity before tests:**
+
+```yaml
+- name: Ensure target is reachable
+  ansible.builtin.wait_for:
+    host: "{{ target_host }}"
+    port: 22
+    timeout: 5
+  register: host_reachable
+  failed_when: false
+```
+
+## 1Password Connection Issues
+
+- Ensure 1Password CLI is installed and authenticated: `op --version` and `op account list`
+- If using 1Password Connect, verify environment variables are set:
+
+```bash
+export OP_CONNECT_HOST=https://connect.local
+export OP_CONNECT_TOKEN=...redacted...
+```
+
+- Validate connectivity from the Ansible control host:
+
+```bash
+curl -sSf "$OP_CONNECT_HOST/v1/health" | jq .
+```
+
+- For local CLI usage with Ansible, ensure `op run -- ansible-playbook ...` is used when referencing `op://` secrets.
+
+## Ansible Inventory Errors
+
+Common symptoms:
+
+- Hosts not found or wrong groups
+- Authentication or SSH failures targeted at incorrect IPs
+
+Quick checks:
+
+```bash
+# Validate inventory plugins
+ansible-inventory -i inventory/og-homelab/netbox.yml --list > /dev/null
+
+# View host vars resolution for a host
+ansible-inventory -i inventory/og-homelab/netbox.yml --host some-hostname
+```
+
+If using NetBox inventory:
+
+- Confirm NetBox URL and token in `inventory/netbox.yml`
+- Test API accessibility from control host
+- Ensure device roles and tags in NetBox match inventory filters
 
 ## Related Documentation
 
