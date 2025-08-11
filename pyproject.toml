@@ -14,7 +14,7 @@ dependencies = [
     "packaging>=21.0",
     "pytz>=2023.3",
     # Required by community.hashi_vault collection for Vault modules
-    "hvac>=2.3.0",
+    "hvac==2.3.0",
 ]
 
 [project.optional-dependencies]
