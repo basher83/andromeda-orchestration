@@ -1,5 +1,4 @@
-# CodeRabbit Configuration for NetBox-Ansible Orchestration Project
-# This configuration tailors CodeRabbit's review behavior for infrastructure automation
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
 # Review settings
 reviews:
@@ -73,12 +72,31 @@ instructions:
   - "Check that container-based deployments use appropriate resource limits"
   - "Ensure documentation is updated when infrastructure patterns change"
 
-# Knowledge base references
-knowledge_base:
-  - "CLAUDE.md - Project conventions and patterns"
-  - "docs/implementation/dns-ipam/implementation-plan.md - DNS/IPAM overhaul roadmap"
-  - "docs/implementation/dns-ipam/netbox-integration-patterns.md - NetBox integration patterns"
-  - "docs/implementation/secrets-management/infisical-setup.md - Secrets management guide"
+# Path grouping for better organization
+path_groupings:
+  - id: ansible_core
+    paths:
+      - "playbooks/**"
+      - "inventory/**"
+      - "roles/**"
+    keywords:
+      - ansible
+      - playbook
+  - id: infrastructure_code
+    paths:
+      - "nomad-jobs/**"
+      - "**/*.hcl"
+      - "**/*.tf"
+    keywords:
+      - nomad
+      - terraform
+  - id: documentation
+    paths:
+      - "docs/**"
+      - "**/*.md"
+    keywords:
+      - documentation
+      - readme
 
 # Chat settings
 chat:
@@ -98,34 +116,13 @@ tools:
   linear:
     enabled: false
 
-# Custom review checklist for infrastructure changes
-early_access:
-  enabled: true
+# Enable early access features
+early_access: true
 
-# Review tone and style
-tone_instructions:
-  - "Be constructive and educational in feedback"
-  - "Prioritize security and reliability issues"
-  - "Suggest improvements that align with infrastructure as code best practices"
-  - "Reference relevant documentation when suggesting changes"
-
-# Enable walkthrough for better PR understanding
-enable_walkthrough: true
-
-# Enable review comments on specific lines
-enable_inline_comments: true
-
-# Summary table configuration
-enable_summary_table: true
-
-# Bot interaction settings
-bot_interaction:
-  # Allow CodeRabbit to respond to comments
-  enable_bot_responses: true
-
-  # Commands that CodeRabbit should recognize
-  commands:
-    - "@coderabbitai review"
-    - "@coderabbitai resolve"
-    - "@coderabbitai ignore"
-    - "@coderabbitai help"
+# Additional configuration for project-specific needs
+custom_prompts: |
+  - Prioritize security and reliability issues
+  - Ensure Ansible playbooks follow best practices
+  - Check for hardcoded secrets or credentials
+  - Verify proper error handling in all code
+  - Validate that infrastructure changes align with project patterns
