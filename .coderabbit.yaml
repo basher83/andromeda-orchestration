@@ -1,0 +1,150 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# Review settings
+reviews:
+  # Request reviews for all pull requests
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  # Auto-approve PRs from renovate bot for dependency updates
+  auto_review:
+    enabled: true
+    labels:
+      - "renovate"
+      - "dependencies"
+      - "automated"
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+    drafts: false
+    base_branches:
+      - main
+      - develop
+
+  # Tool configurations for linting and security
+  tools:
+    # Python linting with ruff
+    ruff:
+      enabled: true
+
+    # YAML linting
+    yamllint:
+      enabled: true
+
+    # Shell script linting
+    shellcheck:
+      enabled: true
+
+    # Markdown linting
+    markdownlint:
+      enabled: true
+
+    # GitHub Actions workflow linting
+    actionlint:
+      enabled: true
+
+    # GitHub checks integration
+    github-checks:
+      enabled: true
+
+    # Secret detection
+    gitleaks:
+      enabled: true
+
+    # Infrastructure as code security scanning
+    checkov:
+      enabled: true
+
+    # Dockerfile linting
+    hadolint:
+      enabled: true
+
+  # Path filters - what to review (exclusions use '!' prefix)
+  path_filters:
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "**/*.py"
+    - "**/*.j2"
+    - "**/*.hcl"
+    - "**/*.nomad"
+    - "**/*.tf"
+    - "**/*.md"
+    - "**/Dockerfile"
+    - "**/*.sh"
+    - ".github/**"
+    - "!**/*.lock"
+    - "!**/package-lock.json"
+    - "!**/.terraform.lock.hcl"
+    - "!**/ansible.cfg"
+    - "!docs/archive/**"
+    - "!**/*.log"
+    - "!**/*.tmp"
+    - "!.venv/**"
+    - "!venv/**"
+    - "!__pycache__/**"
+
+  # Review instructions specific to this project
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        Pay special attention to Ansible playbook syntax and best practices.
+        Check for hardcoded secrets or credentials - all secrets should use Infisical or environment variables.
+        Verify that NetBox API operations use proper error handling.
+        Ensure Nomad job specifications follow HashiCorp best practices.
+        Check that inventory files properly use dynamic inventory plugins.
+        Validate that all playbooks use 'uv run' for execution as per CLAUDE.md.
+        Ensure DNS and IPAM changes align with the implementation plan in docs/implementation/dns-ipam/.
+        Verify Consul service definitions include proper health checks.
+        Check that container-based deployments use appropriate resource limits.
+        Ensure documentation is updated when infrastructure patterns change.
+
+  # Automatic labeling instructions for PRs
+  labeling_instructions:
+    - label: "⚡ api"
+      instructions: "Apply when PR modifies NetBox API integration, inventory plugins, or API-related modules"
+    - label: "👨‍🚀 crew-backend"
+      instructions: "Apply when PR modifies Python code, Ansible modules, or backend infrastructure"
+    - label: "💾 database"
+      instructions: "Apply when PR modifies NetBox database operations or data models"
+    - label: "⚡ performance"
+      instructions: "Apply when PR includes caching, optimization, or performance improvements"
+    - label: "📚 documentation"
+      instructions: "Apply when PR updates README.md, CLAUDE.md, or docs/ directory"
+    - label: "📝 crew-docs"
+      instructions: "Apply when PR significantly updates documentation or adds new docs"
+    - label: "🐛 bug"
+      instructions: "Apply when PR fixes bugs, resolves issues, or corrects errors"
+    - label: "✨ enhancement"
+      instructions: "Apply when PR adds new features, playbooks, or capabilities"
+    - label: "💎 breaking-change"
+      instructions: "Apply when PR introduces breaking changes to playbooks, inventory structure, or modules"
+    - label: "🏷️ auto-labeled"
+      instructions: "Apply to all PRs to indicate CodeRabbit has reviewed and labeled"
+    - label: "🔄 ci-cd"
+      instructions: "Apply when PR modifies .github/workflows/, CI/CD pipelines, or automation"
+    - label: "🔒 security"
+      instructions: "Apply when PR addresses security vulnerabilities, secrets management, or improves security"
+    - label: "🔧 config"
+      instructions: "Apply when PR modifies configuration files, inventory settings, or ansible.cfg"
+    - label: "🔧 crew-devops"
+      instructions: "Apply when PR modifies infrastructure code, Nomad jobs, Consul, or Terraform"
+    - label: "📦 dependencies"
+      instructions: "Apply when PR updates requirements.txt, pyproject.toml, or dependency versions"
+    - label: "🤖 renovate"
+      instructions: "Apply when PR is created by Renovate bot for dependency updates"
+    - label: "🤖 dependabot"
+      instructions: "Apply when PR is created by Dependabot for security updates"
+    - label: "🧹 refactor"
+      instructions: "Apply when PR refactors code without changing functionality"
+    - label: "🧪 testing"
+      instructions: "Apply when PR adds or modifies tests, test playbooks, or test infrastructure"
+
+# Chat settings
+chat:
+  auto_reply: true
+
+# Enable early access features
+early_access: true
