@@ -22,7 +22,8 @@
       "Bash(nomad:*)",
       "Bash(consul kv put:*)",
       "Bash(consul catalog:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "mcp__coderabbitai__resolve_comment"
     ]
   },
   "statusLine": {
