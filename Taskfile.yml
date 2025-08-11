@@ -202,7 +202,12 @@ tasks:
     cmd: |
       echo "Running KICS security scan..."
       mkdir -p kics-results
-      docker run -t -v "$(pwd)":/path checkmarx/kics scan -p /path
+      # Exclude non-source and prototype/debug paths to reduce noise in results
+      # Paths are inside the container under /path
+      docker run -t -v "$(pwd)":/path checkmarx/kics scan \
+        -p /path \
+        --exclude-paths \
+        "/path/.venv/**,/path/kics-results/**,/path/docs/**,/path/playbooks/infrastructure/.debug/**,/path/playbooks/infrastructure/.archive/**"
       echo "KICS scan complete! Results saved to kics-results/"
 
   hooks:

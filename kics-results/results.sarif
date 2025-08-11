@@ -27,7 +27,7 @@
 								{
 									"target": {
 										"id": "CAT012",
-										"index": 3,
+										"index": 10,
 										"toolComponent": {
 											"name": "Categories",
 											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
@@ -37,7 +37,7 @@
 								{
 									"target": {
 										"id": "798",
-										"guid": "62ece1cd-7e86-483c-81e6-d884d974dfac",
+										"guid": "7570a894-31d5-4477-a789-cadd24bf96bf",
 										"toolComponent": {
 											"name": "CWE",
 											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
@@ -63,7 +63,7 @@
 								{
 									"target": {
 										"id": "CAT012",
-										"index": 3,
+										"index": 10,
 										"toolComponent": {
 											"name": "Categories",
 											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
@@ -73,7 +73,7 @@
 								{
 									"target": {
 										"id": "798",
-										"guid": "cdaca4b7-95d2-49b8-8697-2aeffed792b6",
+										"guid": "98550203-00d8-45bb-966c-ac074db1c9fe",
 										"toolComponent": {
 											"name": "CWE",
 											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
@@ -99,7 +99,7 @@
 								{
 									"target": {
 										"id": "CAT013",
-										"index": 9,
+										"index": 5,
 										"toolComponent": {
 											"name": "Categories",
 											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
@@ -109,7 +109,7 @@
 								{
 									"target": {
 										"id": "1357",
-										"guid": "6959e679-35df-4678-886b-889a190c2968",
+										"guid": "e54ebe3a-5acd-4bae-9003-d0da4ef5ce77",
 										"toolComponent": {
 											"name": "CWE",
 											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
@@ -135,7 +135,7 @@
 								{
 									"target": {
 										"id": "CAT007",
-										"index": 1,
+										"index": 9,
 										"toolComponent": {
 											"name": "Categories",
 											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
@@ -145,7 +145,7 @@
 								{
 									"target": {
 										"id": "319",
-										"guid": "e964df4a-5d3b-4a02-93ae-ed1a9a5d89b7",
+										"guid": "abfb0338-da66-4057-bcf4-b2bcf7db6a96",
 										"toolComponent": {
 											"name": "CWE",
 											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
@@ -171,7 +171,7 @@
 								{
 									"target": {
 										"id": "CAT013",
-										"index": 9,
+										"index": 5,
 										"toolComponent": {
 											"name": "Categories",
 											"guid": "58cdcc6f-fe41-4724-bfb3-131a93df4c3f"
@@ -181,7 +181,7 @@
 								{
 									"target": {
 										"id": "732",
-										"guid": "e2f3b7cf-1527-49e4-889f-47e1e408e20f",
+										"guid": "55cd4965-a7fe-40d9-b736-395fe53ddd0e",
 										"toolComponent": {
 											"name": "CWE",
 											"guid": "1489b0c4-d7ce-4d31-af66-6382a01202e3"
@@ -208,191 +208,7 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/.debug/check-pbs-connection-attempt.yml"
-								},
-								"region": {
-									"startLine": 14
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
-					"ruleIndex": 0,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/user-management/deploy-ssh-keys.yml"
-								},
-								"region": {
-									"startLine": 6
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
-					"ruleIndex": 0,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/.archive/enable-pbs-web.yml"
-								},
-								"region": {
-									"startLine": 14
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
-					"ruleIndex": 0,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/.debug/restart-and-check-pbs.yml"
-								},
-								"region": {
-									"startLine": 14
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
-					"ruleIndex": 0,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/powerdns/setup-vault-secrets.yml"
-								},
-								"region": {
-									"startLine": 15
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
-					"ruleIndex": 0,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
 									"uri": "../../path/playbooks/infrastructure/.debug/debug-pbs-netdata.yml"
-								},
-								"region": {
-									"startLine": 14
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
-					"ruleIndex": 0,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/powerdns/setup-vault-secrets.yml"
-								},
-								"region": {
-									"startLine": 19
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
-					"ruleIndex": 0,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/.debug/check-pbs-netdata-logs.yml"
-								},
-								"region": {
-									"startLine": 14
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
-					"ruleIndex": 0,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/.debug/verify-pbs-streaming.yml"
 								},
 								"region": {
 									"startLine": 14
@@ -438,7 +254,191 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/.debug/verify-pbs-streaming.yml"
+								},
+								"region": {
+									"startLine": 14
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/powerdns/setup-vault-secrets.yml"
+								},
+								"region": {
+									"startLine": 15
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/user-management/deploy-ssh-keys.yml"
+								},
+								"region": {
+									"startLine": 6
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/.debug/check-pbs-netdata-logs.yml"
+								},
+								"region": {
+									"startLine": 14
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/.archive/enable-pbs-web.yml"
+								},
+								"region": {
+									"startLine": 14
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
 									"uri": "../../path/playbooks/infrastructure/.debug/check-pbs-streaming.yml"
+								},
+								"region": {
+									"startLine": 14
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/powerdns/setup-vault-secrets.yml"
+								},
+								"region": {
+									"startLine": 19
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/.debug/check-pbs-connection-attempt.yml"
+								},
+								"region": {
+									"startLine": 14
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "487f4be7-3fd9-4506-a07a-eae252180c08",
+					"ruleIndex": 0,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/.debug/restart-and-check-pbs.yml"
 								},
 								"region": {
 									"startLine": 14
@@ -461,10 +461,10 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/apply-consul-tokens-to-nomad.yml"
+									"uri": "../../path/playbooks/infrastructure/powerdns/powerdns-anonymous-acl.yml"
 								},
 								"region": {
-									"startLine": 10
+									"startLine": 9
 								}
 							}
 						}
@@ -507,79 +507,10 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/apply-agent-tokens.yml"
-								},
-								"region": {
-									"startLine": 11
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
 									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-all-consul-tokens.yml"
 								},
 								"region": {
 									"startLine": 51
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/docker/fix-nftables-compatibility.yml"
-								},
-								"region": {
-									"startLine": 61
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/.archive/powerdns-setup/netbox-dns-zones-manual.yml"
-								},
-								"region": {
-									"startLine": 58
 								}
 							}
 						}
@@ -622,10 +553,263 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/nomad/emergency-fix-client-config.yml"
+								},
+								"region": {
+									"startLine": 10
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/apply-client-agent-tokens.yml"
+								},
+								"region": {
+									"startLine": 11
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-consul-agent-tokens.yml"
+								},
+								"region": {
+									"startLine": 10
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
 									"uri": "../../path/playbooks/infrastructure/powerdns/powerdns-generate-secrets.yml"
 								},
 								"region": {
 									"startLine": 33
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/apply-consul-tokens-to-nomad.yml"
+								},
+								"region": {
+									"startLine": 10
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-nomad-client-config.yml"
+								},
+								"region": {
+									"startLine": 10
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-nomad-consul-config.yml"
+								},
+								"region": {
+									"startLine": 12
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/vault/deploy-vault-dev.yml"
+								},
+								"region": {
+									"startLine": 43
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/.archive/powerdns-setup/netbox-dns-zones-manual.yml"
+								},
+								"region": {
+									"startLine": 58
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-consul-on-mable.yml"
+								},
+								"region": {
+									"startLine": 98
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/docker/fix-nftables-compatibility.yml"
+								},
+								"region": {
+									"startLine": 61
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/vault/create-powerdns-secrets.yml"
+								},
+								"region": {
+									"startLine": 36
 								}
 							}
 						}
@@ -691,10 +875,10 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/nomad/emergency-fix-client-config.yml"
+									"uri": "../../path/playbooks/infrastructure/nomad/update-server-consul-token.yml"
 								},
 								"region": {
-									"startLine": 10
+									"startLine": 9
 								}
 							}
 						}
@@ -714,10 +898,10 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/vault/deploy-vault-dev.yml"
+									"uri": "../../path/playbooks/infrastructure/nomad/update-server-consul-token.yml"
 								},
 								"region": {
-									"startLine": 43
+									"startLine": 15
 								}
 							}
 						}
@@ -737,79 +921,10 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/.archive/powerdns-setup/netbox-dns-zones-direct.yml"
+									"uri": "../../path/playbooks/infrastructure/powerdns/setup-vault-secrets.yml"
 								},
 								"region": {
-									"startLine": 37
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/apply-consul-tokens-to-nomad.yml"
-								},
-								"region": {
-									"startLine": 11
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-consul-agent-tokens.yml"
-								},
-								"region": {
-									"startLine": 10
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-consul-on-mable.yml"
-								},
-								"region": {
-									"startLine": 98
+									"startLine": 12
 								}
 							}
 						}
@@ -852,10 +967,10 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/nomad/update-server-consul-token.yml"
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-all-consul-tokens.yml"
 								},
 								"region": {
-									"startLine": 15
+									"startLine": 11
 								}
 							}
 						}
@@ -921,10 +1036,33 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/powerdns/powerdns-setup-secrets.yml"
+									"uri": "../../path/roles/nomad/tasks/consul-acl.yml"
 								},
 								"region": {
-									"startLine": 24
+									"startLine": 21
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/apply-consul-tokens-to-nomad.yml"
+								},
+								"region": {
+									"startLine": 11
 								}
 							}
 						}
@@ -967,125 +1105,10 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/nomad/update-server-consul-token.yml"
+									"uri": "../../path/playbooks/infrastructure/powerdns/powerdns-setup-secrets.yml"
 								},
 								"region": {
-									"startLine": 9
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/apply-client-agent-tokens.yml"
-								},
-								"region": {
-									"startLine": 11
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/vault/create-powerdns-secrets.yml"
-								},
-								"region": {
-									"startLine": 36
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-nomad-consul-config.yml"
-								},
-								"region": {
-									"startLine": 11
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/powerdns/setup-vault-secrets.yml"
-								},
-								"region": {
-									"startLine": 12
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-nomad-client-config.yml"
-								},
-								"region": {
-									"startLine": 10
+									"startLine": 24
 								}
 							}
 						}
@@ -1128,56 +1151,79 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-nomad-consul-config.yml"
-								},
-								"region": {
-									"startLine": 12
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/powerdns/powerdns-anonymous-acl.yml"
-								},
-								"region": {
-									"startLine": 9
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
-					"ruleIndex": 1,
-					"kind": "fail",
-					"message": {
-						"text": "Hardcoded secret key appears in source",
-						"properties": {
-							"platform": "Common"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-all-consul-tokens.yml"
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/apply-agent-tokens.yml"
 								},
 								"region": {
 									"startLine": 11
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-nomad-consul-config.yml"
+								},
+								"region": {
+									"startLine": 11
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/test/test-nomad-consul-acl-integration.yml"
+								},
+								"region": {
+									"startLine": 43
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "baee238e-1921-4801-9c3f-79ae1d7b2cbc",
+					"ruleIndex": 1,
+					"kind": "fail",
+					"message": {
+						"text": "Hardcoded secret key appears in source",
+						"properties": {
+							"platform": "Common"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/.archive/powerdns-setup/netbox-dns-zones-direct.yml"
+								},
+								"region": {
+									"startLine": 37
 								}
 							}
 						}
@@ -1189,52 +1235,6 @@
 					"kind": "fail",
 					"message": {
 						"text": "Package 'python3-apt' does not have version defined",
-						"properties": {
-							"platform": "Dockerfile"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/molecule/default/Dockerfile"
-								},
-								"region": {
-									"startLine": 3
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
-					"ruleIndex": 2,
-					"kind": "fail",
-					"message": {
-						"text": "Package 'systemd-sysv' does not have version defined",
-						"properties": {
-							"platform": "Dockerfile"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/molecule/default/Dockerfile"
-								},
-								"region": {
-									"startLine": 3
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
-					"ruleIndex": 2,
-					"kind": "fail",
-					"message": {
-						"text": "Package 'ca-certificates' does not have version defined",
 						"properties": {
 							"platform": "Dockerfile"
 						}
@@ -1281,6 +1281,52 @@
 					"kind": "fail",
 					"message": {
 						"text": "Package 'sudo' does not have version defined",
+						"properties": {
+							"platform": "Dockerfile"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/molecule/default/Dockerfile"
+								},
+								"region": {
+									"startLine": 3
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+					"ruleIndex": 2,
+					"kind": "fail",
+					"message": {
+						"text": "Package 'ca-certificates' does not have version defined",
+						"properties": {
+							"platform": "Dockerfile"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/molecule/default/Dockerfile"
+								},
+								"region": {
+									"startLine": 3
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "965a08d7-ef86-4f14-8792-4a3b2098937e",
+					"ruleIndex": 2,
+					"kind": "fail",
+					"message": {
+						"text": "Package 'systemd-sysv' does not have version defined",
 						"properties": {
 							"platform": "Dockerfile"
 						}
@@ -1358,29 +1404,6 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/consul-nomad-integration.yml"
-								},
-								"region": {
-									"startLine": 197
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
-					"ruleIndex": 3,
-					"kind": "fail",
-					"message": {
-						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
 									"uri": "../../path/playbooks/infrastructure/.debug/check-all-parents.yml"
 								},
 								"region": {
@@ -1427,125 +1450,10 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/consul-nomad-integration.yml"
+									"uri": "../../path/roles/nomad/tasks/consul-acl.yml"
 								},
 								"region": {
-									"startLine": 48
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
-					"ruleIndex": 3,
-					"kind": "fail",
-					"message": {
-						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/roles/nomad/tasks/validate.yml"
-								},
-								"region": {
-									"startLine": 22
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
-					"ruleIndex": 3,
-					"kind": "fail",
-					"message": {
-						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/monitoring/deploy-netdata-doggos.yml"
-								},
-								"region": {
-									"startLine": 104
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
-					"ruleIndex": 3,
-					"kind": "fail",
-					"message": {
-						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul/service-register.yml"
-								},
-								"region": {
-									"startLine": 48
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
-					"ruleIndex": 3,
-					"kind": "fail",
-					"message": {
-						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/network/update-nftables-vault.yml"
-								},
-								"region": {
-									"startLine": 57
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
-					"ruleIndex": 3,
-					"kind": "fail",
-					"message": {
-						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/.debug/collect-netdata-configs.yml"
-								},
-								"region": {
-									"startLine": 72
+									"startLine": 44
 								}
 							}
 						}
@@ -1588,52 +1496,6 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/monitoring/update-netdata-configs.yml"
-								},
-								"region": {
-									"startLine": 138
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
-					"ruleIndex": 3,
-					"kind": "fail",
-					"message": {
-						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/monitoring/fix-netdata-web-and-ip.yml"
-								},
-								"region": {
-									"startLine": 68
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
-					"ruleIndex": 3,
-					"kind": "fail",
-					"message": {
-						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
 									"uri": "../../path/playbooks/infrastructure/.debug/collect-netdata-configs.yml"
 								},
 								"region": {
@@ -1657,10 +1519,33 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/roles/vault/tasks/consul_register.yml"
+									"uri": "../../path/playbooks/infrastructure/monitoring/update-netdata-configs.yml"
 								},
 								"region": {
-									"startLine": 14
+									"startLine": 138
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/consul-nomad-integration.yml"
+								},
+								"region": {
+									"startLine": 48
 								}
 							}
 						}
@@ -1703,6 +1588,29 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/.debug/collect-netdata-configs.yml"
+								},
+								"region": {
+									"startLine": 72
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
 									"uri": "../../path/roles/vault/tasks/consul_register.yml"
 								},
 								"region": {
@@ -1713,11 +1621,11 @@
 					]
 				},
 				{
-					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
-					"ruleIndex": 4,
-					"kind": "informational",
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
 					"message": {
-						"text": "ansible.builtin.lineinfile 'create' key is set to 'true' and 'mode' key is not defined",
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
 						"properties": {
 							"platform": "Ansible"
 						}
@@ -1726,21 +1634,21 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/monitoring/deploy-netdata-doggos.yml"
+									"uri": "../../path/roles/nomad/tasks/consul-acl.yml"
 								},
 								"region": {
-									"startLine": 71
+									"startLine": 81
 								}
 							}
 						}
 					]
 				},
 				{
-					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
-					"ruleIndex": 4,
-					"kind": "informational",
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
 					"message": {
-						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
 						"properties": {
 							"platform": "Ansible"
 						}
@@ -1749,10 +1657,171 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/maintenance/backup-netdata-config.yml"
+									"uri": "../../path/roles/nomad/tasks/consul-acl.yml"
 								},
 								"region": {
-									"startLine": 53
+									"startLine": 61
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/monitoring/fix-netdata-web-and-ip.yml"
+								},
+								"region": {
+									"startLine": 68
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/roles/nomad/tasks/validate.yml"
+								},
+								"region": {
+									"startLine": 22
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/consul-nomad-integration.yml"
+								},
+								"region": {
+									"startLine": 197
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/roles/vault/tasks/consul_register.yml"
+								},
+								"region": {
+									"startLine": 14
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul/service-register.yml"
+								},
+								"region": {
+									"startLine": 48
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/roles/nomad/tasks/consul-acl.yml"
+								},
+								"region": {
+									"startLine": 25
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "2e8d4922-8362-4606-8c14-aa10466a1ce3",
+					"ruleIndex": 3,
+					"kind": "fail",
+					"message": {
+						"text": "ansible.builtin.uri.url is accessed via the HTTP protocol'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/network/update-nftables-vault.yml"
+								},
+								"region": {
+									"startLine": 57
 								}
 							}
 						}
@@ -1776,167 +1845,6 @@
 								},
 								"region": {
 									"startLine": 57
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
-					"ruleIndex": 4,
-					"kind": "informational",
-					"message": {
-						"text": "'Mode' key of ansible.builtin.copy is set to 'preserve'",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/maintenance/backup-netdata-config.yml"
-								},
-								"region": {
-									"startLine": 44
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
-					"ruleIndex": 4,
-					"kind": "informational",
-					"message": {
-						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/examples/netdata-consul-template.yml"
-								},
-								"region": {
-									"startLine": 118
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
-					"ruleIndex": 4,
-					"kind": "informational",
-					"message": {
-						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-nomad-consul-config.yml"
-								},
-								"region": {
-									"startLine": 26
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
-					"ruleIndex": 4,
-					"kind": "informational",
-					"message": {
-						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/docker/fix-nftables-compatibility.yml"
-								},
-								"region": {
-									"startLine": 23
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
-					"ruleIndex": 4,
-					"kind": "informational",
-					"message": {
-						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/enable-consul-nomad-simple.yml"
-								},
-								"region": {
-									"startLine": 13
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
-					"ruleIndex": 4,
-					"kind": "informational",
-					"message": {
-						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/monitoring/update-netdata-configs.yml"
-								},
-								"region": {
-									"startLine": 58
-								}
-							}
-						}
-					]
-				},
-				{
-					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
-					"ruleIndex": 4,
-					"kind": "informational",
-					"message": {
-						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
-						"properties": {
-							"platform": "Ansible"
-						}
-					},
-					"locations": [
-						{
-							"physicalLocation": {
-								"artifactLocation": {
-									"uri": "../../path/playbooks/examples/netdata-consul-template.yml"
-								},
-								"region": {
-									"startLine": 101
 								}
 							}
 						}
@@ -1979,6 +1887,167 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/repair-nomad-client-config.yml"
+								},
+								"region": {
+									"startLine": 21
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+					"ruleIndex": 4,
+					"kind": "informational",
+					"message": {
+						"text": "'Mode' key of ansible.builtin.copy is set to 'preserve'",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/maintenance/backup-netdata-config.yml"
+								},
+								"region": {
+									"startLine": 44
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+					"ruleIndex": 4,
+					"kind": "informational",
+					"message": {
+						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/fix-nomad-consul-config.yml"
+								},
+								"region": {
+									"startLine": 26
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+					"ruleIndex": 4,
+					"kind": "informational",
+					"message": {
+						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/consul-nomad/enable-consul-nomad-simple.yml"
+								},
+								"region": {
+									"startLine": 13
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+					"ruleIndex": 4,
+					"kind": "informational",
+					"message": {
+						"text": "There are some permissions missing in copy and might create directory/file",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/nomad/add-db-role-metadata.yml"
+								},
+								"region": {
+									"startLine": 46
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+					"ruleIndex": 4,
+					"kind": "informational",
+					"message": {
+						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/docker/fix-nftables-compatibility.yml"
+								},
+								"region": {
+									"startLine": 23
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+					"ruleIndex": 4,
+					"kind": "informational",
+					"message": {
+						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
+									"uri": "../../path/playbooks/infrastructure/monitoring/update-netdata-configs.yml"
+								},
+								"region": {
+									"startLine": 58
+								}
+							}
+						}
+					]
+				},
+				{
+					"ruleId": "88841d5c-d22d-4b7e-a6a0-89ca50e44b9f",
+					"ruleIndex": 4,
+					"kind": "informational",
+					"message": {
+						"text": "There are some permissions missing in ansible.builtin.copy and might create directory/file",
+						"properties": {
+							"platform": "Ansible"
+						}
+					},
+					"locations": [
+						{
+							"physicalLocation": {
+								"artifactLocation": {
 									"uri": "../../path/playbooks/infrastructure/.debug/collect-netdata-simple.yml"
 								},
 								"region": {
@@ -2002,10 +2071,10 @@
 						{
 							"physicalLocation": {
 								"artifactLocation": {
-									"uri": "../../path/playbooks/infrastructure/consul-nomad/repair-nomad-client-config.yml"
+									"uri": "../../path/playbooks/infrastructure/maintenance/backup-netdata-config.yml"
 								},
 								"region": {
-									"startLine": 21
+									"startLine": 53
 								}
 							}
 						}
@@ -2034,63 +2103,23 @@
 							}
 						},
 						{
-							"name": "Insecure Configurations",
-							"id": "CAT007",
+							"name": "Backup",
+							"id": "CAT003",
 							"shortDescription": {
-								"text": "Configurations which expose the application unnecessarily"
+								"text": "Survivability and Recovery"
 							},
 							"fullDescription": {
-								"text": "Configurations which expose the application unnecessarily"
+								"text": "Survivability and Recovery"
 							}
 						},
 						{
-							"name": "Networking and Firewall",
-							"id": "CAT009",
+							"name": "Best Practices",
+							"id": "CAT004",
 							"shortDescription": {
-								"text": "Network port exposure and firewall configuration"
+								"text": "Metadata management"
 							},
 							"fullDescription": {
-								"text": "Network port exposure and firewall configuration"
-							}
-						},
-						{
-							"name": "Secret Management",
-							"id": "CAT012",
-							"shortDescription": {
-								"text": "Secret and Key management"
-							},
-							"fullDescription": {
-								"text": "Secret and Key management"
-							}
-						},
-						{
-							"name": "Bill Of Materials",
-							"id": "CAT015",
-							"shortDescription": {
-								"text": "List of resources provisioned"
-							},
-							"fullDescription": {
-								"text": "List of resources provisioned"
-							}
-						},
-						{
-							"name": "Availability",
-							"id": "CAT002",
-							"shortDescription": {
-								"text": "Reliability and Scalability"
-							},
-							"fullDescription": {
-								"text": "Reliability and Scalability"
-							}
-						},
-						{
-							"name": "Build Process",
-							"id": "CAT005",
-							"shortDescription": {
-								"text": "Insecure configurations when building/deploying"
-							},
-							"fullDescription": {
-								"text": "Insecure configurations when building/deploying"
+								"text": "Metadata management"
 							}
 						},
 						{
@@ -2104,13 +2133,13 @@
 							}
 						},
 						{
-							"name": "Insecure Defaults",
-							"id": "CAT008",
+							"name": "Networking and Firewall",
+							"id": "CAT009",
 							"shortDescription": {
-								"text": "Configurations that are insecure by default"
+								"text": "Network port exposure and firewall configuration"
 							},
 							"fullDescription": {
-								"text": "Configurations that are insecure by default"
+								"text": "Network port exposure and firewall configuration"
 							}
 						},
 						{
@@ -2134,13 +2163,73 @@
 							}
 						},
 						{
-							"name": "Backup",
-							"id": "CAT003",
+							"name": "Access Control",
+							"id": "CAT001",
 							"shortDescription": {
-								"text": "Survivability and Recovery"
+								"text": "Service permission and identity management"
 							},
 							"fullDescription": {
-								"text": "Survivability and Recovery"
+								"text": "Service permission and identity management"
+							}
+						},
+						{
+							"name": "Availability",
+							"id": "CAT002",
+							"shortDescription": {
+								"text": "Reliability and Scalability"
+							},
+							"fullDescription": {
+								"text": "Reliability and Scalability"
+							}
+						},
+						{
+							"name": "Insecure Configurations",
+							"id": "CAT007",
+							"shortDescription": {
+								"text": "Configurations which expose the application unnecessarily"
+							},
+							"fullDescription": {
+								"text": "Configurations which expose the application unnecessarily"
+							}
+						},
+						{
+							"name": "Secret Management",
+							"id": "CAT012",
+							"shortDescription": {
+								"text": "Secret and Key management"
+							},
+							"fullDescription": {
+								"text": "Secret and Key management"
+							}
+						},
+						{
+							"name": "Bill Of Materials",
+							"id": "CAT015",
+							"shortDescription": {
+								"text": "List of resources provisioned"
+							},
+							"fullDescription": {
+								"text": "List of resources provisioned"
+							}
+						},
+						{
+							"name": "Build Process",
+							"id": "CAT005",
+							"shortDescription": {
+								"text": "Insecure configurations when building/deploying"
+							},
+							"fullDescription": {
+								"text": "Insecure configurations when building/deploying"
+							}
+						},
+						{
+							"name": "Insecure Defaults",
+							"id": "CAT008",
+							"shortDescription": {
+								"text": "Configurations that are insecure by default"
+							},
+							"fullDescription": {
+								"text": "Configurations that are insecure by default"
 							}
 						},
 						{
@@ -2161,26 +2250,6 @@
 							},
 							"fullDescription": {
 								"text": "Resource and privilege limit configuration"
-							}
-						},
-						{
-							"name": "Access Control",
-							"id": "CAT001",
-							"shortDescription": {
-								"text": "Service permission and identity management"
-							},
-							"fullDescription": {
-								"text": "Service permission and identity management"
-							}
-						},
-						{
-							"name": "Best Practices",
-							"id": "CAT004",
-							"shortDescription": {
-								"text": "Metadata management"
-							},
-							"fullDescription": {
-								"text": "Metadata management"
 							}
 						}
 					]
@@ -2203,7 +2272,7 @@
 					"releaseDateUtc": "2023-10-26",
 					"taxa": [
 						{
-							"guid": "cdaca4b7-95d2-49b8-8697-2aeffed792b6",
+							"guid": "98550203-00d8-45bb-966c-ac074db1c9fe",
 							"id": "798",
 							"shortDescription": {
 								"text": "The product contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data."
@@ -2214,7 +2283,7 @@
 							"helpUri": "https://cwe.mitre.org/data/definitions/798.html"
 						},
 						{
-							"guid": "cdaca4b7-95d2-49b8-8697-2aeffed792b6",
+							"guid": "98550203-00d8-45bb-966c-ac074db1c9fe",
 							"id": "798",
 							"shortDescription": {
 								"text": "The product contains hard-coded credentials, such as a password or cryptographic key, which it uses for its own inbound authentication, outbound communication to external components, or encryption of internal data."
@@ -2225,7 +2294,7 @@
 							"helpUri": "https://cwe.mitre.org/data/definitions/798.html"
 						},
 						{
-							"guid": "6959e679-35df-4678-886b-889a190c2968",
+							"guid": "e54ebe3a-5acd-4bae-9003-d0da4ef5ce77",
 							"id": "1357",
 							"shortDescription": {
 								"text": "The product is built from multiple separate components, but it uses a component that is not sufficiently trusted to meet expectations for security, reliability, updateability, and maintainability."
@@ -2236,7 +2305,7 @@
 							"helpUri": "https://cwe.mitre.org/data/definitions/1357.html"
 						},
 						{
-							"guid": "e964df4a-5d3b-4a02-93ae-ed1a9a5d89b7",
+							"guid": "abfb0338-da66-4057-bcf4-b2bcf7db6a96",
 							"id": "319",
 							"shortDescription": {
 								"text": "The product transmits sensitive or security-critical data in cleartext in a communication channel that can be sniffed by unauthorized actors."
@@ -2247,7 +2316,7 @@
 							"helpUri": "https://cwe.mitre.org/data/definitions/319.html"
 						},
 						{
-							"guid": "e2f3b7cf-1527-49e4-889f-47e1e408e20f",
+							"guid": "55cd4965-a7fe-40d9-b736-395fe53ddd0e",
 							"id": "732",
 							"shortDescription": {
 								"text": "The product specifies permissions for a security-critical resource in a way that allows that resource to be read or modified by unintended actors."
