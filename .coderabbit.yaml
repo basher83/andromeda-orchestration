@@ -101,6 +101,47 @@ reviews:
         Check that container-based deployments use appropriate resource limits.
         Ensure documentation is updated when infrastructure patterns change.
 
+  # Automatic labeling instructions for PRs
+  labeling_instructions:
+    - label: "⚡ api"
+      instructions: "Apply when PR modifies NetBox API integration, inventory plugins, or API-related modules"
+    - label: "👨‍🚀 crew-backend"
+      instructions: "Apply when PR modifies Python code, Ansible modules, or backend infrastructure"
+    - label: "💾 database"
+      instructions: "Apply when PR modifies NetBox database operations or data models"
+    - label: "⚡ performance"
+      instructions: "Apply when PR includes caching, optimization, or performance improvements"
+    - label: "📚 documentation"
+      instructions: "Apply when PR updates README.md, CLAUDE.md, or docs/ directory"
+    - label: "📝 crew-docs"
+      instructions: "Apply when PR significantly updates documentation or adds new docs"
+    - label: "🐛 bug"
+      instructions: "Apply when PR fixes bugs, resolves issues, or corrects errors"
+    - label: "✨ enhancement"
+      instructions: "Apply when PR adds new features, playbooks, or capabilities"
+    - label: "💎 breaking-change"
+      instructions: "Apply when PR introduces breaking changes to playbooks, inventory structure, or modules"
+    - label: "🏷️ auto-labeled"
+      instructions: "Apply to all PRs to indicate CodeRabbit has reviewed and labeled"
+    - label: "🔄 ci-cd"
+      instructions: "Apply when PR modifies .github/workflows/, CI/CD pipelines, or automation"
+    - label: "🔒 security"
+      instructions: "Apply when PR addresses security vulnerabilities, secrets management, or improves security"
+    - label: "🔧 config"
+      instructions: "Apply when PR modifies configuration files, inventory settings, or ansible.cfg"
+    - label: "🔧 crew-devops"
+      instructions: "Apply when PR modifies infrastructure code, Nomad jobs, Consul, or Terraform"
+    - label: "📦 dependencies"
+      instructions: "Apply when PR updates requirements.txt, pyproject.toml, or dependency versions"
+    - label: "🤖 renovate"
+      instructions: "Apply when PR is created by Renovate bot for dependency updates"
+    - label: "🤖 dependabot"
+      instructions: "Apply when PR is created by Dependabot for security updates"
+    - label: "🧹 refactor"
+      instructions: "Apply when PR refactors code without changing functionality"
+    - label: "🧪 testing"
+      instructions: "Apply when PR adds or modifies tests, test playbooks, or test infrastructure"
+
 # Chat settings
 chat:
   auto_reply: true
