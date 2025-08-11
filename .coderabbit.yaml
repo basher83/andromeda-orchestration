@@ -1,0 +1,131 @@
+# CodeRabbit Configuration for NetBox-Ansible Orchestration Project
+# This configuration tailors CodeRabbit's review behavior for infrastructure automation
+
+# Review settings
+reviews:
+  # Request reviews for all pull requests
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  # Auto-approve PRs from renovate bot for dependency updates
+  auto_review:
+    enabled: true
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+    drafts: false
+    base_branches:
+      - main
+      - develop
+
+# Language-specific settings
+language_specific:
+  # Python settings for Ansible modules and scripts
+  python:
+    linting_enabled: true
+
+  # YAML settings for Ansible playbooks and configurations
+  yaml:
+    linting_enabled: true
+
+# Path filters - what to review
+path_filters:
+  # Include patterns - review these files
+  included_files:
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "**/*.py"
+    - "**/*.j2"
+    - "**/*.hcl"
+    - "**/*.nomad"
+    - "**/*.tf"
+    - "**/*.md"
+    - "**/Dockerfile"
+    - "**/*.sh"
+    - ".github/**"
+
+  # Exclude patterns - skip reviewing these
+  excluded_files:
+    - "**/*.lock"
+    - "**/package-lock.json"
+    - "**/.terraform.lock.hcl"
+    - "**/ansible.cfg"
+    - "docs/archive/**"
+    - "**/*.log"
+    - "**/*.tmp"
+    - ".venv/**"
+    - "venv/**"
+    - "__pycache__/**"
+
+# Review instructions specific to this project
+instructions:
+  - "Pay special attention to Ansible playbook syntax and best practices"
+  - "Check for hardcoded secrets or credentials - all secrets should use Infisical or environment variables"
+  - "Verify that NetBox API operations use proper error handling"
+  - "Ensure Nomad job specifications follow HashiCorp best practices"
+  - "Check that inventory files properly use dynamic inventory plugins"
+  - "Validate that all playbooks use 'uv run' for execution as per CLAUDE.md"
+  - "Ensure DNS and IPAM changes align with the implementation plan in docs/implementation/dns-ipam/"
+  - "Verify Consul service definitions include proper health checks"
+  - "Check that container-based deployments use appropriate resource limits"
+  - "Ensure documentation is updated when infrastructure patterns change"
+
+# Knowledge base references
+knowledge_base:
+  - "CLAUDE.md - Project conventions and patterns"
+  - "docs/implementation/dns-ipam/implementation-plan.md - DNS/IPAM overhaul roadmap"
+  - "docs/implementation/dns-ipam/netbox-integration-patterns.md - NetBox integration patterns"
+  - "docs/implementation/secrets-management/infisical-setup.md - Secrets management guide"
+
+# Chat settings
+chat:
+  auto_reply: true
+
+# Tool settings
+tools:
+  # GitHub Actions integration
+  github_actions:
+    enabled: true
+
+  # Jira integration (if needed in future)
+  jira:
+    enabled: false
+
+  # Linear integration (if needed in future)
+  linear:
+    enabled: false
+
+# Custom review checklist for infrastructure changes
+early_access:
+  enabled: true
+
+# Review tone and style
+tone_instructions:
+  - "Be constructive and educational in feedback"
+  - "Prioritize security and reliability issues"
+  - "Suggest improvements that align with infrastructure as code best practices"
+  - "Reference relevant documentation when suggesting changes"
+
+# Enable walkthrough for better PR understanding
+enable_walkthrough: true
+
+# Enable review comments on specific lines
+enable_inline_comments: true
+
+# Summary table configuration
+enable_summary_table: true
+
+# Bot interaction settings
+bot_interaction:
+  # Allow CodeRabbit to respond to comments
+  enable_bot_responses: true
+
+  # Commands that CodeRabbit should recognize
+  commands:
+    - "@coderabbitai review"
+    - "@coderabbitai resolve"
+    - "@coderabbitai ignore"
+    - "@coderabbitai help"
