@@ -31,13 +31,13 @@ References:
 1. Database provisioning (PostgreSQL)
 
    - [x] Deploy Nomad job: `nomad-jobs/platform-services/postgresql.nomad.hcl`
-   - [ ] Configure host volume for persistence
-   - [ ] Initialize PowerDNS schema
+   - [x] Configure host volume for persistence
+   - [x] Initialize PowerDNS schema
 
 2. Secrets and configuration
 
-   - [ ] Write Consul KV entries for DB host/port/name/user
-   - [ ] Store `db_password` and `api_key` in Vault (Infisical references as needed)
+   - [x] Write Consul KV entries for DB host/port/name/user
+   - [x] Store `db_password` and `api_key` in Vault (Infisical references as needed)
 
 3. Deploy PowerDNS Auth (Mode A)
 
