@@ -22,8 +22,6 @@
 
         # Web interface - disable on child nodes to save resources
         netdata_web_enabled: "{{ inventory_hostname in groups.get('netdata_parents', []) }}"
-
----
 # Separate playbook for parent nodes
 - name: Configure Netdata parent nodes
   hosts: netdata_parents
@@ -49,8 +47,6 @@
           - "metrics"
           - "parent"
           - "api"
-
----
 # Separate playbook for child nodes
 - name: Configure Netdata child nodes
   hosts: all:!netdata_parents
