@@ -12,6 +12,10 @@ reviews:
   # Auto-approve PRs from renovate bot for dependency updates
   auto_review:
     enabled: true
+    labels:
+      - "renovate"
+      - "dependencies"
+      - "automated"
     ignore_title_keywords:
       - "WIP"
       - "DO NOT MERGE"
@@ -20,20 +24,46 @@ reviews:
       - main
       - develop
 
-# Language-specific settings
-language_specific:
-  # Python settings for Ansible modules and scripts
-  python:
-    linting_enabled: true
+  # Tool configurations for linting and security
+  tools:
+    # Python linting with ruff
+    ruff:
+      enabled: true
 
-  # YAML settings for Ansible playbooks and configurations
-  yaml:
-    linting_enabled: true
+    # YAML linting
+    yamllint:
+      enabled: true
 
-# Path filters - what to review
-path_filters:
-  # Include patterns - review these files
-  included_files:
+    # Shell script linting
+    shellcheck:
+      enabled: true
+
+    # Markdown linting
+    markdownlint:
+      enabled: true
+
+    # GitHub Actions workflow linting
+    actionlint:
+      enabled: true
+
+    # GitHub checks integration
+    github-checks:
+      enabled: true
+
+    # Secret detection
+    gitleaks:
+      enabled: true
+
+    # Infrastructure as code security scanning
+    checkov:
+      enabled: true
+
+    # Dockerfile linting
+    hadolint:
+      enabled: true
+
+  # Path filters - what to review (exclusions use '!' prefix)
+  path_filters:
     - "**/*.yml"
     - "**/*.yaml"
     - "**/*.py"
@@ -45,32 +75,31 @@ path_filters:
     - "**/Dockerfile"
     - "**/*.sh"
     - ".github/**"
+    - "!**/*.lock"
+    - "!**/package-lock.json"
+    - "!**/.terraform.lock.hcl"
+    - "!**/ansible.cfg"
+    - "!docs/archive/**"
+    - "!**/*.log"
+    - "!**/*.tmp"
+    - "!.venv/**"
+    - "!venv/**"
+    - "!__pycache__/**"
 
-  # Exclude patterns - skip reviewing these
-  excluded_files:
-    - "**/*.lock"
-    - "**/package-lock.json"
-    - "**/.terraform.lock.hcl"
-    - "**/ansible.cfg"
-    - "docs/archive/**"
-    - "**/*.log"
-    - "**/*.tmp"
-    - ".venv/**"
-    - "venv/**"
-    - "__pycache__/**"
-
-# Review instructions specific to this project
-instructions:
-  - "Pay special attention to Ansible playbook syntax and best practices"
-  - "Check for hardcoded secrets or credentials - all secrets should use Infisical or environment variables"
-  - "Verify that NetBox API operations use proper error handling"
-  - "Ensure Nomad job specifications follow HashiCorp best practices"
-  - "Check that inventory files properly use dynamic inventory plugins"
-  - "Validate that all playbooks use 'uv run' for execution as per CLAUDE.md"
-  - "Ensure DNS and IPAM changes align with the implementation plan in docs/implementation/dns-ipam/"
-  - "Verify Consul service definitions include proper health checks"
-  - "Check that container-based deployments use appropriate resource limits"
-  - "Ensure documentation is updated when infrastructure patterns change"
+  # Review instructions specific to this project
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        Pay special attention to Ansible playbook syntax and best practices.
+        Check for hardcoded secrets or credentials - all secrets should use Infisical or environment variables.
+        Verify that NetBox API operations use proper error handling.
+        Ensure Nomad job specifications follow HashiCorp best practices.
+        Check that inventory files properly use dynamic inventory plugins.
+        Validate that all playbooks use 'uv run' for execution as per CLAUDE.md.
+        Ensure DNS and IPAM changes align with the implementation plan in docs/implementation/dns-ipam/.
+        Verify Consul service definitions include proper health checks.
+        Check that container-based deployments use appropriate resource limits.
+        Ensure documentation is updated when infrastructure patterns change.
 
 # Path grouping for better organization
 path_groupings:
@@ -101,20 +130,6 @@ path_groupings:
 # Chat settings
 chat:
   auto_reply: true
-
-# Tool settings
-tools:
-  # GitHub Actions integration
-  github_actions:
-    enabled: true
-
-  # Jira integration (if needed in future)
-  jira:
-    enabled: false
-
-  # Linear integration (if needed in future)
-  linear:
-    enabled: false
 
 # Enable early access features
 early_access: true
