@@ -7,17 +7,17 @@ This document provides accurate guidance for using Infisical with the andromeda-
 ### What's Available in Free Tier
 
 - ✅ Basic secret management (`secret-manager` project type)
-- ✅ Certificate management (`cert-manager` project type)\*
+- ✅ Certificate management (`cert-manager` project type)*
   - ✅ Private Certificate Authority (CA)
   - ✅ Certificate issuance and management
   - ✅ Certificate templates
   - ❓ Some advanced PKI features may require Pro
-- ✅ SSH certificate management (`ssh` project type)\*
+- ✅ SSH certificate management (`ssh` project type)*
   - ✅ Certificate Authorities (CA)
   - ✅ SSH hosts registration
   - ✅ SSH certificate issuance
   - ❌ SSH host groups (confirmed requires Pro)
-- ✅ Key Management System (`kms` project type)\*
+- ✅ Key Management System (`kms` project type)*
   - ✅ Cryptographic key management
   - ✅ Encrypt/decrypt operations
   - ✅ Key creation and rotation
@@ -43,7 +43,7 @@ This document provides accurate guidance for using Infisical with the andromeda-
 - 💰 Approval workflows (Enterprise)
 - 💰 KMIP protocol for KMS (Enterprise)
 
-\*Note: Based on actual user experience, `cert-manager`, `ssh`, and `kms` project types are all available in the free tier with most core features accessible. The only confirmed limitations are SSH host groups (Pro) and KMIP protocol (Enterprise). The official pricing documentation may not reflect the current generous free tier limits.
+*Note: Based on actual user experience, `cert-manager`, `ssh`, and `kms` project types are all available in the free tier with most core features accessible. The only confirmed limitations are SSH host groups (Pro) and KMIP protocol (Enterprise). The official pricing documentation may not reflect the current generous free tier limits.
 
 **Current andromeda-orchestration Setup**: Using Free tier with `secret-manager` project type - sufficient for current needs.
 
@@ -168,6 +168,7 @@ The `infisical.vault.read_secrets` lookup uses these parameters:
 ## Project Configuration
 
 For project-specific configuration including secret organization, authentication setup, and current usage patterns, see:
+
 - [andromeda-infisical-config.md](./andromeda-infisical-config.md)
 
 ## Migration Guide
@@ -175,22 +176,25 @@ For project-specific configuration including secret organization, authentication
 For organizations migrating from other secret management solutions:
 
 ### Phase 1: Parallel Implementation
+
 1. Set up Infisical alongside existing solution
-2. Configure authentication (Universal Auth recommended)
-3. Create project structure matching your needs
-4. Enable sync with existing solution if available (e.g., 1Password sync)
+1. Configure authentication (Universal Auth recommended)
+1. Create project structure matching your needs
+1. Enable sync with existing solution if available (e.g., 1Password sync)
 
 ### Phase 2: Gradual Migration
+
 1. Start with non-critical secrets
-2. Update automation scripts to use Infisical
-3. Validate access patterns and permissions
-4. Document new procedures
+1. Update automation scripts to use Infisical
+1. Validate access patterns and permissions
+1. Document new procedures
 
 ### Phase 3: Full Migration
+
 1. Migrate remaining secrets
-2. Update all references
-3. Decommission old solution
-4. Archive legacy documentation
+1. Update all references
+1. Decommission old solution
+1. Archive legacy documentation
 
 ### Environment Separation
 
@@ -226,6 +230,7 @@ tasks:
    collections:
      - name: infisical.vault
    ```
+
 3. **Environment Variables** (managed by direnv):
 
    ```bash
@@ -295,7 +300,6 @@ uv run ansible-playbook playbooks/examples/infisical-demo.yml
 INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
 ```
 
-
 ## Troubleshooting
 
 ### Common Issues
@@ -313,6 +317,7 @@ INFISICAL_ENV=staging uv run ansible-playbook playbooks/site.yml
    - Check you're querying the correct environment
 
 3. **Authentication failures**
+
    - Verify environment variables are set
    - Check machine identity has access to the environment/folder
    - Ensure client ID/secret are valid
@@ -377,6 +382,7 @@ Infisical offers specialized project types for different security needs:
 When choosing between Infisical's cert-manager and other PKI solutions (like Vault):
 
 **Infisical cert-manager**:
+
 - ✅ Integrated with existing secret management
 - ✅ ACME/Let's Encrypt automation
 - ✅ Simple certificate lifecycle management
@@ -384,6 +390,7 @@ When choosing between Infisical's cert-manager and other PKI solutions (like Vau
 - ❌ Less flexible than full PKI solutions
 
 **HashiCorp Vault PKI**:
+
 - ✅ Full-featured PKI engine
 - ✅ Complex certificate hierarchies
 - ✅ Custom certificate policies
@@ -396,6 +403,7 @@ requirements.
 ## Security Scanning
 
 For comprehensive security scanning procedures including:
+
 - Infisical CLI secret detection
 - KICS infrastructure security scanning
 - Pre-commit hook integration

@@ -6,7 +6,7 @@ This document describes the complete setup of PostgreSQL as a backend for PowerD
 
 ## Architecture
 
-```
+```text
 PowerDNS → Vault Dynamic Credentials → PostgreSQL Backend
                 ↓
         Time-limited credentials (1h TTL)
@@ -33,6 +33,7 @@ The PostgreSQL Nomad job (`nomad-jobs/platform-services/postgresql.nomad.hcl`) i
 - **Service Identity**: Required for Consul integration
 
 Key configuration elements:
+
 ```hcl
 volume "postgres-data" {
   type      = "host"
@@ -56,6 +57,7 @@ template {
 ### 1.2 PowerDNS Schema
 
 The initialization task creates the complete PowerDNS schema including:
+
 - `domains` - DNS zone information
 - `records` - DNS resource records
 - `supermasters` - Supermaster configuration
@@ -71,6 +73,7 @@ nomad job run nomad-jobs/platform-services/postgresql.nomad.hcl
 ```
 
 Verify deployment:
+
 ```bash
 nomad job status postgresql
 nomad alloc status <allocation-id>
@@ -134,12 +137,14 @@ vault write database/roles/powerdns-role \
 ### 3.1 Generate Dynamic Credentials
 
 Test credential generation:
+
 ```bash
 vault read database/creds/powerdns-role
 ```
 
 Expected output:
-```
+
+```text
 Key                Value
 ---                -----
 lease_id           database/creds/powerdns-role/...
@@ -152,12 +157,14 @@ username           <generated-username>
 ### 3.2 Test Database Access
 
 Verify the dynamic credentials work:
+
 ```bash
 PGPASSWORD="<generated-password>" psql -h $PGHOST -p $PGPORT -U "<generated-username>" -d powerdns -c "SELECT COUNT(*) FROM domains;"
 ```
 
 Should return:
-```
+
+```text
  count
 -------
      0
@@ -169,6 +176,7 @@ Should return:
 ### 4.1 PowerDNS Configuration
 
 PowerDNS will use Vault templates to get dynamic credentials:
+
 ```hcl
 template {
   data = <<EOF
@@ -186,6 +194,7 @@ EOF
 ### 4.2 Service Dependencies
 
 PowerDNS Nomad job should include:
+
 - Vault policy allowing `database/creds/powerdns-role` access
 - Service dependency on PostgreSQL
 - Proper error handling for credential refresh
@@ -223,19 +232,29 @@ PowerDNS Nomad job should include:
 ### Resolved Issues
 
 #### Unix Socket Permission Error
+
 **Issue**: `chmod: /var/run/postgresql: Operation not permitted`
+
 **Solution**: Added `unix_socket_directories = '/tmp'` to PostgreSQL configuration
+
 **Status**: ⚠️ Harmless warning remains from Docker entrypoint, but socket works correctly
 
 #### NetData Role Missing
+
 **Issue**: `FATAL: role "netdata" does not exist`
+
 **Solution**: Added netdata user creation to init-pdns task
+
 **Status**: ✅ Fixed - netdata user created automatically on deployment
 
 #### Vault Connection After Redeployment
+
 **Issue**: Vault fails to connect after PostgreSQL redeployment with new dynamic port
+
 **Solution**: Update Vault database config with new host:port and recreate vaultuser
+
 **Commands**:
+
 ```bash
 # Get new connection details
 PGALLOC=$(nomad job status postgresql | grep running | awk '{print $1}')
@@ -278,6 +297,7 @@ PGPASSWORD="temporary-bootstrap-password" psql -h $PGHOST -p $PGPORT -U postgres
 ### Credential Rotation
 
 Vault automatically handles credential rotation. For manual rotation:
+
 ```bash
 # Revoke specific lease
 vault lease revoke database/creds/powerdns-role/<lease-id>
@@ -310,5 +330,5 @@ vault lease revoke -prefix database/creds/powerdns-role/
 
 ---
 
-*Last updated: 2025-08-10*
-*Author: Infrastructure Team*
+_Last updated: 2025-08-10_
+_Author: Infrastructure Team_

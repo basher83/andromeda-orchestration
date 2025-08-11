@@ -14,31 +14,31 @@ These git standards were developed to create a consistent, readable, and automat
 
 All branches follow a clear naming pattern that indicates their purpose and scope:
 
-**Feature Branches**
+#### Feature Branches
 
 - Pattern: `feature/<scope>-<description>`
 - Example: `feature/auth-oauth-integration`
 - Purpose: New functionality or capabilities
 
-**Fix Branches**
+#### Fix Branches
 
 - Pattern: `fix/<issue-number>-<description>`
 - Example: `fix/123-login-timeout`
 - Purpose: Bug fixes and corrections
 
-**Documentation Branches**
+#### Documentation Branches
 
 - Pattern: `docs/<scope>-<description>`
 - Example: `docs/api-endpoint-guide`
 - Purpose: Documentation updates only
 
-**Chore Branches**
+#### Chore Branches
 
 - Pattern: `chore/<scope>-<description>`
 - Example: `chore/deps-update-react`
 - Purpose: Maintenance tasks, dependency updates
 
-**Experiment Branches**
+#### Experiment Branches
 
 - Pattern: `experiment/<description>`
 - Example: `experiment/new-caching-strategy`
@@ -48,7 +48,7 @@ All branches follow a clear naming pattern that indicates their purpose and scop
 
 All commits follow the space-themed conventional commit format:
 
-```
+```text
 <emoji> <type>(<scope>): <description>
 
 <body>
@@ -96,7 +96,7 @@ All commits follow the space-themed conventional commit format:
 
 **Pull Request Title Format:**
 
-```
+```text
 🎯 feat(scope): Brief description of changes
 ```
 
@@ -131,18 +131,18 @@ Related: #456
 
 ### Merge Strategies
 
-**Feature Branches → Main**
+#### Feature Branches → Main
 
 - Use **squash and merge** for features with many small commits
 - Squashed commit message should follow commit format
 - Include PR number in squashed commit
 
-**Release Branches → Main**
+#### Release Branches → Main
 
 - Use **merge commit** to preserve release history
 - Ensure all commits in release branch follow standards
 
-**Hotfix Branches → Main**
+#### Hotfix Branches → Main
 
 - Use **merge commit** for traceability
 - Cherry-pick to other branches as needed
@@ -204,7 +204,7 @@ git rebase -i main
 
 **Bug Fix with Investigation:**
 
-```bash
+```text
 git commit -m "🐛 fix(auth): resolve session timeout on mobile
 
 Investigation revealed token refresh logic was not triggering
@@ -219,7 +219,7 @@ Tested-on: iOS Safari, Android Chrome"
 
 **Documentation Update:**
 
-```bash
+```text
 git commit -m "📚 docs(api): add webhook endpoint documentation
 
 - Document all webhook event types

@@ -14,7 +14,7 @@ After migrating from static inventories and hardcoded credentials to dynamic inf
 
 #### Role-First Architecture
 
-```
+```text
 roles/                 # PRIMARY automation logic
 ├── consul/           # Service roles (reusable)
 │   ├── tasks/
@@ -45,7 +45,8 @@ inventory/
 ```
 
 #### Anti-Pattern to Avoid
-```
+
+```text
 ❌ playbooks/infrastructure/consul/deploy-consul.yml
 ❌ playbooks/infrastructure/consul/configure-consul.yml
 ❌ playbooks/infrastructure/consul/backup-consul.yml
@@ -418,7 +419,7 @@ jobs:
 
 #### Role Structure (Required)
 
-```
+```text
 roles/service_name/
 ├── README.md              # REQUIRED - Usage documentation
 ├── meta/
@@ -472,12 +473,14 @@ Brief description of what this role does.
 ## Role Variables
 
 ### Required Variables
+
 ```yaml
 service_version: "1.15.2"          # Service version
 service_datacenter: "dc1"           # Datacenter name
 ```
 
 ### Optional Variables
+
 ```yaml
 service_port: 8500                  # Default port
 service_bind_address: "0.0.0.0"     # Bind address
@@ -485,18 +488,21 @@ service_enable_tls: false           # TLS configuration
 ```
 
 ## Dependencies
+
 - system_base (for common setup)
 
 ## Example Playbook
+
 ```yaml
 - hosts: consul_servers
   roles:
     - role: consul
-      consul_node_role: server
+      consul_node_role: "{{ datacenter }}"
       consul_datacenter: "{{ datacenter }}"
 ```
 
 ## Testing
+
 ```bash
 # Run molecule tests
 cd roles/service_name
@@ -507,13 +513,14 @@ molecule test -s docker
 ```
 
 ## License
+
 MIT
 
 ## Author
-Your Organization
-```
 
-#### Role Variable Standards
+Your Organization
+
+### Role Variable Standards
 
 ```yaml
 # defaults/main.yml - Always document variables
@@ -544,7 +551,7 @@ service_memory_limit: "512M"
 service_cpu_limit: "1.0"
 ```
 
-#### Role Task Organization
+### Role Task Organization
 
 ```yaml
 # tasks/main.yml - Orchestrates role execution

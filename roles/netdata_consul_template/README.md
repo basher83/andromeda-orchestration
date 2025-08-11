@@ -20,7 +20,7 @@ This role configures Consul Template to dynamically manage Netdata configuration
 
 ## Architecture
 
-```
+```text
 ┌─────────────┐     Watch KV      ┌─────────────┐     Update      ┌─────────────┐
 │ Consul KV   │ <──────────────── │   Consul    │ ──────────────> │   Netdata   │
 │    Store    │                   │   Template  │                  │    Config   │
@@ -193,7 +193,7 @@ consul kv get -recurse netdata/alarms/
 
 ### Via Consul UI
 
-1. Navigate to Consul UI (http://consul-server:8500)
+1. Navigate to Consul UI ([http://consul-server:8500](http://consul-server:8500))
 2. Go to Key/Value section
 3. Navigate to `netdata/alarms/`
 4. Edit values as needed
@@ -236,123 +236,53 @@ systemctl reload consul-template
 ### Templates Not Rendering
 
 1. Check Consul Template service:
-   ```bash
-   systemctl status consul-template
-   ```
 
-2. Verify Consul connectivity:
-   ```bash
-   consul-template -consul-addr=http://localhost:8500 -dry
-   ```
+```bash
+systemctl status consul-template
+```
 
-3. Check template syntax:
-   ```bash
-   consul-template -template="/path/to/template:test.out" -dry -once
-   ```
+1. Verify Consul connectivity:
+
+```bash
+consul-template -consul-addr=http://localhost:8500 -dry
+```
+
+1. Check template syntax:
+
+```bash
+consul-template -template="/path/to/template:test.out" -dry -once
+```
 
 ### KV Values Not Updating
 
 1. Verify KV values exist:
-   ```bash
-   consul kv get -recurse netdata/
-   ```
 
-2. Check Consul Template logs:
-   ```bash
-   journalctl -u consul-template | tail -50
-   ```
+```bash
+consul kv get -recurse netdata/
+```
 
-3. Test template manually:
-   ```bash
-   consul-template -template="cpu.conf.ctmpl:test.conf" -once
-   ```
+1. Check Consul Template logs:
+
+```bash
+journalctl -u consul-template | tail -50
+```
+
+1. Test template manually:
+
+```bash
+consul-template -template="cpu.conf.ctmpl:test.conf" -once
+```
 
 ### Netdata Not Reloading
 
 1. Verify reload command works:
-   ```bash
-   systemctl reload netdata
-   ```
 
-2. Check Consul Template command output:
-   ```bash
-   consul-template -log-level=debug
-   ```
-
-## Advanced Configuration
-
-### Multiple Consul Clusters
-
-```yaml
-netdata_consul_template_consul_addr: "consul-prod.example.com:8500"
-netdata_consul_template_consul_token: "{{ vault_consul_token }}"
+```bash
+systemctl reload netdata
 ```
 
-### Custom Wait Times
+1. Check Consul Template command output:
 
-```yaml
-netdata_consul_template_configs:
-  - name: "critical.conf.ctmpl"
-    destination: "/etc/netdata/health.d/critical.conf"
-    command: "systemctl reload netdata"
-    wait_min: "2s"   # Quick response for critical alarms
-    wait_max: "10s"
+```bash
+consul-template -log-level=debug
 ```
-
-### Backup Before Update
-
-```yaml
-netdata_consul_template_configs:
-  - name: "production.conf.ctmpl"
-    destination: "/etc/netdata/health.d/production.conf"
-    command: "cp /etc/netdata/health.d/production.conf /backup/ && systemctl reload netdata"
-    backup: true
-```
-
-## Best Practices
-
-1. **Test Templates** - Always test in development first
-2. **Version Control** - Keep templates in version control
-3. **Gradual Rollout** - Update one node at a time
-4. **Monitor Changes** - Log all threshold changes
-5. **Set Boundaries** - Define min/max acceptable values
-6. **Document Thresholds** - Maintain documentation of alarm meanings
-
-## Integration Examples
-
-### With Monitoring Pipeline
-
-```yaml
-# Update thresholds based on historical data
-- name: Calculate optimal thresholds
-  script: analyze_metrics.py
-  register: thresholds
-
-- name: Update Consul KV
-  consul_kv:
-    key: "netdata/alarms/{{ item.key }}"
-    value: "{{ item.value }}"
-  loop: "{{ thresholds.results }}"
-```
-
-### With GitOps
-
-```yaml
-# Store thresholds in Git, apply via CI/CD
-- name: Load thresholds from Git
-  include_vars: "thresholds/{{ environment }}.yml"
-
-- name: Apply to Consul
-  consul_kv:
-    key: "{{ item.key }}"
-    value: "{{ item.value }}"
-  loop: "{{ alarm_thresholds }}"
-```
-
-## License
-
-MIT
-
-## Author Information
-
-Andromeda Orchestration Infrastructure Team

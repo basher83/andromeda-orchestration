@@ -70,6 +70,7 @@ graph TB
 ## Data Flow Details
 
 ### Child → Parent Streaming (Blue Lines)
+
 - **Protocol**: HTTP/HTTPS on port 19999
 - **Direction**: Unidirectional (child to parent)
 - **Authentication**: API key per cluster
@@ -77,6 +78,7 @@ graph TB
 - **Buffering**: 30 seconds on network failure
 
 ### Parent ↔ Parent Mesh (Red Dashed Lines)
+
 - **Protocol**: HTTP/HTTPS on port 19999
 - **Direction**: Bidirectional replication
 - **Authentication**: Mesh-specific API key
@@ -86,17 +88,20 @@ graph TB
 ## Network Topology
 
 ### doggos-homelab Networks
-```
+
+```text
 Management: 192.168.10.0/24 (1G) - Used for mesh cross-cluster
 Data:       192.168.11.0/24 (10G) - Used for child streaming
 ```
 
 ### og-homelab Network
-```
+
+```text
 Single:     192.168.30.0/24 (2.5G) - All traffic
 ```
 
 ### Cross-Cluster Routing
+
 - og-homelab (30.0/24) → doggos management (10.0/24)
 - doggos nodes use dual-NIC configuration
 - Mesh traffic uses management network for cross-cluster
@@ -104,15 +109,18 @@ Single:     192.168.30.0/24 (2.5G) - All traffic
 ## Benefits of Mesh Topology
 
 1. **Unified Monitoring**
+
    - Access all ~60+ nodes from any parent
    - Single pane of glass for entire infrastructure
 
 2. **High Availability**
+
    - 4 parent nodes provide redundancy
    - Automatic failover if parent fails
    - No single point of failure
 
 3. **Load Distribution**
+
    - Query any parent node
    - Distribute dashboard load
    - Parallel query processing
@@ -125,12 +133,14 @@ Single:     192.168.30.0/24 (2.5G) - All traffic
 ## Access Points
 
 ### Web Dashboards
-- http://lloyd:19999 - Full infrastructure view
-- http://holly:19999 - Full infrastructure view
-- http://mable:19999 - Full infrastructure view
-- http://192.168.30.50:19999 - Full infrastructure view
+
+- [http://lloyd:19999](http://lloyd:19999) - Full infrastructure view
+- [http://holly:19999](http://holly:19999) - Full infrastructure view
+- [http://mable:19999](http://mable:19999) - Full infrastructure view
+- [http://192.168.30.50:19999](http://192.168.30.50:19999) - Full infrastructure view
 
 ### API Endpoints
+
 - `/api/v1/info` - Node information
 - `/api/v1/data` - Query metrics
 - `/api/v1/alarms` - Active alarms
@@ -139,6 +149,7 @@ Single:     192.168.30.0/24 (2.5G) - All traffic
 ## Configuration Keys
 
 ### API Key Architecture
+
 ```yaml
 # Child streaming keys (per cluster)
 vault_netdata_parent_api_key: "doggos-child-key"
@@ -149,6 +160,7 @@ vault_netdata_mesh_api_key: "parent-mesh-key"
 ```
 
 ### Resource Allocation
+
 ```yaml
 # Parent nodes
 Memory: dbengine mode
@@ -164,16 +176,19 @@ Retention: 1 hour (30min for containers)
 ## Deployment Order
 
 1. **Deploy Parents First**
+
    - Configure dbengine storage
    - Set up API keys
    - Enable web interface
 
 2. **Deploy Children**
+
    - Configure streaming destination
    - Disable web interface
    - Minimize plugins
 
 3. **Configure Mesh**
+
    - Update parent streaming configs
    - Add mesh API key
    - Restart parents

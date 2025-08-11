@@ -11,17 +11,20 @@ Successfully integrated NetBox as the IPAM solution for the homelab infrastructu
 ## Completed Tasks
 
 ### 1. Initial Setup ✅
+
 - Created homelab sites (OG Homelab, Doggos Homelab)
 - Configured IP prefixes for all networks
 - Set up device roles and types
 - Created manufacturers and device types
 
 ### 2. Physical Infrastructure ✅
+
 - Added 3 Proxmox hosts (lloyd, holly, mable)
 - Configured network interfaces for each host
 - Assigned IP addresses on 10G network (192.168.11.x)
 
 ### 3. Virtual Infrastructure ✅
+
 - Created Proxmox cluster configuration
 - Added 6 Nomad VMs (3 servers, 3 clients)
 - Configured dual network interfaces per VM
@@ -29,7 +32,7 @@ Successfully integrated NetBox as the IPAM solution for the homelab infrastructu
 
 ## NetBox Current State
 
-```
+```text
 === NetBox Current Configuration ===
 Sites: 3
 Device Roles: 6
@@ -41,23 +44,27 @@ VLANs: 0
 ```
 
 ### Sites
+
 - **OG Homelab** (og-homelab): Original homelab Proxmox cluster
 - **Doggos Homelab** (doggos-homelab): 3-node Proxmox cluster with Nomad
 - **Slurp'it** (slurpit): Unifi network devices (auto-imported)
 
 ### Network Prefixes
+
 - `192.168.1.0/24` - Unifi network (from slurpit)
 - `192.168.10.0/24` - 2.5G Management Network (doggos-homelab)
 - `192.168.11.0/24` - 10G Data Network (doggos-homelab)
 - `192.168.30.0/24` - Management Network (og-homelab)
 
 ### Physical Devices
+
 - lloyd (Proxmox host) - 192.168.11.11
 - holly (Proxmox host) - 192.168.11.12
 - mable (Proxmox host) - 192.168.11.13
 - Plus 5 Unifi devices from slurpit
 
 ### Virtual Machines
+
 - nomad-server-1-lloyd (192.168.10.11)
 - nomad-server-2-holly (192.168.10.12)
 - nomad-server-3-mable (192.168.10.13)
@@ -68,15 +75,19 @@ VLANs: 0
 ## Playbooks Created
 
 ### netbox-setup.yml
+
 Initial NetBox configuration with sites, prefixes, roles, and device types.
 
 ### netbox-populate-infrastructure.yml
+
 Populates NetBox with physical hosts, interfaces, and IP assignments.
 
 ### netbox-create-vms.yml
+
 Creates virtual machines with proper cluster configuration and network assignments.
 
 ### netbox-discover.yml
+
 Discovery playbook to verify NetBox configuration and contents.
 
 ## Technical Achievements
@@ -89,11 +100,13 @@ Discovery playbook to verify NetBox configuration and contents.
 ## Next Steps for Phase 4
 
 1. **PowerDNS Integration**
+
    - Configure PowerDNS to use NetBox as backend
    - Set up zone transfers and updates
    - Implement DNS record automation
 
 2. **Dynamic Inventory**
+
    - Configure NetBox dynamic inventory plugin
    - Test inventory generation
    - Update playbooks to use NetBox as source of truth
@@ -106,6 +119,7 @@ Discovery playbook to verify NetBox configuration and contents.
 ## Lessons Learned
 
 1. **Parameter Names**: NetBox modules use specific parameter names:
+
    - `device_role` not `role` for devices
    - `virtual_machine_role` not `role` for VMs
    - `cluster_type` not `type` for clusters
@@ -127,7 +141,7 @@ Discovery playbook to verify NetBox configuration and contents.
 
 ## Access Information
 
-- **NetBox URL**: https://192.168.30.213
+- **NetBox URL**: [https://netbox.example.internal](https://netbox.example.internal) <!-- real value stored in Infisical -->
 - **API Token**: Stored in Infisical at `/apollo-13/services/netbox`
 - **Username**: Retrieved from Infisical
 

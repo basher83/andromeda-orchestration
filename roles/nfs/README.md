@@ -9,6 +9,7 @@ This role is used to configure NFS (Network File System) on the target hosts.
 - **Purpose**: List of directories to export via NFS.
 - **Default Value**: `[]` (empty list)
 - **Example**:
+
   ```yaml
   nfs_exports:
     - path: /srv/nfs
@@ -37,6 +38,7 @@ Include this role in your playbook and define the required variables:
 
 - **Purpose**: List of NFS shares to mount as a client.
 - **Default Value**:
+
   ```yaml
   nfs_client_shares:
     - server_ip: "192.168.30.6"
@@ -48,6 +50,7 @@ Include this role in your playbook and define the required variables:
       directory_group: "nogroup"
       directory_mode: "0755"
   ```
+
 - **Description**: Defines remote NFS shares, mount options, and directory ownership for each service folder.
 
 ---
@@ -75,7 +78,3 @@ Include this role in your playbook and define the required variables:
 - For advanced scenarios, customize mount options and directory permissions per service.
 
 ---
-
-```
-
-```

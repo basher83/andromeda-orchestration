@@ -70,7 +70,7 @@ This document describes the Netdata monitoring architecture deployed across the 
 
 ## Parent Mesh Topology
 
-```
+```text
 doggos-homelab                           og-homelab
 ==============                           ==========
 
@@ -123,7 +123,7 @@ Legend:
 
 ### Group Variables Structure
 
-```
+```text
 inventory/
 ├── doggos-homelab/
 │   └── group_vars/
@@ -164,11 +164,11 @@ inventory/
 ### Web Interfaces (Parents Only)
 
 - **doggos-homelab:**
-  - http://lloyd:19999 or http://192.168.11.2:19999
-  - http://holly:19999 or http://192.168.11.3:19999
-  - http://mable:19999 or http://192.168.11.4:19999
+  - [lloyd:19999](http://lloyd:19999) or [192.168.11.2:19999](http://192.168.11.2:19999)
+  - [holly:19999](http://holly:19999) or [192.168.11.3:19999](http://192.168.11.3:19999)
+  - [mable:19999](http://mable:19999) or [192.168.11.4:19999](http://192.168.11.4:19999)
 - **og-homelab:**
-  - http://pve1:19999 or http://192.168.30.50:19999
+  - [pve1:19999](http://pve1:19999) or [192.168.30.50:19999](http://192.168.30.50:19999)
 
 ### Consul Service Discovery
 
@@ -225,10 +225,11 @@ inventory/
    ```
 
 3. **Configure Mesh Topology:**
-   ```bash
-   ansible-playbook -i inventory/*/infisical.proxmox.yml \
-     playbooks/infrastructure/netdata-configure-mesh.yml
-   ```
+
+```bash
+ansible-playbook -i inventory/*/infisical.proxmox.yml \
+  playbooks/infrastructure/netdata-configure-mesh.yml
+```
 
 ## Troubleshooting
 

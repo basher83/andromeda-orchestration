@@ -58,7 +58,7 @@ Break down large tasks into actionable subtasks:
 
 #### Project Documentation Structure
 
-```
+```text
 docs/
 ├── project-management/
 │   ├── task-list.md              # Central task tracking

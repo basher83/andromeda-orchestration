@@ -191,7 +191,7 @@ vault status
 
 ## Directory Structure
 
-```
+```text
 /opt/vault/           # Base directory
 ├── data/            # Storage (Raft/File backend)
 └── tls/             # TLS certificates

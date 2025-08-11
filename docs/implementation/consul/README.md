@@ -5,7 +5,9 @@ This directory contains guides for implementing and configuring HashiCorp Consul
 ## Documents
 
 ### 🔐 [acl-integration.md](acl-integration.md)
+
 Comprehensive guide for Consul ACL (Access Control List) configuration:
+
 - ACL bootstrap process
 - Policy creation and management
 - Token generation and distribution
@@ -13,7 +15,9 @@ Comprehensive guide for Consul ACL (Access Control List) configuration:
 - Security best practices
 
 ### 🔑 [nomad-workloads-auth.md](nomad-workloads-auth.md)
+
 JWT authentication method configuration for Nomad workloads:
+
 - Service identity token validation
 - JWKS endpoint configuration
 - Claims mapping and role binding
@@ -21,7 +25,9 @@ JWT authentication method configuration for Nomad workloads:
 - Configuration history and evolution
 
 ### 📊 [telemetry-setup.md](telemetry-setup.md)
+
 Configure Consul telemetry and monitoring:
+
 - Prometheus integration
 - StatsD configuration
 - Metrics endpoint setup
@@ -31,13 +37,16 @@ Configure Consul telemetry and monitoring:
 ## Related Resources
 
 ### Playbooks
+
 - **Consul Configuration**: [`../../../playbooks/infrastructure/consul/`](../../../playbooks/infrastructure/consul/)
 - **Consul-Nomad Integration**: [`../../../playbooks/infrastructure/consul-nomad/`](../../../playbooks/infrastructure/consul-nomad/)
 
 ### Assessment Reports
+
 - **Consul Health**: [`../../../reports/consul/`](../../../reports/consul/)
 
 ### Roles
+
 - **Consul Role**: [`../../../roles/consul/`](../../../roles/consul/)
 - **Consul DNS Role**: [`../../../roles/consul_dns/`](../../../roles/consul_dns/)
 

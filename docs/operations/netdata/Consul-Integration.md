@@ -10,12 +10,12 @@ endmeta-->
 
 # Consul
 
-<img src="https://netdata.cloud/img/consul.svg" width="150"/>
+![Consul Logo](https://netdata.cloud/img/consul.svg)
 
 Plugin: go.d.plugin
 Module: consul
 
-<img src="https://img.shields.io/badge/maintained%20by-Netdata-%2300ab44" />
+![Maintained by Netdata](https://img.shields.io/badge/maintained%20by-Netdata-%2300ab44)
 
 ## Overview
 

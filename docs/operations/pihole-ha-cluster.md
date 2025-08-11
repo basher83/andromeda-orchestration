@@ -18,7 +18,8 @@ The Pi-hole DNS infrastructure consists of a 3-node high-availability cluster us
 ### Keepalived Configuration
 
 **Master Node (192.168.30.136)**:
-```
+
+```ini
 vrrp_instance VI_1 {
   state MASTER
   interface eth0
@@ -43,11 +44,13 @@ vrrp_instance VI_1 {
 ### DNS Configuration
 
 #### Upstream DNS Servers
+
 1. Local Unbound (primary)
-2. Cloudflare (1.1.1.1)
-3. Google (8.8.8.8)
+1. Cloudflare (1.1.1.1)
+1. Google (8.8.8.8)
 
 #### DNS Zone
+
 **Domain**: `lab.spaceships.work`
 
 #### Local DNS Records
@@ -80,12 +83,13 @@ vrrp_instance VI_1 {
 ### Network Segments
 
 1. **192.168.10.x** - 2.5G Network (Proxmox nodes, Nomad cluster)
-2. **192.168.30.x** - Primary services network
-3. **192.168.11.x** - 10G Network (not shown in DNS records)
+1. **192.168.30.x** - Primary services network
+1. **192.168.11.x** - 10G Network (not shown in DNS records)
 
 ### Synchronization
 
 **Method**: Nebula Sync Docker container
+
 - Performs teleporter transfer from master to slave nodes
 - Ensures configuration consistency across all Pi-hole instances
 - Syncs blocklists, custom DNS records, and settings
@@ -99,6 +103,7 @@ DHCP is **NOT** handled by Pi-hole. It is managed by the UniFi Controller.
 ### Manual Backup
 
 1. **Export from Master Node (192.168.30.136)**:
+
    ```bash
    # SSH to master Pi-hole
    ssh ansible@192.168.30.136
@@ -108,12 +113,14 @@ DHCP is **NOT** handled by Pi-hole. It is managed by the UniFi Controller.
    ```
 
 2. **Backup Keepalived Configuration**:
+
    ```bash
    # On each node
    sudo cp /etc/keepalived/keepalived.conf ~/keepalived.conf.backup
    ```
 
 3. **Document Nebula Sync Configuration**:
+
    - Container settings
    - Sync schedule
    - Target nodes
@@ -138,29 +145,29 @@ DHCP is **NOT** handled by Pi-hole. It is managed by the UniFi Controller.
 ## Migration Considerations
 
 1. **High Availability**: Must maintain VIP availability during migration
-2. **Sync Mechanism**: Nebula Sync must be replaced or integrated with new solution
-3. **DNS Records**: All local DNS records must be migrated to NetBox
-4. **Keepalived**: Consider Consul for health checking and failover
+1. **Sync Mechanism**: Nebula Sync must be replaced or integrated with new solution
+1. **DNS Records**: All local DNS records must be migrated to NetBox
+1. **Keepalived**: Consider Consul for health checking and failover
 
 ## Integration Points
 
 1. **Consul**: Can replace keepalived for health checking
-2. **NetBox**: Will become source of truth for DNS records
-3. **PowerDNS**: Will replace Pi-hole for authoritative DNS
-4. **Nomad**: Can manage PowerDNS and other DNS services
+1. **NetBox**: Will become source of truth for DNS records
+1. **PowerDNS**: Will replace Pi-hole for authoritative DNS
+1. **Nomad**: Can manage PowerDNS and other DNS services
 
 ## Risk Mitigation
 
 1. **Backup all configurations** before any changes
-2. **Test in development** with same HA setup
-3. **Staged migration** - one node at a time
-4. **Maintain Pi-hole** as fallback during transition
-5. **Monitor VIP availability** throughout migration
+1. **Test in development** with same HA setup
+1. **Staged migration** - one node at a time
+1. **Maintain Pi-hole** as fallback during transition
+1. **Monitor VIP availability** throughout migration
 
 ## Next Steps
 
 1. Set up development environment with 3-node Pi-hole cluster
-2. Test PowerDNS with same local DNS records
-3. Plan Consul service registration for DNS health checks
-4. Design NetBox data model for existing DNS records
-5. Create migration runbook with rollback procedures
+1. Test PowerDNS with same local DNS records
+1. Plan Consul service registration for DNS health checks
+1. Design NetBox data model for existing DNS records
+1. Create migration runbook with rollback procedures

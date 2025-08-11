@@ -26,8 +26,6 @@
         - nomad-client-1-lloyd
         - nomad-client-2-holly
         - nomad-client-3-mable
-
----
 # Deploy Netdata on parent nodes first
 - name: Deploy Netdata parent nodes
   hosts: netdata_parents
@@ -51,8 +49,6 @@
         # Override any conflicting settings for parents
         netdata_parent_enabled: true
         netdata_streaming_enabled: true  # For mutual replication
-
----
 # Deploy Netdata on child nodes
 - name: Deploy Netdata child nodes
   hosts: netdata_children
@@ -78,8 +74,6 @@
         create: true
       when: "'nomad-client' in inventory_hostname"
       notify: restart netdata
-
----
 # Verify deployment
 - name: Verify Netdata deployment
   hosts: all:!localhost
@@ -125,8 +119,6 @@
       ansible.builtin.debug:
         msg: "Streaming status: {{ streaming_status.stdout_lines | default(['No streaming info found']) }}"
       when: inventory_hostname in groups['netdata_children']
-
----
 # Optional: Configure firewall rules for Netdata
 - name: Configure firewall rules for Netdata
   hosts: all:!localhost

@@ -178,7 +178,7 @@ graph TD
 
 ### 1. Web Application (Dynamic Port)
 
-```
+```text
 ┌─────────────────┐       ┌──────────────┐       ┌─────────────────┐
 │                 │       │              │       │                 │
 │  User Browser   │──────▶│ Traefik :443 │──────▶│ Windmill :24563 │
@@ -194,7 +194,7 @@ graph TD
 
 ### 2. DNS Service (Static Port)
 
-```
+```text
 ┌─────────────────┐       ┌─────────────────┐
 │                 │       │                 │
 │   DNS Client    │──────▶│  PowerDNS :53   │
@@ -210,7 +210,7 @@ graph TD
 
 ### 3. Multi-Port Microservice
 
-```
+```text
 ┌───────────────┐     ┌─────────────────────────┐     ┌─────────┐
 │   Frontend    │────▶│      Microservice       │────▶│ Database│
 │               │ :80 │                         │     │         │

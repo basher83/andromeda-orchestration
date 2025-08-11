@@ -50,6 +50,7 @@ sequenceDiagram
 ## Authentication Flow
 
 ### 1. Machine Identity Setup (One-time)
+
 ```bash
 # Developer sets up machine identity credentials
 export INFISICAL_UNIVERSAL_AUTH_CLIENT_ID="your-client-id"
@@ -57,6 +58,7 @@ export INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET="your-client-secret"
 ```
 
 ### 2. Secret Retrieval Pattern
+
 ```yaml
 # In inventory file or playbook
 proxmox_token: >-
@@ -80,16 +82,19 @@ proxmox_token: >-
 ## Common Secret Types
 
 ### Infrastructure Credentials
+
 - Proxmox API tokens
 - SSH keys and passwords
 - Database credentials
 
 ### Service Tokens
+
 - Consul ACL tokens
 - Nomad management tokens
 - API keys for external services
 
 ### Certificates
+
 - TLS certificates
 - CA certificates
 - Service mesh certificates
@@ -97,16 +102,19 @@ proxmox_token: >-
 ## Error Scenarios
 
 ### Authentication Failures
+
 - Missing environment variables
 - Invalid client ID/secret
 - Expired credentials
 
 ### Secret Access Issues
+
 - Secret not found
 - Insufficient permissions
 - Wrong environment specified
 
 ### Network Problems
+
 - Infisical API unreachable
 - Timeout issues
 - Proxy configuration

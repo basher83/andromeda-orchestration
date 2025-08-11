@@ -68,6 +68,7 @@ vault list sys/leases/lookup/database/creds/powerdns-role
 ## Troubleshooting
 
 ### After Redeployment (when port changes)
+
 ```bash
 # Get new connection details
 PGALLOC=$(nomad job status postgresql | grep running | awk '{print $1}')
@@ -93,6 +94,7 @@ vault write database/config/powerdns-database \
 ```
 
 ### Common Log Messages (Expected/Harmless)
+
 - `chmod: /var/run/postgresql: Operation not permitted` - Harmless Docker entrypoint warning
 - `listening on Unix socket "/tmp/.s.PGSQL.XXXXX"` - Correct, socket moved to /tmp
 - NetData role creation - Now handled automatically by init script

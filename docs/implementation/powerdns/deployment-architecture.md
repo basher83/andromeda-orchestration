@@ -6,7 +6,7 @@ This document captures the architectural decision for PowerDNS deployment on Nom
 
 ## Decision Summary
 
-**Chosen Architecture: Mode A (Simple/Production-Ready)**
+### Chosen Architecture: Mode A (Simple/Production-Ready)
 
 After evaluating deployment patterns, we selected the simpler Mode A architecture that deploys PowerDNS Authoritative Server directly on port 53 with an external PostgreSQL backend.
 
@@ -14,7 +14,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 
 ### Mode A: Direct Authoritative DNS
 
-```
+```text
 ┌─────────────┐     :53      ┌─────────────┐     DB      ┌─────────────┐
 │ DNS Clients │ ──────────> │ PowerDNS    │ <────────> │ PostgreSQL  │
 └─────────────┘              │   Auth      │            │  (External) │
@@ -30,7 +30,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 
 ### Mode B: Full Stack with dnsdist
 
-```
+```text
 ┌─────────────┐     :53      ┌─────────────┐     :5301     ┌─────────────┐
 │ DNS Clients │ ──────────> │   dnsdist   │ ──────────> │ PowerDNS    │
 └─────────────┘              │   (Proxy)   │              │   Auth      │
@@ -89,7 +89,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    - Deploy using `nomad-jobs/platform-services/postgresql.nomad.hcl`
    - Ensure host volume configured for data persistence
 
-2. **Consul KV Configuration**
+1. **Consul KV Configuration**
 
    ```bash
    consul kv put pdns/db/host postgres.service.consul
@@ -98,12 +98,13 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    consul kv put pdns/db/user pdns
    ```
 
-3. **Vault Secrets**
-   ```bash
-   vault kv put kv/pdns \
-     db_password="<secure-password>" \
-     api_key="<secure-api-key>"
-   ```
+1. **Vault Secrets**
+
+```bash
+vault kv put kv/pdns \
+  db_password="<secure-password>" \
+  api_key="<secure-api-key>"
+```
 
 ### Deployment Steps
 
@@ -112,12 +113,17 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    ```bash
    # Deploy PostgreSQL
    nomad job run postgresql.nomad.hcl
-
-   # Initialize PowerDNS schema
-   # Connect to PostgreSQL and run PowerDNS schema
    ```
 
-2. **Phase 2: Configure Secrets**
+```bash
+# Deploy PostgreSQL
+nomad job run postgresql.nomad.hcl
+
+# Initialize PowerDNS schema
+# Connect to PostgreSQL and run PowerDNS schema
+```
+
+1. **Phase 2: Configure Secrets**
 
    ```bash
    # Set up Consul KV values
@@ -127,14 +133,14 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    ./scripts/setup-pdns-vault.sh
    ```
 
-3. **Phase 3: Deploy/Configure PowerDNS** (Configure for PostgreSQL backend)
+1. **Phase 3: Deploy/Configure PowerDNS** (Configure for PostgreSQL backend)
 
    ```bash
    # Deploy or update PowerDNS job (configured for PostgreSQL backend)
    nomad job run nomad-jobs/platform-services/powerdns.nomad.hcl
    ```
 
-4. **Phase 4: Verify Deployment**
+1. **Phase 4: Verify Deployment**
 
    ```bash
    # Check service registration
@@ -142,12 +148,15 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 
    # Test DNS resolution
    dig @<node-ip> example.spaceships.work
-
-   # Check API access via Traefik
-   curl -H "X-API-Key: <api-key>" https://pdns-api.internal/api/v1/servers
    ```
 
-## Key Configuration Details
+# Test DNS resolution
+
+dig @<node-ip> example.lab
+
+````
+
+## Configuration
 
 ### Network Configuration
 
@@ -169,31 +178,20 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
 ### Security
 
 - Database credentials via Vault
-- API key authentication
-- TLS termination at Traefik for API access
-
-## Migration Path to Mode B
-
-If recursive DNS becomes a requirement:
-
-1. **Keep Mode A Running** - No downtime during migration
-2. **Deploy Recursor** - Add PowerDNS Recursor service
-3. **Deploy dnsdist** - Configure with backend pools
-4. **Update DNS** - Point clients to dnsdist
-5. **Decommission Mode A** - After validation
-
-## Monitoring and Operations
+- API key stored in Vault
+- Read-only tokens for CI where applicable
 
 ### Health Checks
 
 ```hcl
 check {
-  name     = "dns-tcp-53"
-  type     = "tcp"
+  name     = "api"
+  type     = "http"
+  path     = "/api/v1/servers/localhost"
   interval = "10s"
   timeout  = "2s"
 }
-```
+````
 
 ### Metrics Collection
 

@@ -361,19 +361,19 @@ nomad node status -verbose
 
 - For hot I/O paths (e.g., databases), tag SSD/NVMe nodes (e.g., node.meta.storage=nvme) and add a job constraint to target them
 
-3. **Implement Backup Strategies**
+1. **Implement Backup Strategies**
 
    - Regular automated backups
    - Test restore procedures
    - Off-site backup for critical data
 
-4. **Monitor Storage Health**
+1. **Monitor Storage Health**
 
    - Disk usage alerts
    - I/O performance metrics
    - Volume availability checks
 
-5. **Plan for Growth**
+1. **Plan for Growth**
    - Size volumes appropriately
    - Implement cleanup policies
    - Plan migration strategies
