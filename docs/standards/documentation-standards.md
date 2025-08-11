@@ -110,11 +110,15 @@ When markdown linting rules need to be bypassed for legitimate reasons (e.g., ra
 ```markdown
 <!-- markdownlint-disable-next-line MD040 -->
 ```
+
 Some raw terminal output without language
+
+```text
+<command output omitted>
 ```
 
 <!-- markdownlint-disable-next-line MD013 -->
-This line is intentionally longer than 80 characters because it contains a very important URL that should not be broken: https://example.com/very/long/path
+This line is intentionally longer than 80 characters because it contains a very important URL that should not be broken: [https://example.com/very/long/path](https://example.com/very/long/path)
 
 <!-- markdownlint-disable MD033 -->
 <details>
@@ -122,9 +126,9 @@ This line is intentionally longer than 80 characters because it contains a very 
   Content here
 </details>
 <!-- markdownlint-enable MD033 -->
-```
 
 **Rules for linting exceptions:**
+
 - Use sparingly - fix the content first if possible
 - Always include a comment explaining why the exception is needed
 - Use `disable-next-line` for single line exceptions
