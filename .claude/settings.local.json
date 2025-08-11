@@ -5,8 +5,9 @@
     "deepwiki",
     "grep",
     "infisical",
-    "context7",
     "firecrawl",
+    "github",
+    "coderabbitai",
     "netdata"
   ],
   "permissions": {
@@ -23,5 +24,9 @@
       "Bash(consul catalog:*)",
       "Bash(curl:*)"
     ]
+  },
+  "statusLine": {
+    "command": "input=$(cat); printf \"$(echo \"$input\" | jq -r '.model.display_name') | $(basename \"$(echo \"$input\" | jq -r '.workspace.current_dir')\") | $(whoami)@$(hostname -s)\"",
+    "type": "command"
   }
 }
