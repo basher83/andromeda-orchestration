@@ -89,7 +89,7 @@ After evaluating deployment patterns, we selected the simpler Mode A architectur
    - Deploy using `nomad-jobs/platform-services/postgresql.nomad.hcl`
    - Ensure host volume configured for data persistence
 
-2. **Consul KV Configuration**
+1. **Consul KV Configuration**
 
    ```bash
    consul kv put pdns/db/host postgres.service.consul
@@ -113,6 +113,7 @@ vault kv put kv/pdns \
    ```bash
    # Deploy PostgreSQL
    nomad job run postgresql.nomad.hcl
+   ```
 
 ```bash
 # Deploy PostgreSQL
@@ -127,6 +128,7 @@ nomad job run postgresql.nomad.hcl
    ```bash
    # Set up Consul KV values
    ./scripts/setup-pdns-consul-kv.sh
+   ```
 
 ```bash
 # Set up Consul KV values
@@ -136,7 +138,7 @@ nomad job run postgresql.nomad.hcl
 ./scripts/setup-pdns-vault.sh
 ```
 
-3. **Phase 3: Deploy/Configure PowerDNS** (Configure for PostgreSQL backend)
+1. **Phase 3: Deploy/Configure PowerDNS** (Configure for PostgreSQL backend)
 
    ```bash
    # Deploy or update PowerDNS job (configured for PostgreSQL backend)
@@ -151,10 +153,13 @@ nomad job run postgresql.nomad.hcl
 
    # Test DNS resolution
    dig @<node-ip> example.spaceships.work
+   ```
 
 # Test DNS resolution
+
 dig @<node-ip> example.lab
-```
+
+````
 
 ## Configuration
 
@@ -191,7 +196,7 @@ check {
   interval = "10s"
   timeout  = "2s"
 }
-```
+````
 
 ### Metrics Collection
 

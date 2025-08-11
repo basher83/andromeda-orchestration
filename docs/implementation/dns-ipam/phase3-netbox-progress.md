@@ -100,11 +100,13 @@ Discovery playbook to verify NetBox configuration and contents.
 ## Next Steps for Phase 4
 
 1. **PowerDNS Integration**
+
    - Configure PowerDNS to use NetBox as backend
    - Set up zone transfers and updates
    - Implement DNS record automation
 
 2. **Dynamic Inventory**
+
    - Configure NetBox dynamic inventory plugin
    - Test inventory generation
    - Update playbooks to use NetBox as source of truth
@@ -117,6 +119,7 @@ Discovery playbook to verify NetBox configuration and contents.
 ## Lessons Learned
 
 1. **Parameter Names**: NetBox modules use specific parameter names:
+
    - `device_role` not `role` for devices
    - `virtual_machine_role` not `role` for VMs
    - `cluster_type` not `type` for clusters
@@ -138,7 +141,7 @@ Discovery playbook to verify NetBox configuration and contents.
 
 ## Access Information
 
-- **NetBox URL**: [https://192.168.30.213](https://192.168.30.213)
+- **NetBox URL**: [https://netbox.example.internal](https://netbox.example.internal) <!-- real value stored in Infisical -->
 - **API Token**: Stored in Infisical at `/apollo-13/services/netbox`
 - **Username**: Retrieved from Infisical
 
