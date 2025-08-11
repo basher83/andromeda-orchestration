@@ -45,8 +45,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-          cache: 'pip'
+          python-version: "3.13"
+          cache: "pip"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v6
@@ -73,6 +73,11 @@ jobs:
         run: |
           set -euxo pipefail
           uv run ansible-galaxy collection install -r requirements.yml
+
+      - name: Ensure community.hashi_vault installed
+        run: |
+          set -euxo pipefail
+          uv run ansible-galaxy collection install community.hashi_vault
 
       - name: Show Ansible version and collections
         run: |
