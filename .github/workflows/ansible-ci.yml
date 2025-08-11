@@ -95,7 +95,8 @@ jobs:
           fi
           for f in "${files[@]}"; do
             echo "::group::Syntax-check $f"
-            uv run ansible-playbook --syntax-check "$f"
+            # Use a localhost inline inventory to avoid parsing dynamic inventories during CI
+            uv run ansible-playbook -i 'localhost,' -c local --syntax-check "$f"
             echo "::endgroup::"
           done
 
