@@ -51,12 +51,12 @@ graph TB
     end
 
     %% Parent Mesh Replication
-    L <--> |mesh| H
-    L <--> |mesh| M
-    H <--> |mesh| M
-    L <--> |mesh| P1
-    H <--> |mesh| P1
-    M <--> |mesh| P1
+    L <-->|mesh| H
+    L <-->|mesh| M
+    H <-->|mesh| M
+    L <-->|mesh| P1
+    H <-->|mesh| P1
+    M <-->|mesh| P1
 
     %% Styling
     classDef parent fill:#4a9eff,stroke:#333,stroke-width:3px,color:#fff
@@ -109,15 +109,18 @@ Single:     192.168.30.0/24 (2.5G) - All traffic
 ## Benefits of Mesh Topology
 
 1. **Unified Monitoring**
+
    - Access all ~60+ nodes from any parent
    - Single pane of glass for entire infrastructure
 
 2. **High Availability**
+
    - 4 parent nodes provide redundancy
    - Automatic failover if parent fails
    - No single point of failure
 
 3. **Load Distribution**
+
    - Query any parent node
    - Distribute dashboard load
    - Parallel query processing
@@ -173,16 +176,19 @@ Retention: 1 hour (30min for containers)
 ## Deployment Order
 
 1. **Deploy Parents First**
+
    - Configure dbengine storage
    - Set up API keys
    - Enable web interface
 
 2. **Deploy Children**
+
    - Configure streaming destination
    - Disable web interface
    - Minimize plugins
 
 3. **Configure Mesh**
+
    - Update parent streaming configs
    - Add mesh API key
    - Restart parents
