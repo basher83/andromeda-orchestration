@@ -1,0 +1,57 @@
+---
+# PostgreSQL connectivity smoke test
+#
+# This playbook performs a simple connectivity test to a PostgreSQL instance
+# using the community.postgresql collection without modifying any data.
+#
+# Usage:
+# 1. Find the PostgreSQL endpoint via Consul:
+#    consul catalog nodes -service postgres
+#    Use the ServiceAddress/ServicePort from the output.
+#
+# 2. Export connection variables:
+#    export PGHOST=10.0.0.12
+#    export PGPORT=20042
+#    export PGUSER=vaultuser
+#    export PGPASSWORD=<secure-password-from-vault>
+#    export PGDATABASE=postgres
+#
+# 3. Run the smoke test:
+#    ansible-playbook playbooks/postgresql/00_smoke_ping.yml
+
+- name: Smoke-check PostgreSQL via community.postgresql
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Test PostgreSQL connectivity
+      community.postgresql.postgresql_ping:
+        login_host: "{{ lookup('env','PGHOST') | default('127.0.0.1', true) }}"
+        login_port: "{{ (lookup('env','PGPORT') | default('5432', true)) | int }}"
+        login_user: "{{ lookup('env','PGUSER') }}"
+        login_password: "{{ lookup('env','PGPASSWORD') }}"
+        db: "{{ lookup('env','PGDATABASE') | default('postgres', true) }}"
+      register: pg_ping_result
+
+    - name: Display connection result
+      ansible.builtin.debug:
+        msg: |
+          PostgreSQL connection successful!
+          Server info: {{ pg_ping_result.server_version | default('unknown') }}
+          Connection details:
+          - Host: {{ lookup('env','PGHOST') | default('127.0.0.1', true) }}
+          - Port: {{ lookup('env','PGPORT') | default('5432', true) }}
+          - Database: {{ lookup('env','PGDATABASE') | default('postgres', true) }}
+          - User: {{ lookup('env','PGUSER') | default('not set', true) }}
+      when: pg_ping_result is succeeded
+
+    - name: Display connection failure
+      ansible.builtin.fail:
+        msg: |
+          PostgreSQL connection failed!
+          Please check your environment variables:
+          - PGHOST (current: {{ lookup('env','PGHOST') | default('not set', true) }})
+          - PGPORT (current: {{ lookup('env','PGPORT') | default('not set', true) }})
+          - PGUSER (current: {{ lookup('env','PGUSER') | default('not set', true) }})
+          - PGPASSWORD (current: {{ 'set' if lookup('env','PGPASSWORD') else 'not set' }})
+          - PGDATABASE (current: {{ lookup('env','PGDATABASE') | default('not set', true) }})
+      when: pg_ping_result is failed

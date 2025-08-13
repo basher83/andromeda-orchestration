@@ -23,6 +23,10 @@ collections:
   - name: infisical.vault
     version: ">=1.1.0"
 
+  # PostgreSQL management
+  - name: community.postgresql
+    version: ">=3.8.0,<4.0.0"
+
   # Additional useful collections
   - name: ansible.posix
     version: ">=1.5.0"
