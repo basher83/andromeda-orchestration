@@ -227,7 +227,10 @@ reviews:
         Verify proper use of tags for selective execution.
         Prefer dynamic inventory plugins for inventory references; allow static inventory only with
         documented justification.
-        Validate that sensitive operations have appropriate confirmation prompts.
+        Require no_log: true for tasks handling secrets/credentials (or use vault/encrypted vars).
+        Recommend check_mode/dry-run validation with --check before production changes.
+        Validate that sensitive operations include confirmation prompts or approval steps.
+        Document exceptions where secret output visibility is required for troubleshooting.
 
     - path: "nomad-jobs/**/*"
       instructions: |
