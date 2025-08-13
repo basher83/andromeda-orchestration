@@ -30,9 +30,9 @@ reviews:
     base_branches:
       - main
       - develop
-      - feat
-      - feature
-      - hotfix
+      - '^feat/.*$'
+      - '^feature/.*$'
+      - '^hotfix/.*$'
 
   # Tool configurations for linting and security
   tools:
