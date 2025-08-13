@@ -104,7 +104,7 @@ reviews:
         Ensure proper task naming, idempotency, and error handling.
         Verify variables are properly templated and not hardcoded.
         Check for correct use of handlers, conditionals, and loops.
-        Validate that all secrets use Infisical lookups or environment variables.
+        Validate that all secrets use Ansible Vault, environment variables, or approved lookup plugins (e.g., Infisical).
 
     - path: "**/*.yaml"
       instructions: |
@@ -165,7 +165,7 @@ reviews:
         Focus on Ansible playbook structure and operational safety.
         Ensure playbooks are idempotent and can be run multiple times safely.
         Verify proper use of tags for selective execution.
-        Check that inventory references use dynamic inventory plugins.
+        Prefer dynamic inventory plugins for inventory references; allow static inventory only with documented justification.
         Validate that sensitive operations have appropriate confirmation prompts.
 
     - path: "nomad-jobs/**/*"
