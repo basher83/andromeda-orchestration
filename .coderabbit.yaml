@@ -49,9 +49,9 @@ reviews:
     base_branches:
       - main
       - develop
-      - feat
-      - feature
-      - hotfix
+      - '^feat/.*$'
+      - '^feature/.*$'
+      - '^hotfix/.*$'
 
   # Tool configurations for linting and security
   tools:
@@ -138,7 +138,6 @@ reviews:
     - "!**/*.lock"
     - "!**/package-lock.json"
     - "!**/.terraform.lock.hcl"
-    - "!**/ansible.cfg"
     - "!docs/archive/**"
     - "!**/*.log"
     - "!**/*.tmp"
@@ -362,12 +361,6 @@ reviews:
       instructions: "Apply when PR affects essential systems for project success and mission completion"
     - label: "🆘 emergency"
       instructions: "Apply when PR addresses critical system issues requiring immediate attention"
-
-# Pipeline Failure Remediation Configuration - Tailored for Infrastructure Automation
-pipeline_remediation:
-  enabled: true
-  auto_suggest: true
-  auto_apply: false  # Start with manual review for infrastructure changes
 
   analysis:
     confidence_threshold: 85  # Slightly lower for infrastructure complexity
