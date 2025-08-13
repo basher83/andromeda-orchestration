@@ -84,9 +84,21 @@ reviews:
     gitleaks:
       enabled: true
 
-    # Enhanced security scanning
+    # Enhanced security scanning - Infrastructure focused
     semgrep:
       enabled: true
+      config_file: ".semgrep/infrastructure-rules.yml"
+      options:
+        - "--severity=ERROR"
+        - "--severity=WARNING"
+        - "--exclude=docs/archive/**"
+        - "--exclude=**/*.log"
+        - "--exclude=**/*.tmp"
+        - "--exclude=.venv/**"
+        - "--exclude=venv/**"
+        - "--exclude=__pycache__/**"
+        - "--exclude=**/*.lock"
+        - "--exclude=uv.lock"
 
     # Infrastructure as code security scanning
     checkov:
@@ -133,6 +145,7 @@ reviews:
     - "**/*.tf"
     - "**/*.md"
     - "**/Dockerfile"
+    - "Dockerfile"  # Ensure root Dockerfile is covered
     - "**/*.sh"
     - ".github/**"
     # Environment files for dotenvLint
@@ -143,8 +156,10 @@ reviews:
     - ".env.staging"
     - ".env.development"
     - ".env.test"
+    - "*.env"  # Catch files like app.env, prod.env
     - "**/.env"
     - "**/.env.*"
+    - "**/*.env"  # Catch environment files in subdirectories
     - "!**/*.lock"
     - "!**/package-lock.json"
     - "!**/.terraform.lock.hcl"
@@ -270,6 +285,14 @@ reviews:
         Verify that .env files contain only example or template values.
         Check that production secrets use proper secret management (Infisical, Ansible Vault).
         Validate that .env files follow standard KEY=value format with proper escaping.
+
+    - path: "**/*.env"
+      instructions: |
+        Review environment files (including app.env, prod.env, etc.) for security and best practices.
+        Ensure no sensitive values are hardcoded in committed environment files.
+        Verify that files contain only example or template values for committed code.
+        Check that production secrets use proper secret management (Infisical, Ansible Vault).
+        Validate that environment files follow standard KEY=value format with proper escaping.
 
   # Automatic labeling instructions for PRs
   labeling_instructions:
