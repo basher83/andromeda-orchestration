@@ -9,13 +9,10 @@ reviews:
   review_status: true
   collapse_walkthrough: false
 
-  # Auto-approve PRs from renovate bot for dependency updates
+  # Auto-review PRs
   auto_review:
     enabled: true
     labels:
-      - "renovate"
-      - "dependencies"
-      - "automated"
     ignore_title_keywords:
       - "WIP"
       - "DO NOT MERGE"
@@ -23,6 +20,8 @@ reviews:
     base_branches:
       - main
       - develop
+      - feat
+      - feature
 
   # Tool configurations for linting and security
   tools:
@@ -103,44 +102,113 @@ reviews:
 
   # Automatic labeling instructions for PRs
   labeling_instructions:
-    - label: "⚡ api"
-      instructions: "Apply when PR modifies NetBox API integration, inventory plugins, or API-related modules"
-    - label: "👨‍🚀 crew-backend"
-      instructions: "Apply when PR modifies Python code, Ansible modules, or backend infrastructure"
+    # Infrastructure and DevOps
+    - label: "🏗️ infrastructure"
+      instructions: "Apply when PR modifies infrastructure provisioning, Nomad jobs, Consul services, or cluster management"
+    - label: "🏗️ terraform"
+      instructions: "Apply when PR modifies Terraform configurations or Infrastructure as Code"
+    - label: "🤖 ansible"
+      instructions: "Apply when PR modifies Ansible playbooks, roles, or configuration management"
+    - label: "🔧 crew-devops"
+      instructions: "Apply when PR modifies infrastructure code, DevOps tooling, or operational processes"
+    - label: "☁️ cloud"
+      instructions: "Apply when PR involves cloud platform services, resources, or configurations"
+    - label: "🌐 networking"
+      instructions: "Apply when PR modifies network configuration, DNS, firewalls, or network security"
     - label: "💾 database"
-      instructions: "Apply when PR modifies NetBox database operations or data models"
-    - label: "⚡ performance"
-      instructions: "Apply when PR includes caching, optimization, or performance improvements"
-    - label: "📚 documentation"
-      instructions: "Apply when PR updates README.md, CLAUDE.md, or docs/ directory"
-    - label: "📝 crew-docs"
-      instructions: "Apply when PR significantly updates documentation or adds new docs"
+      instructions: "Apply when PR modifies database operations, PostgreSQL, or data management"
+    - label: "📱 container"
+      instructions: "Apply when PR modifies Docker configurations, containerized applications, or container orchestration"
+
+    # API and Integration
+    - label: "⚡ api"
+      instructions: "Apply when PR modifies NetBox API integration, inventory plugins, or external API integrations"
+    - label: "🔌 mcp-server"
+      instructions: "Apply when PR modifies Model Context Protocol server development or MCP integrations"
+    - label: "🔄 automation"
+      instructions: "Apply when PR adds workflow automation, process improvements, or task automation"
+
+    # Security and Secrets
+    - label: "🔒 security"
+      instructions: "Apply when PR addresses security vulnerabilities, authentication, or authorization"
+    - label: "🔐 secrets-mgmt"
+      instructions: "Apply when PR modifies SOPS configuration, Infisical integration, or secrets management"
+    - label: "🛡️ policy"
+      instructions: "Apply when PR modifies OPA/Rego policies or infrastructure security policies"
+    - label: "🔐 auth"
+      instructions: "Apply when PR modifies authentication systems or authorization frameworks"
+
+    # Monitoring and Observability
+    - label: "📊 monitoring"
+      instructions: "Apply when PR modifies Netdata, monitoring configurations, or observability systems"
+    - label: "📈 metrics"
+      instructions: "Apply when PR adds performance metrics, monitoring dashboards, or telemetry"
+    - label: "💾 backup-restore"
+      instructions: "Apply when PR modifies backup strategies, disaster recovery, or data protection"
+
+    # Development and Code Quality
     - label: "🐛 bug"
       instructions: "Apply when PR fixes bugs, resolves issues, or corrects errors"
     - label: "✨ enhancement"
-      instructions: "Apply when PR adds new features, playbooks, or capabilities"
-    - label: "💎 breaking-change"
-      instructions: "Apply when PR introduces breaking changes to playbooks, inventory structure, or modules"
-    - label: "🏷️ auto-labeled"
-      instructions: "Apply to all PRs to indicate CodeRabbit has reviewed and labeled"
-    - label: "🔄 ci-cd"
-      instructions: "Apply when PR modifies .github/workflows/, CI/CD pipelines, or automation"
-    - label: "🔒 security"
-      instructions: "Apply when PR addresses security vulnerabilities, secrets management, or improves security"
-    - label: "🔧 config"
-      instructions: "Apply when PR modifies configuration files, inventory settings, or ansible.cfg"
-    - label: "🔧 crew-devops"
-      instructions: "Apply when PR modifies infrastructure code, Nomad jobs, Consul, or Terraform"
-    - label: "📦 dependencies"
-      instructions: "Apply when PR updates requirements.txt, pyproject.toml, or dependency versions"
-    - label: "🤖 renovate"
-      instructions: "Apply when PR is created by Renovate bot for dependency updates"
-    - label: "🤖 dependabot"
-      instructions: "Apply when PR is created by Dependabot for security updates"
+      instructions: "Apply when PR adds new features, capabilities, or improvements"
     - label: "🧹 refactor"
       instructions: "Apply when PR refactors code without changing functionality"
+    - label: "⚡ performance"
+      instructions: "Apply when PR includes performance optimization, caching, or efficiency improvements"
+    - label: "💎 breaking-change"
+      instructions: "Apply when PR introduces breaking changes to APIs, configurations, or interfaces"
+
+    # Documentation and Configuration
+    - label: "📚 documentation"
+      instructions: "Apply when PR updates README.md, CLAUDE.md, or documentation in docs/ directory"
+    - label: "📝 crew-docs"
+      instructions: "Apply when PR significantly updates documentation or adds comprehensive guides"
+    - label: "🔧 config"
+      instructions: "Apply when PR modifies configuration files, settings, or environment configurations"
+    - label: "📋 template"
+      instructions: "Apply when PR adds or modifies templates, boilerplate code, or reusable patterns"
+
+    # Dependencies and Automation
+    - label: "📦 dependencies"
+      instructions: "Apply when PR updates Python packages, Ansible collections, or dependency versions"
+    - label: "🤖 renovate"
+      instructions: "Apply when PR is created by Renovate bot for automated dependency updates"
+    - label: "🤖 dependabot"
+      instructions: "Apply when PR is created by Dependabot for automated security updates"
+    - label: "🔄 ci-cd"
+      instructions: "Apply when PR modifies GitHub workflows, CI/CD pipelines, or automation processes"
+
+    # Testing and Quality
     - label: "🧪 testing"
-      instructions: "Apply when PR adds or modifies tests, test playbooks, or test infrastructure"
+      instructions: "Apply when PR adds or modifies tests, test automation, or testing infrastructure"
+    - label: "🧪 staging"
+      instructions: "Apply when PR affects staging environment or staging-specific configurations"
+    - label: "🔍 linting"
+      instructions: "Apply when PR modifies linting rules, code quality tools, or static analysis"
+
+    # Platform and Environment Specific
+    - label: "🌍 production"
+      instructions: "Apply when PR affects production environment or production-critical systems"
+    - label: "💻 development"
+      instructions: "Apply when PR affects development environment or developer experience"
+    - label: "🏠 local"
+      instructions: "Apply when PR affects local development setup or local environment configuration"
+
+    # Language and Tool Specific
+    - label: "🐍 python"
+      instructions: "Apply when PR modifies Python scripts, modules, or Python-based automation"
+    - label: "🐚 shell"
+      instructions: "Apply when PR modifies shell scripts, bash automation, or command-line tools"
+    - label: "🔌 cli"
+      instructions: "Apply when PR modifies command-line interfaces or CLI tool configurations"
+
+    # Process and Workflow
+    - label: "🏷️ auto-labeled"
+      instructions: "Apply to all PRs to indicate CodeRabbit has automatically reviewed and labeled"
+    - label: "🎯 mission-critical"
+      instructions: "Apply when PR affects essential systems for project success and mission completion"
+    - label: "🆘 emergency"
+      instructions: "Apply when PR addresses critical system issues requiring immediate attention"
 
 # Chat settings
 chat:
