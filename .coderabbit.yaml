@@ -1,27 +1,38 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
+# CodeRabbit configuration for andromeda-orchestration infrastructure automation repository
+# This configuration is tailored for Ansible, Terraform, Nomad, and infrastructure-as-code workflows
+
 # Review settings
 reviews:
   # Request reviews for all pull requests
   request_changes_workflow: true
   high_level_summary: true
+  high_level_summary_placeholder: "## Summary\n\nThis PR modifies infrastructure automation components. Please review for:\n- Security implications and secrets management\n- Infrastructure best practices and HashiCorp standards\n- Compatibility with existing Nomad/Consul/Vault services\n- Documentation updates for operational procedures"
   poem: false
   review_status: true
   collapse_walkthrough: false
 
-  # Auto-review PRs
+  # Enable enhanced features for infrastructure repos
+  enable_free_tier: true
+
+  # Auto-review configuration
   auto_review:
     enabled: true
-    labels:
+    labels: []
     ignore_title_keywords:
       - "WIP"
       - "DO NOT MERGE"
+      - "[WIP]"
+      - "[DRAFT]"
+      - "DRAFT:"
     drafts: false
     base_branches:
       - main
       - develop
       - feat
       - feature
+      - hotfix
 
   # Tool configurations for linting and security
   tools:
@@ -85,20 +96,108 @@ reviews:
     - "!venv/**"
     - "!__pycache__/**"
 
-  # Review instructions specific to this project
+  # Review instructions specific to this infrastructure automation repository
   path_instructions:
-    - path: "**/*"
+    - path: "**/*.yml"
       instructions: |
-        Pay special attention to Ansible playbook syntax and best practices.
-        Check for hardcoded secrets or credentials - all secrets should use Infisical or environment variables.
-        Verify that NetBox API operations use proper error handling.
-        Ensure Nomad job specifications follow HashiCorp best practices.
-        Check that inventory files properly use dynamic inventory plugins.
-        Validate that all playbooks use 'uv run' for execution as per CLAUDE.md.
-        Ensure DNS and IPAM changes align with the implementation plan in docs/implementation/dns-ipam/.
-        Verify Consul service definitions include proper health checks.
-        Check that container-based deployments use appropriate resource limits.
-        Ensure documentation is updated when infrastructure patterns change.
+        Review Ansible playbook syntax and YAML structure for best practices.
+        Ensure proper task naming, idempotency, and error handling.
+        Verify variables are properly templated and not hardcoded.
+        Check for correct use of handlers, conditionals, and loops.
+        Validate that all secrets use Infisical lookups or environment variables.
+
+    - path: "**/*.yaml"
+      instructions: |
+        Review YAML syntax and structure for consistency with project standards.
+        For Nomad job files, ensure proper resource allocation and health checks.
+        For Docker Compose files, verify service dependencies and networking.
+        Check for proper indentation and YAML best practices.
+
+    - path: "**/*.hcl"
+      instructions: |
+        Review Nomad job specifications for HashiCorp best practices.
+        Ensure proper resource constraints (CPU, memory, disk).
+        Verify service definitions include health checks and proper networking.
+        Check for appropriate restart policies and update strategies.
+        Validate template stanzas use proper escaping and variable references.
+
+    - path: "**/*.nomad"
+      instructions: |
+        Focus on Nomad-specific syntax and job deployment patterns.
+        Ensure proper constraint definitions for node placement.
+        Verify volume mounts and persistent storage configurations.
+        Check for appropriate service registration with Consul.
+        Validate network modes and port allocations follow project standards.
+
+    - path: "**/*.tf"
+      instructions: |
+        Review Terraform configurations for best practices and security.
+        Ensure proper resource naming conventions and tagging.
+        Verify state management and backend configurations.
+        Check for appropriate use of variables, outputs, and modules.
+        Validate that sensitive values use proper variable types.
+
+    - path: "**/*.py"
+      instructions: |
+        Review Python code for PEP 8 compliance and best practices.
+        Ensure proper error handling and logging.
+        Verify API integrations use proper authentication and retries.
+        Check for appropriate use of type hints and docstrings.
+        Validate that scripts work with 'uv run' execution as per CLAUDE.md.
+
+    - path: "**/*.j2"
+      instructions: |
+        Review Jinja2 templates for proper syntax and security.
+        Ensure variables are properly escaped to prevent injection.
+        Verify template logic is clear and maintainable.
+        Check for appropriate use of filters and functions.
+
+    - path: "**/*.sh"
+      instructions: |
+        Review shell scripts for POSIX compliance and best practices.
+        Ensure proper error handling with set -euo pipefail.
+        Verify variables are properly quoted and escaped.
+        Check for appropriate use of functions and error checking.
+        Validate that scripts handle edge cases and provide useful output.
+
+    - path: "playbooks/**/*"
+      instructions: |
+        Focus on Ansible playbook structure and operational safety.
+        Ensure playbooks are idempotent and can be run multiple times safely.
+        Verify proper use of tags for selective execution.
+        Check that inventory references use dynamic inventory plugins.
+        Validate that sensitive operations have appropriate confirmation prompts.
+
+    - path: "nomad-jobs/**/*"
+      instructions: |
+        Review Nomad job configurations for production readiness.
+        Ensure proper resource allocation and scaling policies.
+        Verify service mesh integration and networking configurations.
+        Check for appropriate logging and monitoring configurations.
+        Validate that persistent storage is configured correctly.
+
+    - path: "docs/**/*"
+      instructions: |
+        Review documentation for clarity, accuracy, and completeness.
+        Ensure operational procedures are well-documented.
+        Verify that architectural decisions are properly explained.
+        Check for proper markdown formatting and link validity.
+        Validate that examples and commands are current and functional.
+
+    - path: "inventory/**/*"
+      instructions: |
+        Review inventory configurations for accuracy and security.
+        Ensure dynamic inventory plugins are properly configured.
+        Verify group variables and host variables are appropriately scoped.
+        Check that sensitive inventory data uses proper encryption.
+
+    - path: ".github/**/*"
+      instructions: |
+        Review CI/CD workflow configurations for efficiency and security.
+        Ensure proper secret management in workflows.
+        Verify that workflows follow infrastructure deployment best practices.
+        Check for appropriate use of caching and artifact management.
+        Validate that security scanning and linting steps are included.
 
   # Automatic labeling instructions for PRs
   labeling_instructions:
