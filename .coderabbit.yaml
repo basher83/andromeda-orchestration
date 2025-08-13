@@ -135,6 +135,16 @@ reviews:
     - "**/Dockerfile"
     - "**/*.sh"
     - ".github/**"
+    # Environment files for dotenvLint
+    - ".env"
+    - ".env.*"
+    - ".env.local"
+    - ".env.production"
+    - ".env.staging"
+    - ".env.development"
+    - ".env.test"
+    - "**/.env"
+    - "**/.env.*"
     - "!**/*.lock"
     - "!**/package-lock.json"
     - "!**/.terraform.lock.hcl"
@@ -249,6 +259,14 @@ reviews:
         Verify that workflows follow infrastructure deployment best practices.
         Check for appropriate use of caching and artifact management.
         Validate that security scanning and linting steps are included.
+
+    - path: "**/.env*"
+      instructions: |
+        Review environment files for security and best practices.
+        Ensure no sensitive values are hardcoded in committed .env files.
+        Verify that .env files contain only example or template values.
+        Check that production secrets use proper secret management (Infisical, Ansible Vault).
+        Validate that .env files follow standard KEY=value format with proper escaping.
 
   # Automatic labeling instructions for PRs
   labeling_instructions:
