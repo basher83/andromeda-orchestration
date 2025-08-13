@@ -3,6 +3,9 @@
 # CodeRabbit configuration for andromeda-orchestration infrastructure automation repository
 # This configuration is tailored for Ansible, Terraform, Nomad, and infrastructure-as-code workflows
 
+# Enable enhanced features for infrastructure repos
+enable_free_tier: true
+
 # Review settings
 reviews:
   # Request reviews for all pull requests
@@ -12,9 +15,6 @@ reviews:
   poem: false
   review_status: true
   collapse_walkthrough: false
-
-  # Enable enhanced features for infrastructure repos
-  enable_free_tier: true
 
   # Auto-review configuration
   auto_review:
