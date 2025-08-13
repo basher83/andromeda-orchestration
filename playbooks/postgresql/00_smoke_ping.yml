@@ -9,21 +9,22 @@
 #    consul catalog nodes -service postgres
 #    Use the ServiceAddress/ServicePort from the output.
 #
-# 2. Export connection variables:
-#    export PGHOST=10.0.0.12
-#    export PGPORT=20042
-#    export PGUSER=vaultuser
-#    export PGPASSWORD=<secure-password-from-vault>
-#    export PGDATABASE=postgres
+# 2. Export connection variables from Infisical:
+#    export PGHOST=$(infisical secrets get PGHOST --env=prod --path=/postgresql --plain)
+#    export PGPORT=$(infisical secrets get PGPORT --env=prod --path=/postgresql --plain)
+#    export PGUSER=$(infisical secrets get PGUSER --env=prod --path=/postgresql --plain)
+#    export PGPASSWORD=$(infisical secrets get PGPASSWORD --env=prod --path=/postgresql --plain)
+#    export PGDATABASE=$(infisical secrets get PGDATABASE --env=prod --path=/postgresql --plain)
 #
 # 3. Run the smoke test:
-#    ansible-playbook playbooks/postgresql/00_smoke_ping.yml
+#    uv run ansible-playbook playbooks/postgresql/00_smoke_ping.yml
 
 - name: Smoke-check PostgreSQL via community.postgresql
   hosts: localhost
   gather_facts: false
   tasks:
     - name: Test PostgreSQL connectivity
+      no_log: true
       community.postgresql.postgresql_ping:
         login_host: "{{ lookup('env','PGHOST') | default('127.0.0.1', true) }}"
         login_port: "{{ (lookup('env','PGPORT') | default('5432', true)) | int }}"
