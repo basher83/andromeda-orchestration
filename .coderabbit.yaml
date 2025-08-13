@@ -275,49 +275,66 @@ reviews:
   labeling_instructions:
     # Infrastructure and DevOps
     - label: "🏗️ infrastructure"
-      instructions: "Apply when PR modifies infrastructure provisioning, Nomad jobs, Consul services,
-        or cluster management"
+      instructions: >
+        Apply when PR modifies infrastructure provisioning, Nomad jobs, Consul services,
+        or cluster management
     - label: "🏗️ terraform"
       instructions: "Apply when PR modifies Terraform configurations or Infrastructure as Code"
     - label: "🤖 ansible"
       instructions: "Apply when PR modifies Ansible playbooks, roles, or configuration management"
     - label: "🔧 crew-devops"
-      instructions: "Apply when PR modifies infrastructure code, DevOps tooling, or
-        operational processes"
+      instructions: >
+        Apply when PR modifies infrastructure code, DevOps tooling, or
+        operational processes
     - label: "☁️ cloud"
-      instructions: "Apply when PR involves cloud platform services, resources, or configurations"
+      instructions: >
+        Apply when PR involves cloud platform services, resources, or configurations
     - label: "🌐 networking"
-      instructions: "Apply when PR modifies network configuration, DNS, firewalls, or network security"
+      instructions: >
+        Apply when PR modifies network configuration, DNS, firewalls, or network security
     - label: "💾 database"
       instructions: "Apply when PR modifies database operations, PostgreSQL, or data management"
     - label: "📱 container"
-      instructions: "Apply when PR modifies Docker configurations, containerized applications, or container orchestration"
+      instructions: >
+        Apply when PR modifies Docker configurations, containerized applications,
+        or container orchestration
 
     # API and Integration
     - label: "⚡ api"
-      instructions: "Apply when PR modifies NetBox API integration, inventory plugins, or external API integrations"
+      instructions: >
+        Apply when PR modifies NetBox API integration, inventory plugins,
+        or external API integrations
     - label: "🔌 mcp-server"
-      instructions: "Apply when PR modifies Model Context Protocol server development or MCP integrations"
+      instructions: >
+        Apply when PR modifies Model Context Protocol server development or MCP integrations
     - label: "🔄 automation"
-      instructions: "Apply when PR adds workflow automation, process improvements, or task automation"
+      instructions: >
+        Apply when PR adds workflow automation, process improvements, or task automation
 
     # Security and Secrets
     - label: "🔒 security"
-      instructions: "Apply when PR addresses security vulnerabilities, authentication, or authorization"
+      instructions: >
+        Apply when PR addresses security vulnerabilities, authentication, or authorization
     - label: "🔐 secrets-mgmt"
-      instructions: "Apply when PR modifies SOPS configuration, Infisical integration, or secrets management"
+      instructions: >
+        Apply when PR modifies SOPS configuration, Infisical integration, or secrets management
     - label: "🛡️ policy"
-      instructions: "Apply when PR modifies OPA/Rego policies or infrastructure security policies"
+      instructions: >
+        Apply when PR modifies OPA/Rego policies or infrastructure security policies
     - label: "🔐 auth"
-      instructions: "Apply when PR modifies authentication systems or authorization frameworks"
+      instructions: >
+        Apply when PR modifies authentication systems or authorization frameworks
 
     # Monitoring and Observability
     - label: "📊 monitoring"
-      instructions: "Apply when PR modifies Netdata, monitoring configurations, or observability systems"
+      instructions: >
+        Apply when PR modifies Netdata, monitoring configurations, or observability systems
     - label: "📈 metrics"
-      instructions: "Apply when PR adds performance metrics, monitoring dashboards, or telemetry"
+      instructions: >
+        Apply when PR adds performance metrics, monitoring dashboards, or telemetry
     - label: "💾 backup-restore"
-      instructions: "Apply when PR modifies backup strategies, disaster recovery, or data protection"
+      instructions: >
+        Apply when PR modifies backup strategies, disaster recovery, or data protection
 
     # Development and Code Quality
     - label: "🐛 bug"
@@ -327,9 +344,11 @@ reviews:
     - label: "🧹 refactor"
       instructions: "Apply when PR refactors code without changing functionality"
     - label: "⚡ performance"
-      instructions: "Apply when PR includes performance optimization, caching, or efficiency improvements"
+      instructions: >
+        Apply when PR includes performance optimization, caching, or efficiency improvements
     - label: "💎 breaking-change"
-      instructions: "Apply when PR introduces breaking changes to APIs, configurations, or interfaces"
+      instructions: >
+        Apply when PR introduces breaking changes to APIs, configurations, or interfaces
 
     # Documentation and Configuration
     - label: "📚 documentation"
