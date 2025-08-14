@@ -1,0 +1,151 @@
+# Curated Semgrep rules for infrastructure automation
+# Focus on security, secrets, and infrastructure-specific issues
+# Excludes noisy general purpose rules not relevant to infra code
+
+rules:
+  # Ansible Security Rules
+  - id: ansible-no-log-sensitive-tasks
+    pattern-either:
+      - pattern: |
+          - name: $TASK_NAME
+            $MODULE:
+              $...ARGS
+            when: $...CONDITION
+    pattern-not: |
+      - name: $TASK_NAME
+        $MODULE:
+          $...ARGS
+        no_log: true
+        when: $...CONDITION
+    message: >
+      Tasks handling sensitive data should use 'no_log: true' to prevent
+      secrets from appearing in logs
+    languages: [yaml]
+    severity: WARNING
+    paths:
+      include:
+        - "playbooks/**/*.yml"
+        - "playbooks/**/*.yaml"
+        - "roles/**/*.yml"
+        - "roles/**/*.yaml"
+
+  # Generic Secret Detection
+  - id: hardcoded-secrets
+    pattern-either:
+      - pattern: password = "$VALUE"
+      - pattern: api_key = "$VALUE"
+      - pattern: secret = "$VALUE"
+      - pattern: token = "$VALUE"
+      - pattern: key = "$VALUE"
+    pattern-not-regex: |
+      (password|api_key|secret|token|key)\s*=\s*["'](\{\{.*\}\}|%\{.*\}|\$\{.*\}|<.*>|changeme|example|placeholder|your_.*_here)["']
+    message: >
+      Hardcoded secrets detected. Use environment variables, Ansible Vault,
+      or secure secret management systems like Infisical
+    languages: [python, yaml, bash, hcl]
+    severity: ERROR
+
+  # Infrastructure Configuration Issues
+  - id: terraform-hardcoded-ips
+    pattern-either:
+      - pattern: |
+          cidr_blocks = ["0.0.0.0/0"]
+      - pattern: |
+          source_cidr = "0.0.0.0/0"
+    message: >
+      Avoid overly permissive network rules. Consider restricting CIDR blocks
+      to specific networks or IP ranges
+    languages: [hcl]
+    severity: WARNING
+    paths:
+      include:
+        - "**/*.tf"
+        - "**/*.hcl"
+
+  # Shell Script Security
+  - id: shell-command-injection
+    pattern-either:
+      - pattern: os.system($USER_INPUT)
+      - pattern: subprocess.call($USER_INPUT, shell=True)
+      - pattern: subprocess.run($USER_INPUT, shell=True)
+    message: >
+      Potential command injection vulnerability. Avoid using shell=True with
+      user-controlled input or use parameterized commands
+    languages: [python]
+    severity: ERROR
+
+  # Docker Security
+  - id: dockerfile-root-user
+    pattern: |
+      USER root
+    message: >
+      Running containers as root is a security risk. Consider using a
+      non-privileged user for better container security
+    languages: [dockerfile]
+    severity: WARNING
+    paths:
+      include:
+        - "**/Dockerfile"
+        - "**/Dockerfile.*"
+
+  # YAML/Ansible Best Practices
+  - id: yaml-avoid-latest-tag
+    pattern-either:
+      - pattern: |
+          image: $IMAGE:latest
+      - pattern: |
+          from: $IMAGE:latest
+    message: >
+      Using 'latest' tag is discouraged for production deployments.
+      Pin to specific versions for reproducibility and security
+    languages: [yaml]
+    severity: INFO
+
+  # Python Security for Infrastructure Scripts
+  - id: python-unsafe-yaml-load
+    pattern-either:
+      - pattern: yaml.load($DATA)
+      - pattern: yaml.unsafe_load($DATA)
+    pattern-not: yaml.safe_load($DATA)
+    message: >
+      Use yaml.safe_load() instead of yaml.load() to prevent arbitrary
+      code execution vulnerabilities
+    languages: [python]
+    severity: ERROR
+
+  # Nomad/HashiCorp Configuration
+  - id: nomad-missing-health-check
+    pattern: |
+      service {
+        $...CONFIG
+      }
+    pattern-not: |
+      service {
+        $...CONFIG
+        check {
+          $...CHECK_CONFIG
+        }
+        $...MORE_CONFIG
+      }
+    message: >
+      Nomad services should include health checks for proper service discovery
+      and load balancer integration
+    languages: [hcl]
+    severity: INFO
+    paths:
+      include:
+        - "nomad-jobs/**/*.hcl"
+        - "nomad-jobs/**/*.nomad"
+
+  # Generic Infrastructure Patterns
+  - id: avoid-debug-true
+    pattern-either:
+      - pattern: debug = true
+      - pattern: "debug: true"
+      - pattern: DEBUG = True
+      - pattern: "DEBUG: True"
+    message: >
+      Debug mode should not be enabled in production configurations.
+      Consider using environment-specific configuration
+    languages: [python, yaml, hcl]
+    severity: WARNING

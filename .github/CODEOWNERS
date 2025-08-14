@@ -1,0 +1,131 @@
+# CODEOWNERS - Solo Developer Template
+# 
+# This file defines code ownership for automated review assignments.
+# Optimized for solo developer workflow with Python, Terraform, Ansible, 
+# documentation, and Infrastructure as Code projects.
+#
+# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# Bootstrap: curl -fsSL https://raw.githubusercontent.com/basher83/docs/main/mission-control/github-configs/CODEOWNERS-template -o .github/CODEOWNERS
+
+# --- Global Ownership (default) ---
+* @basher83
+
+# --- Protect This File ---
+/.github/CODEOWNERS @basher83
+
+# --- Python Development ---
+# **/*.py                 @basher83
+# **/requirements*.txt    @basher83
+# **/pyproject.toml       @basher83
+# **/setup.py             @basher83
+# **/setup.cfg            @basher83
+# **/Pipfile*             @basher83
+# **/poetry.lock          @basher83
+# **/.python-version      @basher83
+# **/tox.ini              @basher83
+# **/.pylintrc            @basher83
+# **/pytest.ini          @basher83
+
+# --- Python MCP Servers ---
+# /mcp/**                 @basher83
+# /**/mcp_server*         @basher83
+# /**/*mcp*               @basher83
+# /**/server.py           @basher83
+
+# --- Infrastructure as Code ---
+# /terraform/**           @basher83
+# **/*.tf                 @basher83
+# **/*.tfvars             @basher83
+# **/*.tfstate            @basher83
+# /ansible/**             @basher83
+# **/*.yml                @basher83
+# **/*.yaml               @basher83
+# /**/playbook*           @basher83
+# /**/inventory*          @basher83
+# /**/ansible.cfg         @basher83
+
+# --- IaC Policy & Security ---
+# /policies/**            @basher83
+# **/*.rego               @basher83
+# /opa/**                 @basher83
+# /conftest/**            @basher83
+# /security/**            @basher83
+# **/*policy*             @basher83
+# **/*compliance*         @basher83
+# /.sops/**               @basher83
+# /secrets/**             @basher83
+# **/*.sops               @basher83
+
+# --- Documentation ---
+# **/*.md                 @basher83
+# /docs/**                @basher83
+# /README*                @basher83
+# /CHANGELOG*             @basher83
+# /LICENSE*               @basher83
+# /CONTRIBUTING*          @basher83
+# /SECURITY*              @basher83
+# **/*.rst                @basher83
+# /mkdocs.yml             @basher83
+# /sphinx/**              @basher83
+
+# --- CI/CD & DevOps ---
+# /.github/**             @basher83
+# /.github/workflows/**   @basher83
+# /.github/actions/**     @basher83
+# /docker/**              @basher83
+# /Dockerfile*            @basher83
+# /docker-compose*        @basher83
+# /.dockerignore          @basher83
+# /Makefile               @basher83
+# /justfile               @basher83
+# /scripts/**             @basher83
+
+# --- Configuration Files ---
+# /.gitignore             @basher83
+# /.gitattributes         @basher83
+# /.env*                  @basher83
+# /.envrc                 @basher83
+# /.direnv*               @basher83
+# /config/**              @basher83
+# **/*.toml               @basher83
+# **/*.ini                @basher83
+# **/*.cfg                @basher83
+# **/*.conf               @basher83
+# **/*.json               @basher83
+
+# --- Development Tools ---
+# /.vscode/**             @basher83
+# /.idea/**               @basher83
+# /.editorconfig          @basher83
+# /.pre-commit*           @basher83
+# /.black                 @basher83
+# /.flake8                @basher83
+# /.mypy.ini              @basher83
+# /ruff.toml              @basher83
+
+# --- Testing ---
+# /test/**                @basher83
+# /tests/**               @basher83
+# /**/*_test.py           @basher83
+# /**/test_*.py           @basher83
+# /**/conftest.py         @basher83
+# /.coverage              @basher83
+# /coverage.xml           @basher83
+
+# --- Cloud & Deployment ---
+# /k8s/**                 @basher83
+# /kubernetes/**          @basher83
+# /helm/**                @basher83
+# /charts/**              @basher83
+# **/*.hcl                @basher83
+# /packer/**              @basher83
+# /vagrant/**             @basher83
+# /Vagrantfile            @basher83
+
+# --- Uncommon but useful patterns ---
+# /vendor/**              @basher83
+# /dist/**                @basher83
+# /build/**               @basher83
+# /.terraform/**          @basher83
+# /.ansible/**            @basher83
+# /**/*.lock              @basher83

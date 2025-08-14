@@ -1,0 +1,13 @@
+# Keep file to maintain directory structure for PostgreSQL playbooks
+#
+# This directory contains Ansible playbooks for managing PostgreSQL databases
+# in the andromeda-orchestration infrastructure.
+#
+# Current playbooks:
+# - 00_smoke_ping.yml: Connectivity test using community.postgresql
+#
+# Future playbooks could include:
+# - User management automation
+# - Database schema migrations
+# - Backup/restore procedures
+# - Monitoring setup
