@@ -65,6 +65,9 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["ARG"]
 "plugins/lookup/*" = ["E402", "ARG002"]
+"plugins/modules/*" = ["TID252"]  # Relative imports are valid for Ansible modules
+"plugins/module_utils/*" = ["TID252"]  # Relative imports are valid for Ansible module utils
+"docs/archive/*" = ["E402", "ARG002"]  # Archived code - not actively maintained
 
 [tool.ruff.lint.isort]
 known-first-party = ["plugins"]
