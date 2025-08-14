@@ -23,7 +23,13 @@
       "Bash(consul kv put:*)",
       "Bash(consul catalog:*)",
       "Bash(curl:*)",
-      "mcp__coderabbitai__resolve_comment"
+      "mcp__coderabbitai__resolve_comment",
+      "Bash(uv run ruff check:*)",
+      "Bash(uv run:*)",
+      "Bash(shellcheck:*)",
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(markdownlint:*)"
     ]
   },
   "statusLine": {
