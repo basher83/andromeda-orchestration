@@ -4,10 +4,6 @@
       "type": "http",
       "url": "https://mcp.deepwiki.com/mcp"
     },
-    "grep": {
-      "type": "http",
-      "url": "https://mcp.grep.app"
-    },
     "infisical": {
       "type": "stdio",
       "command": "npx",
@@ -22,9 +18,7 @@
       "args": [
         "firecrawl-mcp"
       ],
-      "env": {
-        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
-      }
+      "env": {}
     },
     "github": {
       "type": "stdio",
@@ -48,15 +42,18 @@
         "coderabbitai-mcp@latest"
       ],
       "env": {
-        "GITHUB_PAT": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+        "GITHUB_PAT": "$GITHUB_PERSONAL_ACCESS_TOKEN"
       }
     },
-    "netdata": {
+    "mise": {
       "type": "stdio",
-      "command": "/usr/local/netdata/usr/sbin/nd-mcp",
+      "command": "mise",
       "args": [
-        "ws://192.168.30.50:19999/mcp?api_key=688656a9-ef64-4b54-a9de-b9860a39bd33"
-      ]
+        "mcp"
+      ],
+      "env": {
+        "MISE_EXPERIMENTAL": "1"
+      }
     }
   }
 }
