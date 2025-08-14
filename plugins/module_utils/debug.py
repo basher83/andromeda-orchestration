@@ -5,6 +5,7 @@
 import inspect
 import logging
 import os
+from pathlib import Path
 
 #
 # This logger can only be enabled if env var ANSIBLE_DEBUG_LOGGER_ENABLED
@@ -47,7 +48,7 @@ def log_request(module, url, method, request_body=None, status=None, response_bo
 
         logging.debug(
             REQUEST_LOG_TEMPLATE.format(
-                caller_file=os.path.basename(inspect.currentframe().f_back.f_code.co_filename),
+                caller_file=Path(inspect.currentframe().f_back.f_code.co_filename).name,
                 caller_func=inspect.currentframe().f_back.f_code.co_name,
                 url=url,
                 method=method,

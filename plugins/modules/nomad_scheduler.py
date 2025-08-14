@@ -56,7 +56,9 @@ def run_module():
         "PreemptionConfig": {
             # repeat the defaults here since they do not seem to be respected from preemption_config_spec
             "SystemSchedulerEnabled": module.params.get("preemption_config").get("system_scheduler_enabled", True),
-            "SysBatchSchedulerEnabled": module.params.get("preemption_config").get("sys_batch_scheduler_enabled", False),
+            "SysBatchSchedulerEnabled": module.params.get("preemption_config").get(
+                "sys_batch_scheduler_enabled", False
+            ),
             "BatchSchedulerEnabled": module.params.get("preemption_config").get("batch_scheduler_enabled", False),
             "ServiceSchedulerEnabled": module.params.get("preemption_config").get("service_scheduler_enabled", False),
         },

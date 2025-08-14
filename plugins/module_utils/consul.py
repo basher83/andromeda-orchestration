@@ -83,9 +83,7 @@ class ConsulAPI:
                 return None
 
             if e.code == 401 or e.code == 403:
-                self.module.fail_json(
-                    msg=f"Not Authorized: status={e.code} [{method}] {url} ->\n{response_body}"
-                )
+                self.module.fail_json(msg=f"Not Authorized: status={e.code} [{method}] {url} ->\n{response_body}")
 
             self.module.fail_json(msg=f"Error: status={e.code} [{method}] {url} ->\n{response_body}")
 

@@ -63,14 +63,15 @@ def run_module():
         )
         result["changed"] = True
 
-    if module.params.get("state") == "present":
-        if existing_intention is None or not is_subset(desired_intention_body, existing_intention):
-            consul.create_or_update_connect_intention(
-                source=module.params.get("source"),
-                destination=module.params.get("destination"),
-                body=json.dumps(desired_intention_body),
-            )
-            result["changed"] = True
+    if module.params.get("state") == "present" and (
+        existing_intention is None or not is_subset(desired_intention_body, existing_intention)
+    ):
+        consul.create_or_update_connect_intention(
+            source=module.params.get("source"),
+            destination=module.params.get("destination"),
+            body=json.dumps(desired_intention_body),
+        )
+        result["changed"] = True
 
     module.exit_json(**result)
 
