@@ -27,14 +27,13 @@ run_playbook() {
     echo -e "${YELLOW}Testing: $description${NC}"
     echo "Running: uv run ansible-playbook $playbook -i $INVENTORY $extra_args"
 
-    if uv run ansible-playbook "$playbook" -i "$INVENTORY" $extra_args; then
+    if uv run ansible-playbook "$playbook" -i "$INVENTORY" ${extra_args:+$extra_args}; then
         echo -e "${GREEN}✓ $description passed${NC}"
         return 0
     else
         echo -e "${RED}✗ $description failed${NC}"
         return 1
     fi
-    echo
 }
 
 # Track failures

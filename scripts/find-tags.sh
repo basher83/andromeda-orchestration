@@ -49,7 +49,8 @@ fi
 # Function to count tags by type
 count_tags() {
     local pattern="$1"
-    local count=$(rg "$pattern" . \
+    local count
+    count=$(rg "$pattern" . \
         --glob '!.venv/**' \
         --glob '!venv/**' \
         --glob '!.archive/**' \
@@ -157,11 +158,11 @@ fi
 # Suggest next action
 echo ""
 if [ "$TAG_FILTER" = "ALL" ]; then
-    if [ ${tag_counts[SECURITY]:-0} -gt 0 ]; then
+    if [ "${tag_counts[SECURITY]:-0}" -gt 0 ]; then
         echo -e "${RED}⚠️  SECURITY tags found - address immediately!${NC}"
-    elif [ ${tag_counts[FIXME]:-0} -gt 0 ] || [ ${tag_counts[BUG]:-0} -gt 0 ]; then
+    elif [ "${tag_counts[FIXME]:-0}" -gt 0 ] || [ "${tag_counts[BUG]:-0}" -gt 0 ]; then
         echo -e "${RED}⚠️  High priority issues found (FIXME/BUG) - address in current sprint${NC}"
-    elif [ ${tag_counts[TODO]:-0} -gt 0 ]; then
+    elif [ "${tag_counts[TODO]:-0}" -gt 0 ]; then
         echo -e "${YELLOW}📝 TODO items found - schedule for next refactor${NC}"
     else
         echo -e "${GREEN}✅ No action items found!${NC}"
