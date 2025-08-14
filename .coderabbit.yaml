@@ -1,28 +1,57 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
+# CodeRabbit configuration for andromeda-orchestration infrastructure automation repository
+# This configuration is tailored for Ansible, Terraform, Nomad, and infrastructure-as-code workflows
+
+language: en-US
+tone_instructions: "Be professional and focus on security, infrastructure best practices, and operational safety."
+early_access: true
+enable_free_tier: true
+
 # Review settings
 reviews:
-  # Request reviews for all pull requests
+  profile: assertive  # Comprehensive code quality checks for infrastructure
   request_changes_workflow: true
   high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  high_level_summary_in_walkthrough: false
+  auto_title_placeholder: "@coderabbitai"
+  auto_title_instructions: "Include infrastructure component or service name if referenced in PR"
   poem: false
   review_status: true
+  commit_status: true
+  fail_commit_status: false
   collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  auto_apply_labels: true
+  suggested_reviewers: true
+  auto_assign_reviewers: true
+  abort_on_close: true
+  disable_cache: false
 
-  # Auto-approve PRs from renovate bot for dependency updates
+  # Auto-review configuration
   auto_review:
     enabled: true
-    labels:
-      - "renovate"
-      - "dependencies"
-      - "automated"
+    labels: []
     ignore_title_keywords:
       - "WIP"
       - "DO NOT MERGE"
+      - "[WIP]"
+      - "[DRAFT]"
+      - "DRAFT:"
     drafts: false
     base_branches:
       - main
       - develop
+      - '^feat/.*$'
+      - '^feature/.*$'
+      - '^hotfix/.*$'
 
   # Tool configurations for linting and security
   tools:
@@ -46,13 +75,30 @@ reviews:
     actionlint:
       enabled: true
 
-    # GitHub checks integration
+    # GitHub integration - ENHANCED for infrastructure automation
     github-checks:
       enabled: true
+      timeout_ms: 300000  # Increased timeout for complex Ansible/infrastructure pipelines
 
     # Secret detection
     gitleaks:
       enabled: true
+
+    # Enhanced security scanning - Infrastructure focused
+    semgrep:
+      enabled: true
+      config_file: ".semgrep/infrastructure-rules.yml"
+      options:
+        - "--severity=ERROR"
+        - "--severity=WARNING"
+        - "--exclude=docs/archive/**"
+        - "--exclude=**/*.log"
+        - "--exclude=**/*.tmp"
+        - "--exclude=.venv/**"
+        - "--exclude=venv/**"
+        - "--exclude=__pycache__/**"
+        - "--exclude=**/*.lock"
+        - "--exclude=uv.lock"
 
     # Infrastructure as code security scanning
     checkov:
@@ -61,6 +107,32 @@ reviews:
     # Dockerfile linting
     hadolint:
       enabled: true
+
+    # Language/documentation tools for infrastructure docs
+    languagetool:
+      enabled: true
+      disabled_rules: ["WHITESPACE_RULE", "EN_QUOTES"]
+      level: default
+
+    # Environment file validation
+    dotenvLint:
+      enabled: true
+
+    # Disable non-applicable tools for infrastructure repo
+    biome:
+      enabled: false
+    eslint:
+      enabled: false
+    rubocop:
+      enabled: false
+    swiftlint:
+      enabled: false
+    phpstan:
+      enabled: false
+    golangci-lint:
+      enabled: false
+    detekt:
+      enabled: false
 
   # Path filters - what to review (exclusions use '!' prefix)
   path_filters:
@@ -73,12 +145,24 @@ reviews:
     - "**/*.tf"
     - "**/*.md"
     - "**/Dockerfile"
+    - "Dockerfile"  # Ensure root Dockerfile is covered
     - "**/*.sh"
     - ".github/**"
+    # Environment files for dotenvLint
+    - ".env"
+    - ".env.*"
+    - ".env.local"
+    - ".env.production"
+    - ".env.staging"
+    - ".env.development"
+    - ".env.test"
+    - "*.env"  # Catch files like app.env, prod.env
+    - "**/.env"
+    - "**/.env.*"
+    - "**/*.env"  # Catch environment files in subdirectories
     - "!**/*.lock"
     - "!**/package-lock.json"
     - "!**/.terraform.lock.hcl"
-    - "!**/ansible.cfg"
     - "!docs/archive/**"
     - "!**/*.log"
     - "!**/*.tmp"
@@ -86,65 +170,307 @@ reviews:
     - "!venv/**"
     - "!__pycache__/**"
 
-  # Review instructions specific to this project
+  # Review instructions specific to this infrastructure automation repository
   path_instructions:
-    - path: "**/*"
+    - path: "**/*.yml"
       instructions: |
-        Pay special attention to Ansible playbook syntax and best practices.
-        Check for hardcoded secrets or credentials - all secrets should use Infisical or environment variables.
-        Verify that NetBox API operations use proper error handling.
-        Ensure Nomad job specifications follow HashiCorp best practices.
-        Check that inventory files properly use dynamic inventory plugins.
-        Validate that all playbooks use 'uv run' for execution as per CLAUDE.md.
-        Ensure DNS and IPAM changes align with the implementation plan in docs/implementation/dns-ipam/.
-        Verify Consul service definitions include proper health checks.
-        Check that container-based deployments use appropriate resource limits.
-        Ensure documentation is updated when infrastructure patterns change.
+        Review Ansible playbook syntax and YAML structure for best practices.
+        Ensure proper task naming, idempotency, and error handling.
+        Verify variables are properly templated and not hardcoded.
+        Check for correct use of handlers, conditionals, and loops.
+        Validate that all secrets use Ansible Vault, environment variables, or approved lookup plugins
+        (e.g., Infisical).
+
+    - path: "**/*.yaml"
+      instructions: |
+        Review YAML syntax and structure for consistency with project standards.
+        For Nomad job files, ensure proper resource allocation and health checks.
+        For Docker Compose files, verify service dependencies and networking.
+        Check for proper indentation and YAML best practices.
+
+    - path: "**/*.hcl"
+      instructions: |
+        Review Nomad job specifications for HashiCorp best practices.
+        Ensure proper resource constraints (CPU, memory, disk).
+        Verify service definitions include health checks and proper networking.
+        Check for appropriate restart policies and update strategies.
+        Validate template stanzas use proper escaping and variable references.
+
+    - path: "**/*.nomad"
+      instructions: |
+        Focus on Nomad-specific syntax and job deployment patterns.
+        Ensure proper constraint definitions for node placement.
+        Verify volume mounts and persistent storage configurations.
+        Check for appropriate service registration with Consul.
+        Validate network modes and port allocations follow project standards.
+
+    - path: "**/*.tf"
+      instructions: |
+        Review Terraform configurations for best practices and security.
+        Ensure proper resource naming conventions and tagging.
+        Verify state management and backend configurations.
+        Check for appropriate use of variables, outputs, and modules.
+        Validate that sensitive values use proper variable types.
+
+    - path: "**/*.py"
+      instructions: |
+        Review Python code for PEP 8 compliance and best practices.
+        Ensure proper error handling and logging.
+        Verify API integrations use proper authentication and retries.
+        Check for appropriate use of type hints and docstrings.
+        Validate that scripts work with 'uv run' execution as per CLAUDE.md.
+
+    - path: "**/*.j2"
+      instructions: |
+        Review Jinja2 templates for proper syntax and security.
+        Ensure variables are properly escaped to prevent injection.
+        Verify template logic is clear and maintainable.
+        Check for appropriate use of filters and functions.
+
+    - path: "**/*.sh"
+      instructions: |
+        Review shell scripts for POSIX compliance and best practices.
+        Ensure proper error handling with set -euo pipefail.
+        Verify variables are properly quoted and escaped.
+        Check for appropriate use of functions and error checking.
+        Validate that scripts handle edge cases and provide useful output.
+
+    - path: "playbooks/**/*"
+      instructions: |
+        Focus on Ansible playbook structure and operational safety.
+        Ensure playbooks are idempotent and can be run multiple times safely.
+        Verify proper use of tags for selective execution.
+        Prefer dynamic inventory plugins for inventory references; allow static inventory only with
+        documented justification.
+        Require no_log: true for tasks handling secrets/credentials (or use vault/encrypted vars).
+        Recommend check_mode/dry-run validation with --check before production changes.
+        Validate that sensitive operations include confirmation prompts or approval steps.
+        Document exceptions where secret output visibility is required for troubleshooting.
+
+    - path: "playbooks/postgresql/**/*"
+      instructions: |
+        Use FQCN for community.postgresql modules (e.g., community.postgresql.postgresql_ping).
+        Avoid hardcoding credentials; source via env vars or Ansible Vault/lookup plugins.
+        Prefer become_user: postgres for admin tasks; ensure least-privilege for application users.
+        Validate connectivity using postgresql_ping before running schema changes.
+        Ensure tasks are idempotent (e.g., state=present/absent) and safe in --check mode.
+
+    - path: "nomad-jobs/**/*"
+      instructions: |
+        Review Nomad job configurations for production readiness.
+        Ensure proper resource allocation and scaling policies.
+        Verify service mesh integration and networking configurations.
+        Check for appropriate logging and monitoring configurations.
+        Validate that persistent storage is configured correctly.
+
+    - path: "docs/**/*"
+      instructions: |
+        Review documentation for clarity, accuracy, and completeness.
+        Ensure operational procedures are well-documented.
+        Verify that architectural decisions are properly explained.
+        Check for proper markdown formatting and link validity.
+        Validate that examples and commands are current and functional.
+
+    - path: "inventory/**/*"
+      instructions: |
+        Review inventory configurations for accuracy and security.
+        Ensure dynamic inventory plugins are properly configured.
+        Verify group variables and host variables are appropriately scoped.
+        Check that sensitive inventory data uses proper encryption.
+
+    - path: ".github/**/*"
+      instructions: |
+        Review CI/CD workflow configurations for efficiency and security.
+        Ensure proper secret management in workflows.
+        Verify that workflows follow infrastructure deployment best practices.
+        Check for appropriate use of caching and artifact management.
+        Validate that security scanning and linting steps are included.
+
+    - path: "**/.env*"
+      instructions: |
+        Review environment files for security and best practices.
+        Ensure no sensitive values are hardcoded in committed .env files.
+        Verify that .env files contain only example or template values.
+        Check that production secrets use proper secret management (Infisical, Ansible Vault).
+        Validate that .env files follow standard KEY=value format with proper escaping.
+
+    - path: "**/*.env"
+      instructions: |
+        Review environment files (including app.env, prod.env, etc.) for security and best practices.
+        Ensure no sensitive values are hardcoded in committed environment files.
+        Verify that files contain only example or template values for committed code.
+        Check that production secrets use proper secret management (Infisical, Ansible Vault).
+        Validate that environment files follow standard KEY=value format with proper escaping.
 
   # Automatic labeling instructions for PRs
   labeling_instructions:
-    - label: "⚡ api"
-      instructions: "Apply when PR modifies NetBox API integration, inventory plugins, or API-related modules"
-    - label: "👨‍🚀 crew-backend"
-      instructions: "Apply when PR modifies Python code, Ansible modules, or backend infrastructure"
+    # Infrastructure and DevOps
+    - label: "🏗️ infrastructure"
+      instructions: >
+        Apply when PR modifies infrastructure provisioning, Nomad jobs, Consul services,
+        or cluster management
+    - label: "🏗️ terraform"
+      instructions: "Apply when PR modifies Terraform configurations or Infrastructure as Code"
+    - label: "🤖 ansible"
+      instructions: "Apply when PR modifies Ansible playbooks, roles, or configuration management"
+    - label: "🔧 crew-devops"
+      instructions: >
+        Apply when PR modifies infrastructure code, DevOps tooling, or
+        operational processes
+    - label: "☁️ cloud"
+      instructions: >
+        Apply when PR involves cloud platform services, resources, or configurations
+    - label: "🌐 networking"
+      instructions: >
+        Apply when PR modifies network configuration, DNS, firewalls, or network security
     - label: "💾 database"
-      instructions: "Apply when PR modifies NetBox database operations or data models"
-    - label: "⚡ performance"
-      instructions: "Apply when PR includes caching, optimization, or performance improvements"
-    - label: "📚 documentation"
-      instructions: "Apply when PR updates README.md, CLAUDE.md, or docs/ directory"
-    - label: "📝 crew-docs"
-      instructions: "Apply when PR significantly updates documentation or adds new docs"
+      instructions: "Apply when PR modifies database operations, PostgreSQL, or data management"
+    - label: "📱 container"
+      instructions: >
+        Apply when PR modifies Docker configurations, containerized applications,
+        or container orchestration
+
+    # API and Integration
+    - label: "⚡ api"
+      instructions: >
+        Apply when PR modifies NetBox API integration, inventory plugins,
+        or external API integrations
+    - label: "🔌 mcp-server"
+      instructions: >
+        Apply when PR modifies Model Context Protocol server development or MCP integrations
+    - label: "🔄 automation"
+      instructions: >
+        Apply when PR adds workflow automation, process improvements, or task automation
+
+    # Security and Secrets
+    - label: "🔒 security"
+      instructions: >
+        Apply when PR addresses security vulnerabilities, authentication, or authorization
+    - label: "🔐 secrets-mgmt"
+      instructions: >
+        Apply when PR modifies SOPS configuration, Infisical integration, or secrets management
+    - label: "🛡️ policy"
+      instructions: >
+        Apply when PR modifies OPA/Rego policies or infrastructure security policies
+    - label: "🔐 auth"
+      instructions: >
+        Apply when PR modifies authentication systems or authorization frameworks
+
+    # Monitoring and Observability
+    - label: "📊 monitoring"
+      instructions: >
+        Apply when PR modifies Netdata, monitoring configurations, or observability systems
+    - label: "📈 metrics"
+      instructions: >
+        Apply when PR adds performance metrics, monitoring dashboards, or telemetry
+    - label: "💾 backup-restore"
+      instructions: >
+        Apply when PR modifies backup strategies, disaster recovery, or data protection
+
+    # Development and Code Quality
     - label: "🐛 bug"
       instructions: "Apply when PR fixes bugs, resolves issues, or corrects errors"
     - label: "✨ enhancement"
-      instructions: "Apply when PR adds new features, playbooks, or capabilities"
-    - label: "💎 breaking-change"
-      instructions: "Apply when PR introduces breaking changes to playbooks, inventory structure, or modules"
-    - label: "🏷️ auto-labeled"
-      instructions: "Apply to all PRs to indicate CodeRabbit has reviewed and labeled"
-    - label: "🔄 ci-cd"
-      instructions: "Apply when PR modifies .github/workflows/, CI/CD pipelines, or automation"
-    - label: "🔒 security"
-      instructions: "Apply when PR addresses security vulnerabilities, secrets management, or improves security"
-    - label: "🔧 config"
-      instructions: "Apply when PR modifies configuration files, inventory settings, or ansible.cfg"
-    - label: "🔧 crew-devops"
-      instructions: "Apply when PR modifies infrastructure code, Nomad jobs, Consul, or Terraform"
-    - label: "📦 dependencies"
-      instructions: "Apply when PR updates requirements.txt, pyproject.toml, or dependency versions"
-    - label: "🤖 renovate"
-      instructions: "Apply when PR is created by Renovate bot for dependency updates"
-    - label: "🤖 dependabot"
-      instructions: "Apply when PR is created by Dependabot for security updates"
+      instructions: "Apply when PR adds new features, capabilities, or improvements"
     - label: "🧹 refactor"
       instructions: "Apply when PR refactors code without changing functionality"
-    - label: "🧪 testing"
-      instructions: "Apply when PR adds or modifies tests, test playbooks, or test infrastructure"
+    - label: "⚡ performance"
+      instructions: >
+        Apply when PR includes performance optimization, caching, or efficiency improvements
+    - label: "💎 breaking-change"
+      instructions: >
+        Apply when PR introduces breaking changes to APIs, configurations, or interfaces
 
-# Chat settings
+    # Documentation and Configuration
+    - label: "📚 documentation"
+      instructions: "Apply when PR updates README.md, CLAUDE.md, or documentation in docs/ directory"
+    - label: "📝 crew-docs"
+      instructions: "Apply when PR significantly updates documentation or adds comprehensive guides"
+    - label: "🔧 config"
+      instructions: "Apply when PR modifies configuration files, settings, or environment configurations"
+    - label: "📋 template"
+      instructions: "Apply when PR adds or modifies templates, boilerplate code, or reusable patterns"
+
+    # Dependencies and Automation
+    - label: "📦 dependencies"
+      instructions: "Apply when PR updates Python packages, Ansible collections, or dependency versions"
+    - label: "🤖 renovate"
+      instructions: "Apply when PR is created by Renovate bot for automated dependency updates"
+    - label: "🤖 dependabot"
+      instructions: "Apply when PR is created by Dependabot for automated security updates"
+    - label: "🔄 ci-cd"
+      instructions: "Apply when PR modifies GitHub workflows, CI/CD pipelines, or automation processes"
+
+    # Testing and Quality
+    - label: "🧪 testing"
+      instructions: "Apply when PR adds or modifies tests, test automation, or testing infrastructure"
+    - label: "🧪 staging"
+      instructions: "Apply when PR affects staging environment or staging-specific configurations"
+    - label: "🔍 linting"
+      instructions: "Apply when PR modifies linting rules, code quality tools, or static analysis"
+
+    # Platform and Environment Specific
+    - label: "🌍 production"
+      instructions: "Apply when PR affects production environment or production-critical systems"
+    - label: "💻 development"
+      instructions: "Apply when PR affects development environment or developer experience"
+    - label: "🏠 local"
+      instructions: "Apply when PR affects local development setup or local environment configuration"
+
+    # Language and Tool Specific
+    - label: "🐍 python"
+      instructions: "Apply when PR modifies Python scripts, modules, or Python-based automation"
+    - label: "🐚 shell"
+      instructions: "Apply when PR modifies shell scripts, bash automation, or command-line tools"
+    - label: "🔌 cli"
+      instructions: "Apply when PR modifies command-line interfaces or CLI tool configurations"
+
+    # Process and Workflow
+    - label: "🏷️ auto-labeled"
+      instructions: "Apply to all PRs to indicate CodeRabbit has automatically reviewed and labeled"
+    - label: "🎯 mission-critical"
+      instructions: "Apply when PR affects essential systems for project success and mission completion"
+    - label: "🆘 emergency"
+      instructions: "Apply when PR addresses critical system issues requiring immediate attention"
+
+# Knowledge Base Configuration for Infrastructure Context
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  pull_requests:
+    scope: auto
+
+# Code Generation for Infrastructure Components
+code_generation:
+  docstrings:
+    language: en-US
+    path_instructions:
+      - path: "**/*.py"
+        instructions: "Generate comprehensive docstrings for Python automation scripts and inventory plugins"
+      - path: "playbooks/**/*.yml"
+        instructions: "Add clear task descriptions and parameter documentation for Ansible playbooks"
+  unit_tests:
+    path_instructions:
+      - path: "**/*.py"
+        instructions: "Generate tests for Python inventory plugins and automation scripts"
+      - path: "scripts/**/*"
+        instructions: "Create basic validation tests for shell scripts and automation tools"
+
+# Enhanced Tool Configuration with Infrastructure Focus
+# Note: Tool configurations are already defined in reviews.tools section above
+
+# Chat settings with integrations
 chat:
   auto_reply: true
-
-# Enable early access features
-early_access: true
+  integrations:
+    jira:
+      usage: auto
+    linear:
+      usage: auto
