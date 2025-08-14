@@ -1,8 +1,11 @@
 # Phase 4: PowerDNS-NetBox Integration
 
-**Target Timeline**: August 7-14, 2025
+**Target Timeline**: August 12-19, 2025
 **Status**: 🚧 In Progress
 **Prerequisites**: Phase 3 Complete (NetBox populated)
+**GitHub Epic**: [#27](https://github.com/basher83/netbox-ansible/issues/27)
+
+> ⚠️ **CRITICAL DEPENDENCY**: Domain migration from .local to spaceships.work ([Epic #18](https://github.com/basher83/netbox-ansible/issues/18)) must be completed in parallel. See [Critical Domain Migration](../critical-domain-migration.md).
 
 ---
 
@@ -26,42 +29,49 @@ References:
 - PowerDNS Overview: [docs/implementation/powerdns/README.md](../../implementation/powerdns/README.md)
 - Deployment Architecture: [docs/implementation/powerdns/deployment-architecture.md](../../implementation/powerdns/deployment-architecture.md)
 
-### Mode A Implementation Tasks
+### Mode A Implementation Tasks (GitHub Issues)
 
-1. Database provisioning (PostgreSQL)
+**Epic**: [#27](https://github.com/basher83/netbox-ansible/issues/27) - Phase 4 PowerDNS-NetBox Integration Tracking
+
+#### 1. Database provisioning (PostgreSQL) ✅ COMPLETED
 
    - [x] Deploy Nomad job: `nomad-jobs/platform-services/postgresql.nomad.hcl`
    - [x] Configure host volume for persistence
    - [x] Initialize PowerDNS schema
+   - [x] Configure Vault Database Secrets Engine
 
-2. Secrets and configuration
+#### 2. Infrastructure Setup (Active Sprint)
 
-   - [x] Write Consul KV entries for DB host/port/name/user
-   - [x] Store `db_password` and `api_key` in Vault (Infisical references as needed)
+   - [ ] [#28](https://github.com/basher83/netbox-ansible/issues/28): Deploy PowerDNS with PostgreSQL backend
+   - [ ] [#29](https://github.com/basher83/netbox-ansible/issues/29): Expose DNS :53 (TCP/UDP) and API via Traefik dynamic port
+   - [ ] [#30](https://github.com/basher83/netbox-ansible/issues/30): Register Consul services (powerdns-auth, powerdns-auth-api)
+   - [ ] [#31](https://github.com/basher83/netbox-ansible/issues/31): Configure Traefik routing and middlewares for API
+   - [ ] [#32](https://github.com/basher83/netbox-ansible/issues/32): Add health checks for :53 and API
 
-3. Deploy PowerDNS Auth (Mode A)
+#### 3. NetBox Integration
 
-   - [ ] Deploy/update PowerDNS job: `nomad-jobs/platform-services/powerdns.nomad.hcl` (configure for PostgreSQL backend)
-   - [ ] Expose DNS on port 53 (TCP/UDP), API via dynamic port
-   - [ ] Register Consul services (`powerdns-auth`, `powerdns-auth-api`)
+   - [ ] [#38](https://github.com/basher83/netbox-ansible/issues/38): Configure forward/reverse zones in NetBox (use spaceships.work)
+   - [ ] [#39](https://github.com/basher83/netbox-ansible/issues/39): PowerDNS ←→ NetBox API connectivity
+   - [ ] [#40](https://github.com/basher83/netbox-ansible/issues/40): Implement sync script and webhooks
 
-4. Ingress and health
+#### 4. Migration & Testing
 
-   - [ ] Configure Traefik routing for API access
-   - [ ] Enable health checks for :53 and API
-   - [ ] Scale to count=2 with distinct hosts
+   - [ ] [#41](https://github.com/basher83/netbox-ansible/issues/41): Migrate DNS records from Pi-hole to NetBox
+   - [ ] [#42](https://github.com/basher83/netbox-ansible/issues/42): Functional testing - forward/reverse lookups
+   - [ ] [#43](https://github.com/basher83/netbox-ansible/issues/43): Zone transfers and automatic DNS updates
 
-5. Migration from prototype
+#### 5. Production Readiness
 
-   - [ ] Decommission MariaDB-based prototype jobs
-   - [ ] Migrate any initial data (if applicable)
-   - [ ] Validate no consumers depend on old endpoints
+   - [ ] [#33](https://github.com/basher83/netbox-ansible/issues/33): Scale to HA (count=2 on distinct hosts)
+   - [ ] [#34](https://github.com/basher83/netbox-ansible/issues/34): Decommission MariaDB prototype
+   - [ ] [#35](https://github.com/basher83/netbox-ansible/issues/35): Migrate data from prototype if needed
+   - [ ] [#36](https://github.com/basher83/netbox-ansible/issues/36): Verify DNS resolution and API operations
+   - [ ] [#37](https://github.com/basher83/netbox-ansible/issues/37): Update runbooks to Mode A PostgreSQL + Vault
 
-6. Validation
+#### 6. Enhancement (Optional)
 
-   - [ ] Verify DNS queries resolve from PowerDNS
-   - [ ] Verify API operations and metrics
-   - [ ] Document runbook updates
+   - [ ] [#26](https://github.com/basher83/netbox-ansible/issues/26): Integrate PowerDNS-Admin web UI
+   - [ ] [#46](https://github.com/basher83/netbox-ansible/issues/46): Add milestone checklist to Phase 4 doc
 
 ## Current Progress
 
@@ -112,35 +122,36 @@ References:
 
 ## Detailed Checklist
 
-### NetBox DNS Zones
+**Note**: Detailed tasks are now tracked as GitHub issues. See [Mode A Implementation Tasks](#mode-a-implementation-tasks-github-issues) above for issue links.
 
-- [ ] Create primary forward zones (e.g., homelab.local)
-- [ ] Create reverse zones for all managed prefixes
-- [ ] Configure SOA/NS records and TTLs per standard
-- [ ] Define zone delegation if applicable
+### Quick Reference by Category
 
-### PowerDNS API Integration
+**Infrastructure** (Issues #28-33)
+- Deploy PowerDNS, configure ports, Consul services, Traefik routing, health checks, HA
 
-- [ ] Confirm NetBox DNS plugin v1.3.5 installed and enabled
-- [ ] Configure PowerDNS backend to pull from NetBox
-- [ ] Set API key/credentials (store in Infisical/Vault)
-- [ ] Verify PowerDNS ↔ NetBox connectivity
+**NetBox Configuration** (Issues #38, #21)
+- Create zones with spaceships.work domain (NOT .local)
+- Configure forward/reverse zones with proper SOA/NS records
+- Set TTLs per standard
 
-### Sync and Automation
+**Integration** (Issues #39-40)
+- API connectivity between PowerDNS and NetBox
+- Sync script implementation
+- Webhook configuration
 
-- [ ] Implement NetBox → PowerDNS sync script
-- [ ] Configure NetBox webhooks for record changes
-- [ ] Add validation and rollback safeguards
-- [ ] Enable automatic PTR record generation
-- [ ] Configure zone transfers if required
-- [ ] Enable automatic DNS updates where needed
+**Migration** (Issues #41, #34-35)
+- Pi-hole to NetBox record migration
+- Prototype decommission
+- Data migration if needed
 
-### Functional Testing
+**Testing** (Issues #42-43, #36)
+- Forward/reverse lookup validation
+- Zone transfer configuration
+- API operations verification
 
-- [ ] Forward lookups resolve against PowerDNS
-- [ ] Reverse lookups resolve with correct PTRs
-- [ ] Changes in NetBox propagate to PowerDNS
-- [ ] Performance and reliability validated
+**Documentation** (Issues #37, #46)
+- Runbook updates for Mode A
+- Phase 4 milestone checklist
 
 ## Technical Details
 

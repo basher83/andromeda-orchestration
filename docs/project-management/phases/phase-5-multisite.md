@@ -2,34 +2,52 @@
 
 **Target Timeline**: Q4 2025
 **Status**: Future Planning
-**Prerequisites**: Phase 3 Complete, Single site stable
+**Prerequisites**: Phase 4 Complete, Single site stable
+**GitHub Epic**: [#47](https://github.com/basher83/netbox-ansible/issues/47)
 
 ---
 
-## Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 3](./phase-3-netbox.md) | [Phase 6](./phase-6-post-implementation-continuous-improvement.md)
+## Navigation: [Current Sprint](../current-sprint.md) | [Task Summary](../task-summary.md) | [Phase 4](./phase-4-dns-integration.md) | [Phase 6](./phase-6-post-implementation-continuous-improvement.md)
 
 ## Phase Overview
 
 Expand DNS/IPAM infrastructure to support multiple sites (og-homelab integration) and implement advanced features for reliability and performance.
 
+## GitHub Issue Tracking
+
+**Epic**: [#47](https://github.com/basher83/netbox-ansible/issues/47) - Phase 5 Multi-Site Expansion Tracking
+
+### Infrastructure Expansion
+- [#48](https://github.com/basher83/netbox-ansible/issues/48): Plan Multi-Site DNS Strategy
+- [#49](https://github.com/basher83/netbox-ansible/issues/49): Deploy Consul to og-homelab
+- [#50](https://github.com/basher83/netbox-ansible/issues/50): Set up cross-datacenter replication
+- [#51](https://github.com/basher83/netbox-ansible/issues/51): Deploy PowerDNS at each site
+
+### Advanced Features
+- [#52](https://github.com/basher83/netbox-ansible/issues/52): Implement GeoDNS capabilities
+- [#53](https://github.com/basher83/netbox-ansible/issues/53): Security hardening (DNSSEC, mTLS, audit)
+- [#54](https://github.com/basher83/netbox-ansible/issues/54): Performance optimization
+- [#55](https://github.com/basher83/netbox-ansible/issues/55): Disaster recovery plan
+- [#56](https://github.com/basher83/netbox-ansible/issues/56): Advanced automation (webhooks, ChatOps)
+
 ## High Priority Tasks
 
-### 15. Plan Multi-Site DNS Strategy
+### [#48](https://github.com/basher83/netbox-ansible/issues/48): Plan Multi-Site DNS Strategy
 
 **Description**: Design DNS architecture for og-homelab integration
 **Status**: Not Started
-**Blockers**: Single site must work first
+**Blockers**: Phase 4 must complete first
 
 Tasks:
 
 - [ ] Assess og-homelab infrastructure requirements
 - [ ] Design cross-site DNS replication strategy
 - [ ] Plan zone delegation between sites
-- [ ] Define site-specific naming conventions
+- [ ] Define site-specific naming conventions (using spaceships.work subdomain)
 - [ ] Create network interconnection plan
 - [ ] Document failover procedures
 
-### Multi-Site Consul Mesh
+### [#49-50](https://github.com/basher83/netbox-ansible/issues/49): Multi-Site Consul Mesh
 
 **Description**: Extend Consul service mesh across sites
 **Status**: Not Started
@@ -37,16 +55,16 @@ Tasks:
 
 Tasks:
 
-- [ ] Deploy Consul to og-homelab
+- [ ] [#49](https://github.com/basher83/netbox-ansible/issues/49): Deploy Consul to og-homelab
 - [ ] Configure WAN gossip pool
-- [ ] Set up cross-datacenter replication
+- [ ] [#50](https://github.com/basher83/netbox-ansible/issues/50): Set up cross-datacenter replication
 - [ ] Implement prepared queries
 - [ ] Test cross-site service discovery
 - [ ] Configure network segmentation
 
-### PowerDNS Geographic Distribution
+### [#51-52](https://github.com/basher83/netbox-ansible/issues/51): PowerDNS Geographic Distribution
 
-**Description**: Deploy PowerDNS instances at each site
+**Description**: Deploy PowerDNS instances at each site with GeoDNS
 **Status**: Not Started
 **Blockers**: NetBox integration must be complete
 
