@@ -2,7 +2,7 @@
 name: repo-linting-enforcer
 description: Use PROACTIVELY for all linting-related tasks. MUST BE USED when fixing linting violations, running linting checks, implementing linting rules, or resolving CI/CD linting failures. Specialist for enforcing code quality standards across Python, Ansible, YAML, HCL, and shell scripts.
 tools: Read, MultiEdit, Bash, Grep, Glob, Write
-model: sonnet
+model: opus
 color: orange
 ---
 
