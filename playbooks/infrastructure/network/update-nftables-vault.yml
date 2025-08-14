@@ -6,7 +6,6 @@
   hosts: tag_nomad
   become: true
   gather_facts: true
-  
   tasks:
     - name: Include system_base role to apply nftables configuration
       include_role:
