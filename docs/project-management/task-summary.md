@@ -1,8 +1,9 @@
 # andromeda-orchestration Task Summary
 
 **Project**: NetBox-focused Ansible automation with DNS/IPAM infrastructure
-**Status**: Phase 2 Complete, Phase 3 ACCELERATED (NetBox already deployed!)
-**Last Updated**: 2025-08-07
+**Status**: Phase 4 In Progress, Critical Domain Migration Active
+**Last Updated**: 2025-08-14
+**GitHub Issues**: [45 Open](https://github.com/basher83/netbox-ansible/issues)
 
 ---
 
@@ -25,23 +26,45 @@
 
 ### Overall Metrics
 
-- **Total Tasks**: 36 (includes new testing tasks)
-- **Completed**: 17 (47%)
-- **In Progress**: 1 (3%) - PowerDNS-NetBox Integration
-- **Blocked**: 1 (3%)
-- **Not Started**: 17 (47%)
+- **GitHub Issues**: 45 open (4 epics, 41 tasks)
+- **Total Tasks**: 51 (local + GitHub tracked)
+- **Completed**: 17 (33%)
+- **In Progress**: 6 (12%)
+  - Domain migration (6 issues)
+  - PowerDNS deployment (5 issues)
+  - NetBox configuration (2 issues)
+- **Blocked**: 0
+- **Not Started**: 28 (55%)
+
+### Issue Distribution by Priority
+
+- **Critical** (🚨): 6 issues - Domain migration blocking macOS
+- **High**: 17 issues - PowerDNS Phase 4 implementation
+- **Medium**: 15 issues - Refactoring, enhancements, Phase 5 prep
+- **Low**: 7 issues - Future work, optimizations
 
 ## 🎯 Current Focus
 
-**Active Sprint**: [August 5-12, 2025](./current-sprint.md)
+**Active Sprint**: [August 12-19, 2025](./current-sprint.md) | [Sprint Details](./sprint-2025-08-12.md)
 
-- ✅ **COMPLETED**: NetBox fully populated with infrastructure!
-- ✅ Bootstrap NetBox with essential records (3 sites, 8 devices, 6 VMs, 29 IPs)
-- ✅ Vault deployed in dev mode across all nodes
-- 🚧 **IN PROGRESS**: PowerDNS Mode A adoption (Phase 4)
-  - Pivot from MariaDB prototype to PostgreSQL-backed PowerDNS Auth
-  - Then configure zones, API, and NetBox sync
-- 🆕 **NEW**: Critical testing gaps identified - unit tests for 14 modules needed
+### 🚨 Critical Priority
+- **Domain Migration** ([Epic #18](https://github.com/basher83/netbox-ansible/issues/18))
+  - `.local` → `spaceships.work` migration
+  - Blocks macOS developers
+  - **Deadline**: August 20, 2025
+  - [Full Plan](./critical-domain-migration.md)
+
+### 🚧 In Progress
+- **PowerDNS Mode A Deployment** (Issues #28-32)
+  - PostgreSQL backend (✅ deployed)
+  - Configure for Vault dynamic credentials
+  - Expose DNS :53 and API ports
+  - Register Consul services
+
+- **NetBox DNS Configuration** (Issues #38-39)
+  - Create zones with spaceships.work domain
+  - Configure forward/reverse zones
+  - Establish API connectivity
 
 ## ✅ Major Achievements
 
@@ -80,21 +103,29 @@
 
 ## 📅 Upcoming Milestones
 
-### Next 2 Weeks (Accelerated due to NetBox availability)
+### Week of August 12-16 (Current)
+1. **CRITICAL**: Complete domain migration (#19-24)
+2. Deploy PowerDNS with PostgreSQL (#28-32)
+3. Configure NetBox DNS zones (#38)
+4. Establish PowerDNS-NetBox connectivity (#39)
 
-1. NetBox configuration and data model setup
-2. PowerDNS-NetBox integration
-3. **Unit tests for Consul/Nomad modules** (Critical)
-4. DNS record migration from Pi-hole
-5. IP address schema implementation in NetBox
-6. Molecule tests for HashiCorp roles (High priority)
+### Week of August 19-23
+1. Implement sync script (#40)
+2. Migrate DNS records from Pi-hole (#41)
+3. Testing and validation (#42-43)
+4. Scale to HA configuration (#33)
 
-### Next Month
+### End of August
+1. Complete Phase 4 (all 17 issues)
+2. Deploy PowerDNS-Admin UI (#26)
+3. Begin refactoring to role-first architecture (#10-16)
+4. Decommission prototypes (#34-35)
 
-1. Complete Phase 3: Full NetBox integration
-2. Finish DNS record migration
-3. Implement Ansible NetBox dynamic inventory
-4. Begin Phase 5: Multi-Site Expansion
+### September Focus
+1. Phase 5: Multi-Site Expansion (#47-56)
+2. Security hardening (#53)
+3. Performance optimization (#54)
+4. Disaster recovery planning (#55)
 
 ## 📚 Key Documentation
 
