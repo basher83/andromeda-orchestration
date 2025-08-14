@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 
+import contextlib
+import importlib.util
 import json
 
 from ansible.module_utils.basic import AnsibleModule, env_fallback
@@ -11,7 +13,6 @@ from ..module_utils.nomad import NomadAPI
 
 # import nomad_diff if it is available on the system
 _nomad_diff_available = False
-import importlib.util
 
 nomad_diff_spec = importlib.util.find_spec("nomad_diff")
 if nomad_diff_spec is not None:
@@ -99,11 +100,8 @@ def run_module():
 
         # do a nice diff if the system has nomad_diff available
         if _nomad_diff_available and plan.get("Diff") is not None:
-            try:
+            with contextlib.suppress(Exception):
                 result["diff"] = {"prepared": nomad_diff.format(plan["Diff"], colors=True, verbose=False)}
-            except:
-                # if we can't get a diff, it's not a big deal...
-                pass
 
         # if nomad_diff is not available we can try to fallback to a manual diff
         elif plan.get("Diff") is not None and existing_job is not None:

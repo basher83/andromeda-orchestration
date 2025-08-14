@@ -88,9 +88,7 @@ class NomadAPI:
                 response_body,
             )
             if e.code == 401 or e.code == 403:
-                self.module.fail_json(
-                    msg=f"Not Authorized: status={e.code} [{method}] {url} ->\n{response_body}"
-                )
+                self.module.fail_json(msg=f"Not Authorized: status={e.code} [{method}] {url} ->\n{response_body}")
             if e.code == 404 and accept_404:
                 return None
 
