@@ -247,6 +247,14 @@ reviews:
         Validate that sensitive operations include confirmation prompts or approval steps.
         Document exceptions where secret output visibility is required for troubleshooting.
 
+    - path: "playbooks/postgresql/**/*"
+      instructions: |
+        Use FQCN for community.postgresql modules (e.g., community.postgresql.postgresql_ping).
+        Avoid hardcoding credentials; source via env vars or Ansible Vault/lookup plugins.
+        Prefer become_user: postgres for admin tasks; ensure least-privilege for application users.
+        Validate connectivity using postgresql_ping before running schema changes.
+        Ensure tasks are idempotent (e.g., state=present/absent) and safe in --check mode.
+
     - path: "nomad-jobs/**/*"
       instructions: |
         Review Nomad job configurations for production readiness.
