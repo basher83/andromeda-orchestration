@@ -6,7 +6,7 @@ set -e
 # Variables
 CNI_VERSION="1.6.2"
 CONSUL_CNI_VERSION="1.6.3"
-CNI_ARCH=$([ $(uname -m) = aarch64 ] && echo arm64 || echo amd64)
+CNI_ARCH=$([ "$(uname -m)" = aarch64 ] && echo arm64 || echo amd64)
 
 echo "Installing CNI plugins version $CNI_VERSION and Consul CNI plugin version $CONSUL_CNI_VERSION for $CNI_ARCH..."
 
