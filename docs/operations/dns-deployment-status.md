@@ -40,7 +40,7 @@ Successfully deployed DNS zones to NetBox. PowerDNS integration now targets Mode
 
 Reorganized into clean structure:
 
-```
+```text
 playbooks/infrastructure/netbox/
 ├── dns/
 │   ├── discover-zones.yml      # Working ✅

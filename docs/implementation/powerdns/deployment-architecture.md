@@ -150,11 +150,11 @@ nomad job run postgresql.nomad.hcl
    dig @<node-ip> example.spaceships.work
    ```
 
-# Test DNS resolution
+## Test DNS resolution
 
+```bash
 dig @<node-ip> example.lab
-
-````
+```
 
 ## Configuration
 
@@ -191,9 +191,9 @@ check {
   interval = "10s"
   timeout  = "2s"
 }
-````
+```
 
-### Metrics Collection
+## Metrics Collection
 
 - Integrate with Netdata for DNS metrics
 - PowerDNS API provides statistics endpoint

@@ -110,8 +110,8 @@ dig @192.168.11.21 -p 53 test.local
 
 The API is running and accessible from within the container network:
 
-- Internal: http://localhost:8081/api/v1/servers
-- External: http://192.168.11.21:21421/api/v1/servers (may require firewall rules)
+- Internal: <http://localhost:8081/api/v1/servers>
+- External: <http://192.168.11.21:21421/api/v1/servers> (may require firewall rules)
 
 ### API Key
 
