@@ -11,6 +11,7 @@
 ## 🚨 Critical Priority (Immediate Action Required)
 
 ### Domain Migration Epic ([#18](https://github.com/basher83/netbox-ansible/issues/18))
+
 **Impact**: Blocking macOS developers due to .local mDNS conflict
 **Deadline**: August 20, 2025
 **Status**: Active Sprint
@@ -27,10 +28,12 @@
 ## 🔥 High Priority (Current Sprint - Phase 4)
 
 ### PowerDNS-NetBox Integration ([#27](https://github.com/basher83/netbox-ansible/issues/27))
+
 **Target**: August 12-19, 2025
 **Prerequisites**: PostgreSQL ✅ Deployed
 
 #### Infrastructure Setup
+
 | Issue | Title | Status |
 |-------|-------|--------|
 | [#28](https://github.com/basher83/netbox-ansible/issues/28) | Deploy PowerDNS with PostgreSQL backend | 🟡 In Progress |
@@ -40,6 +43,7 @@
 | [#32](https://github.com/basher83/netbox-ansible/issues/32) | Add health checks | 🔴 Not Started |
 
 #### NetBox Integration
+
 | Issue | Title | Status |
 |-------|-------|--------|
 | [#38](https://github.com/basher83/netbox-ansible/issues/38) | Configure forward/reverse zones in NetBox | 🔴 Not Started |
@@ -47,6 +51,7 @@
 | [#40](https://github.com/basher83/netbox-ansible/issues/40) | Implement sync script and webhooks | 🔴 Not Started |
 
 #### Migration & Testing
+
 | Issue | Title | Status |
 |-------|-------|--------|
 | [#41](https://github.com/basher83/netbox-ansible/issues/41) | Migrate DNS records from Pi-hole | 🔴 Not Started |
@@ -54,6 +59,7 @@
 | [#43](https://github.com/basher83/netbox-ansible/issues/43) | Zone transfers configuration | 🔴 Not Started |
 
 #### Production Readiness
+
 | Issue | Title | Status |
 |-------|-------|--------|
 | [#33](https://github.com/basher83/netbox-ansible/issues/33) | Scale to HA (count=2) | 🔴 Not Started |
@@ -65,6 +71,7 @@
 ## 🟡 Medium Priority (Next Sprint)
 
 ### Code Quality & Linting Epic ([#63](https://github.com/basher83/netbox-ansible/issues/63))
+
 **Goal**: Fix 391 ansible-lint violations and achieve production-ready code quality
 
 | Issue | Title | Priority |
@@ -75,6 +82,7 @@
 | [#65](https://github.com/basher83/netbox-ansible/issues/65) | Enhance pre-commit hooks | Medium |
 
 ### Architecture Refactoring Epic ([#17](https://github.com/basher83/netbox-ansible/issues/17))
+
 **Goal**: Reduce playbook complexity through role-first architecture
 
 | Issue | Title | Priority |
@@ -88,6 +96,7 @@
 | [#16](https://github.com/basher83/netbox-ansible/issues/16) | Update docs to role-first | Medium-High |
 
 ### Enhancements
+
 | Issue | Title | Priority |
 |-------|-------|----------|
 | [#26](https://github.com/basher83/netbox-ansible/issues/26) | Integrate PowerDNS-Admin UI | Medium |
@@ -96,6 +105,7 @@
 ## 🔵 Low Priority (Future - Phase 5)
 
 ### Multi-Site Expansion Epic ([#47](https://github.com/basher83/netbox-ansible/issues/47))
+
 **Target**: Q4 2025
 **Prerequisites**: Phase 4 Complete
 
@@ -132,10 +142,12 @@
 ## 🏷️ Issue Labels
 
 ### Priority Labels
+
 - `🟡 priority-medium`: Important but not urgent
 - `🚧 in-progress`: Currently being worked on
 
 ### Category Labels
+
 - `🔧 crew-devops`: Infrastructure and DevOps
 - `📚 documentation`: Documentation improvements
 - `✨ enhancement`: New features

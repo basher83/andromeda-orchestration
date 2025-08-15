@@ -48,6 +48,7 @@
 **Active Sprint**: [August 12-19, 2025](./current-sprint.md) | [Sprint Details](./sprint-2025-08-12.md)
 
 ### 🚨 Critical Priority
+
 - **Domain Migration** ([Epic #18](https://github.com/basher83/netbox-ansible/issues/18))
   - `.local` → `spaceships.work` migration
   - Blocks macOS developers
@@ -55,6 +56,7 @@
   - [Full Plan](./critical-domain-migration.md)
 
 ### 🚧 In Progress
+
 - **PowerDNS Mode A Deployment** (Issues #28-32)
   - PostgreSQL backend (✅ deployed)
   - Configure for Vault dynamic credentials
@@ -104,24 +106,28 @@
 ## 📅 Upcoming Milestones
 
 ### Week of August 12-16 (Current)
+
 1. **CRITICAL**: Complete domain migration (#19-24)
 2. Deploy PowerDNS with PostgreSQL (#28-32)
 3. Configure NetBox DNS zones (#38)
 4. Establish PowerDNS-NetBox connectivity (#39)
 
 ### Week of August 19-23
+
 1. Implement sync script (#40)
 2. Migrate DNS records from Pi-hole (#41)
 3. Testing and validation (#42-43)
 4. Scale to HA configuration (#33)
 
 ### End of August
+
 1. Complete Phase 4 (all 17 issues)
 2. Deploy PowerDNS-Admin UI (#26)
 3. Begin refactoring to role-first architecture (#10-16)
 4. Decommission prototypes (#34-35)
 
 ### September Focus
+
 1. Phase 5: Multi-Site Expansion (#47-56)
 2. Security hardening (#53)
 3. Performance optimization (#54)

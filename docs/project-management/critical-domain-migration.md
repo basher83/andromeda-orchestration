@@ -15,18 +15,21 @@
 ## Task Checklist (Execute in Order)
 
 ### Phase 1: Parameterization
+
 - [ ] [#19](https://github.com/basher83/netbox-ansible/issues/19): Create `homelab_domain` variable (default: spaceships.work)
   - Add to group_vars/all
   - Update role defaults
   - Ensure all playbooks use variable
 
 ### Phase 2: Service Configuration
+
 - [ ] [#20](https://github.com/basher83/netbox-ansible/issues/20): Update Consul config to remove .local usage
   - Review roles/consul_dns/*
   - Update consul-resolved.conf.j2
   - Ensure only .consul domain for service discovery
 
 ### Phase 3: DNS Migration
+
 - [ ] [#21](https://github.com/basher83/netbox-ansible/issues/21): Migrate NetBox zones from *.local to spaceships.work
   - Create new zones first
   - Copy records to new zones
@@ -34,18 +37,21 @@
   - Remove old zones after validation
 
 ### Phase 4: Infrastructure Updates
+
 - [ ] [#22](https://github.com/basher83/netbox-ansible/issues/22): Update PowerDNS + Traefik + Nomad host rules
   - Update all Nomad job files
   - Fix Traefik host rules
   - Update TLS SANs
 
 ### Phase 5: Documentation
+
 - [ ] [#23](https://github.com/basher83/netbox-ansible/issues/23): Update all documentation and examples
   - Replace .local references in docs/
   - Update README.md and ROADMAP.md
   - Add note explaining macOS mDNS conflict
 
 ### Phase 6: Prevention
+
 - [ ] [#24](https://github.com/basher83/netbox-ansible/issues/24): Add lint rule to prevent .local reintroduction
   - Create CI check for .local usage
   - Document exceptions (historical references)
@@ -54,17 +60,20 @@
 ## Implementation Notes
 
 ### Testing Strategy
+
 1. Test changes in isolated environment first
 2. Validate DNS resolution at each step
 3. Keep Pi-hole running as fallback during transition
 4. Monitor for failed lookups
 
 ### Rollback Plan
+
 1. Variables allow quick reversion to .local if needed
 2. Keep backup of NetBox zones before migration
 3. Document old -> new mappings
 
 ### Risk Mitigation
+
 - **Service Outages**: Stage changes during maintenance window
 - **DNS Propagation**: Lower TTLs before migration
 - **Client Caching**: Document cache clearing procedures
@@ -91,6 +100,7 @@
 ## Files Affected (Sample)
 
 Based on grep results, approximately 20+ files contain .local references:
+
 - playbooks/infrastructure/powerdns/README.md
 - nomad-jobs/platform-services/README.md
 - nomad-jobs/core-infrastructure/README.md
