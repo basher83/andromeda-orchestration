@@ -48,7 +48,7 @@ Current ansible-lint violations: **391 issues** across the codebase
 
 ### Phase 1: Tool Installation (Issue #62)
 
-**Status**: 🔴 Not Started  
+**Status**: 🔴 Not Started
 **Target**: Migrate to Mise for comprehensive tool management
 
 1. **Install Mise**:
@@ -67,7 +67,7 @@ Current ansible-lint violations: **391 issues** across the codebase
    terraform = "1.7.0"
    nomad = "1.7.3"
    shellcheck = "0.9.0"
-   
+
    [env]
    VIRTUAL_ENV = ".venv"
    PATH_add = [".venv/bin"]
@@ -80,7 +80,7 @@ Current ansible-lint violations: **391 issues** across the codebase
 
 ### Phase 2: FQCN Migration (Issue #63)
 
-**Status**: 🔴 Not Started  
+**Status**: 🔴 Not Started
 **Target**: Fix 391 ansible-lint violations
 
 #### Automated Fix Script
@@ -117,8 +117,8 @@ Common FQCN replacements:
 - name: Install package
   apt:
     name: nginx
-    
-# After  
+
+# After
 - name: Install package
   ansible.builtin.apt:
     name: nginx
@@ -126,7 +126,7 @@ Common FQCN replacements:
 
 ### Phase 3: Progressive Linting (Issue #64)
 
-**Status**: 🔴 Not Started  
+**Status**: 🔴 Not Started
 **Target**: Implement staged quality improvements
 
 #### Profile Progression Strategy
@@ -170,7 +170,7 @@ Common FQCN replacements:
 
 ### Phase 4: Pre-commit Enhancement (Issue #65)
 
-**Status**: 🔴 Not Started  
+**Status**: 🔴 Not Started
 **Target**: Comprehensive pre-commit hooks
 
 #### Enhanced Configuration
@@ -187,19 +187,19 @@ repos:
         language: system
         files: \.(yml|yaml)$
         exclude: ^archive/
-        
+
       - id: yamllint
         name: YAML Lint
         entry: uv run yamllint
         language: system
         files: \.(yml|yaml)$
-        
+
       - id: ruff
         name: Ruff Check
         entry: uv run ruff check --fix
         language: system
         files: \.py$
-        
+
   # Native tools (direct execution)
   - repo: local
     hooks:
@@ -208,13 +208,13 @@ repos:
         entry: shellcheck
         language: system
         files: \.(sh|bash)$
-        
+
       - id: nomad-fmt
         name: Nomad Format
         entry: nomad fmt
         language: system
         files: \.nomad\.hcl$
-        
+
       - id: terraform-fmt
         name: Terraform Format
         entry: terraform fmt
@@ -231,7 +231,7 @@ repos:
    ```bash
    # Ensure tools are available
    mise install
-   
+
    # Update pre-commit hooks
    pre-commit install
    pre-commit autoupdate
@@ -242,7 +242,7 @@ repos:
    ```bash
    # Run quick lint check
    uv run ansible-lint playbooks/my-playbook.yml
-   
+
    # Use lint-master agent for comprehensive check
    # This coordinates all specialized agents
    ```
@@ -252,7 +252,7 @@ repos:
    ```bash
    # Pre-commit will run automatically
    git commit -m "feat: add new playbook"
-   
+
    # If issues found, fix and re-commit
    uv run ansible-lint --write
    git add -u
@@ -276,28 +276,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v2
-      
+
       - name: Install dependencies
         run: uv sync
-        
+
       - name: Run Python-based linters
         run: |
           uv run ansible-lint
           uv run yamllint .
           uv run ruff check .
-          
+
   lint-native-tools:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
       - uses: hashicorp/setup-nomad@v1
-      
+
       - name: Install shellcheck
         run: |
           sudo apt-get update
           sudo apt-get install -y shellcheck
-          
+
       - name: Run native linters
         run: |
           shellcheck scripts/*.sh
