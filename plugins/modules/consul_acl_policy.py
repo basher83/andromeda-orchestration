@@ -14,8 +14,16 @@ from ..module_utils.utils import del_none, is_subset
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = {
-        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["CONSUL_HTTP_ADDR"])},
+        "state": {
+            "type": "str",
+            "choices": ["present", "absent"],
+            "default": "present",
+        },
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["CONSUL_HTTP_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
@@ -85,7 +93,9 @@ def run_module():
         else:
             # compare if we need to change anything about the policy
             if not is_subset(desired_policy_body, existing_policy):
-                result["policy"] = consul.update_acl_policy(policy_id, json.dumps(desired_policy_body))
+                result["policy"] = consul.update_acl_policy(
+                    policy_id, json.dumps(desired_policy_body)
+                )
                 result["changed"] = True
 
     # post final results

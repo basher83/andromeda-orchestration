@@ -34,9 +34,15 @@ def is_subset(subset, superset):
 
     # using conditional statements instead
     if isinstance(subset, dict):
-        return all(key in superset and is_subset(val, superset[key]) for key, val in subset.items())
+        return all(
+            key in superset and is_subset(val, superset[key])
+            for key, val in subset.items()
+        )
     elif isinstance(subset, list):
-        return all(any(is_subset(subitem, superitem) for superitem in superset) for subitem in subset)
+        return all(
+            any(is_subset(subitem, superitem) for superitem in superset)
+            for subitem in subset
+        )
     # assume that subset is a plain value if none of the above match
     else:
         return subset == superset

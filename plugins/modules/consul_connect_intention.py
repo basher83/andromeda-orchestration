@@ -14,8 +14,16 @@ from ..module_utils.utils import del_none, is_subset
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = {
-        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["CONSUL_HTTP_ADDR"])},
+        "state": {
+            "type": "str",
+            "choices": ["present", "absent"],
+            "default": "present",
+        },
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["CONSUL_HTTP_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
@@ -64,7 +72,8 @@ def run_module():
         result["changed"] = True
 
     if module.params.get("state") == "present" and (
-        existing_intention is None or not is_subset(desired_intention_body, existing_intention)
+        existing_intention is None
+        or not is_subset(desired_intention_body, existing_intention)
     ):
         consul.create_or_update_connect_intention(
             source=module.params.get("source"),

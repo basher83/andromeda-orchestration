@@ -14,7 +14,11 @@ from ..module_utils.utils import del_none
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = {
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["NOMAD_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
