@@ -22,12 +22,14 @@ Based on recent agent testing, we have identified critical gaps in our tooling:
 ### Violation Summary
 
 Current ansible-lint violations: **391 issues** across the codebase
+
 - Primary issue: Missing Fully Qualified Collection Names (FQCN)
 - Tracked in: [Issue #63](https://github.com/basher83/netbox-ansible/issues/63)
 
 ## Agent Architecture
 
 ### Master Coordinator
+
 - **Agent**: `lint-master`
 - **Role**: Orchestrates specialized linters based on file types
 - **Key Feature**: Understands tool invocation patterns (uv run vs direct)
@@ -45,16 +47,19 @@ Current ansible-lint violations: **391 issues** across the codebase
 ## Implementation Roadmap
 
 ### Phase 1: Tool Installation (Issue #62)
+
 **Status**: 🔴 Not Started  
 **Target**: Migrate to Mise for comprehensive tool management
 
 1. **Install Mise**:
+
    ```bash
    curl https://mise.run | sh
    echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
    ```
 
 2. **Create .mise.toml**:
+
    ```toml
    [tools]
    python = "3.12"
@@ -74,10 +79,12 @@ Current ansible-lint violations: **391 issues** across the codebase
    - Update documentation
 
 ### Phase 2: FQCN Migration (Issue #63)
+
 **Status**: 🔴 Not Started  
 **Target**: Fix 391 ansible-lint violations
 
 #### Automated Fix Script
+
 ```bash
 #!/bin/bash
 # fix-fqcn.sh - Automatically fix FQCN violations
@@ -104,6 +111,7 @@ echo "Remaining violations: $(uv run ansible-lint --count)"
 #### Manual Fix Patterns
 
 Common FQCN replacements:
+
 ```yaml
 # Before
 - name: Install package
@@ -117,45 +125,56 @@ Common FQCN replacements:
 ```
 
 ### Phase 3: Progressive Linting (Issue #64)
+
 **Status**: 🔴 Not Started  
 **Target**: Implement staged quality improvements
 
 #### Profile Progression Strategy
 
 1. **Week 1-2**: Basic Profile
+
    ```yaml
    # .ansible-lint
    profile: basic
    ```
+
    - Fix syntax errors
    - Basic formatting
 
 2. **Week 3-4**: Moderate Profile
+
    ```yaml
    profile: moderate
    ```
+
    - FQCN compliance
    - Task naming
 
 3. **Week 5-6**: Safety Profile
+
    ```yaml
    profile: safety
    ```
+
    - Security checks
    - Deterministic behavior
 
 4. **Week 7-8**: Production Profile
+
    ```yaml
    profile: production
    ```
+
    - Full compliance
    - Platform compatibility
 
 ### Phase 4: Pre-commit Enhancement (Issue #65)
+
 **Status**: 🔴 Not Started  
 **Target**: Comprehensive pre-commit hooks
 
 #### Enhanced Configuration
+
 ```yaml
 # .pre-commit-config.yaml
 repos:
@@ -208,6 +227,7 @@ repos:
 ### Daily Development Workflow
 
 1. **Before starting work**:
+
    ```bash
    # Ensure tools are available
    mise install
@@ -218,6 +238,7 @@ repos:
    ```
 
 2. **During development**:
+
    ```bash
    # Run quick lint check
    uv run ansible-lint playbooks/my-playbook.yml
@@ -227,6 +248,7 @@ repos:
    ```
 
 3. **Before committing**:
+
    ```bash
    # Pre-commit will run automatically
    git commit -m "feat: add new playbook"
@@ -288,28 +310,36 @@ jobs:
 ### Common Issues and Solutions
 
 #### Issue: "uv: command not found"
+
 **Solution**: Install uv and ensure Python environment is activated
+
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source ~/.cargo/env
 ```
 
 #### Issue: "ansible-lint: command not found" (when using uv run)
+
 **Solution**: Sync Python dependencies
+
 ```bash
 uv sync
 uv run ansible-lint --version
 ```
 
 #### Issue: Missing HashiCorp tools
+
 **Solution**: Use Mise for tool management (see Phase 1)
+
 ```bash
 mise install
 mise doctor
 ```
 
 #### Issue: Pre-commit hooks failing
+
 **Solution**: Update hooks and fix issues
+
 ```bash
 pre-commit clean
 pre-commit install --install-hooks
@@ -330,6 +360,7 @@ pre-commit run --all-files
 ### Progress Tracking
 
 Weekly reviews should assess:
+
 1. Reduction in linting violations
 2. Profile progression status
 3. Tool availability across environments
@@ -340,6 +371,7 @@ Weekly reviews should assess:
 ### For Developers
 
 1. **Always use uv run for Python tools**:
+
    ```bash
    uv run ansible-lint  # ✅ Correct
    ansible-lint         # ❌ May use wrong version
