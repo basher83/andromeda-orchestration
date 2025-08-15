@@ -1,5 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "deepwiki",
+    "infisical",
+    "firecrawl",
+    "github",
+    "coderabbitai",
+    "mise"
+  ],
   "permissions": {
     "allow": [
       "Bash(tailscale:*)",
@@ -24,18 +33,8 @@
       "mcp__github__create_issue"
     ]
   },
-  "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "deepwiki",
-    "grep",
-    "infisical",
-    "firecrawl",
-    "github",
-    "coderabbitai",
-    "netdata"
-  ],
   "statusLine": {
-    "type": "command",
-    "command": "input=$(cat); printf \"$(echo \"$input\" | jq -r '.model.display_name') | $(basename \"$(echo \"$input\" | jq -r '.workspace.current_dir')\") | $(whoami)@$(hostname -s)\""
+    "command": "input=$(cat); printf \"$(echo \"$input\" | jq -r '.model.display_name') | $(basename \"$(echo \"$input\" | jq -r '.workspace.current_dir')\") | $(whoami)@$(hostname -s)\"",
+    "type": "command"
   }
 }
