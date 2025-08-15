@@ -1,9 +1,11 @@
 # Infrastructure Assessment Report
+
 Date: 2025-07-26T00:00:00Z
 Phase: Phase 0 - Infrastructure Assessment
 Assessed By: infrastructure-assessment-analyst
 
 ## Executive Summary
+
 - Overall readiness score: 7/10
 - Critical findings: 3
 - Blocking issues:
@@ -18,6 +20,7 @@ Assessed By: infrastructure-assessment-analyst
 Based on the assessment from 2025-07-24:
 
 **Strengths:**
+
 - Consul cluster operational with 3 servers and 3 clients
 - All nodes showing "alive" status
 - Encryption enabled (serf_lan encrypted = true)
@@ -25,6 +28,7 @@ Based on the assessment from 2025-07-24:
 - Raft consensus working (leader at 192.168.11.12:8300)
 
 **Concerns:**
+
 - Mixed client versions (1.21.2 vs 1.20.5 on nomad-client-3)
 - No registered services visible (services = 0)
 - DNS port 8600 status needs verification
@@ -35,12 +39,14 @@ Based on the assessment from 2025-07-24:
 ### DNS/IPAM Analysis
 
 **Current State:**
+
 - Pi-hole + Unbound deployed (per documentation)
 - No centralized IPAM solution
 - Ad-hoc IP allocation management
 - DNS zones and authoritative domains not documented
 
 **Missing Information:**
+
 - Complete DNS zone inventory
 - Current IP allocation by subnet
 - DHCP server locations and configurations
@@ -53,12 +59,14 @@ Based on the assessment from 2025-07-24:
 Based on doggos-homelab assessment:
 
 **Available Resources (per node):**
+
 - CPU: 4 cores per node
 - RAM: 15GB total, ~14GB available
 - Storage: 65GB disks with ~58GB free (12% usage)
 - Container Runtime: Docker 28.3.0 installed
 
 **Capacity Analysis:**
+
 - Can support NetBox (requires 4GB RAM, 20GB disk)
 - Can support PowerDNS (requires 1GB RAM, 10GB disk)
 - Can support MariaDB + PostgreSQL (4GB RAM, 50GB disk combined)
@@ -69,11 +77,13 @@ Based on doggos-homelab assessment:
 ### Multi-Cluster Connectivity
 
 **Known Configuration:**
+
 - og-homelab cluster at 192.168.10.x (Proxmox at .2)
 - doggos-homelab cluster at 192.168.11.x
 - Both clusters have Proxmox dynamic inventory configured
 
 **Unknown/Unverified:**
+
 - Network routing between clusters
 - Firewall rules between segments
 - VPN or direct connectivity
@@ -84,12 +94,14 @@ Based on doggos-homelab assessment:
 ### Security Posture
 
 **Strengths:**
+
 - Dual secret management systems (1Password + Infisical)
 - No hardcoded credentials in codebase
 - Consul ACLs enabled
 - Consul encryption enabled
 
 **Concerns:**
+
 - Migration from 1Password to Infisical in progress
 - Infisical secrets at unorganized path (/apollo-13/)
 - Secret rotation policies not documented
@@ -100,12 +112,14 @@ Based on doggos-homelab assessment:
 ### Service Orchestration Readiness
 
 **Nomad Status:**
+
 - Version 1.10.2 deployed across all nodes
 - Both server and client agents running
 - Docker driver available
 - Consul integration present but not fully configured
 
 **Missing Components:**
+
 - Persistent volume configuration for stateful services
 - CSI drivers for storage orchestration
 - Ingress/load balancing strategy
@@ -154,17 +168,21 @@ Based on doggos-homelab assessment:
 ### Immediate Actions (Phase 0)
 
 1. **Complete DNS/IPAM Audit**
+
    ```bash
    uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml -i inventory/og-homelab/infisical.proxmox.yml
    ```
+
    - Document all DNS zones
    - Map IP allocations
    - Identify authoritative servers
 
 2. **Verify Inter-Cluster Connectivity**
+
    ```bash
    uv run ansible-playbook playbooks/assessment/network-connectivity.yml -i inventory/og-homelab/infisical.proxmox.yml
    ```
+
    - Test routing between clusters
    - Document firewall rules
    - Measure latency
@@ -205,15 +223,18 @@ Based on doggos-homelab assessment:
 ## Rollback Considerations
 
 ### Phase 0 (Current)
+
 - No changes to revert (read-only assessment)
 - Maintain comprehensive backups of current state
 
 ### Phase 1 Rollback Plan
+
 - Keep Pi-hole operational throughout
 - Consul DNS as addition, not replacement
 - Service registrations can be removed via API
 
 ### Phase 2+ Rollback Strategy
+
 - Maintain parallel DNS infrastructure
 - Use short TTLs during transition
 - Document each configuration change
@@ -222,6 +243,7 @@ Based on doggos-homelab assessment:
 ## Success Metrics
 
 ### Phase 0 Completion Criteria
+
 - [x] Consul health assessment complete
 - [x] Infrastructure capacity verified
 - [ ] DNS/IPAM audit fully documented
@@ -230,6 +252,7 @@ Based on doggos-homelab assessment:
 - [ ] All risks documented with mitigation plans
 
 ### Overall Project Success Indicators
+
 - DNS query success rate: >99.99%
 - Service discovery latency: <10ms
 - Zero unplanned outages during migration
@@ -245,5 +268,5 @@ Based on doggos-homelab assessment:
 5. Begin Consul service registration framework
 
 ---
-*Assessment Version: 1.0*
-*Next Review: Before Phase 1 Start*
+_Assessment Version: 1.0_
+_Next Review: Before Phase 1 Start_

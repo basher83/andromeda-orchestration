@@ -1,9 +1,11 @@
 # Reports Directory Security Procedures
 
 ## Purpose
+
 This directory contains system-generated reports with sensitive infrastructure data that must be handled according to our security standards.
 
 ## Security Classification
+
 **SENSITIVE - DO NOT COMMIT RAW REPORTS TO GIT**
 
 📚 **See [Security Standards](../docs/standards/security-standards.md) for comprehensive security practices.**
@@ -27,7 +29,9 @@ reports/
 ## Security Procedures
 
 ### 1. Pre-Commit Checks
+
 Before ANY commit in this repository:
+
 ```bash
 # Check for potential secrets
 rg -i "(password|token|secret|key|api_key|private|credential)" reports/
@@ -42,11 +46,13 @@ git check-ignore reports/**/*.yml reports/**/*.json reports/**/*.txt
 ### 2. What Should Be Committed
 
 ✅ **SAFE to commit:**
+
 - Documentation files (*.md)
 - Sanitized summaries that have been reviewed
 
 ❌ **NEVER commit:**
-- Raw reports (*.yml, *.yaml, *.json, *.txt)
+
+- Raw reports (*.yml,*.yaml, *.json,*.txt)
 - Any file containing infrastructure details or credentials
 
 ### 3. Report Sanitization Process
@@ -54,6 +60,7 @@ git check-ignore reports/**/*.yml reports/**/*.json reports/**/*.txt
 If you need to share report data:
 
 1. **Create a sanitized copy:**
+
 ```bash
 # Example: Sanitize a consul report
 cp reports/consul/consul_assessment.yml reports/consul/consul_assessment_sanitized.md
@@ -66,12 +73,14 @@ cp reports/consul/consul_assessment.yml reports/consul/consul_assessment_sanitiz
 ```
 
 2. **Review before committing:**
+
 ```bash
 # Double-check for sensitive data
 rg -i "(192\.168|10\.|token|secret)" reports/consul/consul_assessment_sanitized.md
 ```
 
 3. **Commit only sanitized version:**
+
 ```bash
 git add reports/consul/consul_assessment_sanitized.md
 git commit -m "docs: add sanitized consul assessment summary"
@@ -80,6 +89,7 @@ git commit -m "docs: add sanitized consul assessment summary"
 ### 4. GitIgnore Configuration
 
 Report exclusions are configured in:
+
 - `.gitignore` - Repository-wide patterns
 - `reports/.gitignore` - Local protection layer
 
@@ -92,6 +102,7 @@ If sensitive data is accidentally committed, follow the [Incident Response proce
 ### 6. Automated Scanning
 
 Security scanning tools are configured to exclude the reports directory:
+
 - **Infisical**: Excludes `reports/**` in `.infisical-scan.toml`
 - **KICS**: Excludes `reports/` in `kics.config`
 

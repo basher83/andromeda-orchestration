@@ -11,6 +11,7 @@ This command was created by `/slash-meta` and demonstrates true meta capabilitie
 ## What Makes This Meta?
 
 This factory can create:
+
 1. End-user commands (like `/lint`, `/test`)
 2. Generator commands that create more commands
 3. Sub-factories that create domain-specific generators
@@ -20,6 +21,7 @@ This factory can create:
 `/meta-example-factory <command-name> <purpose> [sub-generators]`
 
 Examples:
+
 - `/meta-example-factory test-generator "creates testing commands" true`
 - `/meta-example-factory lint-factory "creates linting commands" true`
 - `/meta-example-factory simple-command "runs a specific task" false`
@@ -34,6 +36,7 @@ Based on your request, I will:
    - If sub-generators=false: Create a simple task-specific command
 
 3. Generate the command with:
+
    ```markdown
    ---
    allowed-tools: ${sub-generators ? 'Write, Read, LS' : 'Read, Grep, MultiEdit'}

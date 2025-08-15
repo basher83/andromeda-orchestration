@@ -1,7 +1,9 @@
 # Nomad Cluster Assessment Report
+
 Generated: 2025-07-27T04:34:14Z
 
 ## Cluster Overview
+
 - Servers: 3
 - Clients: 3
 - Leader: "192.168.11.12:4647"
@@ -9,6 +11,7 @@ Generated: 2025-07-27T04:34:14Z
 ## Server Nodes
 
 ### nomad-server-1 (192.168.11.11)
+
 ```
 === Node Info ===
 nomad-server-1
@@ -56,6 +59,7 @@ ACLs may be disabled or token required
 ```
 
 ### nomad-server-2 (192.168.11.12)
+
 ```
 === Node Info ===
 nomad-server-2
@@ -104,6 +108,7 @@ ACLs may be disabled or token required
 ```
 
 ### nomad-server-3 (192.168.11.13)
+
 ```
 === Node Info ===
 nomad-server-3
@@ -154,6 +159,7 @@ ACLs may be disabled or token required
 ## Client Nodes
 
 ### nomad-client-1 (192.168.10.11)
+
 ```
 === Node Info ===
 nomad-server-1
@@ -183,6 +189,7 @@ No running jobs
 ```
 
 ### nomad-client-2 (192.168.10.12)
+
 ```
 === Node Info ===
 nomad-server-2
@@ -212,6 +219,7 @@ No running jobs
 ```
 
 ### nomad-client-3 (192.168.10.22)
+
 ```
 === Node Info ===
 nomad-client-3
@@ -241,6 +249,7 @@ No running jobs
 ```
 
 ## Key Findings
+
 1. Nomad is installed and active on all nodes
 2. Version: v1.10.2 across all nodes
 3. ACLs appear to be enabled (commands require token)
@@ -248,6 +257,7 @@ No running jobs
 5. Sufficient resources for workload deployment
 
 ## Recommendations
+
 1. Store Nomad ACL token in 1Password for automation
 2. Create job specifications for core services
 3. Set up Nomad-Consul integration for service discovery

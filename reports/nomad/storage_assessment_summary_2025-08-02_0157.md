@@ -1,4 +1,5 @@
 # Nomad Storage Assessment Summary
+
 Generated: 2025-08-02_0157
 Environment: doggos-homelab
 
@@ -20,6 +21,7 @@ Total Nodes Assessed: 3
 #### nomad-client-2-holly
 
 **Filesystem Usage:**
+
 ```
 /dev/sda1,65G,7.3G,58G,12%,/
 /dev/sda16,881M,113M,707M,14%,/boot
@@ -27,10 +29,12 @@ Total Nodes Assessed: 3
 ```
 
 **Configured Host Volumes:** 2
+
 - powerdns-mysql
 - nomad-volumes
 
 **Volume Directories:**
+
 - /opt/nomad/volumes: Exists (check individual reports for details)
 - /opt/nomad/volumes/dynamic: Exists (check individual reports for details)
 - /alloc: Exists (check individual reports for details)
@@ -38,6 +42,7 @@ Total Nodes Assessed: 3
 #### nomad-client-3-mable
 
 **Filesystem Usage:**
+
 ```
 /dev/sda1,65G,7.3G,58G,12%,/
 /dev/sda16,881M,113M,707M,14%,/boot
@@ -45,10 +50,12 @@ Total Nodes Assessed: 3
 ```
 
 **Configured Host Volumes:** 2
+
 - nomad-volumes
 - powerdns-mysql
 
 **Volume Directories:**
+
 - /opt/nomad/volumes: Exists (check individual reports for details)
 - /opt/nomad/volumes/dynamic: Exists (check individual reports for details)
 - /alloc: Exists (check individual reports for details)
@@ -56,6 +63,7 @@ Total Nodes Assessed: 3
 #### nomad-client-1-lloyd
 
 **Filesystem Usage:**
+
 ```
 /dev/sda1,65G,7.6G,58G,12%,/
 /dev/sda16,881M,113M,707M,14%,/boot
@@ -63,21 +71,22 @@ Total Nodes Assessed: 3
 ```
 
 **Configured Host Volumes:** 2
+
 - nomad-volumes
 - powerdns-mysql
 
 **Volume Directories:**
+
 - /opt/nomad/volumes: Exists (check individual reports for details)
 - /opt/nomad/volumes/dynamic: Exists (check individual reports for details)
 - /alloc: Exists (check individual reports for details)
 
-
 ## Recommendations
-
 
 ### ⚠️  Dynamic Volume Plugins Not Deployed
 
 Dynamic volume plugin scripts are not installed. To enable:
+
 ```bash
 ansible-playbook playbooks/infrastructure/nomad/volumes/enable-dynamic-volumes.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml

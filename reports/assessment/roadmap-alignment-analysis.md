@@ -9,12 +9,14 @@ This analysis compares the high-level ROADMAP.md with the detailed project-task-
 ## Document Purposes
 
 ### ROADMAP.md
+
 - **Purpose**: High-level strategic overview of the DNS/IPAM overhaul
 - **Audience**: Stakeholders, architects, team leads
 - **Scope**: 5 phases with major milestones
 - **Detail Level**: Strategic objectives and outcomes
 
 ### project-task-list.md
+
 - **Purpose**: Detailed task tracking and project management
 - **Audience**: Implementation team, project managers
 - **Scope**: 23 granular tasks with status tracking
@@ -83,6 +85,7 @@ Tasks:
 ### 3. Enhance TLS/SSL Task Detail
 
 Update Task 15 (Security Hardening) to include:
+
 - DNS-01 ACME challenge setup
 - Vault PKI integration planning
 - Consul Connect mTLS configuration

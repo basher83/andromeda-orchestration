@@ -74,11 +74,13 @@ This directory has been archived to `docs/archive/bin/` as it contained only dep
 Organized by environment:
 
 - **og-homelab/**
-  - `infisical.proxmox.yml` - Proxmox dynamic inventory with Infisical (recommended)
-  - `1password.proxmox.yml` - Proxmox dynamic inventory with 1Password (deprecated)
+  - `inventory/og-homelab/infisical.proxmox.yml` - Proxmox dynamic inventory with Infisical
+  - `inventory/og-homelab/1password.proxmox.yml` - Proxmox dynamic inventory with 1Password [DEPRECATED]
 - **doggos-homelab/**
-  - `infisical.proxmox.yml` - Proxmox dynamic inventory with Infisical (recommended)
-  - `1password.proxmox.yml` - Proxmox dynamic inventory with 1Password (deprecated)
+  - `inventory/doggos-homelab/infisical.proxmox.yml` - Proxmox dynamic inventory with Infisical
+  - `inventory/doggos-homelab/1password.proxmox.yml` - Proxmox dynamic inventory with 1Password [DEPRECATED]
+- **tailscale/**
+  - `inventory/tailscale/ansible_tailscale_inventory.py` - Tailscale dynamic inventory script
 
 ### `/playbooks/`
 

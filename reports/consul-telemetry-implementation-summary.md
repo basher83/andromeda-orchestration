@@ -12,6 +12,7 @@ Successfully enabled Consul telemetry across the cluster and configured Netdata 
 
 - Modified `/etc/consul.d/consul.hcl` on all Consul nodes
 - Added telemetry configuration block:
+
   ```hcl
   telemetry {
     prometheus_retention_time = "360h"
@@ -19,6 +20,7 @@ Successfully enabled Consul telemetry across the cluster and configured Netdata 
     metrics_prefix = "consul"
   }
   ```
+
 - Nodes updated: All nomad-server and nomad-client containers
 
 ### 2. Created Consul ACL Policy and Token ✅

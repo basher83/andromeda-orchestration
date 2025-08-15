@@ -281,6 +281,8 @@ VM names may not resolve, causing connectivity tests to fail.
 
 ## 1Password Connection Issues
 
+[DEPRECATED]
+
 - Ensure 1Password CLI is installed and authenticated: `op --version` and `op account list`
 - If using 1Password Connect, verify environment variables are set:
 

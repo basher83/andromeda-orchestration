@@ -15,30 +15,30 @@
                  env_slug='dev',
                  path='/apollo-13/consul',
                  secret_name='CONSUL_MASTER_TOKEN')).value | default('') | trim }}
-    
+
     # Force role to be enabled for all hosts to test
     nomad_consul_integration: true
     nomad_consul_manage_acls: true
     nomad_environment: "dev"
-    
-    # Set appropriate roles based on host groups  
+
+    # Set appropriate roles based on host groups
     nomad_server_enabled: "{{ 'nomad-server' in inventory_hostname }}"
     nomad_client_enabled: "{{ 'nomad-client' in inventory_hostname }}"
-    
+
   tasks:
     - name: Ensure management token is provided
       ansible.builtin.fail:
         msg: |
           Consul management token must be provided!
-          
+
           Set it with one of:
           1. --extra-vars consul_management_token=YOUR_TOKEN
           2. Set vault_consul_management_token in vault/secrets
           3. Export CONSUL_HTTP_TOKEN environment variable
-          
+
           You can get the token from:
           - Initial Consul bootstrap output
-          - Infisical at /consul/tokens/management 
+          - Infisical at /consul/tokens/management
           - consul acl token list (with existing access)
       when: nomad_consul_management_token == ""
 

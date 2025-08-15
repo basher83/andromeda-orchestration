@@ -7,6 +7,7 @@ This guide covers troubleshooting Consul KV access issues in Nomad job templates
 ## Issue Summary
 
 **Symptoms:**
+
 - Nomad jobs fail to deploy with template errors
 - Error messages like: `Template failed: kv.block(path/key): Permission denied`
 - Jobs that use `{{ key "path/to/key" }}` syntax fail to render templates
@@ -24,7 +25,7 @@ The issue has been resolved through enhanced Consul ACL policies. If you encount
 # Check if nomad-client policy has KV access
 consul acl policy read -name nomad-client
 
-# Check if nomad-server policy has KV access  
+# Check if nomad-server policy has KV access
 consul acl policy read -name nomad-server
 
 # Look for this section in both policies:
@@ -104,6 +105,7 @@ consul acl token list | grep nomad
 Use the standardized policy templates in the Nomad role:
 
 **Server Policy** (`roles/nomad/files/consul-policies/nomad-server.hcl`):
+
 ```hcl
 # Allow reading from KV store for templating
 key_prefix "" {
@@ -112,6 +114,7 @@ key_prefix "" {
 ```
 
 **Client Policy** (`roles/nomad/files/consul-policies/nomad-client.hcl`):
+
 ```hcl
 # CRITICAL: Allow reading from KV store for templating in jobs
 key_prefix "" {
@@ -122,11 +125,13 @@ key_prefix "" {
 ### Job Template Best Practices
 
 1. **Always test KV keys exist before deploying:**
+
 ```bash
 consul kv get pdns/db/host  # Should return a value
 ```
 
-2. **Use proper template syntax:**
+1. **Use proper template syntax:**
+
 ```hcl
 template {
   data = <<EOT
@@ -137,7 +142,8 @@ template {
 }
 ```
 
-3. **Include error handling in templates:**
+1. **Include error handling in templates:**
+
 ```hcl
 database_host={{ key_or_default "pdns/db/host" "localhost" }}
 ```
@@ -152,7 +158,7 @@ cat > test-kv-job.nomad.hcl <<EOF
 job "test-kv" {
   datacenters = ["dc1"]
   type = "batch"
-  
+
   group "test" {
     task "test" {
       driver = "docker"
@@ -161,7 +167,7 @@ job "test-kv" {
         command = "cat"
         args = ["/local/test.txt"]
       }
-      
+
       template {
         data = <<EOT
 Test KV Value: {{ key "pdns/db/host" }}

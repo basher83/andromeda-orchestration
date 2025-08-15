@@ -25,6 +25,7 @@ Custom slash commands are reusable prompts stored as Markdown files in `.claude/
 **Syntax**: `/slash-meta <generator-type> <domain> [recursive]`
 
 **Parameters**:
+
 - `generator-type`: Type of meta command to create (`factory`, `generator`, `builder`)
 - `domain`: The domain or focus area for the generator
 - `recursive`: Optional flag to enable recursive generation capabilities
@@ -43,6 +44,7 @@ Custom slash commands are reusable prompts stored as Markdown files in `.claude/
 ```
 
 **What it creates**:
+
 - Commands with Write, Read, LS permissions
 - Built-in command generation logic
 - Optional recursive generation capability
@@ -55,6 +57,7 @@ Custom slash commands are reusable prompts stored as Markdown files in `.claude/
 **Syntax**: `/meta-example-factory <command-name> <purpose> [sub-generators]`
 
 **Parameters**:
+
 - `command-name`: Name for the new command
 - `purpose`: Description of what the command does
 - `sub-generators`: Boolean flag for recursive capability
@@ -79,6 +82,7 @@ Custom slash commands are reusable prompts stored as Markdown files in `.claude/
 **Syntax**: `/slash-generator <command-name> <command-purpose>`
 
 **Parameters**:
+
 - `command-name`: Name for the new command
 - `command-purpose`: Description of the command's function
 
@@ -96,6 +100,7 @@ Custom slash commands are reusable prompts stored as Markdown files in `.claude/
 ```
 
 **What it creates**:
+
 - Task-specific commands with minimal permissions
 - Cannot create other commands
 - Optimized for single-purpose tasks
@@ -107,6 +112,7 @@ Custom slash commands are reusable prompts stored as Markdown files in `.claude/
 **Syntax**: `/markdown-lint [file-pattern]`
 
 **Parameters**:
+
 - `file-pattern`: Optional glob pattern for files to lint (defaults to **/*.md)
 
 **Usage Examples**:
@@ -123,6 +129,7 @@ Custom slash commands are reusable prompts stored as Markdown files in `.claude/
 ```
 
 **What it checks**:
+
 - Blank lines around code blocks and lists
 - Language specifiers in code blocks
 - Heading hierarchy
@@ -143,6 +150,7 @@ Custom slash commands are reusable prompts stored as Markdown files in `.claude/
 ```
 
 **What it does**:
+
 - Runs `git ls-files` to understand structure
 - Reads README.md and key documentation
 - Provides concise project overview
@@ -217,6 +225,7 @@ Find all TODO comments in the codebase and organize by priority.' > .claude/comm
 ### 3. Documentation
 
 Always include in your commands:
+
 - Clear usage examples
 - Parameter descriptions
 - Expected outputs

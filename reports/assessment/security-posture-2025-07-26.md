@@ -15,12 +15,14 @@ The infrastructure demonstrates good foundational security practices with encryp
 ### 1. Secret Management
 
 **Implemented Controls:**
+
 - ✅ No hardcoded credentials in codebase
 - ✅ Dual secret management systems (1Password + Infisical)
 - ✅ Environment variable injection for authentication
 - ✅ Machine identity authentication for Infisical
 
 **Gaps Identified:**
+
 - ❌ Unorganized secret structure (/apollo-13/ path)
 - ❌ No documented secret rotation policy
 - ❌ Mixed authentication methods across playbooks
@@ -29,6 +31,7 @@ The infrastructure demonstrates good foundational security practices with encryp
 **Risk Level:** Medium
 
 **Recommendations:**
+
 ```yaml
 # Proposed Infisical folder structure
 /infrastructure/
@@ -52,11 +55,13 @@ The infrastructure demonstrates good foundational security practices with encryp
 ### 2. Network Security
 
 **Implemented Controls:**
+
 - ✅ Consul encryption enabled (serf_lan encrypted = true)
 - ✅ Consul ACLs enabled
 - ✅ Private network segments (192.168.10.x, 192.168.11.x)
 
 **Gaps Identified:**
+
 - ❌ Inter-cluster communication security not documented
 - ❌ No network segmentation for services
 - ❌ DNS traffic unencrypted (port 53)
@@ -65,6 +70,7 @@ The infrastructure demonstrates good foundational security practices with encryp
 **Risk Level:** Medium-High
 
 **Required Actions:**
+
 1. Implement DNS over TLS (DoT) or DNS over HTTPS (DoH)
 2. Document and test firewall rules between clusters
 3. Plan network segmentation for:
@@ -75,6 +81,7 @@ The infrastructure demonstrates good foundational security practices with encryp
 ### 3. Authentication & Authorization
 
 **Consul Security:**
+
 ```yaml
 Status: Partially Secured
 - ACLs: Enabled ✅
@@ -84,6 +91,7 @@ Status: Partially Secured
 ```
 
 **Nomad Security:**
+
 ```yaml
 Status: Unknown
 - ACLs: Not verified ❓
@@ -94,6 +102,7 @@ Status: Unknown
 **Risk Level:** High
 
 **Required Configuration:**
+
 ```hcl
 # Nomad ACL configuration needed
 acl {
@@ -112,6 +121,7 @@ acl {
 ### 4. Certificate Management
 
 **Current State:**
+
 - ❌ No certificate management solution
 - ❌ No TLS for internal services
 - ❌ No certificate rotation process
@@ -120,6 +130,7 @@ acl {
 **Risk Level:** High
 
 **Implementation Plan:**
+
 1. Deploy cert-manager in Nomad
 2. Configure Let's Encrypt for public endpoints
 3. Implement internal CA for service-to-service
@@ -128,6 +139,7 @@ acl {
 ### 5. Audit & Compliance
 
 **Audit Capabilities:**
+
 - ❌ No centralized logging
 - ❌ No audit trail for configuration changes
 - ❌ No security event monitoring
@@ -136,6 +148,7 @@ acl {
 **Risk Level:** Medium
 
 **Required Components:**
+
 ```yaml
 logging_infrastructure:
   - component: Loki
@@ -155,24 +168,28 @@ audit_requirements:
 ## Security Implementation Roadmap
 
 ### Phase 0: Assessment & Planning (Current)
+
 - [x] Document current security controls
 - [ ] Complete security requirements gathering
 - [ ] Perform threat modeling for DNS/IPAM
 - [ ] Create security test plan
 
 ### Phase 1: Foundation Hardening
+
 - [ ] Implement structured secret management
 - [ ] Configure Nomad ACLs and mTLS
 - [ ] Deploy audit logging infrastructure
 - [ ] Document security procedures
 
 ### Phase 2: Service Security
+
 - [ ] Enable TLS for PowerDNS API
 - [ ] Configure DNS over TLS/HTTPS
 - [ ] Implement service mesh (optional)
 - [ ] Deploy WAF for NetBox
 
 ### Phase 3: Advanced Security
+
 - [ ] Implement certificate automation
 - [ ] Deploy security monitoring
 - [ ] Configure automated compliance checks
@@ -227,11 +244,13 @@ internal_exposure:
 ## Compliance Considerations
 
 ### Data Protection
+
 - Personal data in IPAM: IP assignments may contain user information
 - Retention policy: Not defined
 - Access controls: Planned via NetBox RBAC
 
 ### Security Standards
+
 - CIS Benchmarks: Not applied
 - NIST Cybersecurity Framework: Partial alignment
 - Zero Trust Architecture: Not implemented
@@ -239,6 +258,7 @@ internal_exposure:
 ## Security Testing Plan
 
 ### Pre-Production Tests
+
 1. **Secret Rotation Test**
    - Rotate all secrets
    - Verify service continuity
@@ -255,6 +275,7 @@ internal_exposure:
    - Configuration audit
 
 ### Ongoing Security Monitoring
+
 ```yaml
 monitoring_checklist:
   daily:
@@ -276,18 +297,21 @@ monitoring_checklist:
 ## Recommendations Priority
 
 ### Critical (Implement before Phase 1)
+
 1. Document and test inter-cluster security
 2. Implement Nomad ACLs
 3. Create secret rotation procedures
 4. Deploy basic audit logging
 
 ### High (Implement during Phase 1-2)
+
 1. Structure Infisical secrets properly
 2. Enable TLS for all APIs
 3. Implement certificate management
 4. Deploy security monitoring
 
 ### Medium (Implement during Phase 3+)
+
 1. Implement DNSSEC
 2. Deploy service mesh
 3. Automate compliance checks
@@ -307,6 +331,6 @@ escalation:
 ```
 
 ---
-*Security Assessment Version: 1.0*
-*Classification: Internal Use Only*
-*Next Review: Before Phase 1 Implementation*
+_Security Assessment Version: 1.0_
+_Classification: Internal Use Only_
+_Next Review: Before Phase 1 Implementation_

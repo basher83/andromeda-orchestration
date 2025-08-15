@@ -16,7 +16,7 @@
       1. Initial Consul bootstrap
       2. Infisical at /consul/tokens/management
       3. Your secure password manager
-  when: 
+  when:
     - nomad_consul_manage_acls | bool
     - nomad_consul_management_token == ""
 
@@ -33,7 +33,7 @@
       Rules: "{{ lookup('file', 'consul-policies/nomad-server.hcl') }}"
   register: nomad_server_policy_result
   failed_when: false
-  when: 
+  when:
     - nomad_consul_manage_acls | bool
     - nomad_server_enabled | bool
   delegate_to: "{{ groups['consul'][0] | default(inventory_hostname) }}"
@@ -70,7 +70,7 @@
       ServiceIdentities:
         - ServiceName: "{{ nomad_consul_server_service_name }}"
   register: nomad_server_token_result
-  when: 
+  when:
     - nomad_consul_manage_acls | bool
     - nomad_server_enabled | bool
   delegate_to: "{{ groups['consul'][0] | default(inventory_hostname) }}"
@@ -90,7 +90,7 @@
       ServiceIdentities:
         - ServiceName: "{{ nomad_consul_client_service_name }}"
   register: nomad_client_token_result
-  when: 
+  when:
     - nomad_consul_manage_acls | bool
     - nomad_client_enabled | bool
   delegate_to: "{{ groups['consul'][0] | default(inventory_hostname) }}"
@@ -98,7 +98,7 @@
 - name: Set server token fact
   ansible.builtin.set_fact:
     consul_acl_nomad_server_token: "{{ nomad_server_token_result.json.SecretID }}"
-  when: 
+  when:
     - nomad_consul_manage_acls | bool
     - nomad_server_enabled | bool
     - nomad_server_token_result is defined
@@ -107,7 +107,7 @@
 - name: Set client token fact
   ansible.builtin.set_fact:
     consul_acl_nomad_client_token: "{{ nomad_client_token_result.json.SecretID }}"
-  when: 
+  when:
     - nomad_consul_manage_acls | bool
     - nomad_client_enabled | bool
     - nomad_client_token_result is defined
@@ -119,18 +119,18 @@
       - "=== CONSUL ACL TOKEN CREATED ==="
       - "Nomad Server Token: {{ consul_acl_nomad_server_token }}"
       - "Store this token securely!"
-  when: 
+  when:
     - nomad_consul_manage_acls | bool
     - nomad_server_enabled | bool
     - consul_acl_nomad_server_token is defined
 
-- name: Display token information for clients  
+- name: Display token information for clients
   ansible.builtin.debug:
     msg:
       - "=== CONSUL ACL TOKEN CREATED ==="
       - "Nomad Client Token: {{ consul_acl_nomad_client_token }}"
       - "Store this token securely!"
-  when: 
+  when:
     - nomad_consul_manage_acls | bool
     - nomad_client_enabled | bool
     - consul_acl_nomad_client_token is defined
