@@ -19,11 +19,23 @@ def run_module():
     }
     capabilities_spec = {
         "access_mode": {"type": "str", "aliases": ["AccessMode"], "required": True},
-        "attachment_mode": {"type": "str", "aliases": ["AttachmentMode"], "required": True},
+        "attachment_mode": {
+            "type": "str",
+            "aliases": ["AttachmentMode"],
+            "required": True,
+        },
     }
     module_args = {
-        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "state": {
+            "type": "str",
+            "choices": ["present", "absent"],
+            "default": "present",
+        },
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["NOMAD_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
@@ -36,8 +48,17 @@ def run_module():
         "name": {"type": "str", "required": True},
         "namespace": {"type": "str", "default": "default"},
         "plugin_id": {"type": "str", "required": True},
-        "mount_options": {"type": "dict", "required": False, "options": mount_options_spec},
-        "capabilities": {"type": "list", "required": True, "elements": "dict", "options": capabilities_spec},
+        "mount_options": {
+            "type": "dict",
+            "required": False,
+            "options": mount_options_spec,
+        },
+        "capabilities": {
+            "type": "list",
+            "required": True,
+            "elements": "dict",
+            "options": capabilities_spec,
+        },
         "capacity_gb": {"type": "int", "required": False},
         "parameters": {"type": "dict", "required": False},
     }
@@ -110,7 +131,9 @@ def run_module():
                 result["mismatched"] = True
         else:
             request_body = {"Volumes": [desired_volume]}
-            result["volume"] = nomad.create_csi_volume(volume_id, json.dumps(request_body))
+            result["volume"] = nomad.create_csi_volume(
+                volume_id, json.dumps(request_body)
+            )
             result["changed"] = True
 
     # post final results

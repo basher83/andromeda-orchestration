@@ -20,7 +20,9 @@ URL_ACL_TOKENS = "{url}/v1/acl/tokens"
 URL_ACL_TOKEN = "{url}/v1/acl/token"
 URL_ACL_TOKEN_ID = "{url}/v1/acl/token/{id}"
 URL_ACL_TOKEN_SELF = "{url}/v1/acl/token/self"
-URL_CONNECT_INTENTION = "{url}/v1/connect/intentions/exact?source={src}&destination={dst}"
+URL_CONNECT_INTENTION = (
+    "{url}/v1/connect/intentions/exact?source={src}&destination={dst}"
+)
 URL_SERVICE_NAME = "{url}/v1/catalog/service/{name}"
 
 
@@ -39,7 +41,15 @@ class ConsulAPI:
             "User-Agent": "ansible-module-consul",
         }
 
-    def api_request(self, url, method, headers=None, body=None, json_response=True, ignore_codes=None):
+    def api_request(
+        self,
+        url,
+        method,
+        headers=None,
+        body=None,
+        json_response=True,
+        ignore_codes=None,
+    ):
         if ignore_codes is None:
             ignore_codes = []
         if headers is None:
@@ -83,13 +93,19 @@ class ConsulAPI:
                 return None
 
             if e.code == 401 or e.code == 403:
-                self.module.fail_json(msg=f"Not Authorized: status={e.code} [{method}] {url} ->\n{response_body}")
+                self.module.fail_json(
+                    msg=f"Not Authorized: status={e.code} [{method}] {url} ->\n{response_body}"
+                )
 
-            self.module.fail_json(msg=f"Error: status={e.code} [{method}] {url} ->\n{response_body}")
+            self.module.fail_json(
+                msg=f"Error: status={e.code} [{method}] {url} ->\n{response_body}"
+            )
 
         except Exception as e:
             print("here")
-            self.module.fail_json(msg=f"Could not make API call: [{method}] {url} ->\n{str(e)}")
+            self.module.fail_json(
+                msg=f"Could not make API call: [{method}] {url} ->\n{str(e)}"
+            )
 
     #
     # ACL Policies

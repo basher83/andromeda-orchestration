@@ -18,8 +18,16 @@ def run_module():
         "name": {"type": "str", "aliases": ["Name"]},
     }
     module_args = {
-        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "state": {
+            "type": "str",
+            "choices": ["present", "absent"],
+            "default": "present",
+        },
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["NOMAD_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
@@ -31,8 +39,16 @@ def run_module():
         "accessor_id": {"type": "str"},
         "secret_id": {"type": "str"},
         "description": {"type": "str"},
-        "policies": {"type": "list", "elements": "dict", "options": policies_and_roles_spec},
-        "roles": {"type": "list", "elements": "dict", "options": policies_and_roles_spec},
+        "policies": {
+            "type": "list",
+            "elements": "dict",
+            "options": policies_and_roles_spec,
+        },
+        "roles": {
+            "type": "list",
+            "elements": "dict",
+            "options": policies_and_roles_spec,
+        },
         "is_local": {"type": "bool", "default": False},
         "expiration_ttl": {"type": "str"},
     }

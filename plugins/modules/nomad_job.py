@@ -24,8 +24,16 @@ if nomad_diff_spec is not None:
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = {
-        "state": {"type": "str", "choices": ["present", "absent", "purged"], "default": "present"},
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "state": {
+            "type": "str",
+            "choices": ["present", "absent", "purged"],
+            "default": "present",
+        },
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["NOMAD_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
@@ -62,7 +70,9 @@ def run_module():
     if module.params.get("name") is not None:
         job_id = module.params.get("name")
     else:
-        parsed_job = nomad.parse_job(json.dumps({"JobHCL": module.params.get("hcl_spec")}))
+        parsed_job = nomad.parse_job(
+            json.dumps({"JobHCL": module.params.get("hcl_spec")})
+        )
         job_id = parsed_job["ID"]
 
     existing_job = nomad.get_job(job_id)
@@ -74,10 +84,14 @@ def run_module():
         # if the job is already stopped but purge is set, we need to purge it.
         # also the job can still exist but not purged, in this case the
         # job has Stop set to True
-        if (existing_job is not None and purged) or (existing_job is not None and not existing_job["Stop"]):
+        if (existing_job is not None and purged) or (
+            existing_job is not None and not existing_job["Stop"]
+        ):
             result["changed"] = True
             result["diff"] = {
-                "before": "Job ID {} in namespace {} will be STOPPED!\n".format(job_id, module.params.get("namespace")),
+                "before": "Job ID {} in namespace {} will be STOPPED!\n".format(
+                    job_id, module.params.get("namespace")
+                ),
                 "after": "",
             }
             # exit now if in check mode
@@ -101,7 +115,11 @@ def run_module():
         # do a nice diff if the system has nomad_diff available
         if _nomad_diff_available and plan.get("Diff") is not None:
             with contextlib.suppress(Exception):
-                result["diff"] = {"prepared": nomad_diff.format(plan["Diff"], colors=True, verbose=False)}
+                result["diff"] = {
+                    "prepared": nomad_diff.format(
+                        plan["Diff"], colors=True, verbose=False
+                    )
+                }
 
         # if nomad_diff is not available we can try to fallback to a manual diff
         elif plan.get("Diff") is not None and existing_job is not None:

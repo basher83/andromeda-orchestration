@@ -14,8 +14,16 @@ from ..module_utils.utils import del_none, is_subset
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = {
-        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "state": {
+            "type": "str",
+            "choices": ["present", "absent"],
+            "default": "present",
+        },
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["NOMAD_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
@@ -24,7 +32,11 @@ def run_module():
             "no_log": True,
             "fallback": (env_fallback, ["NOMAD_TOKEN"]),
         },
-        "type": {"type": "str", "choices": ["client", "management"], "default": "client"},
+        "type": {
+            "type": "str",
+            "choices": ["client", "management"],
+            "default": "client",
+        },
         "name": {"type": "str"},
         "match_on_name": {"type": "bool", "default": True},
         "is_global": {"type": "bool", "default": False},
@@ -45,10 +57,15 @@ def run_module():
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
 
     # if the acl token is of client type and present, then policies are required
-    if module.params.get("type") == "client" and module.params.get("state") == "present":
+    if (
+        module.params.get("type") == "client"
+        and module.params.get("state") == "present"
+    ):
         policies = module.params.get("policies")
         if policies is None or policies.len() == 0:
-            module.fail_json("policies are required for nomad acl tokens of client type.")
+            module.fail_json(
+                "policies are required for nomad acl tokens of client type."
+            )
 
     # the NomadAPI can init itself via the module args
     nomad = NomadAPI(module)
@@ -87,7 +104,9 @@ def run_module():
             if desired_token_body.get("ExpirationTTL") is not None:
                 desired_token_body.pop("ExpirationTTL")
             if not is_subset(desired_token_body, existing_token):
-                result["token"] = nomad.update_acl_token(existing_token.get("AccessorID"), json.dumps(existing_token))
+                result["token"] = nomad.update_acl_token(
+                    existing_token.get("AccessorID"), json.dumps(existing_token)
+                )
                 result["changed"] = True
 
     # post final results

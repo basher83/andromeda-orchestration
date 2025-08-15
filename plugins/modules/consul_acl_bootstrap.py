@@ -11,7 +11,11 @@ from ..module_utils.consul import ConsulAPI
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = {
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["CONSUL_HTTP_ADDR"])},
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["CONSUL_HTTP_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
@@ -39,7 +43,9 @@ def run_module():
         token = consul.acl_bootstrap()
         result["changed"] = True
         if token.get("SecretID") != module.params.get("management_token"):
-            module.fail_json("bootstrap token has unexpected value: " + token.get("SecretID"))
+            module.fail_json(
+                "bootstrap token has unexpected value: " + token.get("SecretID")
+            )
     else:
         is_mgmt = False
         # consul management tokens have a policy with ID: 00000000-0000-0000-0000-000000000001 and named global-management

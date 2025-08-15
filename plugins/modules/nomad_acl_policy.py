@@ -20,8 +20,16 @@ def run_module():
         "task": {"type": "str", "aliases": ["Task"], "default": ""},
     }
     module_args = {
-        "state": {"type": "str", "choices": ["present", "absent"], "default": "present"},
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "state": {
+            "type": "str",
+            "choices": ["present", "absent"],
+            "default": "present",
+        },
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["NOMAD_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
@@ -73,13 +81,17 @@ def run_module():
 
     if module.params.get("state") == "present":
         if existing_policy is None:
-            nomad.create_or_update_acl_policy(policy_name, json.dumps(desired_policy_body))
+            nomad.create_or_update_acl_policy(
+                policy_name, json.dumps(desired_policy_body)
+            )
             result["policy"] = nomad.get_acl_policy(policy_name)
             result["changed"] = True
         else:
             # compare if we need to change anything about the policy
             if not is_subset(desired_policy_body, existing_policy):
-                nomad.create_or_update_acl_policy(policy_name, json.dumps(desired_policy_body))
+                nomad.create_or_update_acl_policy(
+                    policy_name, json.dumps(desired_policy_body)
+                )
                 result["policy"] = nomad.get_acl_policy(policy_name)
                 result["changed"] = True
 

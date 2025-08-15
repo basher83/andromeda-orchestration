@@ -11,7 +11,11 @@ from ..module_utils.consul import ConsulAPI
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = {
-        "url": {"type": "str", "required": True, "fallback": (env_fallback, ["NOMAD_ADDR"])},
+        "url": {
+            "type": "str",
+            "required": True,
+            "fallback": (env_fallback, ["NOMAD_ADDR"]),
+        },
         "validate_certs": {"type": "bool", "default": True},
         "connection_timeout": {"type": "int", "default": 10},
         "management_token": {
@@ -39,7 +43,9 @@ def run_module():
     # since the point of this module is to figure out a service IP and port
     # let's throw an error if we don't find one...
     if len(result["instances"]) == 0:
-        module.fail_json("could not find consul service named " + module.params.get("service_name"))
+        module.fail_json(
+            "could not find consul service named " + module.params.get("service_name")
+        )
 
     module.exit_json(**result)
 
