@@ -1,12 +1,15 @@
 # Consul Cluster Assessment Report
+
 Generated: 2025-07-24T05:49:06Z
 
 ## Summary
+
 Total nodes checked: 6
 
 ## Node Details
 
 ### nomad-server-1 (192.168.11.11)
+
 - Role: server
 - SSH Status: Success
 
@@ -38,6 +41,7 @@ LISTEN 0      4096                             *:8301             *:*
 ```
 
 ### nomad-server-2 (192.168.11.12)
+
 - Role: server
 - SSH Status: Success
 
@@ -69,6 +73,7 @@ LISTEN 0      4096                             *:8600             *:*
 ```
 
 ### nomad-server-3 (192.168.11.13)
+
 - Role: server
 - SSH Status: Success
 
@@ -100,6 +105,7 @@ LISTEN 0      4096                             *:8600             *:*
 ```
 
 ### nomad-client-1 (192.168.10.11)
+
 - Role: client
 - SSH Status: Success
 
@@ -131,6 +137,7 @@ LISTEN 0      4096                             *:8301             *:*
 ```
 
 ### nomad-client-2 (192.168.10.12)
+
 - Role: client
 - SSH Status: Success
 
@@ -162,6 +169,7 @@ LISTEN 0      4096                             *:8600             *:*
 ```
 
 ### nomad-client-3 (192.168.10.22)
+
 - Role: client
 - SSH Status: Success
 
@@ -191,6 +199,7 @@ LISTEN 0      4096                             *:8600             *:*
 ```
 
 ## Findings
+
 - Consul appears to be installed on accessible nodes
 - ACLs are enabled (deny by default)
 - Cluster is configured for dual-network operation
@@ -198,6 +207,7 @@ LISTEN 0      4096                             *:8600             *:*
 - High-speed network: 192.168.11.x (used for Consul communication)
 
 ## Recommendations
+
 1. Verify ACL tokens are properly configured
 2. Check firewall rules for Consul ports (8300-8302, 8500, 8600)
 3. Ensure DNS forwarding is configured for .consul domain

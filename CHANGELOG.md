@@ -11,12 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Role-first refactor: playbook soup cleanup (Aug 2025) — due 2025-08-31
 
-  - Milestone: https://github.com/basher83/andromeda-orchestration/milestone/1
+  - Milestone: <https://github.com/basher83/andromeda-orchestration/milestone/1>
   - Epic: [#17](https://github.com/basher83/andromeda-orchestration/issues/17)
   - Issues: [#10](https://github.com/basher83/andromeda-orchestration/issues/10), [#11](https://github.com/basher83/andromeda-orchestration/issues/11), [#12](https://github.com/basher83/andromeda-orchestration/issues/12), [#13](https://github.com/basher83/andromeda-orchestration/issues/13), [#14](https://github.com/basher83/andromeda-orchestration/issues/14), [#15](https://github.com/basher83/andromeda-orchestration/issues/15), [#16](https://github.com/basher83/andromeda-orchestration/issues/16)
 
 - Migrate lab.local → spaceships.work (High Priority) — due 2025-08-20
-  - Milestone: https://github.com/basher83/andromeda-orchestration/milestone/2
+  - Milestone: <https://github.com/basher83/andromeda-orchestration/milestone/2>
   - Epic: [#18](https://github.com/basher83/andromeda-orchestration/issues/18)
   - Issues: [#19](https://github.com/basher83/andromeda-orchestration/issues/19), [#20](https://github.com/basher83/andromeda-orchestration/issues/20), [#21](https://github.com/basher83/andromeda-orchestration/issues/21), [#22](https://github.com/basher83/andromeda-orchestration/issues/22), [#23](https://github.com/basher83/andromeda-orchestration/issues/23), [#24](https://github.com/basher83/andromeda-orchestration/issues/24)
 

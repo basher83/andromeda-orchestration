@@ -7,6 +7,7 @@ Current Status: Assessment Phase
 ## Pre-Flight Checklist
 
 ### Environment Access
+
 - [x] Ansible execution environment configured
 - [x] Proxmox API access verified (both clusters)
 - [ ] Infisical authentication tested
@@ -14,6 +15,7 @@ Current Status: Assessment Phase
 - [ ] Network connectivity between clusters verified
 
 ### Assessment Tools Ready
+
 - [x] Consul health check playbook created
 - [x] DNS/IPAM audit playbook created
 - [x] Infrastructure readiness playbook created
@@ -21,6 +23,7 @@ Current Status: Assessment Phase
 - [ ] Security audit playbook needed
 
 ### Documentation Requirements
+
 - [x] DNS/IPAM implementation plan reviewed
 - [x] Risk assessment matrix created
 - [x] Security posture evaluated
@@ -32,6 +35,7 @@ Current Status: Assessment Phase
 ### Week 1: Infrastructure Discovery
 
 #### Day 1-2: Consul Assessment
+
 ```bash
 # Run on both clusters
 uv run ansible-playbook playbooks/assessment/consul-assessment.yml \
@@ -42,12 +46,14 @@ uv run ansible-playbook playbooks/assessment/consul-assessment.yml \
 ```
 
 **Expected Outputs:**
+
 - Consul cluster health status
 - Service inventory
 - ACL configuration
 - Network topology
 
 #### Day 3-4: DNS/IPAM Audit
+
 ```bash
 # Comprehensive DNS audit
 uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml \
@@ -56,6 +62,7 @@ uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml \
 ```
 
 **Data to Collect:**
+
 - [ ] All DNS zones (forward and reverse)
 - [ ] Custom DNS entries from Pi-hole
 - [ ] DHCP server configurations
@@ -63,6 +70,7 @@ uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml \
 - [ ] DNS query patterns (30-day sample)
 
 #### Day 5: Network Assessment
+
 ```bash
 # Create and run network connectivity tests
 uv run ansible-playbook playbooks/assessment/network-connectivity.yml \
@@ -70,6 +78,7 @@ uv run ansible-playbook playbooks/assessment/network-connectivity.yml \
 ```
 
 **Tests to Perform:**
+
 - [ ] Inter-cluster routing verification
 - [ ] Latency measurements
 - [ ] Bandwidth tests
@@ -79,6 +88,7 @@ uv run ansible-playbook playbooks/assessment/network-connectivity.yml \
 ### Week 2: Analysis and Planning
 
 #### Day 6-7: Data Analysis
+
 - [ ] Compile all assessment reports
 - [ ] Create network topology diagram
 - [ ] Document all DNS zones and records
@@ -86,12 +96,14 @@ uv run ansible-playbook playbooks/assessment/network-connectivity.yml \
 - [ ] Identify service dependencies
 
 #### Day 8-9: Gap Analysis
+
 - [ ] Compare current state to target architecture
 - [ ] Identify missing components
 - [ ] Document technical debt
 - [ ] Create remediation plan
 
 #### Day 10: Stakeholder Review
+
 - [ ] Prepare executive summary
 - [ ] Schedule review meeting
 - [ ] Gather feedback
@@ -100,6 +112,7 @@ uv run ansible-playbook playbooks/assessment/network-connectivity.yml \
 ## Technical Validation Checklist
 
 ### Consul Validation
+
 ```yaml
 consul_requirements:
   version: ">= 1.21.2"
@@ -118,6 +131,7 @@ consul_requirements:
 ```
 
 ### DNS Infrastructure
+
 ```yaml
 dns_current_state:
   authoritative_servers:
@@ -137,6 +151,7 @@ dns_current_state:
 ```
 
 ### Network Requirements
+
 ```yaml
 network_validation:
   connectivity:
@@ -156,6 +171,7 @@ network_validation:
 ```
 
 ### Storage Assessment
+
 ```yaml
 storage_requirements:
   persistent_volumes:
@@ -173,12 +189,14 @@ storage_requirements:
 ## Operational Procedures
 
 ### Daily Tasks During Assessment
+
 1. Review overnight assessment job results
 2. Update findings documentation
 3. Communicate blockers to team
 4. Plan next day activities
 
 ### Communication Plan
+
 ```yaml
 stakeholders:
   technical_team:
@@ -195,6 +213,7 @@ stakeholders:
 ```
 
 ### Issue Tracking
+
 ```yaml
 issue_categories:
   blocker:
@@ -215,9 +234,10 @@ issue_categories:
 
 ## Success Criteria
 
-### Phase 0 Complete When:
+### Phase 0 Complete When
 
 #### Technical Criteria
+
 - [ ] All infrastructure nodes assessed
 - [ ] Network topology fully documented
 - [ ] DNS/IPAM current state captured
@@ -225,6 +245,7 @@ issue_categories:
 - [ ] Resource capacity verified
 
 #### Documentation Criteria
+
 - [ ] Assessment reports generated
 - [ ] Risk matrix completed
 - [ ] Architecture diagrams created
@@ -232,6 +253,7 @@ issue_categories:
 - [ ] Implementation plan updated
 
 #### Stakeholder Criteria
+
 - [ ] Technical review completed
 - [ ] Management approval received
 - [ ] Team trained on findings
@@ -240,6 +262,7 @@ issue_categories:
 ## Tools and Resources
 
 ### Required Tools
+
 ```bash
 # Assessment tools
 rg                  # Fast searching
@@ -255,14 +278,16 @@ git              # Version control
 ```
 
 ### Reference Documentation
-- Consul Documentation: https://developer.hashicorp.com/consul
-- Nomad Documentation: https://developer.hashicorp.com/nomad
-- PowerDNS Docs: https://doc.powerdns.com/
-- NetBox Docs: https://docs.netbox.dev/
+
+- Consul Documentation: <https://developer.hashicorp.com/consul>
+- Nomad Documentation: <https://developer.hashicorp.com/nomad>
+- PowerDNS Docs: <https://doc.powerdns.com/>
+- NetBox Docs: <https://docs.netbox.dev/>
 
 ## Risk Mitigation
 
 ### Assessment Risks
+
 1. **Incomplete Discovery**
    - Mitigation: Multiple assessment runs
    - Validation: Cross-reference multiple sources
@@ -278,6 +303,7 @@ git              # Version control
 ## Next Steps
 
 After Phase 0 completion:
+
 1. Review all findings with team
 2. Update implementation timeline
 3. Create detailed Phase 1 plan
@@ -285,6 +311,6 @@ After Phase 0 completion:
 5. Schedule Phase 1 kick-off
 
 ---
-*Readiness Checklist Version: 1.0*
-*Owner: Infrastructure Team*
-*Next Update: End of Week 1*
+_Readiness Checklist Version: 1.0_
+_Owner: Infrastructure Team_
+_Next Update: End of Week 1_

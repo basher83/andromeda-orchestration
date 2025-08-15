@@ -21,6 +21,5 @@ This command loads essential context for a new agent session by examining the co
 - Documentation:
   - @ROADMAP.md
   - @docs/getting-started/repository-structure.md
-  - @docs/project-management/task-list.md
-  - @docs/project-management/task-summary.md
-  - @docs/project-management/current-sprint.md
+  - @docs/project-management/README.md
+- Developer tools: @Taskfile.yml

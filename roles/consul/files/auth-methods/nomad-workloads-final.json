@@ -1,13 +1,15 @@
 {
-  "JWTValidationPubKeys": [],
-  "JWKSURL": "http://192.168.11.11:4646/.well-known/jwks.json",
+  "BoundAudiences": [
+    "consul.io"
+  ],
   "ClaimMappings": {
-    "nomad_namespace": "nomad_namespace",
     "nomad_job_id": "nomad_job_id",
+    "nomad_namespace": "nomad_namespace",
     "nomad_task": "nomad_task"
   },
+  "JWKSURL": "http://192.168.11.11:4646/.well-known/jwks.json",
+  "JWTValidationPubKeys": [],
   "ListClaimMappings": {
     "nomad_service": "nomad_service"
-  },
-  "BoundAudiences": ["consul.io"]
+  }
 }

@@ -47,9 +47,9 @@ Suppose you've just joined a new project and need to understand its structure qu
 <Tip>
   Tips:
 
-  * Start with broad questions, then narrow down to specific areas
-  * Ask about coding conventions and patterns used in the project
-  * Request a glossary of project-specific terms
+- Start with broad questions, then narrow down to specific areas
+- Ask about coding conventions and patterns used in the project
+- Request a glossary of project-specific terms
 </Tip>
 
 ### Find relevant code
@@ -79,8 +79,8 @@ Suppose you need to locate code related to a specific feature or functionality.
 <Tip>
   Tips:
 
-  * Be specific about what you're looking for
-  * Use domain language from the project
+- Be specific about what you're looking for
+- Use domain language from the project
 </Tip>
 
 ***
@@ -112,9 +112,9 @@ Suppose you've encountered an error message and need to find and fix its source.
 <Tip>
   Tips:
 
-  * Tell Claude the command to reproduce the issue and get a stack trace
-  * Mention any steps to reproduce the error
-  * Let Claude know if the error is intermittent or consistent
+- Tell Claude the command to reproduce the issue and get a stack trace
+- Mention any steps to reproduce the error
+- Let Claude know if the error is intermittent or consistent
 </Tip>
 
 ***
@@ -152,9 +152,9 @@ Suppose you need to update old code to use modern patterns and practices.
 <Tip>
   Tips:
 
-  * Ask Claude to explain the benefits of the modern approach
-  * Request that changes maintain backward compatibility when needed
-  * Do refactoring in small, testable increments
+- Ask Claude to explain the benefits of the modern approach
+- Request that changes maintain backward compatibility when needed
+- Do refactoring in small, testable increments
 </Tip>
 
 ***
@@ -211,10 +211,10 @@ Suppose you want to use specialized AI subagents to handle specific tasks more e
 <Tip>
   Tips:
 
-  * Create project-specific subagents in `.claude/agents/` for team sharing
-  * Use descriptive `description` fields to enable automatic delegation
-  * Limit tool access to what each subagent actually needs
-  * Check the [subagents documentation](/en/docs/claude-code/sub-agents) for detailed examples
+- Create project-specific subagents in `.claude/agents/` for team sharing
+- Use descriptive `description` fields to enable automatic delegation
+- Limit tool access to what each subagent actually needs
+- Check the [subagents documentation](/en/docs/claude-code/sub-agents) for detailed examples
 </Tip>
 
 ***
@@ -252,9 +252,9 @@ Suppose you need to add tests for uncovered code.
 <Tip>
   Tips:
 
-  * Ask for tests that cover edge cases and error conditions
-  * Request both unit and integration tests when appropriate
-  * Have Claude explain the testing strategy
+- Ask for tests that cover edge cases and error conditions
+- Request both unit and integration tests when appropriate
+- Have Claude explain the testing strategy
 </Tip>
 
 ***
@@ -292,9 +292,9 @@ Suppose you need to create a well-documented pull request for your changes.
 <Tip>
   Tips:
 
-  * Ask Claude directly to make a PR for you
-  * Review Claude's generated PR before submitting
-  * Ask Claude to highlight potential risks or considerations
+- Ask Claude directly to make a PR for you
+- Review Claude's generated PR before submitting
+- Ask Claude to highlight potential risks or considerations
 </Tip>
 
 ## Handle documentation
@@ -330,9 +330,9 @@ Suppose you need to add or update documentation for your code.
 <Tip>
   Tips:
 
-  * Specify the documentation style you want (JSDoc, docstrings, etc.)
-  * Ask for examples in the documentation
-  * Request documentation for public APIs, interfaces, and complex logic
+- Specify the documentation style you want (JSDoc, docstrings, etc.)
+- Ask for examples in the documentation
+- Request documentation for public APIs, interfaces, and complex logic
 </Tip>
 
 ***
@@ -388,10 +388,10 @@ Suppose you need to work with images in your codebase, and you want Claude's hel
 <Tip>
   Tips:
 
-  * Use images when text descriptions would be unclear or cumbersome
-  * Include screenshots of errors, UI designs, or diagrams for better context
-  * You can work with multiple images in a conversation
-  * Image analysis works with diagrams, screenshots, mockups, and more
+- Use images when text descriptions would be unclear or cumbersome
+- Include screenshots of errors, UI designs, or diagrams for better context
+- You can work with multiple images in a conversation
+- Image analysis works with diagrams, screenshots, mockups, and more
 </Tip>
 
 ***
@@ -429,10 +429,10 @@ Use @ to quickly include files or directories without waiting for Claude to read
 <Tip>
   Tips:
 
-  * File paths can be relative or absolute
-  * @ file references add CLAUDE.md in the file's directory and parent directories to context
-  * Directory references show file listings, not contents
-  * You can reference multiple files in a single message (e.g., "@file1.js and @file2.js")
+- File paths can be relative or absolute
+- @ file references add CLAUDE.md in the file's directory and parent directories to context
+- Directory references show file listings, not contents
+- You can reference multiple files in a single message (e.g., "@file1.js and @file2.js")
 </Tip>
 
 ***
@@ -467,16 +467,16 @@ Suppose you're working on complex architectural decisions, challenging bugs, or 
 
   Extended thinking is most valuable for complex tasks such as:
 
-  * Planning complex architectural changes
-  * Debugging intricate issues
-  * Creating implementation plans for new features
-  * Understanding complex codebases
-  * Evaluating tradeoffs between different approaches
+- Planning complex architectural changes
+- Debugging intricate issues
+- Creating implementation plans for new features
+- Understanding complex codebases
+- Evaluating tradeoffs between different approaches
 
   The way you prompt for thinking results in varying levels of thinking depth:
 
-  * "think" triggers basic extended thinking
-  * intensifying phrases such as "think more", "think a lot", "think harder", or "think longer" triggers deeper thinking
+- "think" triggers basic extended thinking
+- intensifying phrases such as "think more", "think a lot", "think harder", or "think longer" triggers deeper thinking
 
   For more extended thinking prompting tips, see [Extended thinking tips](/en/docs/build-with-claude/prompt-engineering/extended-thinking-tips).
 </Tip>
@@ -494,8 +494,8 @@ Suppose you've been working on a task with Claude Code and need to continue wher
 
 Claude Code provides two options for resuming previous conversations:
 
-* `--continue` to automatically continue the most recent conversation
-* `--resume` to display a conversation picker
+- `--continue` to automatically continue the most recent conversation
+- `--resume` to display a conversation picker
 
 <Steps>
   <Step title="Continue the most recent conversation">
@@ -532,11 +532,11 @@ Claude Code provides two options for resuming previous conversations:
 <Tip>
   Tips:
 
-  * Conversation history is stored locally on your machine
-  * Use `--continue` for quick access to your most recent conversation
-  * Use `--resume` when you need to select a specific past conversation
-  * When resuming, you'll see the entire conversation history before continuing
-  * The resumed conversation starts with the same model and configuration as the original
+- Conversation history is stored locally on your machine
+- Use `--continue` for quick access to your most recent conversation
+- Use `--resume` when you need to select a specific past conversation
+- When resuming, you'll see the entire conversation history before continuing
+- The resumed conversation starts with the same model and configuration as the original
 
   How it works:
 
@@ -560,6 +560,7 @@ Claude Code provides two options for resuming previous conversations:
   # Continue most recent conversation in non-interactive mode
   claude --continue --print "Run the tests again"
   ```
+
 </Tip>
 
 ***
@@ -620,15 +621,15 @@ Suppose you need to work on multiple tasks simultaneously with complete code iso
 <Tip>
   Tips:
 
-  * Each worktree has its own independent file state, making it perfect for parallel Claude Code sessions
-  * Changes made in one worktree won't affect others, preventing Claude instances from interfering with each other
-  * All worktrees share the same Git history and remote connections
-  * For long-running tasks, you can have Claude working in one worktree while you continue development in another
-  * Use descriptive directory names to easily identify which task each worktree is for
-  * Remember to initialize your development environment in each new worktree according to your project's setup. Depending on your stack, this might include:
-    * JavaScript projects: Running dependency installation (`npm install`, `yarn`)
-    * Python projects: Setting up virtual environments or installing with package managers
-    * Other languages: Following your project's standard setup process
+- Each worktree has its own independent file state, making it perfect for parallel Claude Code sessions
+- Changes made in one worktree won't affect others, preventing Claude instances from interfering with each other
+- All worktrees share the same Git history and remote connections
+- For long-running tasks, you can have Claude working in one worktree while you continue development in another
+- Use descriptive directory names to easily identify which task each worktree is for
+- Remember to initialize your development environment in each new worktree according to your project's setup. Depending on your stack, this might include:
+  - JavaScript projects: Running dependency installation (`npm install`, `yarn`)
+  - Python projects: Setting up virtual environments or installing with package managers
+  - Other languages: Following your project's standard setup process
 </Tip>
 
 ***
@@ -655,9 +656,9 @@ Suppose you want to use Claude Code as a linter or code reviewer.
 <Tip>
   Tips:
 
-  * Use Claude for automated code review in your CI/CD pipeline
-  * Customize the prompt to check for specific issues relevant to your project
-  * Consider creating multiple scripts for different types of verification
+- Use Claude for automated code review in your CI/CD pipeline
+- Customize the prompt to check for specific issues relevant to your project
+- Consider creating multiple scripts for different types of verification
 </Tip>
 
 ### Pipe in, pipe out
@@ -673,9 +674,9 @@ cat build-error.txt | claude -p 'concisely explain the root cause of this build 
 <Tip>
   Tips:
 
-  * Use pipes to integrate Claude into existing shell scripts
-  * Combine with other Unix tools for powerful workflows
-  * Consider using --output-format for structured output
+- Use pipes to integrate Claude into existing shell scripts
+- Combine with other Unix tools for powerful workflows
+- Consider using --output-format for structured output
 </Tip>
 
 ### Control output format
@@ -711,9 +712,9 @@ Suppose you need Claude's output in a specific format, especially when integrati
 <Tip>
   Tips:
 
-  * Use `--output-format text` for simple integrations where you just need Claude's response
-  * Use `--output-format json` when you need the full conversation log
-  * Use `--output-format stream-json` for real-time output of each conversation turn
+- Use `--output-format text` for simple integrations where you just need Claude's response
+- Use `--output-format json` when you need the full conversation log
+- Use `--output-format stream-json` for real-time output of each conversation turn
 </Tip>
 
 ***
@@ -751,10 +752,10 @@ Suppose you want to create reusable slash commands for your project that all tea
 <Tip>
   Tips:
 
-  * Command names are derived from the filename (e.g., `optimize.md` becomes `/optimize`)
-  * You can organize commands in subdirectories (e.g., `.claude/commands/frontend/component.md` creates `/component` with "(project:frontend)" shown in the description)
-  * Project commands are available to everyone who clones the repository
-  * The Markdown file content becomes the prompt sent to Claude when the command is invoked
+- Command names are derived from the filename (e.g., `optimize.md` becomes `/optimize`)
+- You can organize commands in subdirectories (e.g., `.claude/commands/frontend/component.md` creates `/component` with "(project:frontend)" shown in the description)
+- Project commands are available to everyone who clones the repository
+- The Markdown file content becomes the prompt sent to Claude when the command is invoked
 </Tip>
 
 ### Add command arguments with \$ARGUMENTS
@@ -786,9 +787,9 @@ Suppose you want to create flexible slash commands that can accept additional in
 <Tip>
   Tips:
 
-  * The \$ARGUMENTS placeholder is replaced with any text that follows the command
-  * You can position \$ARGUMENTS anywhere in your command template
-  * Other useful applications: generating test cases for specific functions, creating documentation for components, reviewing code in particular files, or translating content to specified languages
+- The \$ARGUMENTS placeholder is replaced with any text that follows the command
+- You can position \$ARGUMENTS anywhere in your command template
+- Other useful applications: generating test cases for specific functions, creating documentation for components, reviewing code in particular files, or translating content to specified languages
 </Tip>
 
 ### Create personal slash commands
@@ -819,10 +820,10 @@ Suppose you want to create personal slash commands that work across all your pro
 <Tip>
   Tips:
 
-  * Personal commands show "(user)" in their description when listed with `/help`
-  * Personal commands are only available to you and not shared with your team
-  * Personal commands work across all your projects
-  * You can use these for consistent workflows across different codebases
+- Personal commands show "(user)" in their description when listed with `/help`
+- Personal commands are only available to you and not shared with your team
+- Personal commands work across all your projects
+- You can use these for consistent workflows across different codebases
 </Tip>
 
 ***
@@ -864,9 +865,9 @@ Claude has built-in access to its documentation and can answer questions about i
 <Tip>
   Tips:
 
-  * Claude always has access to the latest Claude Code documentation, regardless of the version you're using
-  * Ask specific questions to get detailed answers
-  * Claude can explain complex features like MCP integration, enterprise configurations, and advanced workflows
+- Claude always has access to the latest Claude Code documentation, regardless of the version you're using
+- Ask specific questions to get detailed answers
+- Claude can explain complex features like MCP integration, enterprise configurations, and advanced workflows
 </Tip>
 
 ***

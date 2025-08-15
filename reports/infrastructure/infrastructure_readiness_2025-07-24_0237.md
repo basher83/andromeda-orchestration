@@ -1,9 +1,11 @@
 # Infrastructure Readiness Report
+
 Generated: 2025-07-24T06:37:09Z
 
 ## Nodes Checked
 
 ### nomad-server-1 (192.168.11.11)
+
 ```
 === System Info ===
 nomad-server-1
@@ -28,6 +30,7 @@ active
 ```
 
 ### nomad-server-2 (192.168.11.12)
+
 ```
 === System Info ===
 nomad-server-2
@@ -52,6 +55,7 @@ active
 ```
 
 ### nomad-server-3 (192.168.11.13)
+
 ```
 === System Info ===
 nomad-server-3
@@ -76,11 +80,13 @@ active
 ```
 
 ## Summary
+
 - All nodes have Nomad installed and active
 - Docker is available for container workloads
 - Sufficient resources for PowerDNS and NetBox deployment
 
 ## Recommendations
+
 1. **PowerDNS**: Can be deployed as Nomad job with MariaDB
 2. **NetBox**: Requires PostgreSQL, Redis, and sufficient storage
 3. **Monitoring**: Consider deploying Prometheus + Grafana

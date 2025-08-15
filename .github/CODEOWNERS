@@ -1,7 +1,7 @@
 # CODEOWNERS - Solo Developer Template
-# 
+#
 # This file defines code ownership for automated review assignments.
-# Optimized for solo developer workflow with Python, Terraform, Ansible, 
+# Optimized for solo developer workflow with Python, Terraform, Ansible,
 # documentation, and Infrastructure as Code projects.
 #
 # Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners

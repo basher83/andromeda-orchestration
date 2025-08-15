@@ -1,17 +1,22 @@
 # Consul Cluster Detailed Assessment Report
+
 Generated: 2025-07-24T06:35:50Z
 
 ## Cluster Overview
+
 Total nodes: 6
+
 - Servers: 3
 - Clients: 3
 
 ## Leader Information
+
 Failed to retrieve leader information
 
 ## Node Details
 
 ### nomad-server-1 (192.168.11.11)
+
 - Role: server
 - SSH Status: Success
 
@@ -31,74 +36,74 @@ nomad-client-3  192.168.11.22:8301  alive   client  1.20.5  2         dc1  defau
 
 === Consul Info ===
 agent:
-	check_monitors = 0
-	check_ttls = 0
-	checks = 0
-	services = 0
+ check_monitors = 0
+ check_ttls = 0
+ checks = 0
+ services = 0
 build:
-	prerelease =
-	revision = 136b9cb8
-	version = 1.21.2
-	version_metadata =
+ prerelease =
+ revision = 136b9cb8
+ version = 1.21.2
+ version_metadata =
 consul:
-	acl = enabled
-	bootstrap = false
-	known_datacenters = 1
-	leader = false
-	leader_addr = 192.168.11.12:8300
-	server = true
+ acl = enabled
+ bootstrap = false
+ known_datacenters = 1
+ leader = false
+ leader_addr = 192.168.11.12:8300
+ server = true
 raft:
-	applied_index = 258714
-	commit_index = 258714
-	fsm_pending = 0
-	last_contact = 63.754059ms
-	last_log_index = 258714
-	last_log_term = 7
-	last_snapshot_index = 245760
-	last_snapshot_term = 7
-	latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
-	latest_configuration_index = 0
-	num_peers = 2
-	protocol_version = 3
-	protocol_version_max = 3
-	protocol_version_min = 0
-	snapshot_version_max = 1
-	snapshot_version_min = 0
-	state = Follower
-	term = 7
+ applied_index = 258714
+ commit_index = 258714
+ fsm_pending = 0
+ last_contact = 63.754059ms
+ last_log_index = 258714
+ last_log_term = 7
+ last_snapshot_index = 245760
+ last_snapshot_term = 7
+ latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
+ latest_configuration_index = 0
+ num_peers = 2
+ protocol_version = 3
+ protocol_version_max = 3
+ protocol_version_min = 0
+ snapshot_version_max = 1
+ snapshot_version_min = 0
+ state = Follower
+ term = 7
 runtime:
-	arch = amd64
-	cpu_count = 4
-	goroutines = 186
-	max_procs = 4
-	os = linux
-	version = go1.23.10
+ arch = amd64
+ cpu_count = 4
+ goroutines = 186
+ max_procs = 4
+ os = linux
+ version = go1.23.10
 serf_lan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 7
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 563
-	members = 6
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 7
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 563
+ members = 6
+ query_queue = 0
+ query_time = 1
 serf_wan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 1
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 53
-	members = 3
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 1
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 53
+ members = 3
+ query_queue = 0
+ query_time = 1
 
 === Consul Services ===
 consul
@@ -125,10 +130,10 @@ nomad-server-3  b38f83f5  192.168.11.13  dc1
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
 ;; QUESTION SECTION:
-;consul.service.consul.		IN	A
+;consul.service.consul.  IN A
 
 ;; AUTHORITY SECTION:
-consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338951 3600 600 86400 0
+consul.   0 IN SOA ns.consul. hostmaster.consul. 1753338951 3600 600 86400 0
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#8600(127.0.0.1) (UDP)
@@ -137,6 +142,7 @@ consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338951 3600 600 86400 0
 ```
 
 ### nomad-server-2 (192.168.11.12)
+
 - Role: server
 - SSH Status: Success
 
@@ -156,74 +162,74 @@ nomad-client-3  192.168.11.22:8301  alive   client  1.20.5  2         dc1  defau
 
 === Consul Info ===
 agent:
-	check_monitors = 0
-	check_ttls = 0
-	checks = 0
-	services = 0
+ check_monitors = 0
+ check_ttls = 0
+ checks = 0
+ services = 0
 build:
-	prerelease =
-	revision = 136b9cb8
-	version = 1.21.2
-	version_metadata =
+ prerelease =
+ revision = 136b9cb8
+ version = 1.21.2
+ version_metadata =
 consul:
-	acl = enabled
-	bootstrap = false
-	known_datacenters = 1
-	leader = true
-	leader_addr = 192.168.11.12:8300
-	server = true
+ acl = enabled
+ bootstrap = false
+ known_datacenters = 1
+ leader = true
+ leader_addr = 192.168.11.12:8300
+ server = true
 raft:
-	applied_index = 258714
-	commit_index = 258714
-	fsm_pending = 0
-	last_contact = 0
-	last_log_index = 258714
-	last_log_term = 7
-	last_snapshot_index = 245762
-	last_snapshot_term = 7
-	latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
-	latest_configuration_index = 0
-	num_peers = 2
-	protocol_version = 3
-	protocol_version_max = 3
-	protocol_version_min = 0
-	snapshot_version_max = 1
-	snapshot_version_min = 0
-	state = Leader
-	term = 7
+ applied_index = 258714
+ commit_index = 258714
+ fsm_pending = 0
+ last_contact = 0
+ last_log_index = 258714
+ last_log_term = 7
+ last_snapshot_index = 245762
+ last_snapshot_term = 7
+ latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
+ latest_configuration_index = 0
+ num_peers = 2
+ protocol_version = 3
+ protocol_version_max = 3
+ protocol_version_min = 0
+ snapshot_version_max = 1
+ snapshot_version_min = 0
+ state = Leader
+ term = 7
 runtime:
-	arch = amd64
-	cpu_count = 4
-	goroutines = 248
-	max_procs = 4
-	os = linux
-	version = go1.23.10
+ arch = amd64
+ cpu_count = 4
+ goroutines = 248
+ max_procs = 4
+ os = linux
+ version = go1.23.10
 serf_lan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 7
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 563
-	members = 6
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 7
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 563
+ members = 6
+ query_queue = 0
+ query_time = 1
 serf_wan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 1
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 53
-	members = 3
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 1
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 53
+ members = 3
+ query_queue = 0
+ query_time = 1
 
 === Consul Services ===
 consul
@@ -250,10 +256,10 @@ nomad-server-3  b38f83f5  192.168.11.13  dc1
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
 ;; QUESTION SECTION:
-;consul.service.consul.		IN	A
+;consul.service.consul.  IN A
 
 ;; AUTHORITY SECTION:
-consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338951 3600 600 86400 0
+consul.   0 IN SOA ns.consul. hostmaster.consul. 1753338951 3600 600 86400 0
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#8600(127.0.0.1) (UDP)
@@ -262,6 +268,7 @@ consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338951 3600 600 86400 0
 ```
 
 ### nomad-server-3 (192.168.11.13)
+
 - Role: server
 - SSH Status: Success
 
@@ -281,74 +288,74 @@ nomad-client-3  192.168.11.22:8301  alive   client  1.20.5  2         dc1  defau
 
 === Consul Info ===
 agent:
-	check_monitors = 0
-	check_ttls = 0
-	checks = 0
-	services = 0
+ check_monitors = 0
+ check_ttls = 0
+ checks = 0
+ services = 0
 build:
-	prerelease =
-	revision = 136b9cb8
-	version = 1.21.2
-	version_metadata =
+ prerelease =
+ revision = 136b9cb8
+ version = 1.21.2
+ version_metadata =
 consul:
-	acl = enabled
-	bootstrap = false
-	known_datacenters = 1
-	leader = false
-	leader_addr = 192.168.11.12:8300
-	server = true
+ acl = enabled
+ bootstrap = false
+ known_datacenters = 1
+ leader = false
+ leader_addr = 192.168.11.12:8300
+ server = true
 raft:
-	applied_index = 258714
-	commit_index = 258714
-	fsm_pending = 0
-	last_contact = 33.676896ms
-	last_log_index = 258714
-	last_log_term = 7
-	last_snapshot_index = 245762
-	last_snapshot_term = 7
-	latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
-	latest_configuration_index = 0
-	num_peers = 2
-	protocol_version = 3
-	protocol_version_max = 3
-	protocol_version_min = 0
-	snapshot_version_max = 1
-	snapshot_version_min = 0
-	state = Follower
-	term = 7
+ applied_index = 258714
+ commit_index = 258714
+ fsm_pending = 0
+ last_contact = 33.676896ms
+ last_log_index = 258714
+ last_log_term = 7
+ last_snapshot_index = 245762
+ last_snapshot_term = 7
+ latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
+ latest_configuration_index = 0
+ num_peers = 2
+ protocol_version = 3
+ protocol_version_max = 3
+ protocol_version_min = 0
+ snapshot_version_max = 1
+ snapshot_version_min = 0
+ state = Follower
+ term = 7
 runtime:
-	arch = amd64
-	cpu_count = 4
-	goroutines = 163
-	max_procs = 4
-	os = linux
-	version = go1.23.10
+ arch = amd64
+ cpu_count = 4
+ goroutines = 163
+ max_procs = 4
+ os = linux
+ version = go1.23.10
 serf_lan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 7
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 563
-	members = 6
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 7
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 563
+ members = 6
+ query_queue = 0
+ query_time = 1
 serf_wan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 1
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 53
-	members = 3
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 1
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 53
+ members = 3
+ query_queue = 0
+ query_time = 1
 
 === Consul Services ===
 consul
@@ -375,10 +382,10 @@ nomad-server-3  b38f83f5  192.168.11.13  dc1
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
 ;; QUESTION SECTION:
-;consul.service.consul.		IN	A
+;consul.service.consul.  IN A
 
 ;; AUTHORITY SECTION:
-consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338952 3600 600 86400 0
+consul.   0 IN SOA ns.consul. hostmaster.consul. 1753338952 3600 600 86400 0
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#8600(127.0.0.1) (UDP)
@@ -387,6 +394,7 @@ consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338952 3600 600 86400 0
 ```
 
 ### nomad-client-1 (192.168.10.11)
+
 - Role: client
 - SSH Status: Success
 
@@ -406,74 +414,74 @@ nomad-client-3  192.168.11.22:8301  alive   client  1.20.5  2         dc1  defau
 
 === Consul Info ===
 agent:
-	check_monitors = 0
-	check_ttls = 0
-	checks = 0
-	services = 0
+ check_monitors = 0
+ check_ttls = 0
+ checks = 0
+ services = 0
 build:
-	prerelease =
-	revision = 136b9cb8
-	version = 1.21.2
-	version_metadata =
+ prerelease =
+ revision = 136b9cb8
+ version = 1.21.2
+ version_metadata =
 consul:
-	acl = enabled
-	bootstrap = false
-	known_datacenters = 1
-	leader = false
-	leader_addr = 192.168.11.12:8300
-	server = true
+ acl = enabled
+ bootstrap = false
+ known_datacenters = 1
+ leader = false
+ leader_addr = 192.168.11.12:8300
+ server = true
 raft:
-	applied_index = 258714
-	commit_index = 258714
-	fsm_pending = 0
-	last_contact = 78.817945ms
-	last_log_index = 258714
-	last_log_term = 7
-	last_snapshot_index = 245760
-	last_snapshot_term = 7
-	latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
-	latest_configuration_index = 0
-	num_peers = 2
-	protocol_version = 3
-	protocol_version_max = 3
-	protocol_version_min = 0
-	snapshot_version_max = 1
-	snapshot_version_min = 0
-	state = Follower
-	term = 7
+ applied_index = 258714
+ commit_index = 258714
+ fsm_pending = 0
+ last_contact = 78.817945ms
+ last_log_index = 258714
+ last_log_term = 7
+ last_snapshot_index = 245760
+ last_snapshot_term = 7
+ latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
+ latest_configuration_index = 0
+ num_peers = 2
+ protocol_version = 3
+ protocol_version_max = 3
+ protocol_version_min = 0
+ snapshot_version_max = 1
+ snapshot_version_min = 0
+ state = Follower
+ term = 7
 runtime:
-	arch = amd64
-	cpu_count = 4
-	goroutines = 186
-	max_procs = 4
-	os = linux
-	version = go1.23.10
+ arch = amd64
+ cpu_count = 4
+ goroutines = 186
+ max_procs = 4
+ os = linux
+ version = go1.23.10
 serf_lan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 7
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 563
-	members = 6
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 7
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 563
+ members = 6
+ query_queue = 0
+ query_time = 1
 serf_wan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 1
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 53
-	members = 3
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 1
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 53
+ members = 3
+ query_queue = 0
+ query_time = 1
 
 === Consul Services ===
 consul
@@ -500,10 +508,10 @@ nomad-server-3  b38f83f5  192.168.11.13  dc1
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
 ;; QUESTION SECTION:
-;consul.service.consul.		IN	A
+;consul.service.consul.  IN A
 
 ;; AUTHORITY SECTION:
-consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338953 3600 600 86400 0
+consul.   0 IN SOA ns.consul. hostmaster.consul. 1753338953 3600 600 86400 0
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#8600(127.0.0.1) (UDP)
@@ -512,6 +520,7 @@ consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338953 3600 600 86400 0
 ```
 
 ### nomad-client-2 (192.168.10.12)
+
 - Role: client
 - SSH Status: Success
 
@@ -531,74 +540,74 @@ nomad-client-3  192.168.11.22:8301  alive   client  1.20.5  2         dc1  defau
 
 === Consul Info ===
 agent:
-	check_monitors = 0
-	check_ttls = 0
-	checks = 0
-	services = 0
+ check_monitors = 0
+ check_ttls = 0
+ checks = 0
+ services = 0
 build:
-	prerelease =
-	revision = 136b9cb8
-	version = 1.21.2
-	version_metadata =
+ prerelease =
+ revision = 136b9cb8
+ version = 1.21.2
+ version_metadata =
 consul:
-	acl = enabled
-	bootstrap = false
-	known_datacenters = 1
-	leader = true
-	leader_addr = 192.168.11.12:8300
-	server = true
+ acl = enabled
+ bootstrap = false
+ known_datacenters = 1
+ leader = true
+ leader_addr = 192.168.11.12:8300
+ server = true
 raft:
-	applied_index = 258714
-	commit_index = 258714
-	fsm_pending = 0
-	last_contact = 0
-	last_log_index = 258714
-	last_log_term = 7
-	last_snapshot_index = 245762
-	last_snapshot_term = 7
-	latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
-	latest_configuration_index = 0
-	num_peers = 2
-	protocol_version = 3
-	protocol_version_max = 3
-	protocol_version_min = 0
-	snapshot_version_max = 1
-	snapshot_version_min = 0
-	state = Leader
-	term = 7
+ applied_index = 258714
+ commit_index = 258714
+ fsm_pending = 0
+ last_contact = 0
+ last_log_index = 258714
+ last_log_term = 7
+ last_snapshot_index = 245762
+ last_snapshot_term = 7
+ latest_configuration = [{Suffrage:Voter ID:b38f83f5-c9c8-a173-e07b-4b150e26234d Address:192.168.11.13:8300} {Suffrage:Voter ID:0c584b88-b8b8-6b20-0d55-cee9e84e7e08 Address:192.168.11.12:8300} {Suffrage:Voter ID:45087616-4a32-f2ae-c364-c0af2bb8ad2a Address:192.168.11.11:8300}]
+ latest_configuration_index = 0
+ num_peers = 2
+ protocol_version = 3
+ protocol_version_max = 3
+ protocol_version_min = 0
+ snapshot_version_max = 1
+ snapshot_version_min = 0
+ state = Leader
+ term = 7
 runtime:
-	arch = amd64
-	cpu_count = 4
-	goroutines = 248
-	max_procs = 4
-	os = linux
-	version = go1.23.10
+ arch = amd64
+ cpu_count = 4
+ goroutines = 248
+ max_procs = 4
+ os = linux
+ version = go1.23.10
 serf_lan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 7
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 563
-	members = 6
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 7
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 563
+ members = 6
+ query_queue = 0
+ query_time = 1
 serf_wan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 1
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 53
-	members = 3
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 1
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 53
+ members = 3
+ query_queue = 0
+ query_time = 1
 
 === Consul Services ===
 consul
@@ -625,10 +634,10 @@ nomad-server-3  b38f83f5  192.168.11.13  dc1
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
 ;; QUESTION SECTION:
-;consul.service.consul.		IN	A
+;consul.service.consul.  IN A
 
 ;; AUTHORITY SECTION:
-consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338954 3600 600 86400 0
+consul.   0 IN SOA ns.consul. hostmaster.consul. 1753338954 3600 600 86400 0
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#8600(127.0.0.1) (UDP)
@@ -637,6 +646,7 @@ consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338954 3600 600 86400 0
 ```
 
 ### nomad-client-3 (192.168.10.22)
+
 - Role: client
 - SSH Status: Success
 
@@ -656,39 +666,39 @@ nomad-client-3  192.168.11.22:8301  alive   client  1.20.5  2         dc1  defau
 
 === Consul Info ===
 agent:
-	check_monitors = 0
-	check_ttls = 0
-	checks = 0
-	services = 0
+ check_monitors = 0
+ check_ttls = 0
+ checks = 0
+ services = 0
 build:
-	prerelease =
-	revision = 74efe419
-	version = 1.20.5
-	version_metadata =
+ prerelease =
+ revision = 74efe419
+ version = 1.20.5
+ version_metadata =
 consul:
-	acl = enabled
-	known_servers = 3
-	server = false
+ acl = enabled
+ known_servers = 3
+ server = false
 runtime:
-	arch = amd64
-	cpu_count = 8
-	goroutines = 57
-	max_procs = 8
-	os = linux
-	version = go1.23.6
+ arch = amd64
+ cpu_count = 8
+ goroutines = 57
+ max_procs = 8
+ os = linux
+ version = go1.23.6
 serf_lan:
-	coordinate_resets = 0
-	encrypted = true
-	event_queue = 0
-	event_time = 7
-	failed = 0
-	health_score = 0
-	intent_queue = 0
-	left = 0
-	member_time = 563
-	members = 6
-	query_queue = 0
-	query_time = 1
+ coordinate_resets = 0
+ encrypted = true
+ event_queue = 0
+ event_time = 7
+ failed = 0
+ health_score = 0
+ intent_queue = 0
+ left = 0
+ member_time = 563
+ members = 6
+ query_queue = 0
+ query_time = 1
 
 === Consul Services ===
 consul
@@ -715,10 +725,10 @@ nomad-server-3  b38f83f5  192.168.11.13  dc1
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
 ;; QUESTION SECTION:
-;consul.service.consul.		IN	A
+;consul.service.consul.  IN A
 
 ;; AUTHORITY SECTION:
-consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338954 3600 600 86400 0
+consul.   0 IN SOA ns.consul. hostmaster.consul. 1753338954 3600 600 86400 0
 
 ;; Query time: 0 msec
 ;; SERVER: 127.0.0.1#8600(127.0.0.1) (UDP)
@@ -727,6 +737,7 @@ consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338954 3600 600 86400 0
 ```
 
 ## Key Findings
+
 1. **Cluster Health**: All nodes are running Consul service
 2. **Version**: Mix of v1.21.2 (most nodes) and v1.20.5 (nomad-client-3)
 3. **Network Configuration**:
@@ -738,6 +749,7 @@ consul.			0	IN	SOA	ns.consul. hostmaster.consul. 1753338954 3600 600 86400 0
 5. **DNS**: Port 8600 is listening on all nodes
 
 ## Recommendations for Phase 1
+
 1. **Version Consistency**: Update nomad-client-3 to v1.21.2
 2. **DNS Integration**: Configure system resolvers to use Consul DNS
 3. **Service Registration**: Implement service definitions for existing workloads
