@@ -1,8 +1,8 @@
 # GitHub Issue Tracker
 
 **Repository**: [basher83/netbox-ansible](https://github.com/basher83/netbox-ansible)
-**Open Issues**: 45
-**Last Updated**: 2025-08-14
+**Open Issues**: 48
+**Last Updated**: 2025-08-15
 
 ---
 
@@ -64,6 +64,16 @@
 
 ## 🟡 Medium Priority (Next Sprint)
 
+### Code Quality & Linting Epic ([#63](https://github.com/basher83/netbox-ansible/issues/63))
+**Goal**: Fix 391 ansible-lint violations and achieve production-ready code quality
+
+| Issue | Title | Priority |
+|-------|-------|----------|
+| [#62](https://github.com/basher83/netbox-ansible/issues/62) | Install missing linting tools (nomad, terraform) | High |
+| [#63](https://github.com/basher83/netbox-ansible/issues/63) | Ansible FQCN Migration - Fix 391 violations | High |
+| [#64](https://github.com/basher83/netbox-ansible/issues/64) | Progressive linting strategy with profiles | Medium |
+| [#65](https://github.com/basher83/netbox-ansible/issues/65) | Enhance pre-commit hooks | Medium |
+
 ### Architecture Refactoring Epic ([#17](https://github.com/basher83/netbox-ansible/issues/17))
 **Goal**: Reduce playbook complexity through role-first architecture
 
@@ -105,8 +115,8 @@
 
 | Status | Count | Percentage |
 |--------|-------|------------|
-| 🔴 Not Started | 39 | 87% |
-| 🟡 In Progress | 6 | 13% |
+| 🔴 Not Started | 43 | 90% |
+| 🟡 In Progress | 5 | 10% |
 | 🟢 Completed | 0 | 0% |
 | ⚪ Blocked | 0 | 0% |
 
@@ -115,9 +125,9 @@
 | Priority | Count | Issues |
 |----------|-------|--------|
 | Critical | 6 | Domain migration (#19-24) |
-| High | 17 | PowerDNS Phase 4 (#28-43) |
-| Medium | 15 | Refactoring (#10-16), Enhancements |
-| Low | 7 | Phase 5 planning, future work |
+| High | 19 | PowerDNS Phase 4 (#28-43), Linting tools (#62-63) |
+| Medium | 17 | Refactoring (#10-16), Linting (#64-65), Enhancements |
+| Low | 6 | Phase 5 planning, future work |
 
 ## 🏷️ Issue Labels
 
@@ -144,6 +154,7 @@
 - [Phase 4 Epic](https://github.com/basher83/netbox-ansible/issues/27)
 - [Phase 5 Epic](https://github.com/basher83/netbox-ansible/issues/47)
 - [Refactoring Epic](https://github.com/basher83/netbox-ansible/issues/17)
+- [Code Quality Epic](https://github.com/basher83/netbox-ansible/issues/63)
 
 ## 📝 Notes
 
