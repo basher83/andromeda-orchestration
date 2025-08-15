@@ -101,7 +101,7 @@ Every README must include:
 # Fenced code blocks with language
 ```
 
-[Descriptive Links](relative/path.md) not [click here](path)
+[Descriptive Links](relative/path.md) not [go to documentation](path)
 
 #### Linting Exceptions
 
