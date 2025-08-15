@@ -35,43 +35,43 @@ References:
 
 #### 1. Database provisioning (PostgreSQL) ✅ COMPLETED
 
-   - [x] Deploy Nomad job: `nomad-jobs/platform-services/postgresql.nomad.hcl`
-   - [x] Configure host volume for persistence
-   - [x] Initialize PowerDNS schema
-   - [x] Configure Vault Database Secrets Engine
+- [x] Deploy Nomad job: `nomad-jobs/platform-services/postgresql.nomad.hcl`
+- [x] Configure host volume for persistence
+- [x] Initialize PowerDNS schema
+- [x] Configure Vault Database Secrets Engine
 
 #### 2. Infrastructure Setup (Active Sprint)
 
-   - [ ] [#28](https://github.com/basher83/netbox-ansible/issues/28): Deploy PowerDNS with PostgreSQL backend
-   - [ ] [#29](https://github.com/basher83/netbox-ansible/issues/29): Expose DNS :53 (TCP/UDP) and API via Traefik dynamic port
-   - [ ] [#30](https://github.com/basher83/netbox-ansible/issues/30): Register Consul services (powerdns-auth, powerdns-auth-api)
-   - [ ] [#31](https://github.com/basher83/netbox-ansible/issues/31): Configure Traefik routing and middlewares for API
-   - [ ] [#32](https://github.com/basher83/netbox-ansible/issues/32): Add health checks for :53 and API
+- [ ] [#28](https://github.com/basher83/netbox-ansible/issues/28): Deploy PowerDNS with PostgreSQL backend
+- [ ] [#29](https://github.com/basher83/netbox-ansible/issues/29): Expose DNS :53 (TCP/UDP) and API via Traefik dynamic port
+- [ ] [#30](https://github.com/basher83/netbox-ansible/issues/30): Register Consul services (powerdns-auth, powerdns-auth-api)
+- [ ] [#31](https://github.com/basher83/netbox-ansible/issues/31): Configure Traefik routing and middlewares for API
+- [ ] [#32](https://github.com/basher83/netbox-ansible/issues/32): Add health checks for :53 and API
 
 #### 3. NetBox Integration
 
-   - [ ] [#38](https://github.com/basher83/netbox-ansible/issues/38): Configure forward/reverse zones in NetBox (use spaceships.work)
-   - [ ] [#39](https://github.com/basher83/netbox-ansible/issues/39): PowerDNS ←→ NetBox API connectivity
-   - [ ] [#40](https://github.com/basher83/netbox-ansible/issues/40): Implement sync script and webhooks
+- [ ] [#38](https://github.com/basher83/netbox-ansible/issues/38): Configure forward/reverse zones in NetBox (use spaceships.work)
+- [ ] [#39](https://github.com/basher83/netbox-ansible/issues/39): PowerDNS ←→ NetBox API connectivity
+- [ ] [#40](https://github.com/basher83/netbox-ansible/issues/40): Implement sync script and webhooks
 
 #### 4. Migration & Testing
 
-   - [ ] [#41](https://github.com/basher83/netbox-ansible/issues/41): Migrate DNS records from Pi-hole to NetBox
-   - [ ] [#42](https://github.com/basher83/netbox-ansible/issues/42): Functional testing - forward/reverse lookups
-   - [ ] [#43](https://github.com/basher83/netbox-ansible/issues/43): Zone transfers and automatic DNS updates
+- [ ] [#41](https://github.com/basher83/netbox-ansible/issues/41): Migrate DNS records from Pi-hole to NetBox
+- [ ] [#42](https://github.com/basher83/netbox-ansible/issues/42): Functional testing - forward/reverse lookups
+- [ ] [#43](https://github.com/basher83/netbox-ansible/issues/43): Zone transfers and automatic DNS updates
 
 #### 5. Production Readiness
 
-   - [ ] [#33](https://github.com/basher83/netbox-ansible/issues/33): Scale to HA (count=2 on distinct hosts)
-   - [ ] [#34](https://github.com/basher83/netbox-ansible/issues/34): Decommission MariaDB prototype
-   - [ ] [#35](https://github.com/basher83/netbox-ansible/issues/35): Migrate data from prototype if needed
-   - [ ] [#36](https://github.com/basher83/netbox-ansible/issues/36): Verify DNS resolution and API operations
-   - [ ] [#37](https://github.com/basher83/netbox-ansible/issues/37): Update runbooks to Mode A PostgreSQL + Vault
+- [ ] [#33](https://github.com/basher83/netbox-ansible/issues/33): Scale to HA (count=2 on distinct hosts)
+- [ ] [#34](https://github.com/basher83/netbox-ansible/issues/34): Decommission MariaDB prototype
+- [ ] [#35](https://github.com/basher83/netbox-ansible/issues/35): Migrate data from prototype if needed
+- [ ] [#36](https://github.com/basher83/netbox-ansible/issues/36): Verify DNS resolution and API operations
+- [ ] [#37](https://github.com/basher83/netbox-ansible/issues/37): Update runbooks to Mode A PostgreSQL + Vault
 
 #### 6. Enhancement (Optional)
 
-   - [ ] [#26](https://github.com/basher83/netbox-ansible/issues/26): Integrate PowerDNS-Admin web UI
-   - [ ] [#46](https://github.com/basher83/netbox-ansible/issues/46): Add milestone checklist to Phase 4 doc
+- [ ] [#26](https://github.com/basher83/netbox-ansible/issues/26): Integrate PowerDNS-Admin web UI
+- [ ] [#46](https://github.com/basher83/netbox-ansible/issues/46): Add milestone checklist to Phase 4 doc
 
 ## Current Progress
 
@@ -127,29 +127,35 @@ References:
 ### Quick Reference by Category
 
 **Infrastructure** (Issues #28-33)
+
 - Deploy PowerDNS, configure ports, Consul services, Traefik routing, health checks, HA
 
 **NetBox Configuration** (Issues #38, #21)
+
 - Create zones with spaceships.work domain (NOT .local)
 - Configure forward/reverse zones with proper SOA/NS records
 - Set TTLs per standard
 
 **Integration** (Issues #39-40)
+
 - API connectivity between PowerDNS and NetBox
 - Sync script implementation
 - Webhook configuration
 
 **Migration** (Issues #41, #34-35)
+
 - Pi-hole to NetBox record migration
 - Prototype decommission
 - Data migration if needed
 
 **Testing** (Issues #42-43, #36)
+
 - Forward/reverse lookup validation
 - Zone transfer configuration
 - API operations verification
 
 **Documentation** (Issues #37, #46)
+
 - Runbook updates for Mode A
 - Phase 4 milestone checklist
 

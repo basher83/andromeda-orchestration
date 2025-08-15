@@ -18,12 +18,14 @@ Expand DNS/IPAM infrastructure to support multiple sites (og-homelab integration
 **Epic**: [#47](https://github.com/basher83/netbox-ansible/issues/47) - Phase 5 Multi-Site Expansion Tracking
 
 ### Infrastructure Expansion
+
 - [#48](https://github.com/basher83/netbox-ansible/issues/48): Plan Multi-Site DNS Strategy
 - [#49](https://github.com/basher83/netbox-ansible/issues/49): Deploy Consul to og-homelab
 - [#50](https://github.com/basher83/netbox-ansible/issues/50): Set up cross-datacenter replication
 - [#51](https://github.com/basher83/netbox-ansible/issues/51): Deploy PowerDNS at each site
 
 ### Advanced Features
+
 - [#52](https://github.com/basher83/netbox-ansible/issues/52): Implement GeoDNS capabilities
 - [#53](https://github.com/basher83/netbox-ansible/issues/53): Security hardening (DNSSEC, mTLS, audit)
 - [#54](https://github.com/basher83/netbox-ansible/issues/54): Performance optimization
