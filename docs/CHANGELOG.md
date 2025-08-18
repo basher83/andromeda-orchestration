@@ -4,6 +4,19 @@ All notable changes to the documentation in `docs/` will be documented in this f
 
 > How to use this file: Review latest entries at the top to understand recent documentation changes. When updating docs, add a concise entry under today's date with Added/Changed/Removed subsections.
 
+## 2025-08-18
+
+### Added
+
+- New `docs/getting-started/ci-testing-with-act.md` guide for testing GitHub Actions workflows locally before pushing
+- Act installation, configuration, and VS Code integration documentation
+- CI workflow testing best practices and troubleshooting
+
+### Changed
+
+- Updated `docs/README.md` to include CI Testing with Act guide under "For Development" section
+- Updated `docs/getting-started/README.md` to list the new CI testing guide under "Setup and Configuration"
+
 ## 2025-08-09
 
 ### Added

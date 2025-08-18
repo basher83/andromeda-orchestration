@@ -8,6 +8,7 @@ This directory contains essential documentation for new users and developers wor
 
 - **[repository-structure.md](repository-structure.md)** - Complete overview of the project directory structure and organization
 - **[pre-commit-setup.md](pre-commit-setup.md)** - Configure pre-commit hooks for code quality and security scanning
+- **[ci-testing-with-act.md](ci-testing-with-act.md)** - Test GitHub Actions workflows locally before pushing
 - **[uv-ansible-notes.md](uv-ansible-notes.md)** - Important notes about using `uv` with Ansible in this project
 
 ### Help and Support

@@ -38,7 +38,7 @@ Current ansible-lint violations: **391 issues** across the codebase
 
 | Agent | File Types | Tools | Invocation Pattern |
 |-------|------------|-------|-------------------|
-| python-linter | `.py` | ruff, black, mypy | `uv run <tool>` |
+| python-linter | `.py` | ruff, mypy | `uv run <tool>` |
 | ansible-linter | `playbooks/*.yml`, `roles/**/*.yml` | ansible-lint | `uv run ansible-lint` |
 | yaml-linter | `.yml`, `.yaml` | yamllint | `uv run yamllint` |
 | shell-linter | `.sh`, `.bash` | shellcheck | `shellcheck` (direct) |

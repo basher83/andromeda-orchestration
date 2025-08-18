@@ -115,6 +115,7 @@ Deprecated documentation preserved for reference:
 ### For Development
 
 - [Pre-commit Setup](getting-started/pre-commit-setup.md)
+- [CI Testing with Act](getting-started/ci-testing-with-act.md)
 - [Testing Strategy](implementation/dns-ipam/testing-strategy.md)
 - [Documentation Changelog](CHANGELOG.md)
 - [uv with Ansible](getting-started/uv-ansible-notes.md)
