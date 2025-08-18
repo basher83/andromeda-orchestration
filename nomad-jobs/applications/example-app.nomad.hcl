@@ -1,13 +1,13 @@
 job "myapp" {
   datacenters = ["dc1"]
-  type = "service"
+  type        = "service"
 
   group "myapp" {
     count = 1
 
     network {
       port "http" {
-        to = 8080  # Dynamic port, app runs on 8080 internally
+        to = 8080 # Dynamic port, app runs on 8080 internally
       }
     }
 

@@ -28,7 +28,7 @@ job "dnsdist" {
         destination   = "local/dnsdist.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           setLocal("${BIND_ADDR}:53")
           setACL({"0.0.0.0/0"})  -- tighten to your subnets later
 
@@ -50,15 +50,33 @@ job "dnsdist" {
         name = "dnsdist"
         port = "dns"
         tags = ["udp", "tcp"]
-        check { name="tcp53", type="tcp", interval="10s", timeout="2s" }
+        check {
+          name     = "tcp53"
+          type     = "tcp"
+          interval = "10s"
+          timeout  = "2s"
+        }
       }
 
-      resources { cpu = 200, memory = 256 }
+      resources {
+        cpu    = 200
+        memory = 256
+      }
     }
 
     # :53 static
-    network { mode="host"; port "dns" { static = 53, to = 53 } }
+    network {
+      mode = "host"
+      port "dns" {
+        static = 53
+        to     = 53
+      }
+    }
 
-    affinity { attribute = "${node.unique.id}", operator="distinct_hosts", weight=100 }
+    affinity {
+      attribute = "${node.unique.id}"
+      operator  = "distinct_hosts"
+      weight    = 100
+    }
   }
 }

@@ -11,7 +11,7 @@ job "powerdns" {
         to     = 53
       }
       port "api" {
-        to = 8081  # Dynamic port allocation
+        to = 8081 # Dynamic port allocation
       }
       port "mysql" {
         to = 3306
@@ -33,7 +33,7 @@ job "powerdns" {
 
       # Secrets should be injected via Consul KV or Nomad variables
       template {
-        data = <<EOF
+        data        = <<EOF
 MYSQL_ROOT_PASSWORD={{ keyOrDefault "powerdns/mysql/root_password" "" }}
 MYSQL_DATABASE=powerdns
 MYSQL_USER=powerdns
@@ -44,7 +44,7 @@ EOF
       }
 
       template {
-        data = <<EOF
+        data        = <<EOF
 CREATE TABLE IF NOT EXISTS domains (
   id                    INT AUTO_INCREMENT,
   name                  VARCHAR(255) NOT NULL,
@@ -106,7 +106,7 @@ EOF
 
       # API key and database password from Consul KV
       template {
-        data = <<EOF
+        data        = <<EOF
 PDNS_LAUNCH=gmysql
 PDNS_GMYSQL_HOST=${NOMAD_ADDR_mysql}
 PDNS_GMYSQL_PORT=${NOMAD_PORT_mysql}
@@ -152,8 +152,8 @@ EOF
         ]
 
         check {
-          type     = "http"
-          path     = "/api/v1/servers"
+          type = "http"
+          path = "/api/v1/servers"
           header {
             X-API-Key = ["{{ keyOrDefault \"powerdns/api/key\" \"\" }}"]
           }

@@ -6,9 +6,9 @@ job "lxc-example" {
       driver = "lxc"
 
       config {
-        image = "ubuntu:20.04"
+        image   = "ubuntu:20.04"
         command = "/bin/bash"
-        args = ["-c", "echo Hello from LXC! && sleep 60"]
+        args    = ["-c", "echo Hello from LXC! && sleep 60"]
       }
 
       resources {

@@ -15,7 +15,7 @@ job "vault-dev-reference" {
 
   # WARNING: This job is for development/reference only
   meta {
-    warning = "NOT FOR PRODUCTION - Vault should be deployed as a standalone service"
+    warning   = "NOT FOR PRODUCTION - Vault should be deployed as a standalone service"
     reference = "See playbooks/infrastructure/vault/ for proper deployment"
   }
 
@@ -35,7 +35,7 @@ job "vault-dev-reference" {
     }
 
     network {
-      mode = "host"  # Host networking for Vault
+      mode = "host" # Host networking for Vault
 
       port "http" {
         static = 8200
@@ -89,8 +89,8 @@ job "vault-dev-reference" {
 
       env {
         VAULT_DEV_ROOT_TOKEN_ID = "root"
-        VAULT_LOG_LEVEL = "debug"
-        VAULT_UI = "true"
+        VAULT_LOG_LEVEL         = "debug"
+        VAULT_UI                = "true"
       }
 
       # Resources
@@ -131,7 +131,7 @@ job "vault-dev-reference" {
 
       # Template for basic configuration (not used in dev mode)
       template {
-        data = <<EOF
+        data        = <<EOF
 # This configuration would be used for production mode
 # Dev mode ignores configuration files
 
@@ -152,7 +152,7 @@ api_addr = "http://{{ env "NOMAD_IP_http" }}:8200"
 cluster_addr = "http://{{ env "NOMAD_IP_cluster" }}:8201"
 EOF
         destination = "local/vault.hcl"
-        change_mode = "noop"  # Don't restart on change in dev mode
+        change_mode = "noop" # Don't restart on change in dev mode
       }
     }
   }

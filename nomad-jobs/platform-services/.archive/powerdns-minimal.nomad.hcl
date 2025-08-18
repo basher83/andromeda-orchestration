@@ -32,7 +32,7 @@ job "powerdns" {
       }
 
       template {
-        data = <<EOF
+        data        = <<EOF
 MYSQL_ROOT_PASSWORD={{ keyOrDefault "powerdns/mysql/root_password" "" }}
 MYSQL_DATABASE=powerdns
 MYSQL_USER=powerdns
@@ -43,7 +43,7 @@ EOF
       }
 
       template {
-        data = <<EOF
+        data        = <<EOF
 CREATE TABLE IF NOT EXISTS domains (
   id                    INT AUTO_INCREMENT,
   name                  VARCHAR(255) NOT NULL,
@@ -93,7 +93,7 @@ EOF
       }
 
       template {
-        data = <<EOF
+        data        = <<EOF
 PDNS_LAUNCH=gmysql
 PDNS_GMYSQL_HOST=${NOMAD_ADDR_mysql}
 PDNS_GMYSQL_PORT=${NOMAD_PORT_mysql}

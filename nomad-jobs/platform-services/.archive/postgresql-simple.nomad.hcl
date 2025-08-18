@@ -20,19 +20,19 @@ job "postgresql" {
 
     network {
       mode = "host"
-      port "db" {}  # dynamic (20000-32000 per your standard)
+      port "db" {} # dynamic (20000-32000 per your standard)
     }
 
     # Use the existing postgres-data host volume
     volume "pgdata" {
       type      = "host"
       read_only = false
-      source    = "postgres-data"  # matches what's configured on nodes
+      source    = "postgres-data" # matches what's configured on nodes
     }
 
     task "postgres" {
       driver = "docker"
-      user   = "999:999"  # postgres UID:GID inside container
+      user   = "999:999" # postgres UID:GID inside container
 
       config {
         image        = "postgres:16-alpine"
@@ -53,9 +53,9 @@ job "postgresql" {
       env {
         PGHOST_ADDR       = "0.0.0.0"
         POSTGRES_USER     = "postgres"
-        POSTGRES_PASSWORD = "temporary-dev-password"  # Will use Vault later
+        POSTGRES_PASSWORD = "temporary-dev-password" # Will use Vault later
         POSTGRES_DB       = "postgres"
-        PGDATA           = "/var/lib/postgresql/data"
+        PGDATA            = "/var/lib/postgresql/data"
       }
 
       # PostgreSQL configuration
@@ -63,7 +63,7 @@ job "postgresql" {
         destination   = "local/postgresql.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           listen_addresses = '0.0.0.0'
           port = {{ env "NOMAD_PORT_db" }}
 
@@ -93,7 +93,7 @@ job "postgresql" {
         destination   = "local/pg_hba.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           # TYPE  DATABASE        USER            ADDRESS                 METHOD
           local   all             all                                     trust
           host    all             all             127.0.0.1/32            md5
@@ -145,14 +145,14 @@ job "postgresql" {
       }
 
       env {
-        PGPASSWORD = "temporary-dev-password"  # Same as main postgres password
-        PDNS_PASSWORD = "pdns-dev-password"    # PowerDNS user password
+        PGPASSWORD    = "temporary-dev-password" # Same as main postgres password
+        PDNS_PASSWORD = "pdns-dev-password"      # PowerDNS user password
       }
 
       template {
         destination = "local/init.sh"
         perms       = "755"
-        data = <<-EOT
+        data        = <<-EOT
           #!/bin/sh
           set -e
 

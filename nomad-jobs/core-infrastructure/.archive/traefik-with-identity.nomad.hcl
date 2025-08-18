@@ -41,7 +41,7 @@ job "traefik" {
       }
 
       template {
-        data = <<EOF
+        data        = <<EOF
 # Static configuration
 api:
   dashboard: true

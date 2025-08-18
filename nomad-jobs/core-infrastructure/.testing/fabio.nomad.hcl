@@ -1,6 +1,6 @@
 job "fabio" {
   datacenters = ["dc1"]
-  type = "system"  // Deploy on all client nodes
+  type        = "system" // Deploy on all client nodes
 
   group "fabio" {
     network {
@@ -17,8 +17,8 @@ job "fabio" {
     restart {
       attempts = 3
       interval = "5m"
-      delay = "15s"
-      mode = "delay"
+      delay    = "15s"
+      mode     = "delay"
     }
 
     task "fabio" {
@@ -36,7 +36,7 @@ job "fabio" {
 
       # Use a properties file for configuration
       template {
-        data = <<EOH
+        data          = <<EOH
 # Fabio Configuration
 proxy.addr = :${var.fabio_http_port};proto=http
 ui.addr = :${var.fabio_admin_port}
@@ -59,8 +59,8 @@ log.access.target = stdout
 # Custom Routes
 ${var.fabio_routes}
 EOH
-        destination = "local/fabio.properties"
-        change_mode = "signal"
+        destination   = "local/fabio.properties"
+        change_mode   = "signal"
         change_signal = "SIGHUP"
       }
 

@@ -6,7 +6,7 @@ job "traefik" {
     count = 1
 
     network {
-      mode = "host"  # Required to bind to host ports 80/443
+      mode = "host" # Required to bind to host ports 80/443
 
       port "http" {
         static = 80
@@ -17,7 +17,7 @@ job "traefik" {
       }
 
       port "admin" {
-        to = 8080  # Dashboard on dynamic port
+        to = 8080 # Dashboard on dynamic port
       }
     }
 
@@ -40,7 +40,7 @@ job "traefik" {
       }
 
       template {
-        data = <<EOF
+        data        = <<EOF
 # Static configuration
 api:
   dashboard: true
@@ -103,7 +103,7 @@ EOF
 
       # Dynamic configuration for self-signed cert (initial setup)
       template {
-        data = <<EOF
+        data        = <<EOF
 tls:
   stores:
     default:
