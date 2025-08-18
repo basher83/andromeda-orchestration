@@ -59,10 +59,9 @@ job "powerdns-recursor" {
       }
     }
 
-    affinity {
-      attribute = "${node.unique.id}"
-      operator  = "distinct_hosts"
-      weight    = 100
+    constraint {
+      operator = "distinct_hosts"
+      value    = "true"
     }
   }
 }
