@@ -12,12 +12,12 @@
 
     # DNS configuration
     nameservers:
-      - name: "ns1.homelab.local"
+      - name: "ns1.{{ homelab_domain }}"
         description: "Primary nameserver for homelab"
 
     dns_zones:
       forward:
-        - name: "homelab.local"
+        - name: "{{ homelab_domain }}"
           description: "Primary homelab domain"
         - name: "doggos.local"
           description: "Doggos cluster domain"
@@ -59,7 +59,7 @@
 
     - name: Get nameserver ID
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/nameservers/?name=ns1.homelab.local"
+        url: "{{ netbox_url }}/api/plugins/netbox-dns/nameservers/?name=ns1.{{ homelab_domain }}"
         method: GET
         headers:
           Authorization: "Token {{ netbox_token }}"
@@ -108,7 +108,7 @@
           name: "{{ item.name }}"
           description: "{{ item.description }}"
           soa_mname: "{{ ns_id }}"
-          soa_rname: "admin.homelab.local"
+          soa_rname: "admin.{{ homelab_domain }}"
           soa_serial: 2025080801
           soa_ttl: 3600
           soa_refresh: 10800
@@ -145,7 +145,7 @@
           zone: "{{ item.json.results[0].id }}"
           name: "@"
           type: "NS"
-          value: "ns1.homelab.local"
+          value: "ns1.{{ homelab_domain }}"
           ttl: 3600
         validate_certs: "{{ netbox_validate_certs }}"
         status_code: [200, 201, 400]
@@ -181,7 +181,7 @@
           - "DNS Zone Configuration Complete!"
           - "Forward zones: {{ dns_zones.forward | map(attribute='name') | list }}"
           - "Reverse zones: {{ dns_zones.reverse | map(attribute='name') | list }}"
-          - "Nameserver: ns1.homelab.local (192.168.11.20)"
+          - "Nameserver: ns1.{{ homelab_domain }} (192.168.11.20)"
           - ""
           - "Next steps:"
           - "1. Add more DNS records to zones"

@@ -1,0 +1,7 @@
+---
+# Global variables for og-homelab cluster
+
+# Primary domain for homelab infrastructure
+# Default: spaceships.work (replaces .local to avoid macOS mDNS conflicts)
+# See: https://github.com/basher83/andromeda-orchestration/issues/19
+homelab_domain: "spaceships.work"

@@ -76,7 +76,7 @@ job "powerdns" {
         tags = [
           "api",
           "traefik.enable=true",
-          "traefik.http.routers.powerdns.rule=Host(`powerdns.lab.local`)",
+          "traefik.http.routers.powerdns.rule=Host(`powerdns.{{ homelab_domain }}`)",
           "traefik.http.routers.powerdns.entrypoints=websecure",
           "traefik.http.routers.powerdns.tls=true",
           "traefik.http.services.powerdns.loadbalancer.server.port=${NOMAD_PORT_api}",

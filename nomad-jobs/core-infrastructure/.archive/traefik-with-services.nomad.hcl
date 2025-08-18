@@ -27,7 +27,7 @@ job "traefik" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.api.rule=Host(`traefik.lab.local`)",
+        "traefik.http.routers.api.rule=Host(`traefik.{{ homelab_domain }}`)",
         "traefik.http.routers.api.service=api@internal",
         "traefik.http.routers.api.entrypoints=websecure",
         "traefik.http.routers.api.tls=true",

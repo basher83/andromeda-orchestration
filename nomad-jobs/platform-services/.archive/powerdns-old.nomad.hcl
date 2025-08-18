@@ -187,7 +187,7 @@ webserver-port=8081
 webserver-allow-from=0.0.0.0/0
 api=yes
 api-key=changeme789xyz
-default-soa-content=ns1.lab.local hostmaster.lab.local 1 10800 3600 604800 3600
+default-soa-content=ns1.{{ homelab_domain }} hostmaster.{{ homelab_domain }} 1 10800 3600 604800 3600
 EOF
         destination = "local/pdns.conf"
       }
@@ -212,7 +212,7 @@ EOF
         PDNS_gmysql_dbname   = "powerdns"
 
         # Default SOA
-        PDNS_default_soa_content = "ns1.lab.local hostmaster.lab.local 1 10800 3600 604800 3600"
+        PDNS_default_soa_content = "ns1.{{ homelab_domain }} hostmaster.{{ homelab_domain }} 1 10800 3600 604800 3600"
       }
 
       resources {
@@ -253,7 +253,7 @@ EOF
 
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.powerdns.rule=Host(`powerdns.lab.local`)",
+          "traefik.http.routers.powerdns.rule=Host(`powerdns.{{ homelab_domain }}`)",
           "traefik.http.routers.powerdns.entrypoints=websecure",
           "traefik.http.routers.powerdns.tls=true",
           "traefik.http.services.powerdns.loadbalancer.server.port=${NOMAD_PORT_api}",

@@ -110,10 +110,10 @@ tls:
       defaultGeneratedCert:
         resolver: default
         domain:
-          main: "lab.local"
+          main: "{{ homelab_domain }}"
           sans:
-            - "*.lab.local"
-            - "*.doggos.lab.local"
+            - "*.{{ homelab_domain }}"
+            - "*.doggos.{{ homelab_domain }}"
             - "*.service.consul"
 EOF
         destination = "local/dynamic/certs.yml"
@@ -135,7 +135,7 @@ EOF
 
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.api.rule=Host(`traefik.lab.local`)",
+          "traefik.http.routers.api.rule=Host(`traefik.{{ homelab_domain }}`)",
           "traefik.http.routers.api.service=api@internal",
           "traefik.http.routers.api.entrypoints=websecure",
           "traefik.http.routers.api.tls=true",

@@ -9,37 +9,37 @@
     powerdns_ip: "192.168.11.20"
     test_queries:
       # Forward lookups
-      - query: "lloyd.homelab.local"
+      - query: "lloyd.{{ homelab_domain }}"
         type: "A"
         expected: "192.168.11.11"
-      - query: "holly.homelab.local"
+      - query: "holly.{{ homelab_domain }}"
         type: "A"
         expected: "192.168.11.12"
-      - query: "mable.homelab.local"
+      - query: "mable.{{ homelab_domain }}"
         type: "A"
         expected: "192.168.11.13"
-      - query: "nomad-server-1.homelab.local"
+      - query: "nomad-server-1.{{ homelab_domain }}"
         type: "A"
         expected: "192.168.10.11"
-      - query: "netbox.homelab.local"
+      - query: "netbox.{{ homelab_domain }}"
         type: "A"
         expected: "192.168.30.213"
-      - query: "powerdns.homelab.local"
+      - query: "powerdns.{{ homelab_domain }}"
         type: "A"
         expected: "192.168.11.20"
-      - query: "dns.homelab.local"
+      - query: "dns.{{ homelab_domain }}"
         type: "CNAME"
-        expected: "powerdns.homelab.local"
+        expected: "powerdns.{{ homelab_domain }}"
       # Reverse lookups
       - query: "192.168.11.11"
         type: "PTR"
-        expected: "lloyd.homelab.local"
+        expected: "lloyd.{{ homelab_domain }}"
       - query: "192.168.11.12"
         type: "PTR"
-        expected: "holly.homelab.local"
+        expected: "holly.{{ homelab_domain }}"
       - query: "192.168.30.213"
         type: "PTR"
-        expected: "netbox.homelab.local"
+        expected: "netbox.{{ homelab_domain }}"
 
   tasks:
     - name: Test forward DNS lookups
@@ -107,7 +107,7 @@
           - "{% if failed_tests | int == 0 %}✓ All tests passed! DNS integration is working correctly.{% else %}✗ Some tests failed. Please check the configuration.{% endif %}"
 
     - name: Test zone transfer (AXFR)
-      command: "dig @{{ powerdns_ip }} homelab.local AXFR +short"
+      command: "dig @{{ powerdns_ip }} {{ homelab_domain }} AXFR +short"
       register: axfr_result
       changed_when: false
       failed_when: false

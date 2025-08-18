@@ -84,7 +84,7 @@ job "powerdns-test" {
         PDNS_gmysql_user          = "powerdns"
         PDNS_gmysql_password      = "testpdnspass456"
         PDNS_gmysql_dbname        = "powerdns"
-        PDNS_default_soa_content  = "ns1.lab.local hostmaster.lab.local 1 10800 3600 604800 3600"
+        PDNS_default_soa_content  = "ns1.{{ homelab_domain }} hostmaster.{{ homelab_domain }} 1 10800 3600 604800 3600"
       }
 
       resources {
@@ -118,7 +118,7 @@ job "powerdns-test" {
 
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.powerdns-test.rule=Host(`powerdns-test.lab.local`)",
+          "traefik.http.routers.powerdns-test.rule=Host(`powerdns-test.{{ homelab_domain }}`)",
           "traefik.http.routers.powerdns-test.entrypoints=websecure",
           "traefik.http.routers.powerdns-test.tls=true",
         ]

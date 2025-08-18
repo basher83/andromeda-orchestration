@@ -88,7 +88,7 @@
           address: "{{ item.ip }}/24"
           status: "active"
           description: "{{ item.name }} - 10G Network"
-          dns_name: "{{ item.name }}.homelab.local"
+          dns_name: "{{ item.name }}.{{ homelab_domain }}"
         state: present
       loop: "{{ proxmox_hosts }}"
       register: proxmox_ips
@@ -230,7 +230,7 @@
           address: "{{ item.ip }}/24"
           status: "active"
           description: "{{ item.name }} - 2.5G Network"
-          dns_name: "{{ item.name }}.homelab.local"
+          dns_name: "{{ item.name }}.{{ homelab_domain }}"
         state: present
       loop: "{{ vm_list }}"
       register: vm_ips
@@ -246,7 +246,7 @@
           address: "{{ item.ip | regex_replace('192.168.10', '192.168.11') }}/24"
           status: "active"
           description: "{{ item.name }} - 10G Network"
-          dns_name: "{{ item.name }}-10g.homelab.local"
+          dns_name: "{{ item.name }}-10g.{{ homelab_domain }}"
         state: present
       loop: "{{ vm_list }}"
       tags: [ips]

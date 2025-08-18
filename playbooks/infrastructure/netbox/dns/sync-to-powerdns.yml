@@ -63,7 +63,7 @@
           kind: "Native"
           masters: []
           nameservers:
-            - "ns1.homelab.local."
+            - "ns1.{{ homelab_domain }}."
           rrsets:
             - name: "{{ item.name }}."
               type: "SOA"
@@ -132,5 +132,5 @@
           - "PowerDNS API: {{ powerdns_api_url }}"
           - ""
           - "Test with:"
-          - "  dig @192.168.11.20 ns1.homelab.local"
-          - "  dig @192.168.11.20 homelab.local SOA"
+          - "  dig @192.168.11.20 ns1.{{ homelab_domain }}"
+          - "  dig @192.168.11.20 {{ homelab_domain }} SOA"
