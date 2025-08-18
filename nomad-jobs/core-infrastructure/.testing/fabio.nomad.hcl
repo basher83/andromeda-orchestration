@@ -1,3 +1,23 @@
+variable "fabio_version" { type = string default = "1.5.15" }
+variable "fabio_http_port" { type = number default = 9999 }
+variable "fabio_admin_port" { type = number default = 9998 }
+variable "consul_service_name" { type = string default = "consul.service.consul" }
+variable "fabio_tags" { type = string default = "" }
+variable "fabio_consul_refresh" { type = string default = "5s" }
+variable "fabio_proxy_strategy" { type = string default = "rr" }
+variable "fabio_max_conn" { type = number default = 10000 }
+variable "fabio_dial_timeout" { type = string default = "30s" }
+variable "fabio_read_timeout" { type = string default = "30s" }
+variable "fabio_write_timeout" { type = string default = "30s" }
+variable "fabio_metrics_target" { type = string default = "stdout" }
+variable "fabio_metrics_prefix" { type = string default = "fabio" }
+variable "fabio_metrics_interval" { type = string default = "10s" }
+variable "fabio_ui_title" { type = string default = "Homelab Load Balancer" }
+variable "fabio_routes" { type = string default = "" }
+variable "fabio_cpu" { type = number default = 500 }
+variable "fabio_memory" { type = number default = 256 }
+
+
 job "fabio" {
   datacenters = ["dc1"]
   type        = "system" // Deploy on all client nodes
