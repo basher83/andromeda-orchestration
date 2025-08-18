@@ -26,6 +26,7 @@ test_localhost-artifact-*.json
 inventory-output*.json
 ansible-navigator.log
 .ansible_cache/
+.ansible/
 
 # 1Password environment
 scripts/set-1password-env.sh
