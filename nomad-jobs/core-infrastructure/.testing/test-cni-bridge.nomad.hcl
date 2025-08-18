@@ -1,6 +1,6 @@
 job "test-cni-bridge" {
   datacenters = ["dc1"]
-  type = "service"
+  type        = "service"
 
   group "test" {
     network {

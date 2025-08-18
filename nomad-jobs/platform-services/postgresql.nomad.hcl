@@ -14,13 +14,13 @@ job "postgresql" {
     restart {
       attempts = 3
       interval = "30s"
-      delay = "10s"
-      mode = "fail"
+      delay    = "10s"
+      mode     = "fail"
     }
 
     network {
       mode = "host"
-      port "db" {}       # dynamic (20000-32000 per your standard)
+      port "db" {} # dynamic (20000-32000 per your standard)
       # optional admin UI (e.g., pgbouncer/pgadmin later)
     }
 
@@ -28,12 +28,12 @@ job "postgresql" {
     volume "postgres-data" {
       type      = "host"
       read_only = false
-      source    = "postgres-data"  # matches standard naming convention
+      source    = "postgres-data" # matches standard naming convention
     }
 
     task "postgres" {
       driver = "docker"
-      user   = "999:999"  # postgres UID:GID inside container (helps permissions)
+      user   = "999:999" # postgres UID:GID inside container (helps permissions)
       config {
         image        = "postgres:16-alpine"
         network_mode = "host"
@@ -54,7 +54,7 @@ job "postgresql" {
         destination   = "local/postgresql.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           listen_addresses = '{{ env "PGHOST_ADDR" }}'
           port = {{ env "NOMAD_PORT_db" }}
 
@@ -81,7 +81,7 @@ job "postgresql" {
         destination   = "local/pg_hba.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           local   all             all                                     trust
           host    all             all             127.0.0.1/32            md5
           host    all             all             ::1/128                 md5
@@ -111,15 +111,15 @@ job "postgresql" {
         }
 
         check {
-          name = "tcp"
-          type = "tcp"
+          name     = "tcp"
+          type     = "tcp"
           interval = "10s"
-          timeout = "2s"
+          timeout  = "2s"
         }
       }
 
       resources {
-        cpu = 500
+        cpu    = 500
         memory = 2048
       }
     }
@@ -134,12 +134,12 @@ job "postgresql" {
         image        = "postgres:16-alpine"
         network_mode = "host"
         command      = "sh"
-        args = ["/local/create-db.sh"]
+        args         = ["/local/create-db.sh"]
       }
 
       template {
         destination = "local/init.sql"
-        data = <<-EOT
+        data        = <<-EOT
           -- Create PowerDNS user if it doesn't exist
           DO
           $do$
@@ -179,7 +179,7 @@ job "postgresql" {
 
       template {
         destination = "local/create-db.sh"
-        data = <<-EOT
+        data        = <<-EOT
           #!/bin/sh
 
           # Wait for PostgreSQL to be ready
@@ -209,7 +209,7 @@ job "postgresql" {
 
       template {
         destination = "local/powerdns-schema.sql"
-        data = <<-EOT
+        data        = <<-EOT
           -- PowerDNS PostgreSQL schema
           -- Based on: https://doc.powerdns.com/authoritative/backends/generic-postgresql.html
 
@@ -326,7 +326,7 @@ job "postgresql" {
 
 
       resources {
-        cpu = 50
+        cpu    = 50
         memory = 128
       }
     }

@@ -23,7 +23,7 @@ job "powerdns-auth" {
         destination   = "local/pdns.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           launch=gmysql
           gmysql-host={{ key "pdns/db/host" }}
           gmysql-port={{ key "pdns/db/port" }}
@@ -48,8 +48,13 @@ job "powerdns-auth" {
       service {
         name = "powerdns-auth-backend"
         port = "dns"
-        tags = ["udp","tcp"]
-        check { name="tcp5301", type="tcp", interval="10s", timeout="2s" }
+        tags = ["udp", "tcp"]
+        check {
+          name     = "tcp5301"
+          type     = "tcp"
+          interval = "10s"
+          timeout  = "2s"
+        }
       }
 
       service {
@@ -61,17 +66,24 @@ job "powerdns-auth" {
           "traefik.http.services.pdnsapi.loadbalancer.server.port=${NOMAD_PORT_api}",
         ]
         check {
-          name="api"
-          type="http"
-          path="/api/v1/servers/localhost"
-          interval="15s"
-          timeout="3s"
+          name     = "api"
+          type     = "http"
+          path     = "/api/v1/servers/localhost"
+          interval = "15s"
+          timeout  = "3s"
         }
       }
 
-      resources { cpu=200, memory=256 }
+      resources {
+        cpu    = 200
+        memory = 256
+      }
     }
 
-    affinity { attribute="${node.unique.id}", operator="distinct_hosts", weight=100 }
+    affinity {
+      attribute = "${node.unique.id}"
+      operator  = "distinct_hosts"
+      weight    = 100
+    }
   }
 }

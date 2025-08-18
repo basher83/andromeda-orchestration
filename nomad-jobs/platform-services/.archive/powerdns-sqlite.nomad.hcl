@@ -11,7 +11,7 @@ job "powerdns" {
         to     = 53
       }
       port "api" {
-        to = 8081  # PowerDNS API port inside container
+        to = 8081 # PowerDNS API port inside container
       }
     }
 

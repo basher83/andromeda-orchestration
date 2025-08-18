@@ -1,6 +1,6 @@
 job "test-consul-bridge" {
   datacenters = ["dc1"]
-  type = "service"
+  type        = "service"
 
   constraint {
     attribute = "${attr.consul.grpc}"

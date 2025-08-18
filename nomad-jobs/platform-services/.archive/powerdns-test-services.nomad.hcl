@@ -7,7 +7,7 @@ job "powerdns-test" {
 
     network {
       port "dns" {
-        static = 5353  # Test port to avoid conflict
+        static = 5353 # Test port to avoid conflict
         to     = 53
       }
       port "api" {}
@@ -73,18 +73,18 @@ job "powerdns-test" {
       }
 
       env {
-        PDNS_api      = "yes"
-        PDNS_api_key  = "testkey789"
-        PDNS_webserver = "yes"
-        PDNS_webserver_address = "0.0.0.0"
+        PDNS_api                  = "yes"
+        PDNS_api_key              = "testkey789"
+        PDNS_webserver            = "yes"
+        PDNS_webserver_address    = "0.0.0.0"
         PDNS_webserver_allow_from = "0.0.0.0/0"
-        PDNS_launch = "gmysql"
-        PDNS_gmysql_host = "${NOMAD_ADDR_mysql}"
-        PDNS_gmysql_port = "${NOMAD_PORT_mysql}"
-        PDNS_gmysql_user = "powerdns"
-        PDNS_gmysql_password = "testpdnspass456"
-        PDNS_gmysql_dbname = "powerdns"
-        PDNS_default_soa_content = "ns1.lab.local hostmaster.lab.local 1 10800 3600 604800 3600"
+        PDNS_launch               = "gmysql"
+        PDNS_gmysql_host          = "${NOMAD_ADDR_mysql}"
+        PDNS_gmysql_port          = "${NOMAD_PORT_mysql}"
+        PDNS_gmysql_user          = "powerdns"
+        PDNS_gmysql_password      = "testpdnspass456"
+        PDNS_gmysql_dbname        = "powerdns"
+        PDNS_default_soa_content  = "ns1.lab.local hostmaster.lab.local 1 10800 3600 604800 3600"
       }
 
       resources {

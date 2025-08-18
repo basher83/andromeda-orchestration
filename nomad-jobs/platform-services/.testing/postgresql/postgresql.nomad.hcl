@@ -11,11 +11,16 @@ job "postgresql" {
   group "pg" {
     count = 1
 
-    restart { attempts = 3, interval = "30s", delay = "10s", mode = "fail" }
+    restart {
+      attempts = 3
+      interval = "30s"
+      delay    = "10s"
+      mode     = "fail"
+    }
 
     network {
       mode = "host"
-      port "db" {}       # dynamic (20000-32000 per your standard)
+      port "db" {} # dynamic (20000-32000 per your standard)
       # optional admin UI (e.g., pgbouncer/pgadmin later)
     }
 
@@ -23,12 +28,12 @@ job "postgresql" {
     volume "pgdata" {
       type      = "host"
       read_only = false
-      source    = "pgdata"  # define in client config: host_volume "pgdata" { path = "/srv/nomad/pgdata" }
+      source    = "pgdata" # define in client config: host_volume "pgdata" { path = "/srv/nomad/pgdata" }
     }
 
     task "postgres" {
       driver = "docker"
-      user   = "999:999"  # postgres UID:GID inside container (helps permissions)
+      user   = "999:999" # postgres UID:GID inside container (helps permissions)
       config {
         image        = "postgres:16-alpine"
         network_mode = "host"
@@ -45,7 +50,10 @@ job "postgresql" {
 
       env {
         # Bind to all, but limit via firewall/ACLs
-        PGHOST_ADDR = "0.0.0.0"
+        PGHOST_ADDR       = "0.0.0.0"
+        POSTGRES_USER     = "postgres"
+        POSTGRES_PASSWORD = "{{ env `POSTGRES_PASSWORD` }}"
+        PGDATA            = "/var/lib/postgresql/data"
       }
 
       # Base config
@@ -53,7 +61,7 @@ job "postgresql" {
         destination   = "local/postgresql.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           listen_addresses = '${PGHOST_ADDR}'
           port = {{ env "NOMAD_PORT_db" }}
 
@@ -77,7 +85,7 @@ job "postgresql" {
         destination   = "local/pg_hba.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           local   all             all                                     trust
           host    all             all             127.0.0.1/32            md5
           host    all             all             ::1/128                 md5
@@ -92,40 +100,38 @@ job "postgresql" {
       template {
         env         = true
         destination = "secrets/env"
-        data = <<-EOT
+        data        = <<-EOT
           POSTGRES_PASSWORD={{ with secret "kv/postgres" }}{{ .Data.data.superuser_password }}{{ end }}
         EOT
       }
 
-      # Container expects these
-      env {
-        POSTGRES_USER     = "postgres"
-        POSTGRES_PASSWORD = "{{ env `POSTGRES_PASSWORD` }}"
-        PGDATA            = "/var/lib/postgresql/data"
-      }
 
       service {
         name = "postgres"
         port = "db"
         tags = ["tcp", "db", "postgres16"]
-        check { name="tcp", type="tcp", interval="10s", timeout="2s" }
+        check {
+          name     = "tcp"
+          type     = "tcp"
+          interval = "10s"
+          timeout  = "2s"
+        }
       }
 
-      resources { cpu = 500; memory = 2048 }
+      resources {
+        cpu    = 500
+        memory = 2048
+      }
     }
 
     # One-shot init to create the PowerDNS DB/user (idempotent)
     task "init-pdns" {
       driver = "docker"
       lifecycle { hook = "poststart" } # run after postgres starts
-      config {
-        image        = "postgres:16-alpine"
-        network_mode = "host"
-      }
 
       template {
         destination = "local/init.sql"
-        data = <<-EOT
+        data        = <<-EOT
           DO
           $do$
           BEGIN
@@ -187,26 +193,32 @@ job "postgresql" {
       template {
         env         = true
         destination = "secrets/env"
-        data = <<-EOT
+        data        = <<-EOT
           POSTGRES_PASSWORD={{ with secret "kv/postgres" }}{{ .Data.data.superuser_password }}{{ end }}
         EOT
+      }
+
+      config {
+        image   = "postgres:16-alpine"
+        command = "sh"
+        args = ["-lc", <<-EOS
+          until pg_isready -h 127.0.0.1 -p ${NOMAD_PORT_db} -U postgres; do sleep 1; done
+          psql -h 127.0.0.1 -p ${NOMAD_PORT_db} -U postgres -f /local/init.sql || true
+          # Exit immediately so the hook finishes
+          exit 0
+        EOS
+        ]
+        network_mode = "host"
       }
 
       env {
         PGPASSWORD = "{{ env `POSTGRES_PASSWORD` }}"
       }
 
-      # Wait for Postgres then run once
-      command = "sh"
-      args = ["-lc", <<-EOS
-        until pg_isready -h 127.0.0.1 -p ${NOMAD_PORT_db} -U postgres; do sleep 1; done
-        psql -h 127.0.0.1 -p ${NOMAD_PORT_db} -U postgres -f /local/init.sql || true
-        # Exit immediately so the hook finishes
-        exit 0
-      EOS
-      ]
-
-      resources { cpu = 50; memory = 128 }
+      resources {
+        cpu    = 50
+        memory = 128
+      }
     }
   }
 }

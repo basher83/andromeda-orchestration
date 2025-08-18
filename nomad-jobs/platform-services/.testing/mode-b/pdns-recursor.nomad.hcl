@@ -23,7 +23,7 @@ job "powerdns-recursor" {
         destination   = "local/recursor.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           local-address=0.0.0.0
           local-port=5300
 
@@ -44,13 +44,25 @@ job "powerdns-recursor" {
       service {
         name = "powerdns-recursor-backend"
         port = "dns"
-        tags = ["udp","tcp"]
-        check { name="tcp5300", type="tcp", interval="10s", timeout="2s" }
+        tags = ["udp", "tcp"]
+        check {
+          name     = "tcp5300"
+          type     = "tcp"
+          interval = "10s"
+          timeout  = "2s"
+        }
       }
 
-      resources { cpu=200, memory=256 }
+      resources {
+        cpu    = 200
+        memory = 256
+      }
     }
 
-    affinity { attribute="${node.unique.id}", operator="distinct_hosts", weight=100 }
+    affinity {
+      attribute = "${node.unique.id}"
+      operator  = "distinct_hosts"
+      weight    = 100
+    }
   }
 }

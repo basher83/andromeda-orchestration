@@ -9,24 +9,24 @@ job "powerdns-auth" {
       mode = "host"
       port "dns" {
         static = 53
-        to = 53
+        to     = 53
       }
-      port "api" {}     # dynamic (Nomad alloc)
+      port "api" {} # dynamic (Nomad alloc)
     }
 
     restart {
       attempts = 3
       interval = "30s"
-      delay = "10s"
-      mode = "fail"
+      delay    = "10s"
+      mode     = "fail"
     }
 
     task "pdns-auth" {
       driver = "docker"
       config {
-        image   = "powerdns/pdns-auth-46:latest"
-        args    = ["--config-dir=/local"]
-        cap_add = ["NET_BIND_SERVICE"]
+        image        = "powerdns/pdns-auth-46:latest"
+        args         = ["--config-dir=/local"]
+        cap_add      = ["NET_BIND_SERVICE"]
         network_mode = "host"
       }
 
@@ -39,7 +39,7 @@ job "powerdns-auth" {
         destination   = "local/pdns.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           launch=gpgsql
           gpgsql-host={{ key "pdns/db/host" }}
           gpgsql-port={{ key "pdns/db/port" }}
@@ -110,7 +110,7 @@ job "powerdns-auth" {
       }
 
       resources {
-        cpu = 200
+        cpu    = 200
         memory = 256
       }
     }

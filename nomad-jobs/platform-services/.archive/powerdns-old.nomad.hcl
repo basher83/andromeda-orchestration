@@ -11,7 +11,7 @@ job "powerdns" {
         to     = 53
       }
       port "api" {
-        to = 8081  # PowerDNS API port inside container
+        to = 8081 # PowerDNS API port inside container
       }
       port "mysql" {
         to = 3306
@@ -41,7 +41,7 @@ job "powerdns" {
       }
 
       template {
-        data = <<EOF
+        data        = <<EOF
 CREATE TABLE IF NOT EXISTS domains (
   id                    INT AUTO_INCREMENT,
   name                  VARCHAR(255) NOT NULL,
@@ -173,7 +173,7 @@ EOF
       }
 
       template {
-        data = <<EOF
+        data        = <<EOF
 local-address=0.0.0.0,::
 launch=gmysql
 gmysql-host={{ env "NOMAD_IP_mysql" }}
@@ -194,22 +194,22 @@ EOF
 
       env {
         # API Configuration
-        PDNS_api = "yes"
+        PDNS_api     = "yes"
         PDNS_api_key = "changeme789xyz"
 
         # Webserver Configuration
-        PDNS_webserver = "yes"
-        PDNS_webserver_address = "0.0.0.0"
-        PDNS_webserver_port = "${NOMAD_PORT_api}"
+        PDNS_webserver            = "yes"
+        PDNS_webserver_address    = "0.0.0.0"
+        PDNS_webserver_port       = "${NOMAD_PORT_api}"
         PDNS_webserver_allow_from = "0.0.0.0/0"
 
         # MySQL Backend Configuration
-        PDNS_launch = "gmysql"
-        PDNS_gmysql_host = "${NOMAD_ADDR_mysql}"
-        PDNS_gmysql_port = "${NOMAD_PORT_mysql}"
-        PDNS_gmysql_user = "powerdns"
+        PDNS_launch          = "gmysql"
+        PDNS_gmysql_host     = "${NOMAD_ADDR_mysql}"
+        PDNS_gmysql_port     = "${NOMAD_PORT_mysql}"
+        PDNS_gmysql_user     = "powerdns"
         PDNS_gmysql_password = "pdnspassword456"
-        PDNS_gmysql_dbname = "powerdns"
+        PDNS_gmysql_dbname   = "powerdns"
 
         # Default SOA
         PDNS_default_soa_content = "ns1.lab.local hostmaster.lab.local 1 10800 3600 604800 3600"

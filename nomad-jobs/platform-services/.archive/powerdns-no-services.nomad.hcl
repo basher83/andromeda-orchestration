@@ -39,7 +39,7 @@ job "powerdns" {
       }
 
       template {
-        data = <<EOF
+        data        = <<EOF
 CREATE TABLE IF NOT EXISTS domains (
   id                    INT AUTO_INCREMENT,
   name                  VARCHAR(255) NOT NULL,
@@ -89,16 +89,16 @@ EOF
       }
 
       env {
-        PDNS_LAUNCH              = "gmysql"
-        PDNS_GMYSQL_HOST         = "${NOMAD_ADDR_mysql}"
-        PDNS_GMYSQL_PORT         = "${NOMAD_PORT_mysql}"
-        PDNS_GMYSQL_USER         = "powerdns"
-        PDNS_GMYSQL_PASSWORD     = "pdns_secure_pass_123"
-        PDNS_GMYSQL_DBNAME       = "powerdns"
-        PDNS_API                 = "yes"
-        PDNS_API_KEY             = "api_secure_key_789"
-        PDNS_WEBSERVER           = "yes"
-        PDNS_WEBSERVER_ADDRESS   = "0.0.0.0"
+        PDNS_LAUNCH               = "gmysql"
+        PDNS_GMYSQL_HOST          = "${NOMAD_ADDR_mysql}"
+        PDNS_GMYSQL_PORT          = "${NOMAD_PORT_mysql}"
+        PDNS_GMYSQL_USER          = "powerdns"
+        PDNS_GMYSQL_PASSWORD      = "pdns_secure_pass_123"
+        PDNS_GMYSQL_DBNAME        = "powerdns"
+        PDNS_API                  = "yes"
+        PDNS_API_KEY              = "api_secure_key_789"
+        PDNS_WEBSERVER            = "yes"
+        PDNS_WEBSERVER_ADDRESS    = "0.0.0.0"
         PDNS_WEBSERVER_ALLOW_FROM = "0.0.0.0/0"
       }
 

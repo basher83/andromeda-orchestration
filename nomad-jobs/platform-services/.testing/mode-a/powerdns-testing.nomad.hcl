@@ -7,18 +7,23 @@ job "powerdns-auth" {
 
     network {
       mode = "host"
-      port "dns" {}     # host:53 (set below)
-      port "api" {}     # dynamic (Nomad alloc)
+      port "dns" {} # host:53 (set below)
+      port "api" {} # dynamic (Nomad alloc)
     }
 
-    restart { attempts = 3, interval = "30s", delay = "10s", mode = "fail" }
+    restart {
+      attempts = 3
+      interval = "30s"
+      delay    = "10s"
+      mode     = "fail"
+    }
 
     task "pdns-auth" {
       driver = "docker"
       config {
-        image   = "powerdns/pdns-auth-46:latest"
-        args    = ["--config-dir=/local"]
-        cap_add = ["NET_BIND_SERVICE"]
+        image        = "powerdns/pdns-auth-46:latest"
+        args         = ["--config-dir=/local"]
+        cap_add      = ["NET_BIND_SERVICE"]
         network_mode = "host"
       }
 
@@ -31,7 +36,7 @@ job "powerdns-auth" {
         destination   = "local/pdns.conf"
         change_mode   = "signal"
         change_signal = "SIGHUP"
-        data = <<-EOT
+        data          = <<-EOT
           launch=gmysql
           gmysql-host={{ key "pdns/db/host" }}
           gmysql-port={{ key "pdns/db/port" }}
@@ -89,16 +94,26 @@ job "powerdns-auth" {
         }
       }
 
-      resources { cpu = 200, memory = 256 }
+      resources {
+        cpu    = 200
+        memory = 256
+      }
     }
 
     # pin :53 explicitly
     network {
       mode = "host"
-      port "dns" { static = 53, to = 53 }
+      port "dns" {
+        static = 53
+        to     = 53
+      }
     }
 
     # Spread across hosts
-    affinity { attribute = "${node.unique.id}", operator = "distinct_hosts", weight = 100 }
+    affinity {
+      attribute = "${node.unique.id}"
+      operator  = "distinct_hosts"
+      weight    = 100
+    }
   }
 }
