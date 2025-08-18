@@ -1,6 +1,6 @@
 name: Use Sync Labels Workflow
 
-on:
+'on':
   workflow_dispatch: # Allows manual triggering
   # You could also add 'schedule', 'push', etc. triggers if needed
 
