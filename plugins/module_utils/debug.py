@@ -41,14 +41,10 @@ if DEBUG_LOGGER_ENABLED:
     )
 
 
-def log_request(
-    module, url, method, request_body=None, status=None, response_body=None
-):
+def log_request(module, url, method, request_body=None, status=None, response_body=None):
     if DEBUG_LOGGER_ENABLED:
         # Emit a warning if this is enabled!
-        module.warn(
-            f"{ENV_VAR} is enabled! Sensitive information may be logged to disk!"
-        )
+        module.warn(f"{ENV_VAR} is enabled! Sensitive information may be logged to disk!")
 
         logging.debug(
             REQUEST_LOG_TEMPLATE.format(

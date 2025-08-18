@@ -57,15 +57,10 @@ def run_module():
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
 
     # if the acl token is of client type and present, then policies are required
-    if (
-        module.params.get("type") == "client"
-        and module.params.get("state") == "present"
-    ):
+    if module.params.get("type") == "client" and module.params.get("state") == "present":
         policies = module.params.get("policies")
         if policies is None or policies.len() == 0:
-            module.fail_json(
-                "policies are required for nomad acl tokens of client type."
-            )
+            module.fail_json("policies are required for nomad acl tokens of client type.")
 
     # the NomadAPI can init itself via the module args
     nomad = NomadAPI(module)
@@ -104,9 +99,7 @@ def run_module():
             if desired_token_body.get("ExpirationTTL") is not None:
                 desired_token_body.pop("ExpirationTTL")
             if not is_subset(desired_token_body, existing_token):
-                result["token"] = nomad.update_acl_token(
-                    existing_token.get("AccessorID"), json.dumps(existing_token)
-                )
+                result["token"] = nomad.update_acl_token(existing_token.get("AccessorID"), json.dumps(existing_token))
                 result["changed"] = True
 
     # post final results

@@ -43,9 +43,7 @@ def run_module():
     # since the point of this module is to figure out a service IP and port
     # let's throw an error if we don't find one...
     if len(result["instances"]) == 0:
-        module.fail_json(
-            "could not find consul service named " + module.params.get("service_name")
-        )
+        module.fail_json("could not find consul service named " + module.params.get("service_name"))
 
     module.exit_json(**result)
 

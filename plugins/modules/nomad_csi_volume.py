@@ -131,9 +131,7 @@ def run_module():
                 result["mismatched"] = True
         else:
             request_body = {"Volumes": [desired_volume]}
-            result["volume"] = nomad.create_csi_volume(
-                volume_id, json.dumps(request_body)
-            )
+            result["volume"] = nomad.create_csi_volume(volume_id, json.dumps(request_body))
             result["changed"] = True
 
     # post final results
