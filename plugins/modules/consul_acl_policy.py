@@ -93,9 +93,7 @@ def run_module():
         else:
             # compare if we need to change anything about the policy
             if not is_subset(desired_policy_body, existing_policy):
-                result["policy"] = consul.update_acl_policy(
-                    policy_id, json.dumps(desired_policy_body)
-                )
+                result["policy"] = consul.update_acl_policy(policy_id, json.dumps(desired_policy_body))
                 result["changed"] = True
 
     # post final results

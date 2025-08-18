@@ -43,9 +43,7 @@ def run_module():
         token = nomad.acl_bootstrap()
         result["changed"] = True
         if token.get("SecretID") != module.params.get("management_token"):
-            module.fail_json(
-                "bootstrap token has unexpected value: " + token.get("SecretID")
-            )
+            module.fail_json("bootstrap token has unexpected value: " + token.get("SecretID"))
     elif existing_token.get("Type") != "management":
         module.fail_json("token provided is not of management type")
 
