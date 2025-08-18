@@ -5,6 +5,8 @@
 An Ansible automation project for comprehensive homelab infrastructure management, with NetBox integration for network
 source-of-truth and secure credential management through Infisical.
 
+<!-- Verification comment: Repository access and linting verified by Devin -->
+
 ## Overview
 
 This project provides a framework for managing network infrastructure using Ansible with:
