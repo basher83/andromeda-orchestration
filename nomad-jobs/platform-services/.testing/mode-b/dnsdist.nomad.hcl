@@ -7,7 +7,10 @@ job "dnsdist" {
 
     network {
       mode = "host"
-      port "dns" {}
+      port "dns" {
+        static = 53
+        to     = 53
+      }
       port "api" {} # optional console API if you want to manage remotely
     }
 
@@ -64,19 +67,10 @@ job "dnsdist" {
       }
     }
 
-    # :53 static
-    network {
-      mode = "host"
-      port "dns" {
-        static = 53
-        to     = 53
-      }
-    }
 
-    affinity {
-      attribute = "${node.unique.id}"
-      operator  = "distinct_hosts"
-      weight    = 100
+    constraint {
+      operator = "distinct_hosts"
+      value    = "true"
     }
   }
 }
