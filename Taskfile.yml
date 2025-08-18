@@ -32,6 +32,7 @@ tasks:
       - task: lint:yaml
       - task: lint:ansible
       - task: lint:python
+      - task: lint:nomad
       - task: lint:markdown
 
   lint:yaml:
@@ -58,7 +59,210 @@ tasks:
       else
         echo "markdownlint not found. Install with: npm install -g markdownlint-cli2"
         exit 1
+  lint:nomad:
+    desc: Run nomad fmt checks on all Nomad jobs
+  lint:nomad:
+    desc: Run nomad fmt checks on all Nomad jobs
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -check -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
       fi
+
+  fix:nomad:
+    desc: Auto-format Nomad job files
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -check -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+  fix:nomad:
+    desc: Auto-format Nomad job files
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+
+      fi
+  lint:nomad:
+    desc: Run nomad fmt checks on all Nomad jobs
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -check -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+  fix:nomad:
+    desc: Auto-format Nomad job files
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+
+  lint:nomad:
+    desc: Run nomad fmt checks on all Nomad jobs
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -check -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+  fix:nomad:
+    desc: Auto-format Nomad job files
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+
+  lint:nomad:
+  lint:nomad:
+    desc: Run nomad fmt checks on all Nomad jobs
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -check -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+  fix:nomad:
+    desc: Auto-format Nomad job files
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+
+    desc: Run nomad fmt checks on all Nomad jobs
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -check -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+  fix:nomad:
+    desc: Auto-format Nomad job files
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+
+  lint:nomad:
+    desc: Run nomad fmt checks on all Nomad jobs
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -check -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+  fix:nomad:
+    desc: Auto-format Nomad job files
+    cmd: |
+      if command -v nomad >/dev/null 2>&1; then
+        if [ -d "nomad-jobs" ]; then
+          nomad fmt -recursive nomad-jobs
+        else
+          echo "No nomad-jobs directory found."
+        fi
+      else
+        echo "Nomad CLI not found; install from https://developer.hashicorp.com/nomad/downloads"
+        exit 1
+      fi
+
+
 
   fix:
     desc: Auto-fix linting issues where possible
@@ -66,6 +270,7 @@ tasks:
       - uv run ruff check --fix plugins scripts tests
       - uv run ruff format plugins scripts tests
       - uv run ansible-lint --fix || true
+      - task: fix:nomad
       - task: fix:markdown
 
   fix:markdown:
