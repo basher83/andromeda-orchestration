@@ -180,6 +180,51 @@ jobs:
           path: infisical-results.sarif
           retention-days: 30
 
+  nomad-fmt:
+    name: Nomad Format & Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Nomad CLI
+        run: |
+          set -euo pipefail
+          NOMAD_VERSION="1.8.2"
+          curl -fsSL -o nomad.zip "https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip"
+          sudo apt-get update && sudo apt-get install -y unzip
+          unzip -o nomad.zip
+          sudo install -m 0755 nomad /usr/local/bin/nomad
+          nomad version
+
+      - name: Run nomad fmt -check
+        run: |
+          if [ -d "nomad-jobs" ]; then
+            nomad fmt -check -recursive nomad-jobs
+          else
+            echo "No nomad-jobs directory found."
+          fi
+
+      - name: Validate Nomad job files
+        run: |
+          set -euo pipefail
+          if [ -d "nomad-jobs" ]; then
+            mapfile -t files < <(find nomad-jobs -type f -name '*.nomad.hcl' -print)
+            if [ ${#files[@]} -eq 0 ]; then
+              echo "No Nomad job files found."
+              exit 0
+            fi
+            for f in "${files[@]}"; do
+              echo "::group::Validating $f"
+              nomad job validate "$f"
+              echo "::endgroup::"
+            done
+          else
+            echo "No nomad-jobs directory found."
+          fi
+
+
   kics-scan:
     name: Infrastructure Security (KICS)
     runs-on: ubuntu-latest
@@ -217,7 +262,7 @@ jobs:
     name: Test Summary
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
-    needs: [ansible-lint, yaml-lint, python-quality, markdown-lint]
+    needs: [ansible-lint, yaml-lint, python-quality, markdown-lint, nomad-fmt]
     steps:
       - name: Summary
         run: |
@@ -230,3 +275,4 @@ jobs:
           echo "| YAML Lint | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| Python Quality | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| Markdown Lint | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Nomad Format & Validate | ✅ |" >> $GITHUB_STEP_SUMMARY
