@@ -8,3 +8,6 @@ homelab_domain: "spaceships.work"
 # These will be combined with homelab_domain
 # e.g., doggos.spaceships.work
 cluster_subdomain: "doggos"
+
+# Convenience: fully qualified cluster domain (use in templates/records)
+fqdn_suffix: "{{ cluster_subdomain }}.{{ homelab_domain }}"

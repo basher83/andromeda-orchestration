@@ -1,0 +1,20 @@
+---
+# Common assertions to prevent configuration regressions
+# Include this in playbooks with:
+#   pre_tasks:
+#     - include_tasks: ../common/assertions.yml
+
+- name: Assert homelab_domain does not use .local
+  ansible.builtin.assert:
+    that:
+      - homelab_domain is defined
+      - "'.local' not in homelab_domain"
+    fail_msg: "homelab_domain must not use .local (macOS mDNS conflict). Found: {{ homelab_domain }}"
+    success_msg: "Domain validation passed: {{ homelab_domain }}"
+
+- name: Assert cluster_subdomain is defined
+  ansible.builtin.assert:
+    that:
+      - cluster_subdomain is defined
+    fail_msg: "cluster_subdomain must be defined for this inventory"
+    success_msg: "Cluster subdomain: {{ cluster_subdomain }}"
