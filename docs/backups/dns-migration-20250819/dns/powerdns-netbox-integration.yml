@@ -15,11 +15,6 @@
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
     consul_url: "http://192.168.11.20:8500"  # Consul on nomad-client-1
 
-    # Domain variables (provided by inventory)
-    homelab_domain: "{{ homelab_domain | default('spaceships.work', true) }}"
-    cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
-    fqdn_suffix: "{{ fqdn_suffix | default(cluster_subdomain + '.' + homelab_domain if cluster_subdomain else homelab_domain, true) }}"
-
   tasks:
     - name: Retrieve PowerDNS API key from Consul KV
       uri:
@@ -111,7 +106,7 @@
             --no-verify-ssl
 
     - name: Test DNS resolution
-      command: dig @192.168.11.20 ns1.{{ homelab_domain }} A +short
+      command: dig @192.168.11.20 ns1.homelab.local A +short
       register: dns_test
       changed_when: false
 
@@ -119,7 +114,7 @@
       debug:
         msg:
           - "DNS Resolution Test:"
-          - "Query: ns1.{{ homelab_domain }}"
+          - "Query: ns1.homelab.local"
           - "Result: {{ dns_test.stdout }}"
           - ""
           - "Integration Complete!"

@@ -11,11 +11,6 @@
     infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
 
-    # Domain variables (provided by inventory)
-    homelab_domain: "{{ homelab_domain | default('spaceships.work', true) }}"
-    cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
-    fqdn_suffix: "{{ fqdn_suffix | default(cluster_subdomain + '.' + homelab_domain if cluster_subdomain else homelab_domain, true) }}"
-
   tasks:
     - name: Retrieve NetBox API token from Infisical
       set_fact:
@@ -68,7 +63,7 @@
           kind: "Native"
           masters: []
           nameservers:
-            - "ns1.{{ homelab_domain }}."
+            - "ns1.homelab.local."
           rrsets:
             - name: "{{ item.name }}."
               type: "SOA"
@@ -137,5 +132,5 @@
           - "PowerDNS API: {{ powerdns_api_url }}"
           - ""
           - "Test with:"
-          - "  dig @192.168.11.20 ns1.{{ homelab_domain }}"
-          - "  dig @192.168.11.20 {{ homelab_domain }} SOA"
+          - "  dig @192.168.11.20 ns1.homelab.local"
+          - "  dig @192.168.11.20 homelab.local SOA"

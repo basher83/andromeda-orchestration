@@ -7,45 +7,39 @@
   become: false
   vars:
     powerdns_ip: "192.168.11.20"
-
-    # Domain variables (provided by inventory)
-    homelab_domain: "{{ homelab_domain | default('spaceships.work', true) }}"
-    cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
-    fqdn_suffix: "{{ fqdn_suffix | default(cluster_subdomain + '.' + homelab_domain if cluster_subdomain else homelab_domain, true) }}"
-
     test_queries:
       # Forward lookups
-      - query: "lloyd.{{ homelab_domain }}"
+      - query: "lloyd.homelab.local"
         type: "A"
         expected: "192.168.11.11"
-      - query: "holly.{{ homelab_domain }}"
+      - query: "holly.homelab.local"
         type: "A"
         expected: "192.168.11.12"
-      - query: "mable.{{ homelab_domain }}"
+      - query: "mable.homelab.local"
         type: "A"
         expected: "192.168.11.13"
-      - query: "nomad-server-1.{{ homelab_domain }}"
+      - query: "nomad-server-1.homelab.local"
         type: "A"
         expected: "192.168.10.11"
-      - query: "netbox.{{ homelab_domain }}"
+      - query: "netbox.homelab.local"
         type: "A"
         expected: "192.168.30.213"
-      - query: "powerdns.{{ homelab_domain }}"
+      - query: "powerdns.homelab.local"
         type: "A"
         expected: "192.168.11.20"
-      - query: "dns.{{ homelab_domain }}"
+      - query: "dns.homelab.local"
         type: "CNAME"
-        expected: "powerdns.{{ homelab_domain }}"
+        expected: "powerdns.homelab.local"
       # Reverse lookups
       - query: "192.168.11.11"
         type: "PTR"
-        expected: "lloyd.{{ homelab_domain }}"
+        expected: "lloyd.homelab.local"
       - query: "192.168.11.12"
         type: "PTR"
-        expected: "holly.{{ homelab_domain }}"
+        expected: "holly.homelab.local"
       - query: "192.168.30.213"
         type: "PTR"
-        expected: "netbox.{{ homelab_domain }}"
+        expected: "netbox.homelab.local"
 
   tasks:
     - name: Test forward DNS lookups
@@ -113,7 +107,7 @@
           - "{% if failed_tests | int == 0 %}✓ All tests passed! DNS integration is working correctly.{% else %}✗ Some tests failed. Please check the configuration.{% endif %}"
 
     - name: Test zone transfer (AXFR)
-      command: "dig @{{ powerdns_ip }} {{ homelab_domain }} AXFR +short"
+      command: "dig @{{ powerdns_ip }} homelab.local AXFR +short"
       register: axfr_result
       changed_when: false
       failed_when: false
