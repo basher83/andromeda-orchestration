@@ -10,9 +10,9 @@
     force_start: "{{ force | default(false) }}"
     wait_for_healthy: "{{ wait | default(true) }}"
     # Domain variables will be provided by inventory or can be overridden
-    homelab_domain: "{{ homelab_domain | default('spaceships.work') }}"
-    cluster_subdomain: "{{ cluster_subdomain | default('') }}"
-    fqdn_suffix: "{{ fqdn_suffix | default(cluster_subdomain + '.' + homelab_domain if cluster_subdomain else homelab_domain) }}"
+    homelab_domain: "{{ homelab_domain | default('spaceships.work', true) }}"
+    cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
+    fqdn_suffix: "{{ fqdn_suffix | default(cluster_subdomain + '.' + homelab_domain if cluster_subdomain else homelab_domain, true) }}"
 
   tasks:
     - name: Validate job file exists
@@ -49,8 +49,8 @@
           JobHCL: "{{ job_spec.content | b64decode }}"
           Variables:
             homelab_domain: "{{ homelab_domain }}"
-            cluster_subdomain: "{{ cluster_subdomain | default('') }}"
-            fqdn_suffix: "{{ fqdn_suffix | default('') }}"
+            cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
+            fqdn_suffix: "{{ fqdn_suffix | default('', true) }}"
           Canonicalize: true
         headers:
           Content-Type: "application/json"
