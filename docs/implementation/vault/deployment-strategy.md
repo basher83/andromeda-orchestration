@@ -159,7 +159,7 @@ seal "transit" {
 roles/vault/                       # Ansible role
 ├── defaults/main.yml              # Configuration variables
 ├── tasks/
-│   ├── install.yml               # Installation tasks
+│   ├── install.yml               # Installation tasks [FIXME]: This install installs from binary, needs to be updated to use the package manager
 │   ├── config_dev.yml            # Dev mode setup
 │   ├── config_prod.yml           # Production setup
 │   └── nomad_integration.yml    # Nomad auth configuration
