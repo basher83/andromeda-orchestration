@@ -1,3 +1,9 @@
+variable "homelab_domain" {
+  type        = string
+  default     = "spaceships.work"
+  description = "The domain for the homelab environment"
+}
+
 job "myapp" {
   datacenters = ["dc1"]
   type        = "service"
@@ -25,7 +31,7 @@ job "myapp" {
 
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.myapp.rule=Host(`myapp.lab.local`)",
+          "traefik.http.routers.myapp.rule=Host(`myapp.${var.homelab_domain}`)",
           "traefik.http.routers.myapp.entrypoints=websecure",
           "traefik.http.routers.myapp.tls=true",
         ]
