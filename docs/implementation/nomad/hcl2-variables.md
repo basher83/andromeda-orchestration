@@ -30,20 +30,23 @@ Use Nomad's `/v1/jobs/parse` API endpoint to parse the HCL with variables before
 # Step 1: Parse HCL with variables
 - name: Parse HCL job with variables
   ansible.builtin.uri:
-    url: "{{ nomad_api_endpoint }}/v1/jobs/parse"
+    url: "{{ nomad_api_endpoint }}/v1/jobs/parse?namespace={{ namespace | default('default') }}"
     method: POST
     body_format: json
     body:
       JobHCL: "{{ job_spec.content | b64decode }}"
       Variables:
         homelab_domain: "{{ homelab_domain }}"
-        cluster_subdomain: "{{ cluster_subdomain | default('') }}"
-        fqdn_suffix: "{{ fqdn_suffix | default('') }}"
+        cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
+        fqdn_suffix: "{{ fqdn_suffix | default('', true) }}"
       Canonicalize: true
     headers:
       Content-Type: "application/json"
+    status_code: [200, 400, 500]
+    validate_certs: "{{ validate_certs | default(true) }}"
   register: parsed_job
   when: job_spec.content | b64decode is search('variable\\s')
+  failed_when: false
 
 # Step 2: Deploy the parsed job
 - name: Deploy job with parsed content
@@ -51,11 +54,16 @@ Use Nomad's `/v1/jobs/parse` API endpoint to parse the HCL with variables before
     host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
     port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
     use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+    namespace: "{{ namespace | default('default') }}"
     content: "{{ parsed_job.json | to_json }}"
     content_format: json  # Note: JSON format, not HCL
     state: present
   register: deploy_result
-  when: parsed_job is defined and parsed_job.json is defined
+  when: >
+    parsed_job is defined and
+    parsed_job is not failed and
+    parsed_job.status | default(0) == 200 and
+    parsed_job.json is defined
 ```
 
 ### Fallback for Non-Variable Jobs
@@ -68,11 +76,16 @@ Include a fallback for jobs that don't use variables:
     host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
     port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
     use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+    namespace: "{{ namespace | default('default') }}"
     content: "{{ job_spec.content | b64decode }}"
     content_format: hcl
     state: present
   register: deploy_result
-  when: parsed_job is skipped or parsed_job.json is not defined
+  when: >
+    parsed_job is skipped or
+    parsed_job is failed or
+    (parsed_job.status | default(500)) != 200 or
+    parsed_job.json is not defined
 ```
 
 ## HCL2 Job Requirements
@@ -130,6 +143,8 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
 2. **Don't rely on NOMAD_VAR_ with Ansible**: Only works with CLI, not the module
 3. **Always provide defaults**: Include default values in your variable declarations
 4. **Check for variable usage**: The playbook checks if variables are used before parsing
+5. **Handle parse failures gracefully**: The parse API may fail; always include fallback logic
+6. **Include namespace parameter**: Required for multi-namespace Nomad clusters
 
 ## API Reference
 
