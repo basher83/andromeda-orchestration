@@ -9,7 +9,10 @@
     job_path: "{{ job | mandatory }}"
     force_start: "{{ force | default(false) }}"
     wait_for_healthy: "{{ wait | default(true) }}"
+    # Domain variables will be provided by inventory or can be overridden
     homelab_domain: "{{ homelab_domain | default('spaceships.work') }}"
+    cluster_subdomain: "{{ cluster_subdomain | default('') }}"
+    fqdn_suffix: "{{ fqdn_suffix | default(cluster_subdomain + '.' + homelab_domain if cluster_subdomain else homelab_domain) }}"
 
   tasks:
     - name: Validate job file exists
@@ -37,7 +40,37 @@
           - "To Nomad: {{ nomad_api_endpoint }}"
           - "Force start: {{ force_start }}"
 
-    - name: Deploy job
+    - name: Parse HCL job with variables
+      ansible.builtin.uri:
+        url: "{{ nomad_api_endpoint }}/v1/jobs/parse"
+        method: POST
+        body_format: json
+        body:
+          JobHCL: "{{ job_spec.content | b64decode }}"
+          Variables:
+            homelab_domain: "{{ homelab_domain }}"
+            cluster_subdomain: "{{ cluster_subdomain | default('') }}"
+            fqdn_suffix: "{{ fqdn_suffix | default('') }}"
+          Canonicalize: true
+        headers:
+          Content-Type: "application/json"
+        status_code: 200
+      register: parsed_job
+      when: job_spec.content | b64decode is search('variable\\s')
+
+    - name: Deploy job with parsed content
+      community.general.nomad_job:
+        host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
+        port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
+        use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+        content: "{{ parsed_job.json | to_json }}"
+        content_format: json
+        state: present
+        force_start: "{{ force_start }}"
+      register: deploy_result
+      when: parsed_job is defined and parsed_job.json is defined
+
+    - name: Deploy job without variables (fallback)
       community.general.nomad_job:
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
@@ -47,8 +80,7 @@
         state: present
         force_start: "{{ force_start }}"
       register: deploy_result
-      environment:
-        NOMAD_VAR_homelab_domain: "{{ homelab_domain }}"
+      when: parsed_job is skipped or parsed_job.json is not defined
 
     - name: Show deployment result
       ansible.builtin.debug:
