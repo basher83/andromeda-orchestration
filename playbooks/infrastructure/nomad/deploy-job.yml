@@ -9,6 +9,7 @@
     job_path: "{{ job | mandatory }}"
     force_start: "{{ force | default(false) }}"
     wait_for_healthy: "{{ wait | default(true) }}"
+    homelab_domain: "{{ homelab_domain | default('spaceships.work') }}"
 
   tasks:
     - name: Validate job file exists
@@ -46,6 +47,8 @@
         state: present
         force_start: "{{ force_start }}"
       register: deploy_result
+      environment:
+        NOMAD_VAR_homelab_domain: "{{ homelab_domain }}"
 
     - name: Show deployment result
       ansible.builtin.debug:
