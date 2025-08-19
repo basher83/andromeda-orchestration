@@ -1,58 +1,65 @@
-# Current Sprint: August 12-19, 2025
+# Current Sprint: January 19-20, 2025
 
-**Sprint Focus**: 🚨 CRITICAL domain migration (.local → spaceships.work) and PowerDNS deployment with PostgreSQL
+**Sprint Goal**: 🚨 CRITICAL domain migration (.local → spaceships.work) - Sprint 1 & 2
 
-**Previous Sprint**: [August 5-12 Summary](./completed/2025-08.md#august-5-12-sprint)
+**Previous Sprint**: [Archived](./completed/2025-01.md)
 
 ---
 
-## Navigation: [Task Summary](./task-summary.md) | [Sprint Details](./sprint-2025-08-12.md) | [Critical Migration](./critical-domain-migration.md) | [Phases](./phases/)
+## Navigation: [Task Summary](./task-summary.md) | [Domain Master Plan](./domain-migration-master-plan.md) | [Phases](./phases/)
 
-## 🚨 Critical Priority
+## 🎯 Sprint Goals (January 19-20)
 
-- **Domain Migration** ([Epic #18](https://github.com/basher83/netbox-ansible/issues/18)) — `.local` conflicts with macOS mDNS
-  - [Full Migration Plan](./critical-domain-migration.md)
-  - **Deadline**: August 20, 2025
-  - **Impact**: Blocking macOS developers
+### Today (Jan 19) - Sprint 1: Foundation & Critical Path
+- **PR #1**: Create homelab_domain variable (30 min)
+- **PR #2**: Nomad HCL2 variables implementation (2 hrs)
+- **Status**: Ready to implement
+- **Blocker**: PR #70 needs to be closed (wrong approach)
 
-## 🚀 Active Tasks
+### Tomorrow (Jan 20) - Sprint 2: NetBox DNS Infrastructure
+- **PR #3**: NetBox DNS zone migration (3 hrs)
+- **Status**: Pending PR #1 merge
+- **Target**: Complete by EOD for macOS developer unblocking
 
-- **PowerDNS Mode A Deployment** (Phase 4) — PostgreSQL backend, Vault integration
-  - Issues [#28-32](https://github.com/basher83/netbox-ansible/issues/28): Deploy, configure, health checks
-  - [Phase 4: PowerDNS-NetBox Integration](./phases/phase-4-dns-integration.md)
-- **NetBox DNS Configuration** — Setup zones with spaceships.work domain
-  - Issue [#38](https://github.com/basher83/netbox-ansible/issues/38): Configure forward/reverse zones
-  - Issue [#39](https://github.com/basher83/netbox-ansible/issues/39): API connectivity
+## 📋 Active Tasks
 
-## ⛔ Blocked Items
+### Domain Migration Foundation
+- **Description**: Parameterize domain across infrastructure
+- **Status**: In Progress
+- **Priority**: P0 (Critical)
+- **Blockers**: None
+- **Related**: [Master Plan](./domain-migration-master-plan.md), PR #70 (to close)
 
-- None currently (service identity token issue resolved with workaround)
+### Nomad HCL2 Variable Implementation
+- **Description**: Fix Nomad jobs to use HCL2 variables (not Jinja2)
+- **Status**: Not Started
+- **Priority**: P0 (Critical)
+- **Blockers**: Requires PR #1 merged
+- **Related**: Issues #19, #22
 
-## ✅ Recently Completed (Last Sprint)
+### NetBox Zone Migration
+- **Description**: Create spaceships.work zones in NetBox
+- **Status**: Not Started
+- **Priority**: P0 (Critical)
+- **Blockers**: Requires homelab_domain variable
+- **Related**: Issues #21, #38
 
-- PostgreSQL deployment with Vault integration (Aug 11)
-- NetBox bootstrap and population (Aug 7)
-- Vault deployed in dev mode across nomad-server nodes (Aug 6)
-- Netdata monitoring optimization (Aug 4)
-- Traefik load balancer deployment (Aug 2)
+## ✅ Completed Today
+
+- Consolidated migration documentation into master plan
+- Identified PR #70 technical issues
+- Created 5-sprint implementation roadmap
 
 ## 📊 Sprint Metrics
 
-- **Sprint Tasks**: 16 (6 critical, 10 high priority)
-- **GitHub Issues Active**: 45 open (tracking in GitHub)
-- **Completed This Sprint**: 0 (sprint just started)
-- **In Progress**: 3
-  - Domain migration (6 issues)
-  - PowerDNS deployment (5 issues)
-  - NetBox zones (2 issues)
-- **Blocked**: 0
-- **Overall Project**: 17/51 tasks (33%)
+- **Target PRs**: 3 (PR #1, #2, #3)
+- **Estimated Time**: 5.5 hours
+- **Completion**: 0/3 PRs
+- **Risk Level**: High (blocking macOS developers)
 
 ## 🔗 Quick Links
 
-- [Sprint Details](./sprint-2025-08-12.md)
-- [Critical Domain Migration](./critical-domain-migration.md)
-- [GitHub Issues](https://github.com/basher83/netbox-ansible/issues)
-- [Phase 4: PowerDNS-NetBox Integration](./phases/phase-4-dns-integration.md)
-- [Task Summary](./task-summary.md)
-- [Troubleshooting](../getting-started/troubleshooting.md)
+- [Domain Migration Master Plan](./domain-migration-master-plan.md)
+- [GitHub Epic #18](https://github.com/basher83/andromeda-orchestration/issues/18)
+- [PR #70](https://github.com/basher83/andromeda-orchestration/pull/70) (to close)
+- [Phase 4: DNS Integration](./phases/phase-4-dns-integration.md)

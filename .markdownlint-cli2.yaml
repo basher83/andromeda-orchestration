@@ -22,6 +22,8 @@ globs:
   - "!.claude/**"
   - "!docs/resources/ai-assistants/**"
   - "!docs/archive/**"
+  - "!docs/project-management/archive/**"
+  - "!**/archive/**"
 # Use the existing .markdownlint.json for rules
 config: .markdownlint.json
 

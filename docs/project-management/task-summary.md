@@ -1,9 +1,9 @@
 # andromeda-orchestration Task Summary
 
 **Project**: NetBox-focused Ansible automation with DNS/IPAM infrastructure
-**Status**: Phase 4 In Progress, Critical Domain Migration Active
-**Last Updated**: 2025-08-14
-**GitHub Issues**: [45 Open](https://github.com/basher83/netbox-ansible/issues)
+**Status**: 🚨 CRITICAL Domain Migration Active
+**Last Updated**: 2025-01-19
+**GitHub Issues**: [Epic #18](https://github.com/basher83/andromeda-orchestration/issues/18)
 
 ---
 
@@ -45,28 +45,32 @@
 
 ## 🎯 Current Focus
 
-**Active Sprint**: [August 12-19, 2025](./current-sprint.md) | [Sprint Details](./sprint-2025-08-12.md)
+**Active Sprint**: [January 19-24, 2025](./current-sprint.md) | [Sprint Tracking](./sprints/2025-01-19-domain-migration.md)
 
 ### 🚨 Critical Priority
 
-- **Domain Migration** ([Epic #18](https://github.com/basher83/netbox-ansible/issues/18))
+- **Domain Migration** ([Epic #18](https://github.com/basher83/andromeda-orchestration/issues/18))
   - `.local` → `spaceships.work` migration
-  - Blocks macOS developers
-  - **Deadline**: August 20, 2025
-  - [Full Plan](./critical-domain-migration.md)
+  - Blocks macOS developers (mDNS conflict)
+  - **Target**: January 20, 2025 (2-day critical path)
+  - [Master Plan](./domain-migration-master-plan.md)
+  - **PR Sequence**: 6 incremental PRs over 5 days
+  - **Current Status**: PR #70 needs closing (wrong approach)
 
 ### 🚧 In Progress
 
-- **PowerDNS Mode A Deployment** (Issues #28-32)
-  - PostgreSQL backend (✅ deployed)
-  - Configure for Vault dynamic credentials
-  - Expose DNS :53 and API ports
-  - Register Consul services
+- **Domain Migration PRs** (6 total)
+  - PR #1: homelab_domain variable (Day 1)
+  - PR #2: Nomad HCL2 variables (Day 1)
+  - PR #3: NetBox DNS zones (Day 2)
+  - PR #4: PowerDNS sync (Day 3)
+  - PR #5: Ansible playbooks (Day 4)
+  - PR #6: Documentation & CI (Day 5)
 
-- **NetBox DNS Configuration** (Issues #38-39)
-  - Create zones with spaceships.work domain
-  - Configure forward/reverse zones
-  - Establish API connectivity
+- **PowerDNS Deployment** (Paused for migration)
+  - Will resume after domain migration
+  - PostgreSQL backend ready
+  - Waiting on new domain configuration
 
 ## ✅ Major Achievements
 
@@ -105,33 +109,28 @@
 
 ## 📅 Upcoming Milestones
 
-### Week of August 12-16 (Current)
+### Week of January 19-24 (Current)
 
-1. **CRITICAL**: Complete domain migration (#19-24)
-2. Deploy PowerDNS with PostgreSQL (#28-32)
-3. Configure NetBox DNS zones (#38)
-4. Establish PowerDNS-NetBox connectivity (#39)
+1. **Day 1 (Jan 19)**: Foundation PRs #1-2 (variables & Nomad)
+2. **Day 2 (Jan 20)**: NetBox DNS zones PR #3 🎯 Critical deadline
+3. **Day 3 (Jan 21)**: PowerDNS integration PR #4
+4. **Day 4 (Jan 22)**: Ansible updates PR #5
+5. **Day 5 (Jan 23)**: Documentation & CI PR #6
+6. **Day 6 (Jan 24)**: Final validation & cutover
 
-### Week of August 19-23
+### Week of January 27-31
 
-1. Implement sync script (#40)
-2. Migrate DNS records from Pi-hole (#41)
-3. Testing and validation (#42-43)
-4. Scale to HA configuration (#33)
+1. Resume PowerDNS deployment (#28-32)
+2. Complete NetBox DNS configuration (#38-39)
+3. Implement sync scripts (#40)
+4. Begin DNS record migration (#41)
 
-### End of August
+### February Focus
 
-1. Complete Phase 4 (all 17 issues)
+1. Complete Phase 4 DNS integration
 2. Deploy PowerDNS-Admin UI (#26)
-3. Begin refactoring to role-first architecture (#10-16)
-4. Decommission prototypes (#34-35)
-
-### September Focus
-
-1. Phase 5: Multi-Site Expansion (#47-56)
-2. Security hardening (#53)
-3. Performance optimization (#54)
-4. Disaster recovery planning (#55)
+3. Begin refactoring to role-first architecture
+4. Plan Phase 5 multi-site expansion
 
 ## 📚 Key Documentation
 
