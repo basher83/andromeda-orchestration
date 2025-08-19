@@ -48,11 +48,8 @@ uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
 uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --list
 
 # Graph inventory structure
+uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --graph
 uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --graph
-
-# Test inventory with 1Password (deprecated - for migration only)
-# Use ansible-connect wrapper only if still migrating from 1Password
-# ./bin/ansible-connect inventory -i inventory/og-homelab/1password.proxmox.yml --list
 ```
 
 ### Running Assessment Playbooks
@@ -91,7 +88,6 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 - **Planned**: NetBox dynamic inventory integration (see `docs/implementation/dns-ipam/netbox-integration-patterns.md` for patterns)
 - **Authentication**:
   - Infisical: Machine identity credentials via environment variables
-  - 1Password: API tokens via Connect server (legacy)
 
 ### Nomad Job Management
 
@@ -125,18 +121,12 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
   - Runtime data queries with `netbox.netbox.nb_lookup`
   - Event-driven automation patterns
 
-- `docs/implementation/secrets-management/infisical-setup.md`: Infisical secrets management guide:
+- `docs/implementation/infisical/infisical-setup.md`: Infisical secrets management guide:
 
   - Accurate explanation of projects, environments, folders, and secrets
   - Current state with secrets at `/apollo-13/`
   - Migration plan to organized folder structure
   - Ansible collection usage patterns
-
-- `docs/archive/1password-integration.md`: 1Password Connect integration for secrets management (deprecated):
-  - Vault item lookups using `community.general.onepassword`
-  - Secret injection patterns
-  - Error handling strategies
-  - Environment setup instructions
 
 ### Key Integration Patterns
 
@@ -182,7 +172,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 
 Vault is currently running in development mode on all three nomad-server nodes:
 
-- nomad-server-1-lloyd: <http://192.168.10.11:8200> (v1.15.5)
+- nomad-server-1-lloyd: <http://192.168.10.11:8200> (v1.20.2)
 - nomad-server-2-holly: <http://192.168.10.12:8200> (v1.20.1)
 - nomad-server-3-mable: <http://192.168.10.13:8200> (v1.20.1)
 
