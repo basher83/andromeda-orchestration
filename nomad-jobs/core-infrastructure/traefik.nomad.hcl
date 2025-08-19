@@ -1,3 +1,9 @@
+variable "homelab_domain" {
+  type        = string
+  default     = "spaceships.work"
+  description = "The domain for the homelab environment"
+}
+
 job "traefik" {
   datacenters = ["dc1"]
   type        = "service"
@@ -110,10 +116,10 @@ tls:
       defaultGeneratedCert:
         resolver: default
         domain:
-          main: "lab.local"
+          main: "${var.homelab_domain}"
           sans:
-            - "*.lab.local"
-            - "*.doggos.lab.local"
+            - "*.${var.homelab_domain}"
+            - "*.doggos.${var.homelab_domain}"
             - "*.service.consul"
 EOF
         destination = "local/dynamic/certs.yml"
@@ -135,7 +141,7 @@ EOF
 
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.api.rule=Host(`traefik.lab.local`)",
+          "traefik.http.routers.api.rule=Host(`traefik.${var.homelab_domain}`)",
           "traefik.http.routers.api.service=api@internal",
           "traefik.http.routers.api.entrypoints=websecure",
           "traefik.http.routers.api.tls=true",

@@ -9,6 +9,11 @@
     job_path: "{{ job | mandatory }}"
     force_start: "{{ force | default(false) }}"
     wait_for_healthy: "{{ wait | default(true) }}"
+    namespace: "{{ namespace | default('default') }}"
+    # Domain variables will be provided by inventory or can be overridden
+    homelab_domain: "{{ homelab_domain | default('spaceships.work', true) }}"
+    cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
+    fqdn_suffix: "{{ fqdn_suffix | default(cluster_subdomain + '.' + homelab_domain if cluster_subdomain else homelab_domain, true) }}"
 
   tasks:
     - name: Validate job file exists
@@ -36,16 +41,66 @@
           - "To Nomad: {{ nomad_api_endpoint }}"
           - "Force start: {{ force_start }}"
 
-    - name: Deploy job
+    - name: Parse HCL job with variables
+      ansible.builtin.uri:
+        url: "{{ nomad_api_endpoint }}/v1/jobs/parse?namespace={{ namespace }}"
+        method: POST
+        body_format: json
+        body:
+          JobHCL: "{{ job_spec.content | b64decode }}"
+          Variables:
+            homelab_domain: "{{ homelab_domain }}"
+            cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
+            fqdn_suffix: "{{ fqdn_suffix | default('', true) }}"
+          Canonicalize: true
+        headers:
+          Content-Type: "application/json"
+        status_code: [200, 400, 500]
+        validate_certs: "{{ validate_certs | default(true) }}"
+      register: parsed_job
+      when: job_spec.content | b64decode is search('variable\\s')
+      failed_when: false
+
+    - name: Warn if parse failed
+      ansible.builtin.debug:
+        msg: "Warning: Failed to parse job with variables. Falling back to direct deployment. Error: {{ parsed_job.msg | default('Unknown error') }}"
+      when: >
+        parsed_job is not skipped and
+        (parsed_job is failed or parsed_job.status != 200)
+
+    - name: Deploy job with parsed content
       community.general.nomad_job:
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+        namespace: "{{ namespace }}"
+        content: "{{ parsed_job.json | to_json }}"
+        content_format: json
+        state: present
+        force_start: "{{ force_start }}"
+      register: deploy_result
+      when: >
+        parsed_job is defined and
+        parsed_job is not failed and
+        parsed_job.status | default(0) == 200 and
+        parsed_job.json is defined
+
+    - name: Deploy job without variables (fallback)
+      community.general.nomad_job:
+        host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
+        port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
+        use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+        namespace: "{{ namespace }}"
         content: "{{ job_spec.content | b64decode }}"
         content_format: hcl
         state: present
         force_start: "{{ force_start }}"
       register: deploy_result
+      when: >
+        parsed_job is skipped or
+        parsed_job is failed or
+        (parsed_job.status | default(500)) != 200 or
+        parsed_job.json is not defined
 
     - name: Show deployment result
       ansible.builtin.debug:
@@ -57,6 +112,7 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+        namespace: "{{ namespace }}"
         name: "{{ job_name }}"
       register: job_info
 
@@ -65,6 +121,7 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+        namespace: "{{ namespace }}"
         name: "{{ job_name }}"
       register: job_status
       until: job_status.jobs[0].Status == "running" and job_status.jobs[0].JobSummary.Summary | json_query('*.Running') | sum > 0
@@ -86,3 +143,5 @@
 # ansible-playbook deploy-job.yml -e job=nomad-jobs/core-infrastructure/traefik.nomad.hcl
 # ansible-playbook deploy-job.yml -e job=nomad-jobs/platform-services/powerdns.nomad.hcl -e force=true
 # ansible-playbook deploy-job.yml -e job=nomad-jobs/applications/myapp.nomad.hcl -e wait=false
+# ansible-playbook deploy-job.yml -e job=nomad-jobs/applications/myapp.nomad.hcl -e namespace=production
+# ansible-playbook deploy-job.yml -e job=nomad-jobs/applications/myapp.nomad.hcl -e validate_certs=false  # For dev environments

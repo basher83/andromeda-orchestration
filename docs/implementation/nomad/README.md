@@ -17,6 +17,7 @@ export NOMAD_ADDR=http://nomad.service.consul:4646
 - [Storage Strategy](storage-strategy.md): decision criteria and architecture
 - [Port Allocation](port-allocation.md): dynamic vs. static, patterns, validation
 - [Dynamic Volumes](dynamic-volumes.md): plugin, systemd unit, installer, checks
+- [HCL2 Variables](hcl2-variables.md): passing variables to Nomad jobs via Ansible
 
 ## 📚 Documentation
 
@@ -49,6 +50,14 @@ export NOMAD_ADDR=http://nomad.service.consul:4646
   - Port range management
   - Service discovery integration
   - Load balancer configuration
+
+### Job Configuration
+
+- **[hcl2-variables.md](hcl2-variables.md)** - HCL2 variable passing from Ansible
+  - Community.general.nomad_job limitations
+  - Using Nomad API /v1/jobs/parse endpoint
+  - Variable injection patterns
+  - Common pitfalls and solutions
 
 ## 🚀 Quick Start
 

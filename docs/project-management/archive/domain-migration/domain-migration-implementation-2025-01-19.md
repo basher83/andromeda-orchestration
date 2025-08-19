@@ -70,19 +70,37 @@ variable "homelab_domain" {
 
 **File**: `playbooks/infrastructure/nomad/deploy-job.yml`
 ```yaml
-- name: Deploy job
+# Parse HCL with variables using Nomad API
+- name: Parse HCL job with variables
+  ansible.builtin.uri:
+    url: "{{ nomad_api_endpoint }}/v1/jobs/parse"
+    method: POST
+    body_format: json
+    body:
+      JobHCL: "{{ job_spec.content | b64decode }}"
+      Variables:
+        homelab_domain: "{{ homelab_domain }}"
+        cluster_subdomain: "{{ cluster_subdomain | default('') }}"
+        fqdn_suffix: "{{ fqdn_suffix | default('') }}"
+      Canonicalize: true
+  register: parsed_job
+  when: job_spec.content | b64decode is search('variable\\s')
+
+# Deploy the parsed job
+- name: Deploy job with parsed content
   community.general.nomad_job:
     host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
     port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
     use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-    content: "{{ job_spec.content | b64decode }}"
-    content_format: hcl
+    content: "{{ parsed_job.json | to_json }}"
+    content_format: json
     state: present
     force_start: "{{ force_start }}"
-  environment:
-    NOMAD_VAR_homelab_domain: "{{ homelab_domain | default('spaceships.work') }}"
   register: deploy_result
+  when: parsed_job is defined and parsed_job.json is defined
 ```
+
+**Note**: The `community.general.nomad_job` module doesn't support NOMAD_VAR_* environment variables. We must use Nomad's /v1/jobs/parse API endpoint to inject variables.
 
 ### Phase 3: NetBox DNS Infrastructure
 
@@ -299,8 +317,10 @@ PR #70's approach failed because:
 
 This plan corrects that by:
 - Using Nomad HCL2 native variables
-- Passing variables via environment (NOMAD_VAR_*)
+- Using Nomad API /v1/jobs/parse endpoint to inject variables
 - Maintaining HCL file validity
+
+**Critical Discovery**: The `community.general.nomad_job` module doesn't support NOMAD_VAR_* environment variables. While the Nomad CLI honors these variables, the Ansible module uses the HTTP API directly and requires using the /v1/jobs/parse endpoint with a Variables payload.
 
 ## Related Issues
 

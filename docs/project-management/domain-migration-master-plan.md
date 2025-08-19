@@ -62,7 +62,8 @@ PR #70 failed because it used Ansible Jinja2 syntax (`{{ homelab_domain }}`) in 
    - [ ] Replace domain references
 
 3. **Update Deployment Playbook** (`playbooks/infrastructure/nomad/deploy-job.yml`):
-   - [ ] Add NOMAD_VAR_homelab_domain to environment
+   - [ ] Use Nomad API /v1/jobs/parse endpoint to inject variables
+   - [ ] Parse HCL with Variables payload (not NOMAD_VAR_* env vars)
    - [ ] Default to spaceships.work if not set
 
 **Testing Commands**:
@@ -70,13 +71,15 @@ PR #70 failed because it used Ansible Jinja2 syntax (`{{ homelab_domain }}`) in 
 # Validate HCL syntax
 nomad job validate nomad-jobs/core-infrastructure/traefik.nomad.hcl
 
-# Test deployment with variable
+# Test deployment with variable (CLI supports NOMAD_VAR_*)
 NOMAD_VAR_homelab_domain=spaceships.work nomad job plan traefik.nomad.hcl
 
-# Deploy via playbook
+# Deploy via playbook (uses API parsing, not env vars)
 uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml
 ```
+
+**Important**: The `community.general.nomad_job` module doesn't support NOMAD_VAR_* environment variables. The playbook uses Nomad's /v1/jobs/parse API endpoint instead.
 
 **Rollback Plan**:
 - Keep backup of original HCL files
