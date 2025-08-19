@@ -1,0 +1,104 @@
+[settings]
+experimental = true
+auto_install = true
+not_found_auto_install = true
+color = true
+jobs = 4
+pin = true
+
+[settings.python]
+uv_venv_auto = true
+
+[tools]
+act = "0.2.80"
+ansible-core = "2.19.0"
+consul = "1.21.4"
+eza = "0.23.0"
+fd = "10.2.0"
+github-markdown-toc = "0.10.0"
+jq = "1.8.1"
+markdownlint-cli2 = "0.14.0"
+nomad = "1.10.4"
+pre-commit = "4.3.0"
+python = "3.12.11"
+rg = "14.1.1"
+ruff = "0.12.9"
+uv = "0.8.12"
+vault = "1.20.2"
+
+# ============================================================================
+# CORE TASKS - Primary developer actions
+# ============================================================================
+
+[tasks."setup:mcp"]
+description = "Generate .mcp.json from template using Infisical secrets"
+run = "./scripts/generate-mcp-config.sh"
+sources = ["mcp.json.template", "scripts/generate-mcp-config.sh", ".infisical.json"]
+outputs = [".mcp.json"]
+tools = { "jq" = "latest" }
+
+
+# ============================================================================
+# UTILITY - Helper tasks
+# ============================================================================
+
+[tasks.mcp]
+description = "MCP configuration management"
+alias = "m"
+tools = { "jq" = "latest" }
+run = '''
+echo "🔧 MCP Configuration Management"
+echo "================================"
+if [ -f ".mcp.json" ]; then
+  echo "✅ .mcp.json exists"
+  echo ""
+  echo "Available actions:"
+  echo "  1) Regenerate from template (overwrites current)"
+  echo "  2) Validate JSON syntax"
+  echo "  3) Show current servers"
+  echo "  4) Exit"
+  echo ""
+  read -p "Choose action [1-4]: " choice
+  case $choice in
+    1) mise run setup:mcp ;;
+    2) jq empty .mcp.json && echo "✅ Valid JSON" || echo "❌ Invalid JSON" ;;
+    3) jq '.mcpServers | keys[]' .mcp.json 2>/dev/null || echo "❌ Unable to parse servers" ;;
+    4) echo "Exiting..." ;;
+    *) echo "Invalid choice" ;;
+  esac
+else
+  echo "❌ .mcp.json not found"
+  echo ""
+  if [ -f "mcp.json.template" ]; then
+    echo "Template found. Generate config? (y/n)"
+    read -p "> " confirm
+    [ "$confirm" = "y" ] && mise run setup:mcp
+  else
+    echo "No template found. Please create mcp.json.template first."
+  fi
+fi
+'''
+
+[tasks."mcp:clean"]
+description = "Remove generated MCP configuration"
+run = '''
+if [ -f ".mcp.json" ]; then
+  echo "⚠️  This will delete .mcp.json (can be regenerated from template)"
+  read -p "Continue? (y/n): " confirm
+  if [ "$confirm" = "y" ]; then
+    rm -f .mcp.json
+    echo "✅ .mcp.json removed"
+  else
+    echo "Cancelled"
+  fi
+else
+  echo "No .mcp.json file to remove"
+fi
+'''
+
+# ============================================================================
+# HOOKS
+# ============================================================================
+[hooks]
+enter = "echo 'Welcome to the Andromeda-Orchestration repository!'"
+leave = "echo 'Goodbye!'"

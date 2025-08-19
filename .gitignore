@@ -107,3 +107,4 @@ reports/nomad/*.json
 !reports/SECURITY.md
 !reports/**/*_sanitized.md
 !reports/**/*_summary.md
+.mcp.json
