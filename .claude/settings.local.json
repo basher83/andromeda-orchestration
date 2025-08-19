@@ -30,7 +30,11 @@
       "Bash(npm install:*)",
       "Bash(markdownlint:*)",
       "WebFetch(domain:docs.anthropic.com)",
-      "mcp__github__create_issue"
+      "mcp__github__create_issue",
+      "mcp__coderabbitai__get_coderabbit_reviews",
+      "mcp__coderabbitai__get_review_comments",
+      "Bash(rg:*)",
+      "mcp__github__get_job_logs"
     ]
   },
   "statusLine": {
