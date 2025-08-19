@@ -1,0 +1,13 @@
+---
+# Domain configuration
+# This variable replaces all hardcoded .local references
+# to avoid macOS mDNS conflicts
+homelab_domain: "spaceships.work"
+
+# Subdomain prefixes for different clusters
+# These will be combined with homelab_domain
+# e.g., doggos.spaceships.work
+cluster_subdomain: "doggos"
+
+# Convenience: fully qualified cluster domain (use in templates/records)
+fqdn_suffix: "{{ cluster_subdomain }}.{{ homelab_domain }}"
