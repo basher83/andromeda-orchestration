@@ -1,5 +1,12 @@
 # CRITICAL: Domain Migration from .local to spaceships.work
 
+> **NOTE**: This document has been consolidated into [Domain Migration Master Plan](./domain-migration-master-plan.md)
+> Please refer to the master plan for the authoritative implementation approach.
+
+---
+
+# CRITICAL: Domain Migration from .local to spaceships.work
+
 **Status**: 🚨 Critical Priority - Blocking Issue
 **Epic**: GitHub Issue [#18](https://github.com/basher83/netbox-ansible/issues/18)
 **Impact**: Affects all macOS developers and DNS resolution
