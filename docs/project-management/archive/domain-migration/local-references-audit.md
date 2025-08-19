@@ -49,12 +49,12 @@ dns_name: "{{ item.name }}.{{ homelab_domain }}"
 ```
 
 ### For Nomad Jobs
-Use HCL2 variables (to be implemented in PR #2):
+Use HCL2 variables (**Note: `var.fqdn_suffix` will be introduced in PR #2 - Nomad HCL2 Variables**):
 ```hcl
 # Before
 "traefik.http.routers.api.rule=Host(`traefik.lab.local`)"
 
-# After
+# After (available after PR #2)
 "traefik.http.routers.api.rule=Host(`traefik.${var.fqdn_suffix}`)"
 ```
 
@@ -69,12 +69,24 @@ dig @192.168.11.20 ns1.spaceships.work
 ```
 
 ## Next Steps
-1. ✅ PR #1: Foundation - Variables defined
-2. 🔄 PR #2: Nomad HCL2 variables
-3. ⏳ PR #3: NetBox zone migration
-4. ⏳ PR #4: PowerDNS sync updates
-5. ⏳ PR #5: Ansible playbook updates
-6. ⏳ PR #6: Documentation updates
+
+1. ✅ **PR #1: Foundation - Variables defined**
+   - Acceptance: Variables available in all inventories, CI passes
+
+2. 🔄 **PR #2: Nomad HCL2 variables**
+   - Acceptance: All Nomad jobs use `var.*` variables, `nomad validate` passes
+
+3. ⏳ **PR #3: NetBox zone migration**
+   - Acceptance: Zones created for `{{ homelab_domain }}`, NetBox entries verified
+
+4. ⏳ **PR #4: PowerDNS sync updates**
+   - Acceptance: Sync job creates/updates zones without drift
+
+5. ⏳ **PR #5: Ansible playbook updates**
+   - Acceptance: No hardcoded `.local` in active playbooks, idempotent runs
+
+6. ⏳ **PR #6: Documentation updates**
+   - Acceptance: All examples use new domain format, docs reviewed
 
 ## Notes
 - Many references are in archived files which don't need updating
