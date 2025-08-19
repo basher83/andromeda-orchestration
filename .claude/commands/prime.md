@@ -22,4 +22,3 @@ This command loads essential context for a new agent session by examining the co
   - @ROADMAP.md
   - @docs/getting-started/repository-structure.md
   - @docs/project-management/README.md
-- Developer tools: @Taskfile.yml
