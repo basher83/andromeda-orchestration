@@ -1,9 +1,9 @@
 # Domain Migration Master Plan: .local → spaceships.work
 
-**Status**: 🚨 CRITICAL - Active Implementation
+**Status**: 🚧 IN PROGRESS - 50% Complete
 **Epic**: [#18](https://github.com/basher83/andromeda-orchestration/issues/18)
 **Created**: 2025-01-19
-**Target Completion**: 2025-01-20
+**Target Completion**: 2025-01-24
 **Impact**: Blocking macOS developers due to mDNS conflicts
 
 ---
@@ -18,29 +18,31 @@ PR #70 failed because it used Ansible Jinja2 syntax (`{{ homelab_domain }}`) in 
 
 ## Sprint Breakdown
 
-### Sprint 1: Foundation & Critical Path (Day 1)
+### Sprint 1: Foundation & Critical Path (Day 1) ✅ COMPLETE
 **Duration**: 4 hours
-**PRs**: #1, #2
+**PRs**: #71, #72
 
-#### PR #1: Foundation - Variable Setup
+#### PR #71: Foundation - Variable Setup ✅ MERGED
 **Branch**: `feat/homelab-domain-variable`
 **Estimated Time**: 30 minutes
+**Commit**: 5ecac8d
 
 **Tasks**:
-- [ ] Create `inventory/doggos-homelab/group_vars/all/main.yml`
-- [ ] Create `inventory/og-homelab/group_vars/all/main.yml`
-- [ ] Add `homelab_domain: "spaceships.work"` to both files
-- [ ] Test variable resolution: `ansible -m debug -a "var=homelab_domain" all`
+- [x] Create `inventory/doggos-homelab/group_vars/all/main.yml`
+- [x] Create `inventory/og-homelab/group_vars/all/main.yml`
+- [x] Add `homelab_domain: "spaceships.work"` to both files
+- [x] Test variable resolution: `ansible -m debug -a "var=homelab_domain" all`
 
 **Success Criteria**:
 - Variable accessible from all playbooks
 - Default value properly set
 - No breaking changes to existing playbooks
 
-#### PR #2: Nomad Jobs with HCL2 Variables
+#### PR #72: Nomad Jobs with HCL2 Variables ✅ MERGED
 **Branch**: `feat/nomad-hcl2-domain-vars`
 **Estimated Time**: 2 hours
-**Dependencies**: PR #1 merged
+**Commit**: 260486a
+**Dependencies**: PR #71 merged
 
 **Implementation Checklist**:
 
@@ -52,19 +54,19 @@ PR #70 failed because it used Ansible Jinja2 syntax (`{{ homelab_domain }}`) in 
      default = "spaceships.work"
    }
    ```
-   - [ ] Replace all `lab.local` with `${var.homelab_domain}`
-   - [ ] Replace all `*.lab.local` with `*.${var.homelab_domain}`
-   - [ ] Replace all `*.doggos.lab.local` with `*.doggos.${var.homelab_domain}`
-   - [ ] Replace all `traefik.lab.local` with `traefik.${var.homelab_domain}`
+   - [x] Replace all `lab.local` with `${var.homelab_domain}`
+   - [x] Replace all `*.lab.local` with `*.${var.homelab_domain}`
+   - [x] Replace all `*.doggos.lab.local` with `*.doggos.${var.homelab_domain}`
+   - [x] Replace all `traefik.lab.local` with `traefik.${var.homelab_domain}`
 
 2. **Update Example App** (`nomad-jobs/applications/example-app.nomad.hcl`):
-   - [ ] Add variable declaration
-   - [ ] Replace domain references
+   - [x] Add variable declaration
+   - [x] Replace domain references
 
 3. **Update Deployment Playbook** (`playbooks/infrastructure/nomad/deploy-job.yml`):
-   - [ ] Use Nomad API /v1/jobs/parse endpoint to inject variables
-   - [ ] Parse HCL with Variables payload (not NOMAD_VAR_* env vars)
-   - [ ] Default to spaceships.work if not set
+   - [x] Use Nomad API /v1/jobs/parse endpoint to inject variables
+   - [x] Parse HCL with Variables payload (not NOMAD_VAR_* env vars)
+   - [x] Default to spaceships.work if not set
 
 **Testing Commands**:
 ```bash
@@ -86,38 +88,39 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 - Variable defaults allow instant reversion
 - Test in dev environment first
 
-### Sprint 2: NetBox DNS Infrastructure (Day 2)
+### Sprint 2: NetBox DNS Infrastructure (Day 2) ✅ COMPLETE
 **Duration**: 3 hours
-**PR**: #3
+**PR**: #76
 
-#### PR #3: NetBox DNS Zone Migration
+#### PR #76: NetBox DNS Zone Migration ✅ MERGED
 **Branch**: `feat/netbox-dns-zones-migration`
 **Estimated Time**: 3 hours
-**Dependencies**: PR #1 merged
+**Commit**: 9567b22
+**Dependencies**: PR #71 merged
 
 **Pre-Implementation Tasks**:
-- [ ] Backup existing NetBox DNS zones
-- [ ] Document current .local zones
-- [ ] Lower TTLs to 60 seconds
+- [x] Backup existing NetBox DNS zones (archived to playbooks/.archive/)
+- [x] Document current .local zones
+- [x] Lower TTLs to 60 seconds
 
 **Implementation Checklist**:
 
 1. **Zone Setup** (`playbooks/infrastructure/netbox/dns/setup-zones.yml`):
-   - [ ] Update nameserver references to use `{{ homelab_domain }}`
-   - [ ] Create spaceships.work forward zone
-   - [ ] Create doggos.spaceships.work forward zone
-   - [ ] Create og.spaceships.work forward zone
-   - [ ] Create reverse zones for all subnets
+   - [x] Update nameserver references to use `{{ homelab_domain }}`
+   - [x] Create spaceships.work forward zone
+   - [x] Create doggos.spaceships.work forward zone
+   - [x] Create og.spaceships.work forward zone
+   - [x] Create reverse zones for all subnets
 
 2. **Record Population** (`playbooks/infrastructure/netbox/dns/populate-records.yml`):
-   - [ ] Replace all `zone: "homelab.local"` with `zone: "{{ homelab_domain }}"`
-   - [ ] Update all FQDN references
-   - [ ] Ensure PTR records point to new domain
+   - [x] Replace all `zone: "homelab.local"` with `zone: "{{ homelab_domain }}"`
+   - [x] Update all FQDN references
+   - [x] Ensure PTR records point to new domain
 
 3. **Testing Updates** (`playbooks/infrastructure/netbox/dns/test-dns-resolution.yml`):
-   - [ ] Update test queries to new domain
-   - [ ] Add parallel testing for both domains
-   - [ ] Include macOS-specific tests
+   - [x] Update test queries to new domain
+   - [x] Add parallel testing for both domains
+   - [x] Include macOS-specific tests
 
 **Testing Commands**:
 ```bash
@@ -274,15 +277,15 @@ grep -r '\.local' \
 
 ### Per-Sprint Validation
 
-**Sprint 1**:
-- [ ] Variables accessible in all inventories
-- [ ] Nomad jobs deploy with new domain
-- [ ] Traefik routing functional
+**Sprint 1**: ✅ COMPLETE
+- [x] Variables accessible in all inventories
+- [x] Nomad jobs deploy with new domain
+- [x] Traefik routing functional
 
-**Sprint 2**:
-- [ ] NetBox zones created
-- [ ] Records populated
-- [ ] API accessible
+**Sprint 2**: ✅ COMPLETE
+- [x] NetBox zones created
+- [x] Records populated
+- [x] API accessible
 
 **Sprint 3**:
 - [ ] PowerDNS serving zones

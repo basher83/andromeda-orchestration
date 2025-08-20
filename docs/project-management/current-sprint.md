@@ -1,65 +1,69 @@
-# Current Sprint: January 19-20, 2025
+# Current Sprint: August 20-24, 2025
 
-**Sprint Goal**: 🚨 CRITICAL domain migration (.local → spaceships.work) - Sprint 1 & 2
+**Sprint Goal**: 🚨 CRITICAL domain migration (.local → spaceships.work) - Sprints 3-5
 
-**Previous Sprint**: [Archived](./completed/2025-01.md)
+**Previous Sprint**: [Archived](./completed/2025-08.md)
 
 ---
 
 ## Navigation: [Task Summary](./task-summary.md) | [Domain Master Plan](./domain-migration-master-plan.md) | [Phases](./phases/)
 
-## 🎯 Sprint Goals (January 19-20)
+## 🎯 Sprint Goals (August 20-24)
 
-### Today (Jan 19) - Sprint 1: Foundation & Critical Path
-- **PR #1**: Create homelab_domain variable (30 min)
-- **PR #2**: Nomad HCL2 variables implementation (2 hrs)
+### Today (Aug 20) - Sprint 3: PowerDNS Integration
+- **PR #4**: PowerDNS sync and integration (2 hrs)
 - **Status**: Ready to implement
-- **Blocker**: PR #70 needs to be closed (wrong approach)
+- **Blockers**: None (PR #76 merged)
 
-### Tomorrow (Jan 20) - Sprint 2: NetBox DNS Infrastructure
-- **PR #3**: NetBox DNS zone migration (3 hrs)
-- **Status**: Pending PR #1 merge
-- **Target**: Complete by EOD for macOS developer unblocking
+### Tomorrow (Aug 21) - Sprint 4: Ansible Updates
+- **PR #5**: Update all Ansible playbooks (3 hrs)
+- **Status**: Planning
+- **Target**: Fix remaining .local references
+
+### Aug 22-24 - Sprint 5: Documentation & Validation
+- **PR #6**: Documentation and CI/CD (2 hrs)
+- **Status**: Planning
+- **Target**: Complete migration by Aug 24
 
 ## 📋 Active Tasks
 
-### Domain Migration Foundation
-- **Description**: Parameterize domain across infrastructure
-- **Status**: In Progress
+### PowerDNS Integration Updates
+- **Description**: Sync new zones to PowerDNS
+- **Status**: Not Started
 - **Priority**: P0 (Critical)
 - **Blockers**: None
-- **Related**: [Master Plan](./domain-migration-master-plan.md), PR #70 (to close)
+- **Related**: [Master Plan](./domain-migration-master-plan.md), Issue #28
 
-### Nomad HCL2 Variable Implementation
-- **Description**: Fix Nomad jobs to use HCL2 variables (not Jinja2)
+### Ansible Playbook Migration
+- **Description**: Update remaining .local references in playbooks
 - **Status**: Not Started
 - **Priority**: P0 (Critical)
-- **Blockers**: Requires PR #1 merged
+- **Blockers**: None
 - **Related**: Issues #19, #22
 
-### NetBox Zone Migration
-- **Description**: Create spaceships.work zones in NetBox
+### Documentation & CI Prevention
+- **Description**: Update docs and add CI checks for .local
 - **Status**: Not Started
-- **Priority**: P0 (Critical)
-- **Blockers**: Requires homelab_domain variable
-- **Related**: Issues #21, #38
+- **Priority**: P1 (High)
+- **Blockers**: None
+- **Related**: Issue #18
 
-## ✅ Completed Today
+## ✅ Completed (Aug 19-20)
 
-- Consolidated migration documentation into master plan
-- Identified PR #70 technical issues
-- Created 5-sprint implementation roadmap
+- ✅ PR #71: homelab_domain variable setup (merged)
+- ✅ PR #72: Nomad HCL2 variables (merged)
+- ✅ PR #76: NetBox DNS playbook migration (merged)
+- ✅ PR #73-74: Dependency updates (merged)
 
 ## 📊 Sprint Metrics
 
-- **Target PRs**: 3 (PR #1, #2, #3)
-- **Estimated Time**: 5.5 hours
-- **Completion**: 0/3 PRs
-- **Risk Level**: High (blocking macOS developers)
+- **Completed PRs**: 3 (PR #71, #72, #76) ✅
+- **Remaining PRs**: 3 (PR #4, #5, #6)
+- **Progress**: 50% of domain migration complete
+- **Risk Level**: Medium (critical path complete, macOS partially unblocked)
 
 ## 🔗 Quick Links
 
 - [Domain Migration Master Plan](./domain-migration-master-plan.md)
 - [GitHub Epic #18](https://github.com/basher83/andromeda-orchestration/issues/18)
-- [PR #70](https://github.com/basher83/andromeda-orchestration/pull/70) (to close)
 - [Phase 4: DNS Integration](./phases/phase-4-dns-integration.md)

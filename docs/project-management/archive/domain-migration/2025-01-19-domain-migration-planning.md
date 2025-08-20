@@ -1,8 +1,12 @@
-# Domain Migration Sprint Tracking
+# Domain Migration Sprint Tracking (ARCHIVED - Planning Document)
 
-**Sprint Duration**: January 19-24, 2025
+> **NOTE**: This was a planning document created in January 2025 that was never executed.
+> The actual domain migration work was completed in August 2025.
+> See `/docs/project-management/completed/2025-08.md` for the actual implementation details.
+
+**Original Planned Sprint Duration**: January 19-24, 2025
 **Epic**: [#18](https://github.com/basher83/andromeda-orchestration/issues/18)
-**Status**: Active
+**Status**: ARCHIVED - Work completed in August 2025 instead
 
 ## Sprint Schedule
 
