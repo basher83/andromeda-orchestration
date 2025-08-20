@@ -20,6 +20,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Epic: [#18](https://github.com/basher83/andromeda-orchestration/issues/18)
   - Issues: [#19](https://github.com/basher83/andromeda-orchestration/issues/19), [#20](https://github.com/basher83/andromeda-orchestration/issues/20), [#21](https://github.com/basher83/andromeda-orchestration/issues/21), [#22](https://github.com/basher83/andromeda-orchestration/issues/22), [#23](https://github.com/basher83/andromeda-orchestration/issues/23), [#24](https://github.com/basher83/andromeda-orchestration/issues/24)
 
+## [2025-08-19] - Domain Migration Infrastructure
+
+### Added
+
+- **Domain Migration Support**: Implemented configurable domain infrastructure for homelab environments
+  - Added `homelab_domain` variable to group_vars for centralized domain management ([#71](https://github.com/basher83/andromeda-orchestration/pull/71))
+  - Introduced HCL2 variable support in Nomad jobs for domain flexibility ([#72](https://github.com/basher83/andromeda-orchestration/pull/72))
+  - Updated NetBox DNS playbooks to use configurable domain variables ([#76](https://github.com/basher83/andromeda-orchestration/pull/76))
+
+### Changed
+
+- **CRITICAL MIGRATION**: Infrastructure prepared for domain transition from `.local` to `spaceships.work`
+  - All Ansible group variables now use `homelab_domain` variable (default: `spaceships.work`)
+  - Nomad jobs converted to HCL2 format with `variable "homelab_domain"` support
+  - NetBox DNS discovery and zone creation playbooks updated for dynamic domain configuration
+  - PowerDNS configurations made domain-agnostic through variable substitution
+
+### Infrastructure Impact
+
+- **Scope**: Complete infrastructure stack (Ansible, Nomad, NetBox, PowerDNS)
+- **Migration Status**: 50% complete (infrastructure ready, service migration pending)
+- **Backward Compatibility**: Maintained through configurable domain variables
+- **Risk Mitigation**: Gradual rollout enabled via per-environment domain configuration
+
+### Technical Details
+
+- **Variable Implementation**:
+  - Ansible: `{{ homelab_domain }}` in all group_vars (og-homelab, doggos-homelab)
+  - Nomad: HCL2 variables with `var.homelab_domain` references
+  - NetBox: Dynamic zone creation with `{{ homelab_domain }}` templating
+- **Files Modified**:
+  - `inventory/og-homelab/group_vars/all.yml`
+  - `inventory/doggos-homelab/group_vars/all.yml`
+  - `nomad-jobs/platform-services/powerdns.nomad.hcl`
+  - `playbooks/infrastructure/netbox-dns-discover.yml`
+  - `playbooks/infrastructure/netbox-dns-zones.yml`
+- **Milestone Progress**: <https://github.com/basher83/andromeda-orchestration/milestone/2> (50% complete)
+
+### Dependencies Updated
+
+- Python updated to v3.13.7 ([#74](https://github.com/basher83/andromeda-orchestration/pull/74))
+- markdownlint-cli2 updated to v0.18.1 ([#73](https://github.com/basher83/andromeda-orchestration/pull/73))
+
 ## [2025-08-10] - Consul ACL Integration Fix
 
 ### Fixed
