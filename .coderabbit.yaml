@@ -164,6 +164,7 @@ reviews:
     - "!**/package-lock.json"
     - "!**/.terraform.lock.hcl"
     - "!docs/archive/**"
+    - "!playbooks/.archive/**"
     - "!**/*.log"
     - "!**/*.tmp"
     - "!.venv/**"
