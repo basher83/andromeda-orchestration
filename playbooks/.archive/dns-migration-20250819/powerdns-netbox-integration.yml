@@ -9,17 +9,11 @@
     ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
     # Configuration
-    powerdns_ip: "{{ powerdns_ip | default('192.168.11.20', true) }}"  # PowerDNS on nomad-client-1
-    powerdns_api_url: "http://{{ powerdns_ip }}:8081"
+    powerdns_api_url: "http://192.168.11.20:8081"  # PowerDNS on nomad-client-1
     netbox_url: "https://192.168.30.213"
     infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
-    consul_url: "http://{{ powerdns_ip }}:8500"  # Consul on nomad-client-1
-
-    # Domain variables (provided by inventory)
-    homelab_domain: "{{ homelab_domain | default('spaceships.work', true) }}"
-    cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
-    fqdn_suffix: "{{ fqdn_suffix | default(cluster_subdomain ~ '.' ~ homelab_domain if cluster_subdomain else homelab_domain, true) }}"
+    consul_url: "http://192.168.11.20:8500"  # Consul on nomad-client-1
 
   tasks:
     - name: Retrieve PowerDNS API key from Consul KV
@@ -112,7 +106,7 @@
             --no-verify-ssl
 
     - name: Test DNS resolution
-      command: dig @{{ powerdns_ip }} ns1.{{ homelab_domain }} A +short
+      command: dig @192.168.11.20 ns1.homelab.local A +short
       register: dns_test
       changed_when: false
 
@@ -120,7 +114,7 @@
       debug:
         msg:
           - "DNS Resolution Test:"
-          - "Query: ns1.{{ homelab_domain }}"
+          - "Query: ns1.homelab.local"
           - "Result: {{ dns_test.stdout }}"
           - ""
           - "Integration Complete!"
