@@ -1,7 +1,7 @@
 # andromeda-orchestration Task Summary
 
 **Project**: NetBox-focused Ansible automation with DNS/IPAM infrastructure
-**Status**: 🚧 Domain Migration 50% Complete
+**Status**: 🚨 Domain Migration - Critical Gap Found
 **Last Updated**: 2025-01-20
 **GitHub Issues**: [Epic #18](https://github.com/basher83/andromeda-orchestration/issues/18)
 
@@ -29,11 +29,13 @@
 - **GitHub Issues**: 45 open (4 epics, 41 tasks)
 - **Total Tasks**: 51 (local + GitHub tracked)
 - **Completed**: 21 (41%)
-- **In Progress**: 3 (6%)
+- **In Progress**: 4 (8%)
+  - Apply infrastructure configuration (NEW - CRITICAL)
+  - Deploy PostgreSQL backend (NEW - PREREQUISITE)
   - Domain migration (3 remaining PRs)
-  - PowerDNS deployment (paused)
   - NetBox configuration (active)
-- **Blocked**: 0
+- **Blocked**: 1
+  - PowerDNS deployment (blocked by infrastructure update)
 - **Not Started**: 27 (53%)
 
 ### Issue Distribution by Priority
@@ -55,22 +57,28 @@
   - **Target**: January 24, 2025 (extended for thorough testing)
   - [Master Plan](./domain-migration-master-plan.md)
   - **PR Sequence**: 6 incremental PRs over 5 days
-  - **Current Status**: 3/6 PRs merged, critical path complete
+  - **Current Status**: 3/6 PRs merged BUT NOT APPLIED TO INFRASTRUCTURE
+  - **🚨 Critical Gap**: Repository updated, infrastructure still on old config
 
 ### 🚧 In Progress
 
+- **Infrastructure Configuration** (NEW - CRITICAL)
+  - Apply PRs #71, #72, #76 changes to running infrastructure
+  - Deploy PostgreSQL backend for PowerDNS
+  - Status: MUST DO IMMEDIATELY
+
 - **Domain Migration PRs** (6 total)
-  - PR #71: homelab_domain variable ✅ MERGED
-  - PR #72: Nomad HCL2 variables ✅ MERGED
-  - PR #76: NetBox DNS zones ✅ MERGED
-  - PR #4: PowerDNS sync (Day 3) - IN PROGRESS
+  - PR #71: homelab_domain variable ✅ MERGED (not applied)
+  - PR #72: Nomad HCL2 variables ✅ MERGED (not applied)
+  - PR #76: NetBox DNS zones ✅ MERGED (not applied)
+  - PR #4: PowerDNS sync (Day 3) - BLOCKED
   - PR #5: Ansible playbooks (Day 4) - PLANNED
   - PR #6: Documentation & CI (Day 5) - PLANNED
 
-- **PowerDNS Deployment** (Paused for migration)
-  - Will resume after domain migration
-  - PostgreSQL backend ready
-  - Waiting on new domain configuration
+- **PowerDNS Deployment** (BLOCKED)
+  - Cannot proceed until infrastructure updated
+  - PostgreSQL backend NOT deployed yet
+  - Requires new domain configuration applied first
 
 ## ✅ Major Achievements
 
@@ -121,8 +129,8 @@
 ### Week of January 19-24 (Current)
 
 1. **Day 1 (Aug 19)**: Foundation PRs #71-72 ✅ COMPLETE
-2. **Day 2 (Aug 20)**: NetBox DNS zones PR #76 ✅ COMPLETE
-3. **Day 3 (Aug 21)**: PowerDNS integration PR #4 - NEXT
+2. **Day 2 (Aug 20)**: NetBox DNS zones PR #76 ✅ COMPLETE (not applied)
+3. **Day 3 (Aug 20-21)**: Infrastructure update + PowerDNS - CRITICAL GAP
 4. **Day 4 (Aug 22)**: Ansible updates PR #5
 5. **Day 5 (Aug 23)**: Documentation & CI PR #6
 6. **Day 6 (Aug 24)**: Final validation & cutover

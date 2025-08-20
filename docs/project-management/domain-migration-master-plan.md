@@ -19,26 +19,31 @@ PR #70 failed because it used Ansible Jinja2 syntax (`{{ homelab_domain }}`) in 
 ## Sprint Breakdown
 
 ### Sprint 1: Foundation & Critical Path (Day 1) ✅ COMPLETE
+
 **Duration**: 4 hours
 **PRs**: #71, #72
 
 #### PR #71: Foundation - Variable Setup ✅ MERGED
+
 **Branch**: `feat/homelab-domain-variable`
 **Estimated Time**: 30 minutes
 **Commit**: 5ecac8d
 
 **Tasks**:
+
 - [x] Create `inventory/doggos-homelab/group_vars/all/main.yml`
 - [x] Create `inventory/og-homelab/group_vars/all/main.yml`
 - [x] Add `homelab_domain: "spaceships.work"` to both files
 - [x] Test variable resolution: `ansible -m debug -a "var=homelab_domain" all`
 
 **Success Criteria**:
+
 - Variable accessible from all playbooks
 - Default value properly set
 - No breaking changes to existing playbooks
 
 #### PR #72: Nomad Jobs with HCL2 Variables ✅ MERGED
+
 **Branch**: `feat/nomad-hcl2-domain-vars`
 **Estimated Time**: 2 hours
 **Commit**: 260486a
@@ -47,6 +52,7 @@ PR #70 failed because it used Ansible Jinja2 syntax (`{{ homelab_domain }}`) in 
 **Implementation Checklist**:
 
 1. **Update Traefik Job** (`nomad-jobs/core-infrastructure/traefik.nomad.hcl`):
+
    ```hcl
    # Add at top
    variable "homelab_domain" {
@@ -54,6 +60,7 @@ PR #70 failed because it used Ansible Jinja2 syntax (`{{ homelab_domain }}`) in 
      default = "spaceships.work"
    }
    ```
+
    - [x] Replace all `lab.local` with `${var.homelab_domain}`
    - [x] Replace all `*.lab.local` with `*.${var.homelab_domain}`
    - [x] Replace all `*.doggos.lab.local` with `*.doggos.${var.homelab_domain}`
@@ -69,6 +76,7 @@ PR #70 failed because it used Ansible Jinja2 syntax (`{{ homelab_domain }}`) in 
    - [x] Default to spaceships.work if not set
 
 **Testing Commands**:
+
 ```bash
 # Validate HCL syntax
 nomad job validate nomad-jobs/core-infrastructure/traefik.nomad.hcl
@@ -84,21 +92,25 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 **Important**: The `community.general.nomad_job` module doesn't support NOMAD_VAR_* environment variables. The playbook uses Nomad's /v1/jobs/parse API endpoint instead.
 
 **Rollback Plan**:
+
 - Keep backup of original HCL files
 - Variable defaults allow instant reversion
 - Test in dev environment first
 
 ### Sprint 2: NetBox DNS Infrastructure (Day 2) ✅ COMPLETE
+
 **Duration**: 3 hours
 **PR**: #76
 
 #### PR #76: NetBox DNS Zone Migration ✅ MERGED
+
 **Branch**: `feat/netbox-dns-zones-migration`
 **Estimated Time**: 3 hours
 **Commit**: 9567b22
 **Dependencies**: PR #71 merged
 
 **Pre-Implementation Tasks**:
+
 - [x] Backup existing NetBox DNS zones (archived to playbooks/.archive/)
 - [x] Document current .local zones
 - [x] Lower TTLs to 60 seconds
@@ -123,6 +135,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
    - [x] Include macOS-specific tests
 
 **Testing Commands**:
+
 ```bash
 # Create new zones
 uv run ansible-playbook playbooks/infrastructure/netbox/dns/setup-zones.yml
@@ -137,16 +150,19 @@ nslookup traefik.spaceships.work 192.168.10.11
 ```
 
 **Success Criteria**:
+
 - All zones created in NetBox
 - Records properly populated
 - Both old and new zones active (parallel running)
 - No service disruptions
 
 ### Sprint 3: PowerDNS Integration (Day 3)
+
 **Duration**: 2 hours
 **PR**: #4
 
 #### PR #4: PowerDNS Integration Updates
+
 **Branch**: `feat/powerdns-domain-updates`
 **Estimated Time**: 2 hours
 **Dependencies**: PR #3 merged
@@ -164,6 +180,7 @@ nslookup traefik.spaceships.work 192.168.10.11
    - [ ] Set up NOTIFY for zone changes
 
 **Testing Commands**:
+
 ```bash
 # Sync zones to PowerDNS
 uv run ansible-playbook playbooks/infrastructure/netbox/dns/sync-to-powerdns.yml
@@ -180,16 +197,19 @@ dscacheutil -q host -a name traefik.spaceships.work
 ```
 
 **Success Criteria**:
+
 - PowerDNS serving new zones
 - Zone transfers working
 - API sync operational
 - Both domains resolving
 
 ### Sprint 4: Ansible & Service Updates (Day 4)
+
 **Duration**: 3 hours
 **PR**: #5
 
 #### PR #5: Ansible Playbook Updates
+
 **Branch**: `feat/ansible-playbook-domains`
 **Estimated Time**: 3 hours
 **Dependencies**: PRs #1-4 merged
@@ -208,6 +228,7 @@ dscacheutil -q host -a name traefik.spaceships.work
    - [ ] Fix health check URLs
 
 **File List** (from grep analysis):
+
 ```bash
 # Files with .local references
 playbooks/infrastructure/powerdns/README.md
@@ -217,6 +238,7 @@ inventory/*/host_vars/*.yml
 ```
 
 **Testing Commands**:
+
 ```bash
 # Find remaining .local references
 rg '\.local' --type yaml --type j2
@@ -229,10 +251,12 @@ uv run ansible-playbook playbooks/infrastructure/site.yml --check
 ```
 
 ### Sprint 5: Documentation & Prevention (Day 5)
+
 **Duration**: 2 hours
 **PR**: #6
 
 #### PR #6: Documentation and CI/CD
+
 **Branch**: `feat/docs-and-linting`
 **Estimated Time**: 2 hours
 **Dependencies**: All previous PRs merged
@@ -252,6 +276,7 @@ uv run ansible-playbook playbooks/infrastructure/site.yml --check
    - [ ] Test on PR
 
 **Testing**:
+
 ```bash
 # Test linting locally
 grep -r '\.local' \
@@ -278,26 +303,31 @@ grep -r '\.local' \
 ### Per-Sprint Validation
 
 **Sprint 1**: ✅ COMPLETE
+
 - [x] Variables accessible in all inventories
 - [x] Nomad jobs deploy with new domain
 - [x] Traefik routing functional
 
 **Sprint 2**: ✅ COMPLETE
+
 - [x] NetBox zones created
 - [x] Records populated
 - [x] API accessible
 
 **Sprint 3**:
+
 - [ ] PowerDNS serving zones
 - [ ] Zone transfers working
 - [ ] Sync operational
 
 **Sprint 4**:
+
 - [ ] All playbooks updated
 - [ ] Services accessible
 - [ ] Consul unchanged
 
 **Sprint 5**:
+
 - [ ] Documentation complete
 - [ ] CI/CD preventing regression
 - [ ] Migration guide published
@@ -314,11 +344,13 @@ grep -r '\.local' \
 ## Rollback Procedures
 
 ### Quick Rollback (< 5 minutes)
+
 1. Change `homelab_domain` variable back to "lab.local"
 2. Redeploy affected Nomad jobs
 3. Services immediately revert
 
 ### Full Rollback (< 30 minutes)
+
 1. Restore NetBox zones from backup
 2. Sync original zones to PowerDNS
 3. Revert all PR changes
@@ -329,21 +361,25 @@ grep -r '\.local' \
 ### Stakeholder Notifications
 
 **T-24 hours**:
+
 - Announce maintenance window
 - Share testing instructions
 - Provide cache clearing commands
 
 **T-1 hour**:
+
 - Final reminder
 - Share status page link
 - Confirm rollback plan
 
 **During Migration**:
+
 - Update status every 30 minutes
 - Report any issues immediately
 - Provide workarounds if needed
 
 **Post-Migration**:
+
 - Confirm completion
 - Share new domain information
 - Request testing feedback
@@ -351,6 +387,7 @@ grep -r '\.local' \
 ## Commands Reference
 
 ### DNS Testing
+
 ```bash
 # Test from macOS
 dscacheutil -q host -a name service.spaceships.work
@@ -367,6 +404,7 @@ host service.spaceships.work 192.168.10.11
 ```
 
 ### Monitoring
+
 ```bash
 # Watch DNS queries
 tcpdump -i any -n port 53
@@ -379,6 +417,7 @@ nomad job status
 ```
 
 ### Verification
+
 ```bash
 # Find .local references
 rg '\.local' --type-not md
