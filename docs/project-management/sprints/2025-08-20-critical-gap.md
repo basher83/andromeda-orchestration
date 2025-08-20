@@ -25,8 +25,8 @@ A critical gap has been discovered in the domain migration process. While PRs #7
 - ❌ Nomad: Running with old configuration
 - ❌ Traefik: Using old domain in routes
 - ❌ All services: Registered with old domain names
-- ❌ PostgreSQL: Not deployed (PowerDNS dependency)
-- ❌ PowerDNS: Cannot be deployed until above is fixed
+- ✅ PostgreSQL: Running and accessible (port 30837)
+- ⚠️ PowerDNS: Deployed but not operational (port conflicts)
 
 ## Impact Analysis
 
@@ -98,8 +98,9 @@ The deployment process was not clearly defined in the original plan. The assumpt
 - **09:00**: Action plan updated with corrective steps
 - **09:30**: Begin infrastructure configuration application
 - **11:00**: Target: Infrastructure updated with new configuration
-- **12:00**: Target: PostgreSQL deployed
-- **14:00**: Target: PowerDNS deployed and operational
+- **12:00**: ✅ PostgreSQL deployed and operational
+- **14:00**: ⚠️ PowerDNS deployed but facing issues
+- **22:00**: Current status - troubleshooting deployment issues
 
 ## Verification Checklist
 
@@ -107,9 +108,34 @@ The deployment process was not clearly defined in the original plan. The assumpt
 - [ ] Consul services show spaceships.work domain
 - [ ] Nomad jobs have homelab_domain variable set
 - [ ] Traefik routes use new domain
-- [ ] PostgreSQL is running and accessible
-- [ ] PowerDNS can connect to PostgreSQL
+- [x] PostgreSQL is running and accessible
+- [x] PowerDNS can connect to PostgreSQL
 - [ ] DNS queries resolve for spaceships.work
+
+## Current Issues & Blockers
+
+### Completed Progress
+
+1. ✅ **PostgreSQL**: Successfully running on nomad-client-1:30837
+2. ✅ **Database Setup**: pdns user created with Infisical password
+3. ✅ **Consul KV**: PowerDNS configuration stored
+4. ✅ **Infisical Secrets**: All credentials securely stored
+5. ✅ **PowerDNS Job**: Successfully deployed to Nomad
+
+### Active Issues
+
+1. **Port 53 Conflict**: systemd-resolved and dnsmasq using port 53 on target nodes
+2. **HCL2 Variable Passing**: Nomad parse API not correctly passing passwords through playbook
+3. **Vault Dev Mode**: Still in dev mode, credentials lost on restart
+4. **Group Vars Not Applied**: Infrastructure still needs domain variable updates
+5. **Playbook Bug Fixed**: namespace variable conflict resolved in deploy-job.yml
+
+### Technical Details
+
+- PostgreSQL: Running with temporary bootstrap password
+- PowerDNS: Job deployed but container failing to bind to port 53
+- Secrets: Stored in Infisical at `/apollo-13/services/postgresql` and `/apollo-13/services/powerdns`
+- Consul KV: Database connection details at `pdns/db/*`
 
 ## Communication
 
@@ -120,6 +146,30 @@ This critical gap has been communicated through:
 - Task summary updated with blocked status
 - This dedicated alert document
 
+## Next Steps
+
+### Immediate Actions Required
+
+1. **Resolve Port 53 Conflict**
+   - Option A: Stop systemd-resolved and dnsmasq on target nodes
+   - Option B: Configure PowerDNS to use alternative port
+   - Option C: Use different nodes without DNS services
+
+2. **Fix HCL2 Variable Passing**
+   - Debug why parse API returns 400 Bad Request
+   - Consider alternative: hardcode non-sensitive config, use Vault for secrets only
+
+3. **Apply Domain Variables to Infrastructure**
+   - Still pending - original Step 0 not yet executed
+   - Required before services can use new domain
+
+### Resolution Path
+
+1. First: Resolve port conflict to get PowerDNS running
+2. Then: Apply domain variables to infrastructure
+3. Finally: Sync NetBox zones and test resolution
+
 ---
 
-**Next Review**: After Step 0 completion (infrastructure update)
+**Next Review**: After port conflict resolution
+**Last Updated**: August 20, 2025 22:00 UTC

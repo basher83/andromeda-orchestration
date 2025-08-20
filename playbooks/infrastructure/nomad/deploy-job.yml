@@ -9,7 +9,7 @@
     job_path: "{{ job | mandatory }}"
     force_start: "{{ force | default(false) }}"
     wait_for_healthy: "{{ wait | default(true) }}"
-    namespace: "{{ namespace | default('default') }}"
+    nomad_namespace: "default"  # namespace is a reserved word in Jinja2
     # Domain variables will be provided by inventory or can be overridden
     homelab_domain: "{{ homelab_domain | default('spaceships.work', true) }}"
     cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
@@ -43,7 +43,7 @@
 
     - name: Parse HCL job with variables
       ansible.builtin.uri:
-        url: "{{ nomad_api_endpoint }}/v1/jobs/parse?namespace={{ namespace }}"
+        url: "{{ nomad_api_endpoint }}/v1/jobs/parse?namespace={{ nomad_namespace }}"
         method: POST
         body_format: json
         body:
@@ -52,6 +52,8 @@
             homelab_domain: "{{ homelab_domain }}"
             cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
             fqdn_suffix: "{{ fqdn_suffix | default('', true) }}"
+            pdns_db_password: "{{ pdns_db_password | default('', true) }}"
+            pdns_api_key: "{{ pdns_api_key | default('', true) }}"
           Canonicalize: true
         headers:
           Content-Type: "application/json"
@@ -73,7 +75,7 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ namespace }}"
+        namespace: "{{ nomad_namespace }}"
         content: "{{ parsed_job.json | to_json }}"
         content_format: json
         state: present
@@ -90,7 +92,7 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ namespace }}"
+        namespace: "{{ nomad_namespace }}"
         content: "{{ job_spec.content | b64decode }}"
         content_format: hcl
         state: present
@@ -112,7 +114,7 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ namespace }}"
+        namespace: "{{ nomad_namespace }}"
         name: "{{ job_name }}"
       register: job_info
 
@@ -121,7 +123,7 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ namespace }}"
+        namespace: "{{ nomad_namespace }}"
         name: "{{ job_name }}"
       register: job_status
       until: job_status.jobs[0].Status == "running" and job_status.jobs[0].JobSummary.Summary | json_query('*.Running') | sum > 0
