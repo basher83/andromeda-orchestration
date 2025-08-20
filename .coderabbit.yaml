@@ -88,17 +88,7 @@ reviews:
     semgrep:
       enabled: true
       config_file: ".semgrep/infrastructure-rules.yml"
-      options:
-        - "--severity=ERROR"
-        - "--severity=WARNING"
-        - "--exclude=docs/archive/**"
-        - "--exclude=**/*.log"
-        - "--exclude=**/*.tmp"
-        - "--exclude=.venv/**"
-        - "--exclude=venv/**"
-        - "--exclude=__pycache__/**"
-        - "--exclude=**/*.lock"
-        - "--exclude=uv.lock"
+      # Note: Exclusions are handled via path_filters section above
 
     # Infrastructure as code security scanning
     checkov:
@@ -164,6 +154,7 @@ reviews:
     - "!**/package-lock.json"
     - "!**/.terraform.lock.hcl"
     - "!docs/archive/**"
+    - "!playbooks/.archive/**"
     - "!**/*.log"
     - "!**/*.tmp"
     - "!.venv/**"
