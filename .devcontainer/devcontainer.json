@@ -16,7 +16,8 @@
                 "GitHub.copilot",
                 "GitHub.copilot-chat",
                 "HashiCorp.HCL",
-                "samuelcolvin.jinjahtml"
+                "samuelcolvin.jinjahtml",
+                "SanjulaGanepola.github-local-actions"
             ]
         }
     },
