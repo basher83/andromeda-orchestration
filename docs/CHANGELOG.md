@@ -4,6 +4,55 @@ All notable changes to the documentation in `docs/` will be documented in this f
 
 > How to use this file: Review latest entries at the top to understand recent documentation changes. When updating docs, add a concise entry under today's date with Added/Changed/Removed subsections.
 
+## 2025-08-21
+
+### Added
+
+- New `docs/implementation/nomad/consul-health-checks.md` - Comprehensive guide for Consul service registration and health checks in Nomad jobs
+  - Identity blocks for ACL integration
+  - Health check patterns (HTTP, TCP, Script, gRPC)
+  - Timing best practices and port specification guidelines
+  - Complete examples for web apps, databases, and multi-protocol services
+  - Common pitfalls and troubleshooting
+- Populated `docs/operations/README.md` with comprehensive index:
+  - Directory structure with all operational guides
+  - Quick start sections for incident response and routine operations
+  - Operational checklists (daily, weekly, monthly)
+  - Common tasks with example commands
+  - Service status matrix
+  - Emergency procedures and maintenance windows
+
+### Changed
+
+- Updated `docs/implementation/nomad/README.md` to integrate consul-health-checks.md:
+  - Added to "How these docs are organized" section
+  - Created new "Service Registration & Health Checks" documentation section
+  - Enhanced Consul integration references throughout
+  - Updated implementation status to reflect completed health check documentation
+- Improved formatting of `docs/implementation/nomad/consul-health-checks.md`:
+  - Added hierarchical section structure with clear headings
+  - Created timing table for visual reference
+  - Added visual indicators (✅ ❌ ⚠️) for best practices
+  - Included Quick Reference table and Common Pitfalls section
+- Updated `docs/README.md`:
+  - Changed Nomad Configuration reference to properly link to nomad/ directory
+  - Added Nomad Configuration to Documentation Coverage table
+
+### Fixed
+
+- Corrected incorrect `ai-docs/` directory reference in `docs/README.md` to `resources/ai-assistants/`
+- Fixed empty `docs/operations/README.md` by adding comprehensive index and operational guidance
+- Updated `docs/standards/ansible-standards.md` to include all collections from requirements.yml:
+  - Added missing collections (Proxmox, PostgreSQL, Vault, Infisical)
+  - Created Collection Management section with installation instructions
+  - Added version pinning strategy guidance
+  - Expanded module documentation to cover all infrastructure tools
+- Refactored `docs/standards/nomad-job-standards.md` to eliminate duplication:
+  - Replaced duplicated content with references to implementation/nomad/ docs
+  - Added links to all 8 Nomad implementation guides
+  - Maintained standards focus while pointing to detailed implementation docs
+  - Improved cross-referencing between standards and implementation
+
 ## 2025-08-18
 
 ### Added

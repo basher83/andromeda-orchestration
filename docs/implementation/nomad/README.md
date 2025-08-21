@@ -18,8 +18,20 @@ export NOMAD_ADDR=http://nomad.service.consul:4646
 - [Port Allocation](port-allocation.md): dynamic vs. static, patterns, validation
 - [Dynamic Volumes](dynamic-volumes.md): plugin, systemd unit, installer, checks
 - [HCL2 Variables](hcl2-variables.md): passing variables to Nomad jobs via Ansible
+- [Consul Health Checks](consul-health-checks.md): service registration patterns and health check configuration
 
 ## 📚 Documentation
+
+### Service Registration & Health Checks
+
+- **[consul-health-checks.md](consul-health-checks.md)** - Critical guide for Nomad-Consul integration
+
+  - Identity blocks for ACL integration (required for all services)
+  - Health check patterns (HTTP, TCP, Script, gRPC)
+  - Timing best practices for different service types
+  - Port specification guidelines
+  - Complete examples for web apps, databases, and multi-protocol services
+  - Common pitfalls and how to avoid them
 
 ### Storage Configuration
 
@@ -93,6 +105,7 @@ nomad job status <job-name>
 - CSI plugin guidance
 - **Consul ACL integration** (Aug 10, 2025) - KV access for job templating
 - Enhanced Nomad role with automated ACL policy management
+- **Consul health check patterns** - Comprehensive guide for service registration
 
 ### 🚧 In Progress
 
@@ -131,6 +144,8 @@ graph TD
 ### Integration Points
 
 - **Consul**: Service registration, health checks, and KV templating
+  - See [consul-health-checks.md](consul-health-checks.md) for comprehensive health check patterns
+  - Identity blocks required for ACL integration
 - **Vault**: Dynamic secrets and workload identity
 - **Traefik**: Load balancing and routing
 
@@ -149,7 +164,10 @@ template {
 }
 ```
 
-**Requirements**: Nomad agents must have proper Consul ACL permissions (`key_prefix` read access) - automatically configured by the enhanced Nomad role.
+**Requirements**:
+
+- Nomad agents must have proper Consul ACL permissions (`key_prefix` read access) - automatically configured by the enhanced Nomad role
+- Services must include identity blocks for ACL integration (see [consul-health-checks.md](consul-health-checks.md))
 
 ## 📁 Job Organization
 

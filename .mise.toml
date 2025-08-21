@@ -19,6 +19,7 @@ fd = "10.2.0"
 github-markdown-toc = "0.10.0"
 jq = "1.8.1"
 markdownlint-cli2 = "0.18.1"
+node = "24.6.0"
 nomad = "1.10.4"
 pre-commit = "4.3.0"
 python = "3.13.7"
@@ -50,7 +51,7 @@ run = '''
 if command -v act >/dev/null 2>&1; then
   ACT_PATH=$(which act)
   SYMLINK_PATH="/usr/local/bin/act"
-  
+
   # Check if symlink already exists and points to correct location
   if [ -L "$SYMLINK_PATH" ] && [ "$(readlink -f $SYMLINK_PATH)" = "$(readlink -f $ACT_PATH)" ]; then
     echo "✅ Act symlink already configured correctly"
@@ -59,7 +60,7 @@ if command -v act >/dev/null 2>&1; then
     sudo ln -sf "$ACT_PATH" "$SYMLINK_PATH"
     echo "✅ Act symlinked to $SYMLINK_PATH"
   fi
-  
+
   # Verify it works
   if $SYMLINK_PATH --version >/dev/null 2>&1; then
     echo "✅ Act is accessible system-wide (version: $($SYMLINK_PATH --version))"
@@ -340,7 +341,7 @@ description = "Run all Nomad CI checks (format, validate)"
 run = '''
 echo "🔧 Running Nomad CI checks..."
 mise run fmt:nomad
-mise run lint:nomad  
+mise run lint:nomad
 mise run validate:nomad
 echo "✅ All Nomad CI checks passed!"
 '''
@@ -1208,6 +1209,19 @@ fi
 tools = { "vault" = "1.20.2" }
 
 # ============================================================================
+# CLAUDE CODE
+# ============================================================================
+[tasks."install:claude-code"]
+description = "Install Claude Code via npm"
+run = '''
+echo "📦 Installing Claude Code via npm..."
+npm install -g @anthropic-ai/claude-code
+claude --version
+echo "✅ Claude Code installed successfully"
+'''
+tools = { "nodejs" = "latest" }
+
+# ============================================================================
 # HOOKS
 # ============================================================================
 [hooks]
@@ -1216,7 +1230,7 @@ leave = "echo 'Goodbye!'"
 
 [env]
 _.file = ".env.json"
-NOMAD_ADDR = "http://100.108.219.48:4646"
 NOMAD_REGION = "global"
-VAULT_ADDR = "http://100.108.219.48:8200"
+NOMAD_ADDR = "http://100.108.219.48:4646"
 CONSUL_HTTP_ADDR = "http://100.108.219.48:8500"
+VAULT_ADDR = "http://100.108.219.48:8200"

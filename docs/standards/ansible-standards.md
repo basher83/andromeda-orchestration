@@ -191,6 +191,47 @@ database_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256...
 ```
 
+### Collection Management
+
+#### Required Collections (requirements.yml)
+
+```yaml
+collections:
+  - name: community.general      # >=8.0.0  - Core community modules
+  - name: community.proxmox      # >=1.0.0  - Proxmox management
+  - name: netbox.netbox          # >=3.13.0 - NetBox integration
+  - name: infisical.vault        # >=1.1.0  - Secrets management
+  - name: community.postgresql   # >=4.1.0  - Database operations
+  - name: ansible.posix          # >=1.5.0  - POSIX operations
+  - name: ansible.utils          # >=2.10.0 - Data utilities
+  - name: community.hashi_vault  # ==7.0.0  - HashiCorp Vault
+```
+
+#### Installation
+
+```bash
+# Install all required collections
+ansible-galaxy collection install -r requirements.yml
+
+# Or with uv (recommended)
+uv run ansible-galaxy collection install -r requirements.yml
+
+# Force reinstall/upgrade
+ansible-galaxy collection install -r requirements.yml --force
+
+# Install to specific location
+ansible-galaxy collection install -r requirements.yml -p ./collections
+```
+
+#### Version Pinning Strategy
+
+- **Exact versions** (`==7.0.0`) - For critical dependencies with breaking changes
+- **Minimum versions** (`>=8.0.0`) - For stable, backward-compatible collections
+- **Range constraints** (`>=4.1.0,<4.2.0`) - For known compatibility windows
+- **Latest compatible** (`>=1.0.0`) - For actively maintained collections
+
+Always test collection updates in development before production deployment.
+
 ### Module Usage
 
 #### Module Security Priority (highest to lowest trust)
@@ -207,9 +248,23 @@ database_password: !vault |
 - **Files**: `ansible.builtin.copy`, `template`, `file` (not `raw`)
 - **Services**: `ansible.builtin.service`, `systemd` (not `shell`)
 - **Network**: `ansible.builtin.uri` with validation
-- **Nomad**: `community.general.nomad_job`
-- **NetBox**: `netbox.netbox.*`
-- **Consul**: `community.general.consul*`
+- **Package Management**: `ansible.builtin.package`, `apt`, `yum` (not `shell`)
+- **User Management**: `ansible.builtin.user`, `group` (not manual commands)
+
+#### Infrastructure-Specific Modules
+
+- **Proxmox**: `community.proxmox.*` - VM/container management
+- **Nomad**: `community.general.nomad_job`, custom modules in `plugins/modules/nomad_*`
+- **NetBox**: `netbox.netbox.*` - IPAM and DCIM operations
+- **Consul**: `community.general.consul*`, custom modules in `plugins/modules/consul_*`
+- **Vault**: `community.hashi_vault.vault_*` - Secret management
+- **PostgreSQL**: `community.postgresql.*` - Database operations
+- **Infisical**: `infisical.vault.*` - Alternative secrets management
+
+#### Utility Collections
+
+- **POSIX Operations**: `ansible.posix.*` - ACLs, mounts, sysctls
+- **Data Manipulation**: `ansible.utils.*` - Filters and lookups for data transformation
 
 #### Modules to Avoid
 

@@ -31,7 +31,7 @@ Detailed implementation guides organized by component:
 - **[powerdns/](implementation/powerdns/)** - PowerDNS deployment architecture and decisions
 - **[consul/](implementation/consul/)** - Consul configuration and integration
 - **[infisical/](implementation/infisical/)** - Infisical secrets management
-- **Nomad Configuration** - Storage, patterns, and port allocation guides
+- **[nomad/](implementation/nomad/)** - Nomad configuration including health checks, storage, and port allocation
 - **[netbox-integration.md](implementation/netbox-integration.md)** - NetBox automation patterns
 
 ### 📋 [project-management/](project-management/)
@@ -60,7 +60,7 @@ Visual representations of architecture and workflows:
 - Secrets management patterns
 - Network topology diagrams
 
-### 🤖 [ai-docs/](ai-docs/)
+### 🤖 [resources/ai-assistants/](resources/ai-assistants/)
 
 AI assistant integration documentation:
 
@@ -168,6 +168,7 @@ When adding or updating documentation:
 | Getting Started         | ✅ Complete | `getting-started/`                     |
 | DNS/IPAM Implementation | ✅ Complete | `implementation/dns-ipam/`             |
 | Consul Integration      | ✅ Complete | `implementation/consul/`               |
+| Nomad Configuration     | ✅ Complete | `implementation/nomad/`                |
 | Secrets Management      | ✅ Complete | `implementation/infisical/`            |
 | NetBox Patterns         | ✅ Complete | `implementation/netbox-integration.md` |
 | Operational Guides      | 🚧 Growing  | `operations/`                          |
