@@ -13,7 +13,6 @@ uv_venv_auto = true
 act = "0.2.80"
 ansible-core = "2.19.0"
 consul = "1.21.4"
-direnv = "2.37.1"
 eza = "0.23.0"
 fd = "10.2.0"
 github-markdown-toc = "0.10.0"

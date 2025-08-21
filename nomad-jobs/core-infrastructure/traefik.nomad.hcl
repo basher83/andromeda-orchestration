@@ -27,6 +27,13 @@ job "traefik" {
       }
     }
 
+    # Volume for certificate storage - MOVED TO GROUP LEVEL
+    volume "traefik-certs" {
+      type      = "host"
+      read_only = false
+      source    = "traefik-certs"
+    }
+
     task "traefik" {
       driver = "docker"
 
@@ -130,6 +137,7 @@ EOF
         memory = 256
       }
 
+      # Main admin/API service
       service {
         name = "traefik"
         port = "admin"
@@ -150,13 +158,25 @@ EOF
         ]
 
         check {
+          name     = "traefik-api-ping"
           type     = "http"
           path     = "/ping"
+          port     = "admin"
           interval = "10s"
           timeout  = "2s"
         }
+
+        check {
+          name     = "traefik-dashboard"
+          type     = "http"
+          path     = "/dashboard/"
+          port     = "admin"
+          interval = "30s"
+          timeout  = "5s"
+        }
       }
 
+      # HTTP entrypoint service
       service {
         name = "traefik-http"
         port = "http"
@@ -165,8 +185,19 @@ EOF
           aud = ["consul.io"]
           ttl = "1h"
         }
+
+        tags = ["entrypoint", "http"]
+
+        check {
+          name     = "http-entrypoint"
+          type     = "tcp"
+          port     = "http"
+          interval = "10s"
+          timeout  = "2s"
+        }
       }
 
+      # HTTPS entrypoint service
       service {
         name = "traefik-https"
         port = "https"
@@ -175,8 +206,19 @@ EOF
           aud = ["consul.io"]
           ttl = "1h"
         }
+
+        tags = ["entrypoint", "https", "tls"]
+
+        check {
+          name     = "https-entrypoint"
+          type     = "tcp"
+          port     = "https"
+          interval = "10s"
+          timeout  = "2s"
+        }
       }
 
+      # Dedicated metrics service for Prometheus
       service {
         name = "traefik-metrics"
         port = "admin"
@@ -193,19 +235,14 @@ EOF
         ]
 
         check {
+          name     = "prometheus-metrics"
           type     = "http"
           path     = "/metrics"
+          port     = "admin"
           interval = "30s"
           timeout  = "5s"
         }
       }
-    }
-
-    # Volume for certificate storage
-    volume "traefik-certs" {
-      type      = "host"
-      read_only = false
-      source    = "traefik-certs"
-    }
-  }
-}
+    } # CLOSE TASK BLOCK
+  }   # CLOSE GROUP BLOCK
+}     # CLOSE JOB BLOCK

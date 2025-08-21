@@ -184,12 +184,23 @@ dig @<node-ip> example.lab
 ### Health Checks
 
 ```hcl
+# DNS service check
 check {
-  name     = "api"
-  type     = "http"
-  path     = "/api/v1/servers/localhost"
+  name     = "dns-tcp"
+  type     = "tcp"
   interval = "10s"
   timeout  = "2s"
+  port     = "dns"
+}
+
+# API service check
+check {
+  name     = "api-health"
+  type     = "http"
+  path     = "/api/v1/servers/localhost"
+  interval = "15s"
+  timeout  = "3s"
+  port     = "api"
 }
 ```
 

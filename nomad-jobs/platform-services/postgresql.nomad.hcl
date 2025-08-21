@@ -111,10 +111,11 @@ job "postgresql" {
         }
 
         check {
-          name     = "tcp"
+          name     = "postgres-tcp" # Add descriptive name
           type     = "tcp"
           interval = "10s"
           timeout  = "2s"
+          port     = "db" # Add explicit port reference
         }
       }
 
