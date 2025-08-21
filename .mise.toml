@@ -387,7 +387,7 @@ else
   echo "✅ All Consul configs validated successfully"
 fi
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 # Cluster Status & Monitoring
 [tasks."status:consul"]
@@ -405,7 +405,7 @@ echo "💾 Consul Info:"
 echo "==============="
 consul info
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 [tasks."health:consul"]
 description = "Check Consul cluster health"
@@ -423,7 +423,7 @@ consul catalog services | while read service; do
   echo "  Status: $healthy/$total healthy"
 done
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 [tasks."nodes:consul"]
 description = "List Consul nodes and their status"
@@ -440,7 +440,7 @@ consul catalog nodes | tail -n +2 | while read node address; do
   echo ""
 done
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 # Service Discovery
 [tasks."services:consul"]
@@ -458,7 +458,7 @@ consul catalog services | while read service; do
   echo ""
 done
 '''
-tools = { "consul" = "latest", "jq" = "latest" }
+tools = { "consul" = "1.21.4", "jq" = "latest" }
 
 [tasks."service:consul"]
 description = "Get details for specific service (usage: mise run service:consul -- <service-name>)"
@@ -477,7 +477,7 @@ echo "🏥 Health Status:"
 echo "================="
 consul health service "$1"
 '''
-tools = { "consul" = "latest", "jq" = "latest" }
+tools = { "consul" = "1.21.4", "jq" = "latest" }
 
 [tasks."dns:consul"]
 description = "Test Consul DNS resolution (usage: mise run dns:consul -- <service-name>)"
@@ -497,7 +497,7 @@ echo ""
 echo "SRV record:"
 dig @localhost -p 8600 "$1.service.consul" SRV
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 # KV Store Operations
 [tasks."kv:list"]
@@ -508,7 +508,7 @@ echo "🗂️  Consul KV Keys: $prefix"
 echo "=========================="
 consul kv get -recurse -keys "$prefix" | sort
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 [tasks."kv:get"]
 description = "Get Consul KV value (usage: mise run kv:get -- <key>)"
@@ -525,7 +525,7 @@ echo "🔑 KV Value for: $1"
 echo "==================="
 consul kv get "$1"
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 [tasks."kv:put"]
 description = "Set Consul KV value (usage: mise run kv:put -- <key> <value>)"
@@ -538,7 +538,7 @@ fi
 echo "📝 Setting KV: $1 = $2"
 consul kv put "$1" "$2"
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 [tasks."kv:setup-powerdns"]
 description = "Setup PowerDNS KV configuration"
@@ -553,7 +553,7 @@ echo ""
 echo "📋 Current values:"
 mise run kv:list -- pdns/
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 # Health & Debugging
 [tasks."checks:consul"]
@@ -567,7 +567,7 @@ consul catalog services | while read service; do
   echo ""
 done
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 [tasks."logs:consul"]
 description = "Follow Consul logs (if running via systemd)"
@@ -584,7 +584,7 @@ else
   echo "  - Docker: docker logs <consul-container>"
 fi
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 [tasks."debug:consul"]
 description = "Debug Consul connectivity and configuration"
@@ -613,7 +613,7 @@ for svc in traefik postgres powerdns-auth consul; do
   fi
 done
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 # Integration with your infrastructure
 [tasks."nomad-services:consul"]
@@ -627,7 +627,7 @@ consul catalog services -tags | grep -E "(traefik|postgres|powerdns)" | while re
   echo ""
 done
 '''
-tools = { "consul" = "latest", "jq" = "latest" }
+tools = { "consul" = "1.21.4", "jq" = "latest" }
 
 [tasks."traefik-services:consul"]
 description = "Show services configured for Traefik"
@@ -644,7 +644,7 @@ consul catalog services | while read service; do
   fi
 done
 '''
-tools = { "consul" = "latest", "jq" = "latest" }
+tools = { "consul" = "1.21.4", "jq" = "latest" }
 
 # Maintenance
 [tasks."backup:consul"]
@@ -659,7 +659,7 @@ consul kv export > "$backup_dir/kv-export.json"
 echo "✅ Backup complete"
 ls -la "$backup_dir"
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 [tasks."cleanup:consul"]
 description = "Clean up deregistered services and checks"
@@ -674,7 +674,7 @@ echo ""
 echo "2. Current dead nodes:"
 consul members | grep "left\|failed" || echo "No dead nodes found"
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 # Combined tasks
 [tasks."ci:consul"]
@@ -700,7 +700,7 @@ else
   echo "Please open: $consul_ui"
 fi
 '''
-tools = { "consul" = "latest" }
+tools = { "consul" = "1.21.4" }
 
 # ============================================================================
 # HOOKS
