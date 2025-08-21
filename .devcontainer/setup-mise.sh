@@ -294,6 +294,38 @@ after_finish_help() {
 }
 
 install_mise
+
+# --- ensure mise auto-activates in bash and zsh ---
+INSTALL_PATH="${MISE_INSTALL_PATH:-$HOME/.local/bin/mise}"
+
+ensure_line() {
+  file="$1"; line="$2"
+  [ -f "$file" ] || : >"$file"
+  grep -qxF "$line" "$file" || printf '%s\n' "$line" >> "$file"
+}
+
+# Bash setup
+BASHRC="$HOME/.bashrc"
+ensure_line "$BASHRC" 'export PATH="$HOME/.local/bin:$PATH"'
+ensure_line "$BASHRC" "eval \"\$($INSTALL_PATH activate bash)\""
+
+# Zsh setup
+ZSHRC="${ZDOTDIR:-$HOME}/.zshrc"
+# create zshrc if missing
+[ -f "$ZSHRC" ] || : >"$ZSHRC"
+ensure_line "$ZSHRC" 'export PATH="$HOME/.local/bin:$PATH"'
+ensure_line "$ZSHRC" "eval \"\$($INSTALL_PATH activate zsh)\""
+
+# Activate mise for the *current* shell (no restart needed)
+if [ -x "$INSTALL_PATH" ]; then
+  case "${SHELL:-}" in
+    */zsh)  eval "$($INSTALL_PATH activate zsh)"  ;;
+    */bash) eval "$($INSTALL_PATH activate bash)" ;;
+    *)      : ;;  # unknown shell; skip
+  esac
+fi
+
+# Optionally keep the help messages
 if [ "${MISE_INSTALL_HELP-}" != 0 ]; then
   after_finish_help
 fi
