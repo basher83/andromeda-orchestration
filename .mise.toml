@@ -703,6 +703,503 @@ fi
 tools = { "consul" = "1.21.4" }
 
 # ============================================================================
+# VAULT
+# ============================================================================
+# Vault Development Tasks
+
+# Cluster Status & Health
+[tasks."status:vault"]
+description = "Show Vault cluster status"
+run = '''
+echo "🔐 Vault Cluster Status:"
+echo "========================"
+vault status
+echo ""
+echo "🔑 Auth Methods:"
+echo "================"
+vault auth list
+echo ""
+echo "🎯 Secret Engines:"
+echo "=================="
+vault secrets list
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."health:vault"]
+description = "Check Vault health and seal status"
+run = '''
+echo "🏥 Vault Health Check:"
+echo "======================"
+if vault status >/dev/null 2>&1; then
+  echo "✅ Vault is reachable"
+  sealed=$(vault status -format=json | jq -r .sealed)
+  if [ "$sealed" = "false" ]; then
+    echo "✅ Vault is unsealed"
+  else
+    echo "❌ Vault is sealed"
+  fi
+else
+  echo "❌ Cannot reach Vault"
+  exit 1
+fi
+echo ""
+echo "📊 Vault System Health:"
+vault read sys/health -format=json | jq .
+'''
+tools = { "vault" = "1.20.2", "jq" = "latest" }
+
+[tasks."unseal:vault"]
+description = "Unseal Vault (interactive)"
+run = '''
+echo "🔓 Unsealing Vault:"
+echo "==================="
+if vault status | grep -q "Sealed.*false"; then
+  echo "✅ Vault is already unsealed"
+else
+  echo "🔑 Please provide unseal key:"
+  vault operator unseal
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# Authentication
+[tasks."auth:vault"]
+description = "Authenticate to Vault (interactive)"
+run = '''
+echo "🔐 Vault Authentication:"
+echo "========================"
+echo "Current token info:"
+vault token lookup 2>/dev/null || echo "No valid token"
+echo ""
+echo "Available auth methods:"
+vault auth list
+echo ""
+echo "💡 Login examples:"
+echo "  vault login                    # Token auth"
+echo "  vault login -method=userpass  # Username/password"
+echo "  vault login -method=oidc      # OIDC/SSO"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."token:vault"]
+description = "Show current token information"
+run = '''
+echo "🎫 Current Token Information:"
+echo "============================="
+vault token lookup
+'''
+tools = { "vault" = "1.20.2" }
+
+# Secret Management (KV v2)
+[tasks."secrets:list"]
+description = "List secrets in KV store (usage: mise run secrets:list -- [path])"
+run = '''
+path=${1:-""}
+echo "🗂️  Vault Secrets: $path"
+echo "======================="
+vault kv list "secret/$path" 2>/dev/null || vault kv list "$path" 2>/dev/null || echo "No secrets found or insufficient permissions"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."secret:get"]
+description = "Get secret from KV store (usage: mise run secret:get -- <path>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run secret:get -- <path>"
+  echo "Examples:"
+  echo "  mise run secret:get -- pdns"
+  echo "  mise run secret:get -- database/postgres"
+  exit 1
+fi
+echo "🔑 Secret: $1"
+echo "=============="
+vault kv get "secret/$1" 2>/dev/null || vault kv get "$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."secret:put"]
+description = "Store secret in KV store (usage: mise run secret:put -- <path> key=value [key2=value2...])"
+run = '''
+if [ $# -lt 2 ]; then
+  echo "Usage: mise run secret:put -- <path> key=value [key2=value2...]"
+  echo "Examples:"
+  echo "  mise run secret:put -- pdns db_password=secret123 api_key=abc123"
+  echo "  mise run secret:put -- database/postgres password=supersecret"
+  exit 1
+fi
+path=$1
+shift
+echo "📝 Storing secret: $path"
+vault kv put "secret/$path" "$@"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."secret:delete"]
+description = "Delete secret from KV store (usage: mise run secret:delete -- <path>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run secret:delete -- <path>"
+  echo "⚠️  This will permanently delete the secret!"
+  exit 1
+fi
+echo "🗑️  Deleting secret: $1"
+echo "Are you sure? (y/N)"
+read -r confirm
+if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+  vault kv delete "secret/$1"
+  echo "✅ Secret deleted"
+else
+  echo "❌ Cancelled"
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# Database Secrets Engine (PowerDNS Integration)
+[tasks."db:status"]
+description = "Show database secrets engine status"
+run = '''
+echo "🗄️  Database Secrets Engine:"
+echo "============================="
+echo "Configurations:"
+vault list database/config/ 2>/dev/null || echo "No database configs found"
+echo ""
+echo "Roles:"
+vault list database/roles/ 2>/dev/null || echo "No database roles found"
+echo ""
+echo "Active leases:"
+vault list sys/leases/lookup/database/creds/ 2>/dev/null || echo "No active leases"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."db:config"]
+description = "Show database connection configuration (usage: mise run db:config -- <name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run db:config -- <config-name>"
+  echo "Available configs:"
+  vault list database/config/
+  exit 1
+fi
+echo "🔧 Database Config: $1"
+echo "======================"
+vault read "database/config/$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."db:role"]
+description = "Show database role configuration (usage: mise run db:role -- <role-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run db:role -- <role-name>"
+  echo "Available roles:"
+  vault list database/roles/
+  exit 1
+fi
+echo "👤 Database Role: $1"
+echo "===================="
+vault read "database/roles/$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."db:creds"]
+description = "Generate database credentials (usage: mise run db:creds -- <role-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run db:creds -- <role-name>"
+  echo "Available roles:"
+  vault list database/roles/
+  exit 1
+fi
+echo "🔑 Generating credentials for role: $1"
+echo "======================================"
+vault read "database/creds/$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."db:setup-powerdns"]
+description = "Setup PowerDNS database secrets engine"
+run = '''
+echo "🔧 Setting up PowerDNS Database Secrets Engine..."
+echo "=================================================="
+
+# Get PostgreSQL connection details from user
+echo "Please provide PostgreSQL connection details:"
+read -p "PostgreSQL host (default: postgres.service.consul): " pghost
+read -p "PostgreSQL port (default: 5432): " pgport
+pghost=${pghost:-postgres.service.consul}
+pgport=${pgport:-5432}
+
+echo ""
+echo "Creating database configuration..."
+vault write database/config/powerdns-database \
+  plugin_name="postgresql-database-plugin" \
+  allowed_roles="powerdns-role" \
+  connection_url="postgresql://{{username}}:{{password}}@$pghost:$pgport/powerdns" \
+  username="vaultuser" \
+  password="vaultpass" \
+  password_authentication="scram-sha-256"
+
+echo ""
+echo "Creating PowerDNS role..."
+vault write database/roles/powerdns-role \
+  db_name="powerdns-database" \
+  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD ''{{password}}'' VALID UNTIL ''{{expiration}}''; \
+    GRANT USAGE ON SCHEMA public TO \"{{name}}\"; \
+    GRANT SELECT, INSERT, UPDATE, DELETE ON domains, records, supermasters, comments, domainmetadata, cryptokeys, tsigkeys TO \"{{name}}\"; \
+    GRANT SELECT, USAGE ON domains_id_seq, records_id_seq, comments_id_seq, domainmetadata_id_seq, cryptokeys_id_seq, tsigkeys_id_seq TO \"{{name}}\";" \
+  default_ttl="1h" \
+  max_ttl="24h"
+
+echo ""
+echo "✅ PowerDNS database secrets engine setup complete!"
+echo ""
+echo "Test with: mise run db:creds -- powerdns-role"
+'''
+tools = { "vault" = "1.20.2" }
+
+# Policies
+[tasks."policies:vault"]
+description = "List Vault policies"
+run = '''
+echo "📋 Vault Policies:"
+echo "=================="
+vault policy list
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."policy:vault"]
+description = "Show specific policy (usage: mise run policy:vault -- <policy-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run policy:vault -- <policy-name>"
+  echo "Available policies:"
+  vault policy list
+  exit 1
+fi
+echo "📋 Policy: $1"
+echo "============="
+vault policy read "$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+# Leases Management
+[tasks."leases:vault"]
+description = "List active leases"
+run = '''
+echo "⏰ Active Vault Leases:"
+echo "======================="
+vault list sys/leases/lookup/ 2>/dev/null || echo "No active leases found"
+echo ""
+echo "Database leases:"
+vault list sys/leases/lookup/database/creds/ 2>/dev/null || echo "No database leases"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."lease:revoke"]
+description = "Revoke specific lease (usage: mise run lease:revoke -- <lease-id>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run lease:revoke -- <lease-id>"
+  echo "Active leases:"
+  mise run leases:vault
+  exit 1
+fi
+echo "🗑️  Revoking lease: $1"
+vault lease revoke "$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."leases:revoke-prefix"]
+description = "Revoke all leases with prefix (usage: mise run leases:revoke-prefix -- <prefix>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run leases:revoke-prefix -- <prefix>"
+  echo "Examples:"
+  echo "  mise run leases:revoke-prefix -- database/creds/powerdns-role/"
+  exit 1
+fi
+echo "🗑️  Revoking all leases with prefix: $1"
+echo "Are you sure? (y/N)"
+read -r confirm
+if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+  vault lease revoke -prefix "$1"
+  echo "✅ Leases revoked"
+else
+  echo "❌ Cancelled"
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# Debugging & Maintenance
+[tasks."debug:vault"]
+description = "Debug Vault connectivity and configuration"
+run = '''
+echo "🔍 Vault Debug Information:"
+echo "==========================="
+echo "1. Connection Test:"
+vault status >/dev/null 2>&1 && echo "✅ Vault connection OK" || echo "❌ Vault connection failed"
+echo ""
+echo "2. Seal Status:"
+sealed=$(vault status -format=json 2>/dev/null | jq -r .sealed 2>/dev/null || echo "unknown")
+echo "Sealed: $sealed"
+echo ""
+echo "3. Authentication:"
+vault token lookup >/dev/null 2>&1 && echo "✅ Valid token" || echo "❌ No valid token"
+echo ""
+echo "4. Environment:"
+echo "VAULT_ADDR: ${VAULT_ADDR:-not set}"
+echo "VAULT_TOKEN: ${VAULT_TOKEN:+***set***}"
+echo "VAULT_NAMESPACE: ${VAULT_NAMESPACE:-not set}"
+echo ""
+echo "5. Critical Configurations:"
+echo "Secret engines:"
+vault secrets list -format=json 2>/dev/null | jq -r 'keys[]' | grep -E "(secret|database)" || echo "Cannot list secret engines"
+echo ""
+echo "Database configs:"
+vault list database/config/ 2>/dev/null | grep -E "(powerdns|postgres)" || echo "No database configs found"
+'''
+tools = { "vault" = "1.20.2", "jq" = "latest" }
+
+[tasks."logs:vault"]
+description = "Show Vault logs (if running via systemd)"
+run = '''
+echo "📝 Vault Logs:"
+echo "==============="
+if command -v journalctl >/dev/null; then
+  sudo journalctl -u vault -f --no-pager
+else
+  echo "⚠️  journalctl not available. Check your Vault logs manually."
+  echo "Common locations:"
+  echo "  - /var/log/vault/"
+  echo "  - /opt/vault/logs/"
+  echo "  - Docker: docker logs <vault-container>"
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# Backup & Restore
+[tasks."backup:vault"]
+description = "Backup Vault data (requires appropriate permissions)"
+run = '''
+backup_dir="backups/vault/$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup_dir"
+echo "💾 Backing up Vault data to: $backup_dir"
+echo "==========================================="
+
+echo "Backing up KV secrets..."
+vault kv list -format=json secret/ 2>/dev/null | jq -r '.[]' | while read path; do
+  echo "Backing up secret/$path"
+  vault kv get -format=json "secret/$path" > "$backup_dir/secret-$(echo $path | tr '/' '-').json"
+done
+
+echo "Backing up policies..."
+vault policy list | while read policy; do
+  if [ "$policy" != "default" ] && [ "$policy" != "root" ]; then
+    echo "Backing up policy: $policy"
+    vault policy read "$policy" > "$backup_dir/policy-$policy.hcl"
+  fi
+done
+
+echo "✅ Backup complete"
+ls -la "$backup_dir"
+'''
+tools = { "vault" = "1.20.2", "jq" = "latest" }
+
+# Integration Tasks
+[tasks."setup:vault-powerdns"]
+description = "Complete PowerDNS Vault integration setup"
+run = '''
+echo "🔧 Complete PowerDNS Vault Setup:"
+echo "=================================="
+
+echo "1. Setting up database secrets engine..."
+mise run db:setup-powerdns
+
+echo ""
+echo "2. Creating PowerDNS secrets..."
+echo "Please provide PowerDNS secrets:"
+read -p "Database password for pdns user: " -s db_password
+echo ""
+read -p "PowerDNS API key: " api_key
+
+vault kv put secret/pdns \
+  db_password="$db_password" \
+  api_key="$api_key"
+
+echo ""
+echo "✅ PowerDNS Vault integration complete!"
+echo ""
+echo "Test database credentials:"
+echo "  mise run db:creds -- powerdns-role"
+echo ""
+echo "View stored secrets:"
+echo "  mise run secret:get -- pdns"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."test:vault-integration"]
+description = "Test Vault integration with infrastructure"
+run = '''
+echo "🧪 Testing Vault Integration:"
+echo "============================="
+
+echo "1. Testing KV secrets..."
+if vault kv get secret/pdns >/dev/null 2>&1; then
+  echo "✅ PowerDNS secrets accessible"
+else
+  echo "❌ PowerDNS secrets not found"
+fi
+
+echo ""
+echo "2. Testing database secrets engine..."
+if vault read database/creds/powerdns-role >/dev/null 2>&1; then
+  echo "✅ PowerDNS database credentials can be generated"
+else
+  echo "❌ PowerDNS database role not working"
+fi
+
+echo ""
+echo "3. Testing Consul integration..."
+if vault kv get secret/consul >/dev/null 2>&1; then
+  echo "✅ Consul secrets found"
+else
+  echo "⚠️  Consul secrets not configured"
+fi
+
+echo ""
+echo "4. Testing Nomad integration..."
+# This would test Nomad's ability to get secrets
+echo "ℹ️  Nomad integration test requires running job"
+'''
+tools = { "vault" = "1.20.2" }
+
+# Combined tasks
+[tasks."ci:vault"]
+description = "Run Vault health checks"
+run = '''
+echo "🔧 Running Vault CI checks..."
+mise run health:vault
+mise run debug:vault
+echo "✅ Vault CI checks complete!"
+'''
+depends = ["health:vault", "debug:vault"]
+
+[tasks."dashboard:vault"]
+description = "Open Vault UI (if available)"
+run = '''
+vault_ui="${VAULT_ADDR:-http://localhost:8200}/ui"
+echo "🌐 Opening Vault UI: $vault_ui"
+if command -v open >/dev/null; then
+  open "$vault_ui"
+elif command -v xdg-open >/dev/null; then
+  xdg-open "$vault_ui"
+else
+  echo "Please open: $vault_ui"
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# ============================================================================
 # HOOKS
 # ============================================================================
 [hooks]
