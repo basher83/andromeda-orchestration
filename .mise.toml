@@ -1209,19 +1209,6 @@ fi
 tools = { "vault" = "1.20.2" }
 
 # ============================================================================
-# CLAUDE CODE
-# ============================================================================
-[tasks."install:claude-code"]
-description = "Install Claude Code via npm"
-run = '''
-echo "📦 Installing Claude Code via npm..."
-npm install -g @anthropic-ai/claude-code
-claude --version
-echo "✅ Claude Code installed successfully"
-'''
-tools = { "nodejs" = "latest" }
-
-# ============================================================================
 # HOOKS
 # ============================================================================
 [hooks]
