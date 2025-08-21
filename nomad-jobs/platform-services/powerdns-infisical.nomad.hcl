@@ -92,10 +92,11 @@ job "powerdns-auth" {
         }
 
         check {
+          name     = "dns-tcp"
           type     = "tcp"
-          port     = "dns"
           interval = "10s"
           timeout  = "2s"
+          port     = "dns"
         }
       }
 
@@ -110,11 +111,12 @@ job "powerdns-auth" {
         }
 
         check {
+          name     = "api-health"
           type     = "http"
           path     = "/api/v1/servers/localhost"
+          interval = "15s"
+          timeout  = "3s"
           port     = "api"
-          interval = "30s"
-          timeout  = "2s"
         }
       }
 
