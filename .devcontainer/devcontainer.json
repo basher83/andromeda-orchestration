@@ -1,0 +1,23 @@
+{
+    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    "runArgs": [
+        "--device=/dev/net/tun"
+    ],
+    "features": {
+        "ghcr.io/tailscale/codespace/tailscale": {},
+        "ghcr.io/jdx/mise/devcontainer-feature/mise:1": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "hverlin.mise-vscode",
+                "DavidAnson.vscode-markdownlint"
+            ]
+        }
+    },
+    "mounts": [
+        "source=mise-data-volume,target=/mnt/mise-data,type=volume"
+    ],
+    "containerEnv": {},
+    "remoteEnv": {}
+}
