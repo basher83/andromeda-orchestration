@@ -4,9 +4,9 @@
         "--device=/dev/net/tun"
     ],
     "features": {
-        "ghcr.io/tailscale/codespace/tailscale": {},
-        "ghcr.io/jdx/mise/devcontainer-feature/mise:1": {}
+        "ghcr.io/tailscale/codespace/tailscale": {}
     },
+    "postCreateCommand": ".devcontainer/setup-mise.sh",
     "customizations": {
         "vscode": {
             "extensions": [
@@ -17,7 +17,5 @@
     },
     "mounts": [
         "source=mise-data-volume,target=/mnt/mise-data,type=volume"
-    ],
-    "containerEnv": {},
-    "remoteEnv": {}
+    ]
 }
