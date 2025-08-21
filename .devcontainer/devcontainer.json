@@ -11,7 +11,12 @@
         "vscode": {
             "extensions": [
                 "hverlin.mise-vscode",
-                "DavidAnson.vscode-markdownlint"
+                "DavidAnson.vscode-markdownlint",
+                "tamasfe.even-better-toml",
+                "GitHub.copilot",
+                "GitHub.copilot-chat",
+                "HashiCorp.HCL",
+                "samuelcolvin.jinjahtml"
             ]
         }
     },

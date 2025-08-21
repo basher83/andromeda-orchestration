@@ -42,6 +42,15 @@ tools = { "jq" = "latest" }
 # UTILITY - Helper tasks
 # ============================================================================
 
+[tasks."tailscale:auth"]
+run = "sudo tailscale up --accept-routes"
+
+[tasks."tailscale:status"]
+run = "sudo tailscale status"
+
+[tasks."network_utils:install"]
+run = "sudo apt-get update && sudo apt-get install -y iputils-ping iputils-tracepath dnsutils netcat-openbsd curl wget telnet mtr tcpdump"
+
 [tasks.mcp]
 description = "MCP configuration management"
 alias = "m"
@@ -102,3 +111,4 @@ fi
 [hooks]
 enter = "echo 'Welcome to the Andromeda-Orchestration repository!'"
 leave = "echo 'Goodbye!'"
+
