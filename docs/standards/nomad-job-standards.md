@@ -36,21 +36,14 @@ nomad-jobs/
 
 ### Service Identity Requirements
 
-```hcl
-# REQUIRED when service_identity is enabled in Nomad
-service {
-  name = "service-name"
-  port = "port-label"
+All Nomad jobs **MUST** include identity blocks for Consul ACL integration.
 
-  identity {
-    aud = ["consul.io"]  # MANDATORY
-    ttl = "1h"          # Recommended
-  }
+📖 **See**: [Consul Health Checks Guide](../implementation/nomad/consul-health-checks.md) for comprehensive patterns including:
 
-  tags = [...]
-  check {...}
-}
-```
+- Identity block configuration
+- Health check patterns (HTTP, TCP, Script)
+- Timing best practices
+- Complete examples for different service types
 
 **Why Required?**
 
@@ -61,54 +54,30 @@ service {
 
 ### Port Allocation
 
-Use standardized port labels across jobs to simplify routing and observability. See the Port label glossary for recommended names: [Port Allocation: Port label glossary](../implementation/nomad/port-allocation.md#port-label-glossary).
+📖 **See**: [Port Allocation Guide](../implementation/nomad/port-allocation.md) for:
 
-Recommended labels (keep lowercase and consistent):
+- Complete port label glossary
+- Dynamic vs static port decision criteria
+- Port range management (20000-32000)
+- Service discovery integration patterns
+- Load balancer configuration
 
-- http – primary HTTP traffic (via LB)
-- https – TLS entrypoint (LB only)
-- grpc – gRPC endpoint (internal/LB)
-- metrics – Prometheus scrape (internal)
-- admin – admin/management (internal)
-- health – health checks (internal)
-- db – database protocol (internal)
-
-```hcl
-network {
-  # Static ports - ONLY for special cases
-  port "dns" {
-    static = 53  # ONLY for DNS
-  }
-
-  # Dynamic ports - DEFAULT
-  port "api" {}    # Nomad assigns from 20000-32000
-  port "web" {}    # No conflicts possible
-
-  # Port mapping for containers
-  port "admin" {
-    to = 8080    # Container port
-  }              # Host port is dynamic
-}
-```
+**Key Principle**: Use dynamic ports by default. Static ports only for DNS (53), HTTP (80), HTTPS (443).
 
 ### Volume Standards
 
-```hcl
-# Persistent data
-volume "service-data" {
-  type      = "host"
-  source    = "service-data"  # Matches client config
-  read_only = false
-}
+📖 **See Implementation Guides**:
 
-# Naming: {service}-{purpose}
-# Examples:
-#   postgres-data
-#   traefik-certs
-#   prometheus-data
-```
+- [Storage Configuration](../implementation/nomad/storage-configuration.md) - Volume types and use cases
+- [Storage Patterns](../implementation/nomad/storage-patterns.md) - Common implementation patterns
+- [Storage Strategy](../implementation/nomad/storage-strategy.md) - Architecture decisions
+- [Dynamic Volumes](../implementation/nomad/dynamic-volumes.md) - Plugin and systemd configuration
+
+**Naming Convention**: `{service}-{purpose}` (e.g., `postgres-data`, `traefik-certs`)
 
 ### Task Configuration
+
+📖 **See**: [HCL2 Variables Guide](../implementation/nomad/hcl2-variables.md) for passing variables from Ansible
 
 ```hcl
 task "service" {
@@ -117,12 +86,6 @@ task "service" {
   config {
     image = "image:tag"  # Always specify tag
     ports = ["web", "api"]
-
-    # For debugging - remove in production
-    args = [
-      "--debug",
-      "--verbose"
-    ]
   }
 
   # Resource limits - ALWAYS SET
@@ -133,9 +96,7 @@ task "service" {
 
   # Environment variables
   env {
-    # Configuration via env vars
     CONFIG_OPTION = "value"
-
     # NEVER hardcode secrets
     API_KEY = "${NOMAD_SECRET_API_KEY}"
   }
@@ -152,36 +113,14 @@ EOF
 
 ### Health Checks
 
-```hcl
-service {
-  check {
-    type     = "http"
-    path     = "/health"
-    interval = "10s"
-    timeout  = "2s"
+📖 **See**: [Consul Health Checks Guide](../implementation/nomad/consul-health-checks.md#check-type-patterns) for:
 
-    # For authenticated endpoints
-    header {
-      Authorization = ["Bearer ${NOMAD_SECRET_TOKEN}"]
-    }
-  }
-}
+- HTTP, TCP, Script, and gRPC check patterns
+- Timing recommendations by service criticality
+- Port specification best practices
+- Complete working examples
 
-# TCP check for non-HTTP services
-check {
-  type     = "tcp"
-  interval = "10s"
-  timeout  = "2s"
-}
-
-# Script check for complex validation
-check {
-  type     = "script"
-  command  = "/local/health-check.sh"
-  interval = "30s"
-  timeout  = "5s"
-}
-```
+**Quick Reference**: Critical services (10s/2s), API services (15s/3s), Non-critical (30s/5s)
 
 ## Rationale
 
@@ -334,8 +273,23 @@ mv *-test*.nomad.hcl .archive/
 
 ## References
 
-- [Nomad Storage Configuration](../implementation/nomad/storage-configuration.md)
-- [Port Allocation](../implementation/nomad/port-allocation.md)
+### Implementation Guides
+
+- [Nomad Implementation README](../implementation/nomad/README.md) - Main index for all Nomad documentation
+- [Consul Health Checks](../implementation/nomad/consul-health-checks.md) - Service registration and health checks
+- [Port Allocation](../implementation/nomad/port-allocation.md) - Dynamic vs static ports
+- [Storage Configuration](../implementation/nomad/storage-configuration.md) - Volume types and patterns
+- [Storage Strategy](../implementation/nomad/storage-strategy.md) - Architecture decisions
+- [Storage Patterns](../implementation/nomad/storage-patterns.md) - Common patterns
+- [Dynamic Volumes](../implementation/nomad/dynamic-volumes.md) - Plugin configuration
+- [HCL2 Variables](../implementation/nomad/hcl2-variables.md) - Variable passing from Ansible
+
+### Troubleshooting
+
 - [Service Identity Issues](../troubleshooting/service-identity-issues.md)
+- [Consul KV Templating](../troubleshooting/consul-kv-templating-issues.md)
+
+### Related Documentation
+
 - [Nomad Workloads Authentication](../implementation/consul/nomad-workloads-auth.md)
-- [Nomad Jobs README](../../nomad-jobs/README.md)
+- [Nomad Jobs Directory](../../nomad-jobs/README.md)

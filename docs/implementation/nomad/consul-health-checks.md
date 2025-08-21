@@ -1,17 +1,21 @@
-# Core Requirements
+# Consul Health Checks for Nomad Services
 
-1. Always Include Identity Blocks
+## Core Requirements
+
+### 1. Always Include Identity Blocks
+
+Every service registration **must** include an identity block for Consul ACL integration:
 
 ```hcl
 service {
   name = "my-service"
   port = "http"
-  
+
   identity {
     aud = ["consul.io"]
     ttl = "1h"
   }
-  
+
   check {
     # health check configuration
   }
@@ -20,7 +24,9 @@ service {
 
 ## Check Type Patterns
 
-1. HTTP Health Checks are preferred
+### 1. HTTP Health Checks (Preferred)
+
+For services exposing HTTP endpoints, use HTTP checks for better observability:
 
 ```hcl
 check {
@@ -33,7 +39,9 @@ check {
 }
 ```
 
-1. TCP Connectivity Checks
+### 2. TCP Connectivity Checks
+
+For non-HTTP services or basic connectivity validation:
 
 ```hcl
 check {
@@ -45,19 +53,21 @@ check {
 }
 ```
 
-1. Multi-Protocol Services
+### 3. Multi-Protocol Services
+
+For services exposing multiple protocols (e.g., PowerDNS with DNS + API):
 
 ```hcl
 service {
   name = "powerdns-auth"
   port = "dns"
   tags = ["udp", "tcp", "dns"]
-  
+
   identity {
     aud = ["consul.io"]
     ttl = "1h"
   }
-  
+
   check {
     name     = "dns-tcp"
     type     = "tcp"
@@ -70,12 +80,12 @@ service {
   name = "powerdns-api"
   port = "api"
   tags = ["http", "api"]
-  
+
   identity {
     aud = ["consul.io"]
     ttl = "1h"
   }
-  
+
   check {
     name     = "api-health"
     type     = "http"
@@ -86,60 +96,65 @@ service {
 }
 ```
 
-## Consistent Timing
+## Best Practices
+
+### Consistent Timing
+
+Use standard intervals based on service criticality:
+
+| Service Type | Interval | Timeout | Examples |
+|-------------|----------|---------|----------|
+| Critical | 10s | 2s | DNS, Database |
+| API Services | 15s | 3s | REST APIs, Admin interfaces |
+| Non-critical | 30s | 5s | Metrics, Background workers |
 
 ```hcl
-# Standard intervals based on service criticality
+# Critical service example
 check {
-  interval = "10s"    # Critical services (DNS, DB)
+  interval = "10s"
   timeout  = "2s"
 }
-
-check {
-  interval = "15s"    # API services
-  timeout  = "3s"
-}
-
-check {
-  interval = "30s"    # Non-critical services
-  timeout  = "5s"
-}
 ```
 
-## Meaningful Check Names
+### Meaningful Check Names
+
+Use descriptive names that indicate the service and check type:
+
+✅ **Good Examples:**
+
+- `postgres-tcp`
+- `api-health`
+- `dns-tcp-53`
+- `http-ready`
+
+❌ **Avoid:**
+
+- `check`
+- `health`
+- `test`
+
+### Port Specification
+
+Always use explicit port references for clarity:
 
 ```hcl
-# Good - descriptive names
-check {
-  name = "postgres-tcp"
-  name = "api-health"
-  name = "dns-tcp-53"
-}
-
-# Avoid generic names
-check {
-  name = "check"  # too generic
-}
-```
-
-## Port Specification
-
-```hcl
-# Explicit port reference (recommended)
+# ✅ Explicit port reference (recommended)
 check {
   type = "http"
   path = "/health"
   port = "api"      # references network.port.api
 }
 
-# Implicit (uses service port)
+# ⚠️ Implicit (uses service port)
 check {
   type = "tcp"
   # uses the port defined in service block
 }
 ```
 
-## Complete example pattern
+## Complete Examples
+
+### Example 1: Standard Web Application
 
 ```hcl
 job "example-service" {
@@ -156,7 +171,7 @@ job "example-service" {
 
     task "app" {
       driver = "docker"
-      
+
       config {
         image = "myapp:latest"
         ports = ["http", "admin"]
@@ -221,8 +236,11 @@ job "example-service" {
     }
   }
 }
+```
 
-# Database service example
+### Example 2: PostgreSQL Database
+
+```hcl
 job "database" {
   group "db" {
     network {
@@ -261,8 +279,11 @@ job "database" {
     }
   }
 }
+```
 
-# DNS service with static port
+### Example 3: PowerDNS with Multiple Services
+
+```hcl
 job "dns-server" {
   group "dns" {
     network {
@@ -318,3 +339,20 @@ job "dns-server" {
   }
 }
 ```
+
+## Quick Reference
+
+| Check Type | Use Case | Key Parameters |
+|------------|----------|----------------|
+| `http` | REST APIs, web services | `path`, `method`, `header` |
+| `tcp` | Databases, raw sockets | Port only |
+| `script` | Custom validation | `command`, `args` |
+| `grpc` | gRPC services | `grpc_service` |
+
+## Common Pitfalls to Avoid
+
+1. **Missing identity blocks** → ACL failures
+2. **Wrong port references** → Health checks fail
+3. **Too aggressive intervals** → Resource waste
+4. **Missing explicit ports** → Ambiguous routing
+5. **Generic check names** → Hard to debug
