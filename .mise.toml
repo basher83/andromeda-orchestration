@@ -11,6 +11,7 @@ uv_venv_auto = true
 
 [tools]
 act = "0.2.80"
+age = "1.2.1"
 ansible-core = "2.19.0"
 consul = "1.21.4"
 eza = "0.23.0"
@@ -23,6 +24,7 @@ pre-commit = "4.3.0"
 python = "3.13.7"
 rg = "14.1.1"
 ruff = "0.12.9"
+sops = "3.10.2"
 uv = "0.8.12"
 vault = "1.20.2"
 
@@ -708,6 +710,7 @@ enter = "echo 'Welcome to the Andromeda-Orchestration repository!'"
 leave = "echo 'Goodbye!'"
 
 [env]
+_.file = ".env.json"
 NOMAD_ADDR = "http://100.108.219.48:4646"
 NOMAD_REGION = "global"
 VAULT_ADDR = "http://100.108.219.48:8200"
