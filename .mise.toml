@@ -33,10 +33,42 @@ vault = "1.20.2"
 [tasks."setup:mcp"]
 description = "Generate .mcp.json from template using Infisical secrets"
 run = "./scripts/generate-mcp-config.sh"
-sources = ["mcp.json.template", "scripts/generate-mcp-config.sh", ".infisical.json"]
+sources = [
+  "mcp.json.template",
+  "scripts/generate-mcp-config.sh",
+  ".infisical.json",
+]
 outputs = [".mcp.json"]
 tools = { "jq" = "latest" }
 
+[tasks."setup:act-symlink"]
+description = "Ensure act is symlinked for VS Code extension"
+run = '''
+# Check if act is installed via mise
+if command -v act >/dev/null 2>&1; then
+  ACT_PATH=$(which act)
+  SYMLINK_PATH="/usr/local/bin/act"
+  
+  # Check if symlink already exists and points to correct location
+  if [ -L "$SYMLINK_PATH" ] && [ "$(readlink -f $SYMLINK_PATH)" = "$(readlink -f $ACT_PATH)" ]; then
+    echo "✅ Act symlink already configured correctly"
+  else
+    echo "🔧 Creating symlink for act..."
+    sudo ln -sf "$ACT_PATH" "$SYMLINK_PATH"
+    echo "✅ Act symlinked to $SYMLINK_PATH"
+  fi
+  
+  # Verify it works
+  if $SYMLINK_PATH --version >/dev/null 2>&1; then
+    echo "✅ Act is accessible system-wide (version: $($SYMLINK_PATH --version))"
+  else
+    echo "❌ Failed to create working symlink" && exit 1
+  fi
+else
+  echo "⚠️  Act not installed, skipping symlink setup"
+fi
+'''
+tools = { "act" = "0.2.80" }
 
 # ============================================================================
 # UTILITY - Helper tasks
@@ -104,6 +136,569 @@ else
   echo "No .mcp.json file to remove"
 fi
 '''
+# ============================================================================
+# LINTING
+# ============================================================================
+
+[tasks."lint:markdown"]
+description = "Lint Markdown files"
+run = "markdownlint-cli2 **/*.md"
+tools = { "markdownlint-cli2" = "0.18.1" }
+
+[tasks."lint:python"]
+description = "Lint Python files"
+run = "ruff check plugins scripts tests"
+tools = { "ruff" = "0.12.9" }
+
+# ============================================================================
+# NOMAD
+# ============================================================================
+# Nomad Development Tasks
+[tasks."lint:nomad"]
+description = "Lint Nomad files"
+run = "nomad fmt -check -recursive nomad-jobs"
+tools = { "nomad" = "1.10.4" }
+
+[tasks."fmt:nomad"]
+description = "Format Nomad files"
+run = "nomad fmt -recursive nomad-jobs"
+tools = { "nomad" = "1.10.4" }
+
+[tasks."validate:nomad"]
+description = "Validate all Nomad job syntax"
+run = '''
+echo "🔍 Validating Nomad jobs..."
+failed=0
+for file in $(find nomad-jobs -name "*.nomad.hcl"); do
+  echo "Validating $file..."
+  if ! nomad job validate "$file"; then
+    failed=1
+  fi
+done
+if [ $failed -eq 1 ]; then
+  echo "❌ Some jobs failed validation"
+  exit 1
+else
+  echo "✅ All jobs validated successfully"
+fi
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."validate:nomad:job"]
+description = "Validate specific Nomad job (usage: mise run validate:nomad:job -- <job-file>)"
+run = 'nomad job validate "$1"'
+tools = { "nomad" = "1.10.4" }
+
+[tasks."plan:nomad"]
+description = "Plan a specific Nomad job (usage: mise run plan:nomad -- <job-file>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run plan:nomad -- <job-file>"
+  echo "Example: mise run plan:nomad -- nomad-jobs/core-infrastructure/traefik.nomad.hcl"
+  exit 1
+fi
+nomad job plan "$1"
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."status:nomad"]
+description = "Show status of all Nomad jobs"
+run = '''
+echo "📊 Nomad Cluster Status:"
+echo "======================="
+nomad job status
+echo ""
+echo "📍 Node Status:"
+echo "==============="
+nomad node status
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."stop:nomad"]
+description = "Stop a Nomad job (usage: mise run stop:nomad -- <job-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run stop:nomad -- <job-name>"
+  echo "Available jobs:"
+  nomad job status | grep -v "ID" | awk "{print \$1}"
+  exit 1
+fi
+nomad job stop "$1"
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."logs:nomad"]
+description = "Show logs for a Nomad allocation (usage: mise run logs:nomad -- <alloc-id>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run logs:nomad -- <alloc-id>"
+  echo "Recent allocations:"
+  nomad job status | grep -v "ID" | head -5 | while read job _; do
+    echo "Job: $job"
+    nomad job status "$job" | grep "running\|failed" | head -3
+  done
+  exit 1
+fi
+nomad alloc logs "$1"
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."deploy:traefik"]
+description = "Deploy Traefik load balancer"
+run = '''
+echo "🚀 Deploying Traefik..."
+nomad job run nomad-jobs/core-infrastructure/traefik.nomad.hcl
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."deploy:postgresql"]
+description = "Deploy PostgreSQL database"
+run = '''
+echo "🚀 Deploying PostgreSQL..."
+nomad job run nomad-jobs/platform-services/postgresql.nomad.hcl
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."deploy:powerdns"]
+description = "Deploy PowerDNS with variables"
+run = '''
+echo "🚀 Deploying PowerDNS..."
+# Using your Ansible deployment pattern with uv
+uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml \
+  -e job=nomad-jobs/platform-services/powerdns-auth.nomad.hcl
+'''
+tools = { "nomad" = "1.10.4", "uv" = "0.8.12" }
+
+[tasks."health:nomad"]
+description = "Check health of Nomad services in Consul"
+run = '''
+echo "🏥 Nomad Service Health in Consul:"
+echo "=================================="
+consul catalog services | grep -E "(traefik|postgres|powerdns)" | while read service; do
+  echo "Service: $service"
+  consul health service "$service" | head -10
+  echo ""
+done
+'''
+tools = { "nomad" = "1.10.4", "consul" = "1.21.4" }
+
+[tasks."debug:nomad"]
+description = "Debug failed Nomad allocation (usage: mise run debug:nomad -- <job-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run debug:nomad -- <job-name>"
+  echo "Failed jobs:"
+  nomad job status | grep failed
+  exit 1
+fi
+
+echo "🔍 Debugging job: $1"
+echo "=================="
+nomad job status "$1"
+echo ""
+
+echo "📋 Recent allocations:"
+alloc_id=$(nomad job status "$1" | grep -E "failed|running" | head -1 | awk "{print \$1}")
+if [ -n "$alloc_id" ]; then
+  echo "Allocation: $alloc_id"
+  nomad alloc status "$alloc_id"
+  echo ""
+  echo "📝 Logs:"
+  nomad alloc logs "$alloc_id"
+fi
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."clean:nomad"]
+description = "Clean up completed/failed Nomad allocations"
+run = '''
+echo "🧹 Cleaning up Nomad allocations..."
+echo "Stopping failed jobs..."
+nomad job status | grep failed | awk "{print \$1}" | while read job; do
+  echo "Stopping failed job: $job"
+  nomad job stop -purge "$job" || true
+done
+
+echo "✅ Cleanup complete"
+'''
+tools = { "nomad" = "1.10.4" }
+
+# Combined tasks
+[tasks."ci:nomad"]
+description = "Run all Nomad CI checks (format, validate)"
+run = '''
+echo "🔧 Running Nomad CI checks..."
+mise run fmt:nomad
+mise run lint:nomad  
+mise run validate:nomad
+echo "✅ All Nomad CI checks passed!"
+'''
+depends = ["fmt:nomad", "lint:nomad", "validate:nomad"]
+
+[tasks."deploy:core"]
+description = "Deploy core infrastructure (Traefik)"
+run = '''
+echo "🚀 Deploying core infrastructure..."
+mise run deploy:traefik
+echo "⏳ Waiting for Traefik to be ready..."
+sleep 10
+mise run status:nomad
+'''
+depends = ["deploy:traefik"]
+
+[tasks."deploy:platform"]
+description = "Deploy platform services (PostgreSQL, PowerDNS)"
+run = '''
+echo "🚀 Deploying platform services..."
+mise run deploy:postgresql
+echo "⏳ Waiting for PostgreSQL..."
+sleep 15
+mise run deploy:powerdns
+echo "⏳ Waiting for PowerDNS..."
+sleep 10
+mise run status:nomad
+'''
+depends = ["deploy:postgresql", "deploy:powerdns"]
+
+# ============================================================================
+# CONSUL
+# ============================================================================
+
+[tasks."validate:consul"]
+description = "Validate Consul configuration files"
+run = '''
+echo "🔍 Validating Consul configurations..."
+failed=0
+for file in $(find . -name "*.hcl" -path "*/consul/*" -o -name "consul.json"); do
+  if [ -f "$file" ]; then
+    echo "Validating $file..."
+    if ! consul validate "$file"; then
+      failed=1
+    fi
+  fi
+done
+if [ $failed -eq 1 ]; then
+  echo "❌ Some Consul configs failed validation"
+  exit 1
+else
+  echo "✅ All Consul configs validated successfully"
+fi
+'''
+tools = { "consul" = "latest" }
+
+# Cluster Status & Monitoring
+[tasks."status:consul"]
+description = "Show Consul cluster status"
+run = '''
+echo "📊 Consul Cluster Status:"
+echo "========================"
+consul members
+echo ""
+echo "🎯 Consul Leader:"
+echo "================="
+consul operator raft list-peers
+echo ""
+echo "💾 Consul Info:"
+echo "==============="
+consul info
+'''
+tools = { "consul" = "latest" }
+
+[tasks."health:consul"]
+description = "Check Consul cluster health"
+run = '''
+echo "🏥 Consul Health Checks:"
+echo "========================"
+consul operator raft list-peers
+echo ""
+echo "🔍 Service Health Overview:"
+echo "==========================="
+consul catalog services | while read service; do
+  echo "Service: $service"
+  healthy=$(consul health service "$service" | grep -c "passing" || echo "0")
+  total=$(consul health service "$service" | grep -c "critical\|warning\|passing" || echo "0")
+  echo "  Status: $healthy/$total healthy"
+done
+'''
+tools = { "consul" = "latest" }
+
+[tasks."nodes:consul"]
+description = "List Consul nodes and their status"
+run = '''
+echo "🖥️  Consul Nodes:"
+echo "=================="
+consul catalog nodes -detailed
+echo ""
+echo "🔧 Node Health:"
+echo "==============="
+consul catalog nodes | tail -n +2 | while read node address; do
+  echo "Node: $node ($address)"
+  consul health node "$node" | head -5
+  echo ""
+done
+'''
+tools = { "consul" = "latest" }
+
+# Service Discovery
+[tasks."services:consul"]
+description = "List all registered services"
+run = '''
+echo "🎯 Consul Services:"
+echo "==================="
+consul catalog services -tags
+echo ""
+echo "📍 Service Details:"
+echo "==================="
+consul catalog services | while read service; do
+  echo "Service: $service"
+  consul catalog service "$service" | jq -r ".[] | \"  Node: \\(.Node) Address: \\(.ServiceAddress):\\(.ServicePort) Health: \\(.Checks | length) checks\""
+  echo ""
+done
+'''
+tools = { "consul" = "latest", "jq" = "latest" }
+
+[tasks."service:consul"]
+description = "Get details for specific service (usage: mise run service:consul -- <service-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run service:consul -- <service-name>"
+  echo "Available services:"
+  consul catalog services
+  exit 1
+fi
+echo "🎯 Service Details: $1"
+echo "======================"
+consul catalog service "$1" | jq .
+echo ""
+echo "🏥 Health Status:"
+echo "================="
+consul health service "$1"
+'''
+tools = { "consul" = "latest", "jq" = "latest" }
+
+[tasks."dns:consul"]
+description = "Test Consul DNS resolution (usage: mise run dns:consul -- <service-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run dns:consul -- <service-name>"
+  echo "Examples:"
+  echo "  mise run dns:consul -- traefik"
+  echo "  mise run dns:consul -- postgres"
+  exit 1
+fi
+echo "🔍 DNS Resolution Test for: $1"
+echo "==============================="
+echo "A record:"
+dig @localhost -p 8600 "$1.service.consul" A
+echo ""
+echo "SRV record:"
+dig @localhost -p 8600 "$1.service.consul" SRV
+'''
+tools = { "consul" = "latest" }
+
+# KV Store Operations
+[tasks."kv:list"]
+description = "List Consul KV store keys (usage: mise run kv:list -- [prefix])"
+run = '''
+prefix=${1:-""}
+echo "🗂️  Consul KV Keys: $prefix"
+echo "=========================="
+consul kv get -recurse -keys "$prefix" | sort
+'''
+tools = { "consul" = "latest" }
+
+[tasks."kv:get"]
+description = "Get Consul KV value (usage: mise run kv:get -- <key>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run kv:get -- <key>"
+  echo "Common keys in your setup:"
+  echo "  pdns/db/host"
+  echo "  pdns/db/port"
+  echo "  pdns/db/name"
+  exit 1
+fi
+echo "🔑 KV Value for: $1"
+echo "==================="
+consul kv get "$1"
+'''
+tools = { "consul" = "latest" }
+
+[tasks."kv:put"]
+description = "Set Consul KV value (usage: mise run kv:put -- <key> <value>)"
+run = '''
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "Usage: mise run kv:put -- <key> <value>"
+  echo "Example: mise run kv:put -- pdns/db/host postgres.service.consul"
+  exit 1
+fi
+echo "📝 Setting KV: $1 = $2"
+consul kv put "$1" "$2"
+'''
+tools = { "consul" = "latest" }
+
+[tasks."kv:setup-powerdns"]
+description = "Setup PowerDNS KV configuration"
+run = '''
+echo "🔧 Setting up PowerDNS KV configuration..."
+consul kv put pdns/db/host "postgres.service.consul"
+consul kv put pdns/db/port "5432"
+consul kv put pdns/db/name "powerdns"
+consul kv put pdns/db/user "pdns"
+echo "✅ PowerDNS KV configuration complete"
+echo ""
+echo "📋 Current values:"
+mise run kv:list -- pdns/
+'''
+tools = { "consul" = "latest" }
+
+# Health & Debugging
+[tasks."checks:consul"]
+description = "Show all health checks"
+run = '''
+echo "🏥 All Health Checks:"
+echo "====================="
+consul catalog services | while read service; do
+  echo "Service: $service"
+  consul health checks "$service" | head -10
+  echo ""
+done
+'''
+tools = { "consul" = "latest" }
+
+[tasks."logs:consul"]
+description = "Follow Consul logs (if running via systemd)"
+run = '''
+echo "📝 Consul Logs:"
+echo "==============="
+if command -v journalctl >/dev/null; then
+  sudo journalctl -u consul -f --no-pager
+else
+  echo "⚠️  journalctl not available. Check your Consul logs manually."
+  echo "Common locations:"
+  echo "  - /var/log/consul/"
+  echo "  - /opt/consul/logs/"
+  echo "  - Docker: docker logs <consul-container>"
+fi
+'''
+tools = { "consul" = "latest" }
+
+[tasks."debug:consul"]
+description = "Debug Consul connectivity and configuration"
+run = '''
+echo "🔍 Consul Debug Information:"
+echo "============================"
+echo "1. Connection Test:"
+consul members 2>/dev/null && echo "✅ Consul connection OK" || echo "❌ Consul connection failed"
+echo ""
+echo "2. Agent Info:"
+consul info | grep -E "(Version|Datacenter|Server)"
+echo ""
+echo "3. DNS Test:"
+dig @localhost -p 8600 consul.service.consul +short 2>/dev/null && echo "✅ Consul DNS OK" || echo "❌ Consul DNS failed"
+echo ""
+echo "4. Environment:"
+echo "CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR:-not set}"
+echo "CONSUL_HTTP_TOKEN: ${CONSUL_HTTP_TOKEN:+***set***}"
+echo ""
+echo "5. Critical Services:"
+for svc in traefik postgres powerdns-auth consul; do
+  if consul catalog service "$svc" >/dev/null 2>&1; then
+    echo "✅ $svc registered"
+  else
+    echo "❌ $svc not found"
+  fi
+done
+'''
+tools = { "consul" = "latest" }
+
+# Integration with your infrastructure
+[tasks."nomad-services:consul"]
+description = "Show services registered by Nomad"
+run = '''
+echo "🎯 Nomad-Registered Services:"
+echo "============================="
+consul catalog services -tags | grep -E "(traefik|postgres|powerdns)" | while read service; do
+  echo "Service: $service"
+  consul catalog service "$service" | jq -r ".[] | \"  Node: \\(.Node) Port: \\(.ServicePort) Tags: \\(.ServiceTags | join(\",\"))\""
+  echo ""
+done
+'''
+tools = { "consul" = "latest", "jq" = "latest" }
+
+[tasks."traefik-services:consul"]
+description = "Show services configured for Traefik"
+run = '''
+echo "🚦 Traefik-Enabled Services:"
+echo "============================"
+consul catalog services | while read service; do
+  tags=$(consul catalog service "$service" | jq -r ".[0].ServiceTags[]?" 2>/dev/null | grep "traefik" || true)
+  if [ -n "$tags" ]; then
+    echo "Service: $service"
+    echo "Traefik tags:"
+    echo "$tags" | sed "s/^/  /"
+    echo ""
+  fi
+done
+'''
+tools = { "consul" = "latest", "jq" = "latest" }
+
+# Maintenance
+[tasks."backup:consul"]
+description = "Backup Consul data (KV store)"
+run = '''
+backup_dir="backups/consul/$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup_dir"
+echo "💾 Backing up Consul data to: $backup_dir"
+echo "======================================"
+consul snapshot save "$backup_dir/consul-snapshot.snap"
+consul kv export > "$backup_dir/kv-export.json"
+echo "✅ Backup complete"
+ls -la "$backup_dir"
+'''
+tools = { "consul" = "latest" }
+
+[tasks."cleanup:consul"]
+description = "Clean up deregistered services and checks"
+run = '''
+echo "🧹 Consul Cleanup:"
+echo "=================="
+echo "Deregistered services will be cleaned automatically by Consul"
+echo "Manual cleanup options:"
+echo "1. Force leave dead nodes:"
+echo "   consul force-leave <node-name>"
+echo ""
+echo "2. Current dead nodes:"
+consul members | grep "left\|failed" || echo "No dead nodes found"
+'''
+tools = { "consul" = "latest" }
+
+# Combined tasks
+[tasks."ci:consul"]
+description = "Run Consul health checks and validation"
+run = '''
+echo "🔧 Running Consul CI checks..."
+mise run validate:consul
+mise run health:consul
+echo "✅ Consul CI checks complete!"
+'''
+depends = ["validate:consul", "health:consul"]
+
+[tasks."dashboard:consul"]
+description = "Open Consul UI (if available)"
+run = '''
+consul_ui="http://localhost:8500"
+echo "🌐 Opening Consul UI: $consul_ui"
+if command -v open >/dev/null; then
+  open "$consul_ui"
+elif command -v xdg-open >/dev/null; then
+  xdg-open "$consul_ui"
+else
+  echo "Please open: $consul_ui"
+fi
+'''
+tools = { "consul" = "latest" }
 
 # ============================================================================
 # HOOKS
@@ -112,3 +707,8 @@ fi
 enter = "echo 'Welcome to the Andromeda-Orchestration repository!'"
 leave = "echo 'Goodbye!'"
 
+[env]
+NOMAD_ADDR = "http://100.108.219.48:4646"
+NOMAD_REGION = "global"
+VAULT_ADDR = "http://100.108.219.48:8200"
+CONSUL_HTTP_ADDR = "http://100.108.219.48:8500"
