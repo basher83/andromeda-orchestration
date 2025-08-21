@@ -5,7 +5,7 @@ variable "pdns_db_password" {
 }
 
 variable "pdns_api_key" {
-  type        = string  
+  type        = string
   default     = ""
   description = "PowerDNS API key"
 }
@@ -15,7 +15,7 @@ job "powerdns-auth" {
   type        = "service"
 
   group "auth" {
-    count = 1  # Start with 1 for testing
+    count = 1 # Start with 1 for testing
 
     network {
       mode = "host"
