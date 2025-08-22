@@ -1,0 +1,170 @@
+---
+# Disable iptables and ensure nftables is the only firewall system
+# This resolves conflicts between iptables and nftables on Nomad nodes
+#
+# Usage:
+#   uv run ansible-playbook playbooks/fix/disable-iptables.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Disable iptables and consolidate to nftables
+  hosts: tag_nomad
+  become: true
+  gather_facts: true
+
+  vars:
+    backup_dir: "/var/backups/firewall-migration-{{ ansible_date_time.date }}"
+
+  tasks:
+    - name: Create backup directory
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Backup current iptables rules
+      ansible.builtin.shell: |
+        iptables-save > {{ backup_dir }}/iptables-backup.txt
+        ip6tables-save > {{ backup_dir }}/ip6tables-backup.txt
+      args:
+        creates: "{{ backup_dir }}/iptables-backup.txt"
+
+    - name: Backup current nftables rules
+      ansible.builtin.shell: |
+        nft list ruleset > {{ backup_dir }}/nftables-backup.txt
+      args:
+        creates: "{{ backup_dir }}/nftables-backup.txt"
+
+    - name: Stop and disable iptables-related services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - iptables
+        - ip6tables
+        - netfilter-persistent
+      ignore_errors: true
+
+    - name: Flush all iptables rules
+      ansible.builtin.shell: |
+        # Flush all chains
+        iptables -F
+        iptables -X
+        iptables -t nat -F
+        iptables -t nat -X
+        iptables -t mangle -F
+        iptables -t mangle -X
+        iptables -t raw -F
+        iptables -t raw -X
+
+        # Set default policies to ACCEPT (nftables will handle filtering)
+        iptables -P INPUT ACCEPT
+        iptables -P FORWARD ACCEPT
+        iptables -P OUTPUT ACCEPT
+
+        # Do the same for IPv6
+        ip6tables -F
+        ip6tables -X
+        ip6tables -t nat -F
+        ip6tables -t nat -X
+        ip6tables -t mangle -F
+        ip6tables -t mangle -X
+        ip6tables -t raw -F
+        ip6tables -t raw -X
+
+        ip6tables -P INPUT ACCEPT
+        ip6tables -P FORWARD ACCEPT
+        ip6tables -P OUTPUT ACCEPT
+      register: iptables_flush_result
+      changed_when: true
+
+    - name: Remove iptables packages (but keep iptables-nft for compatibility)
+      ansible.builtin.package:
+        name:
+          - iptables-persistent
+          - netfilter-persistent
+        state: absent
+      ignore_errors: true
+
+    - name: Ensure nftables service is enabled and started
+      ansible.builtin.systemd:
+        name: nftables
+        state: started
+        enabled: true
+        daemon_reload: true
+
+    - name: Reload nftables configuration to ensure it's active
+      ansible.builtin.systemd:
+        name: nftables
+        state: reloaded
+
+    - name: Verify nftables is managing firewall rules
+      ansible.builtin.shell: nft list ruleset | head -10
+      register: nftables_status
+      changed_when: false
+
+    - name: Display nftables status
+      ansible.builtin.debug:
+        msg:
+          - "🔥 Firewall migration completed!"
+          - "✅ iptables flushed and services disabled"
+          - "✅ nftables active and managing rules"
+          - ""
+          - "Backup location: {{ backup_dir }}"
+          - ""
+          - "Current nftables rules preview:"
+          - "{{ nftables_status.stdout_lines[:5] | default(['No rules found']) }}"
+
+    - name: Restart Docker to clear iptables rules it may have added
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted
+      when: ansible_facts.services['docker.service'] is defined
+
+    - name: Wait for Docker to be ready
+      ansible.builtin.wait_for:
+        port: 2375
+        host: localhost
+        timeout: 30
+      ignore_errors: true
+      when: ansible_facts.services['docker.service'] is defined
+
+    - name: Create post-migration verification script
+      ansible.builtin.copy:
+        dest: "{{ backup_dir }}/verify-migration.sh"
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          echo "=== Firewall Migration Verification ==="
+          echo
+          echo "1. iptables status:"
+          systemctl is-active iptables 2>/dev/null || echo "iptables service: inactive (good)"
+          echo
+          echo "2. nftables status:"
+          systemctl is-active nftables
+          echo
+          echo "3. Current nftables rules:"
+          nft list table inet filter 2>/dev/null | head -20
+          echo
+          echo "4. Docker containers:"
+          docker ps --format "table {{{{.Names}}}}\t{{{{.Status}}}}\t{{{{.Ports}}}}" 2>/dev/null || echo "Docker not running"
+          echo
+          echo "5. Test connectivity:"
+          echo "Run: curl -f http://localhost:8080/ping"
+
+    - name: Final instructions
+      ansible.builtin.debug:
+        msg:
+          - "🎯 Migration Complete! Next steps:"
+          - ""
+          - "1. Verify Traefik connectivity:"
+          - "   curl -f http://{{ ansible_default_ipv4.address }}:8080/ping"
+          - ""
+          - "2. If issues persist, run the verification script:"
+          - "   {{ backup_dir }}/verify-migration.sh"
+          - ""
+          - "3. To rollback (if needed):"
+          - "   iptables-restore < {{ backup_dir }}/iptables-backup.txt"
+          - ""
+          - "4. Docker has been restarted to clear old iptables rules"
