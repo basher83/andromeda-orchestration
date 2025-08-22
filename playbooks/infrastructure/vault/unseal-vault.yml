@@ -1,0 +1,137 @@
+---
+# Unseal Vault nodes using keys from Infisical
+# This playbook retrieves unseal keys from Infisical and unseals Vault nodes
+
+- name: Unseal Vault Production Cluster
+  hosts: "{{ target_hosts | default('tag_server') }}"
+  gather_facts: true
+  serial: 1  # Unseal one node at a time
+
+  vars:
+    # Vault unsealing requires 3 out of 5 keys
+    vault_unseal_threshold: 3
+
+  tasks:
+    - name: Check Vault seal status
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}:8200/v1/sys/seal-status"
+        method: GET
+      register: seal_status
+      failed_when: false
+
+    - name: Display current seal status
+      ansible.builtin.debug:
+        msg:
+          - "Node: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})"
+          - "Sealed: {{ seal_status.json.sealed | default('unknown') }}"
+          - "Initialized: {{ seal_status.json.initialized | default('unknown') }}"
+          - "Unseal Progress: {{ seal_status.json.progress | default(0) }}/{{ seal_status.json.t | default(3) }}"
+
+    - name: Unseal Vault node
+      when:
+        - seal_status.json.sealed | default(true)
+        - seal_status.json.initialized | default(false)
+      block:
+        - name: Retrieve unseal keys from Infisical
+          ansible.builtin.set_fact:
+            vault_unseal_keys:
+              - "{{ (lookup('infisical.vault.read_secrets',
+                       universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                       universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                       project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                       env_slug='prod',
+                       path='/apollo-13/vault/unseal-keys',
+                       secret_name='UNSEAL_KEY_1')).value }}"
+              - "{{ (lookup('infisical.vault.read_secrets',
+                       universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                       universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                       project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                       env_slug='prod',
+                       path='/apollo-13/vault/unseal-keys',
+                       secret_name='UNSEAL_KEY_2')).value }}"
+              - "{{ (lookup('infisical.vault.read_secrets',
+                       universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                       universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                       project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                       env_slug='prod',
+                       path='/apollo-13/vault/unseal-keys',
+                       secret_name='UNSEAL_KEY_3')).value }}"
+              - "{{ (lookup('infisical.vault.read_secrets',
+                       universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                       universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                       project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                       env_slug='prod',
+                       path='/apollo-13/vault/unseal-keys',
+                       secret_name='UNSEAL_KEY_4')).value }}"
+              - "{{ (lookup('infisical.vault.read_secrets',
+                       universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                       universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                       project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                       env_slug='prod',
+                       path='/apollo-13/vault/unseal-keys',
+                       secret_name='UNSEAL_KEY_5')).value }}"
+          no_log: true
+
+        - name: Unseal Vault with keys (attempt until threshold met)
+          ansible.builtin.uri:
+            url: "http://{{ ansible_default_ipv4.address }}:8200/v1/sys/unseal"
+            method: PUT
+            body_format: json
+            body:
+              key: "{{ item }}"
+            status_code: [200]
+          loop: "{{ vault_unseal_keys[:3] }}"  # Only use first 3 keys to avoid timeout
+          register: unseal_results
+          failed_when: false
+          no_log: true
+          vars:
+            ansible_no_log: true
+
+        - name: Check if enough keys were successful
+          ansible.builtin.set_fact:
+            successful_unseals: "{{ unseal_results.results | selectattr('status', 'equalto', 200) | list | length }}"
+
+        - name: Verify Vault is unsealed
+          ansible.builtin.uri:
+            url: "http://{{ ansible_default_ipv4.address }}:8200/v1/sys/seal-status"
+            method: GET
+          register: final_seal_status
+
+        - name: Display unseal results
+          ansible.builtin.debug:
+            msg:
+              - "Node: {{ ansible_hostname }}"
+              - "Successful unseal attempts: {{ successful_unseals }}/{{ vault_unseal_keys | length }}"
+              - "Final sealed status: {{ final_seal_status.json.sealed }}"
+              - "Unseal progress: {{ final_seal_status.json.progress | default(0) }}/{{ final_seal_status.json.t | default(3) }}"
+
+    - name: Skip already unsealed nodes
+      ansible.builtin.debug:
+        msg: "Node {{ ansible_hostname }} is already unsealed"
+      when: not (seal_status.json.sealed | default(true))
+
+  post_tasks:
+    - name: Verify cluster status
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}:8200/v1/sys/leader"
+        method: GET
+      register: leader_status
+      failed_when: false
+
+    - name: Display cluster leadership
+      ansible.builtin.debug:
+        msg:
+          - "Node: {{ ansible_hostname }}"
+          - "Is Leader: {{ leader_status.json.is_self | default(false) }}"
+          - "Leader Address: {{ leader_status.json.leader_address | default('unknown') }}"
+      when: leader_status.status == 200
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "Vault Unseal Operation Complete"
+          - "=========================================="
+          - "Node: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})"
+          - "Status: {{ 'Unsealed' if not (final_seal_status.json.sealed | default(true)) else 'Still Sealed' }}"
+          - "Next: Verify all nodes are unsealed and cluster is healthy"
