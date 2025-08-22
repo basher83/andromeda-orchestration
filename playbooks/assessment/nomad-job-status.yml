@@ -1,0 +1,176 @@
+---
+# Nomad Job Status Check Playbook
+#
+# This playbook checks the status of Nomad jobs using the community.general.nomad_job_info module
+# It can check a specific job or list all jobs
+#
+# Usage:
+#   # Check specific job
+#   uv run ansible-playbook playbooks/assessment/nomad-job-status.yml -i inventory/doggos-homelab/infisical.proxmox.yml -e job_name=traefik
+#
+#   # List all jobs
+#   uv run ansible-playbook playbooks/assessment/nomad-job-status.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+
+- name: Nomad Job Status Check
+  hosts: localhost
+  gather_facts: true
+  become: false
+  vars:
+    nomad_api_endpoint: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646', true) }}"
+    nomad_namespace: "default"
+    job_name: "{{ hostvars[inventory_hostname]['job_name'] | default('', true) }}"  # Optional: specify a job name
+    report_dir: "{{ playbook_dir }}/../../reports/nomad"
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+
+  tasks:
+    - name: Create report directory
+      ansible.builtin.file:
+        path: "{{ report_dir }}"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+
+    - name: Get specific job info
+      ansible.builtin.uri:
+        url: "{{ nomad_api_endpoint }}/v1/job/{{ job_name }}?namespace={{ nomad_namespace }}"
+        method: GET
+        headers:
+          Content-Type: "application/json"
+      register: specific_job_result
+      when: job_name != ""
+
+    - name: List all Nomad jobs
+      community.general.nomad_job_info:
+        host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
+        port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
+        use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
+        namespace: "{{ nomad_namespace }}"
+      register: all_jobs_result
+      when: job_name == ""
+
+    - name: Display specific job status
+      ansible.builtin.debug:
+        msg:
+          - "📊 Job: {{ job_name }}"
+          - "Status: {{ specific_job_result.json.Status | default('Unknown') }}"
+          - "Type: {{ specific_job_result.json.Type | default('Unknown') }}"
+          - "Priority: {{ specific_job_result.json.Priority | default('Unknown') }}"
+          - "Datacenters: {{ specific_job_result.json.Datacenters | default([]) | join(', ') }}"
+          - "Running Allocations: {{ specific_job_result.json.TaskGroups | map(attribute='Count') | sum | default(0) }}"
+          - "Submit Time: {{ specific_job_result.json.SubmitTime | default('Unknown') }}"
+      when: job_name != "" and specific_job_result.json is defined
+
+    - name: Display all jobs summary
+      ansible.builtin.debug:
+        msg:
+          - "📊 All Nomad Jobs Summary:"
+          - "========================="
+          - "Total Jobs: {{ all_jobs_result.result | length | default(0) }}"
+          - ""
+          - "Job List:"
+          - "{{ all_jobs_result.result | default([]) | map(attribute='Name') | list | join(', ') }}"
+      when: job_name == "" and all_jobs_result.result is defined
+
+    - name: Create detailed job status table
+      ansible.builtin.set_fact:
+        job_status_table: |
+          {% if job_name == "" and all_jobs_result.result is defined %}
+          | Job Name | Status | Type | Running | Failed | Pending | Priority |
+          |----------|---------|------|---------|--------|---------|----------|
+          {% for job in all_jobs_result.result %}
+          | {{ job.Name }} | {{ job.Status | default('Unknown') }} | {{ job.Type | default('Unknown') }} | {{ job.Summary | default({}) | json_query('*.Running') | sum | default(0) }} | {{ job.Summary | default({}) | json_query('*.Failed') | sum | default(0) }} | {{ job.Summary | default({}) | json_query('*.Queued') | sum | default(0) }} | {{ job.Priority | default('Unknown') }} |
+          {% endfor %}
+          {% elif job_name != "" and specific_job_result.json is defined %}
+          | Job Name | Status | Type | Running | Priority |
+          |----------|---------|------|---------|----------|
+          | {{ specific_job_result.json.Name }} | {{ specific_job_result.json.Status | default('Unknown') }} | {{ specific_job_result.json.Type | default('Unknown') }} | {{ specific_job_result.json.TaskGroups | map(attribute='Count') | sum | default(0) }} | {{ specific_job_result.json.Priority | default('Unknown') }} |
+          {% else %}
+          No job data available
+          {% endif %}
+      when: specific_job_result.json is defined or all_jobs_result.result is defined
+
+    - name: Display job status table
+      ansible.builtin.debug:
+        msg: "{{ job_status_table.split('\n') }}"
+      when: job_status_table is defined
+
+    - name: Save job status report
+      ansible.builtin.copy:
+        content: |
+          # Nomad Job Status Report
+          Generated: {{ ansible_date_time.iso8601 }}
+          Nomad Endpoint: {{ nomad_api_endpoint }}
+          Namespace: {{ nomad_namespace }}
+
+          {% if job_name != "" and specific_job_result.json is defined %}
+          ## Job: {{ job_name }}
+
+          - **Status**: {{ specific_job_result.json.Status | default('Unknown') }}
+          - **Type**: {{ specific_job_result.json.Type | default('Unknown') }}
+          - **Priority**: {{ specific_job_result.json.Priority | default('Unknown') }}
+          - **Datacenters**: {{ specific_job_result.json.Datacenters | default([]) | join(', ') }}
+          - **Running Allocations**: {{ specific_job_result.json.TaskGroups | map(attribute='Count') | sum | default(0) }}
+          - **Last Modified**: {{ specific_job_result.json.ModifyTime | default('Unknown') }}
+
+          ### Full Job Details
+          ```yaml
+          {{ specific_job_result.json | to_nice_yaml }}
+          ```
+          {% elif job_name == "" and all_jobs_result.result is defined %}
+          ## All Jobs Summary
+
+          Total Jobs: {{ all_jobs_result.result | length | default(0) }}
+
+          {{ job_status_table }}
+
+          ### Raw Job Data
+          ```yaml
+          {{ all_jobs_result.result | to_nice_yaml }}
+          ```
+          {% else %}
+          ## No Data Available
+
+          No job information could be retrieved.
+          {% endif %}
+        dest: "{{ report_dir }}/job_status_{{ job_name | default('all', true) }}_{{ timestamp }}.md"
+        mode: '0644'
+      when: specific_job_result.json is defined or all_jobs_result.result is defined
+
+    - name: Check for unhealthy jobs
+      ansible.builtin.set_fact:
+        unhealthy_jobs: |
+          {% set unhealthy = [] %}
+          {% if all_jobs_result.result is defined %}
+          {% for job in all_jobs_result.result %}
+          {% if job.Status != 'running' or (job.JobSummary.Summary | default({}) | json_query('*.Failed') | sum | default(0)) > 0 %}
+          {% set _ = unhealthy.append(job.Name) %}
+          {% endif %}
+          {% endfor %}
+          {% elif specific_job_result.json is defined %}
+          {% if specific_job_result.json.Status != 'running' %}
+          {% set _ = unhealthy.append(specific_job_result.json.Name) %}
+          {% endif %}
+          {% endif %}
+          {{ unhealthy }}
+      when: specific_job_result.json is defined or all_jobs_result.result is defined
+
+    - name: Warn about unhealthy jobs
+      ansible.builtin.debug:
+        msg:
+          - "⚠️  WARNING: Unhealthy jobs detected!"
+          - "Jobs with issues: {{ unhealthy_jobs | join(', ') }}"
+          - "These jobs are either not running or have failed allocations."
+          - "Use 'nomad job status <job-name>' for detailed troubleshooting."
+      when: unhealthy_jobs is defined and unhealthy_jobs | length > 0
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg:
+          - "✅ Nomad job status check complete!"
+          - "Report saved to: {{ report_dir }}/job_status_{{ job_name | default('all', true) }}_{{ timestamp }}.md"
+          - ""
+          - "Next steps:"
+          - "- Check unhealthy jobs if any were reported"
+          - "- Review allocation details for failed jobs"
+          - "- Monitor resource usage and constraints"

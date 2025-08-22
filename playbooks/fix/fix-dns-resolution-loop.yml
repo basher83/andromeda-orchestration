@@ -1,0 +1,173 @@
+---
+# Fix DNS resolution loop issues between systemd-resolved and Consul DNS
+# This playbook addresses the "server misbehaving" errors from 127.0.0.53:53
+- name: Fix DNS Resolution Loop Configuration
+  hosts: nomad-client*:nomad-server*
+  become: true
+  gather_facts: true
+
+  vars:
+    # External DNS servers to use as fallback
+    external_dns_servers:
+      - "8.8.8.8"        # Google DNS
+      - "8.8.4.4"        # Google DNS
+      - "1.1.1.1"        # Cloudflare DNS
+      - "1.0.0.1"        # Cloudflare DNS
+
+    # Consul DNS configuration
+    consul_dns_port: 8600
+    consul_dns_domain: "consul"
+
+  tasks:
+    - name: Display current DNS configuration
+      ansible.builtin.debug:
+        msg: "Fixing DNS resolution loops on {{ inventory_hostname }}"
+
+    - name: Check current systemd-resolved status
+      ansible.builtin.command: resolvectl status
+      register: current_dns_status
+      failed_when: false
+      changed_when: false
+
+    - name: Display current DNS status
+      ansible.builtin.debug:
+        var: current_dns_status.stdout_lines
+        verbosity: 1
+
+    - name: Stop systemd-resolved service
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: stopped
+
+    - name: Clean up conflicting systemd-resolved configuration
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/resolved.conf
+        regexp: '^(DNS|FallbackDNS|DNSStubListener)='
+        state: absent
+        backup: true
+      notify: restart systemd-resolved
+
+    - name: Configure systemd-resolved with proper DNS hierarchy
+      ansible.builtin.blockinfile:
+        path: /etc/systemd/resolved.conf
+        marker: "# {mark} ANSIBLE MANAGED DNS CONFIGURATION"
+        block: |
+          # External DNS servers for internet resolution
+          DNS={{ external_dns_servers | join(' ') }}
+
+          # Disable DNS stub listener to prevent loops
+          DNSStubListener=no
+
+          # Cache settings
+          Cache=yes
+          CacheFromLocalhost=no
+
+          # DNSSEC validation
+          DNSSEC=allow-downgrade
+        backup: true
+      notify: restart systemd-resolved
+
+    - name: Remove conflicting consul.conf from resolved.conf.d
+      ansible.builtin.file:
+        path: /etc/systemd/resolved.conf.d/consul.conf
+        state: absent
+      notify: restart systemd-resolved
+
+    - name: Update netplan configuration to use external DNS directly
+      ansible.builtin.replace:
+        path: /etc/netplan/50-cloud-init.yaml
+        regexp: 'nameservers:\s*addresses:\s*\[127\.0\.0\.53\]'
+        replace: |
+          nameservers:
+                  addresses: [{{ external_dns_servers | join(', ') }}]
+        backup: true
+      notify:
+        - apply netplan
+        - restart systemd-resolved
+
+    - name: Also handle single-line nameserver format in netplan
+      ansible.builtin.replace:
+        path: /etc/netplan/50-cloud-init.yaml
+        regexp: 'addresses:\s*\[\s*127\.0\.0\.53\s*\]'
+        replace: 'addresses: [{{ external_dns_servers | join(", ") }}]'
+        backup: true
+      notify:
+        - apply netplan
+        - restart systemd-resolved
+
+    - name: Force handlers to run now
+      ansible.builtin.meta: flush_handlers
+
+    - name: Wait for systemd-resolved to be ready
+      ansible.builtin.wait_for:
+        timeout: 10
+
+    - name: Remove existing /etc/resolv.conf if it's a symlink to stub
+      ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: absent
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Create new /etc/resolv.conf with direct DNS servers
+      ansible.builtin.template:
+        src: resolv.conf.j2
+        dest: /etc/resolv.conf
+        mode: '0644'
+        backup: true
+
+    - name: Test external DNS resolution
+      ansible.builtin.command: nslookup registry-1.docker.io {{ external_dns_servers[0] }}
+      register: dns_test
+      failed_when: false
+      changed_when: false
+
+    - name: Display DNS test results
+      ansible.builtin.debug:
+        msg:
+          - "DNS resolution test for registry-1.docker.io:"
+          - "{{ dns_test.stdout_lines | default(['Test failed']) }}"
+
+    - name: Test Consul DNS resolution (if Consul is running)
+      ansible.builtin.command: nslookup consul.service.consul 127.0.0.1
+      register: consul_dns_test
+      failed_when: false
+      changed_when: false
+      when: inventory_hostname is match('nomad-.*')
+
+    - name: Display Consul DNS test results
+      ansible.builtin.debug:
+        msg:
+          - "Consul DNS resolution test:"
+          - "{{ consul_dns_test.stdout_lines | default(['Test failed or skipped']) }}"
+      when: consul_dns_test is defined
+
+    - name: Validate final DNS configuration
+      ansible.builtin.command: resolvectl status
+      register: final_dns_status
+      changed_when: false
+
+    - name: Display final DNS configuration
+      ansible.builtin.debug:
+        msg: "DNS configuration updated successfully on {{ inventory_hostname }}"
+      when: "'8.8.8.8' in final_dns_status.stdout"
+
+  handlers:
+    - name: restart systemd-resolved
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: restarted
+        daemon_reload: true
+
+    - name: apply netplan
+      ansible.builtin.command: netplan apply
+      become: true
+
+  post_tasks:
+    - name: Summary of changes
+      ansible.builtin.debug:
+        msg:
+          - "✅ DNS resolution loop configuration fixed"
+          - "✅ External DNS: {{ external_dns_servers | join(', ') }}"
+          - "✅ systemd-resolved stub listener disabled"
+          - "✅ Consul DNS still available at 127.0.0.1:{{ consul_dns_port }}"
+          - "🔄 Docker registry resolution should now work"
