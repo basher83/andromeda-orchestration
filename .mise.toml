@@ -33,6 +33,128 @@ vault = "1.20.2"
 # CORE TASKS - Primary developer actions
 # ============================================================================
 
+[tasks.setup]
+description = "Complete project setup for new environment (Python deps, Ansible collections)"
+run = '''
+echo "🚀 NetBox Ansible Project Setup"
+echo "================================"
+
+# Check if we're in the right directory
+if [ ! -f "ansible.cfg" ] || [ ! -f "pyproject.toml" ]; then
+  echo "❌ Error: Not in the project root directory"
+  echo "   Please run this from the netbox-ansible repository root"
+  exit 1
+fi
+
+echo ""
+echo "📦 Step 1: Installing mise tools..."
+echo "------------------------------------"
+mise install --yes
+echo "✅ Mise tools installed"
+
+echo ""
+echo "🐍 Step 2: Setting up Python virtual environment..."
+echo "----------------------------------------------------"
+if [ ! -d ".venv" ]; then
+  echo "Creating new virtual environment..."
+  uv venv
+  echo "✅ Virtual environment created"
+else
+  echo "✅ Virtual environment already exists"
+fi
+
+echo ""
+echo "📚 Step 3: Installing Python dependencies..."
+echo "---------------------------------------------"
+echo "Installing main dependencies and dev extras..."
+if uv sync --extra dev; then
+  echo "✅ Python dependencies installed successfully"
+else
+  echo "⚠️  Warning: Some dependencies may have failed to install"
+  echo "   This is often due to platform-specific packages"
+  echo "   Core functionality should still work"
+fi
+
+echo ""
+echo "🎭 Step 4: Installing Ansible collections..."
+echo "---------------------------------------------"
+if uv run ansible-galaxy collection install -r requirements.yml --force; then
+  echo "✅ Ansible collections installed"
+else
+  echo "❌ Failed to install Ansible collections"
+  echo "   Please check your requirements.yml file"
+  exit 1
+fi
+
+echo ""
+echo "🔧 Step 5: Setting up pre-commit hooks (optional)..."
+echo "------------------------------------------------------"
+if command -v pre-commit >/dev/null 2>&1; then
+  uv run pre-commit install
+  echo "✅ Pre-commit hooks installed"
+else
+  echo "ℹ️  Skipping pre-commit setup (not installed)"
+fi
+
+echo ""
+echo "📋 Step 6: Verification..."
+echo "---------------------------"
+echo "Python version: $(uv run python --version)"
+echo "Ansible version: $(uv run ansible --version | head -1)"
+echo "Virtual env location: $(pwd)/.venv"
+
+# Check for Infisical configuration
+echo ""
+# Check both possible Infisical auth methods
+if [ -n "$INFISICAL_TOKEN" ] || \
+   [ -n "$INFISICAL_MACHINE_IDENTITY_CLIENT_ID" ] || \
+   [ -n "$INFISICAL_UNIVERSAL_AUTH_CLIENT_ID" ]; then
+  echo "✅ Infisical credentials detected"
+  # Show which auth method is configured
+  [ -n "$INFISICAL_TOKEN" ] && echo "   Using: Token authentication"
+  [ -n "$INFISICAL_MACHINE_IDENTITY_CLIENT_ID" ] && echo "   Using: Machine Identity"
+  [ -n "$INFISICAL_UNIVERSAL_AUTH_CLIENT_ID" ] && echo "   Using: Universal Auth"
+else
+  echo "ℹ️  Note: Infisical credentials not configured"
+  echo "   Configure in .env.json or set environment variables:"
+  echo "   - INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and _CLIENT_SECRET"
+  echo "   - Or INFISICAL_MACHINE_IDENTITY_CLIENT_ID and _CLIENT_SECRET"
+fi
+
+echo ""
+echo "✨ Setup complete! You're ready to use the project."
+echo ""
+echo "Quick start commands:"
+echo "  mise run env:show           # Check current environment"
+echo "  mise run status:nomad       # Check Nomad cluster status"
+echo "  mise run status:consul      # Check Consul cluster status"
+echo "  uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list"
+echo ""
+echo "For more tasks, run: mise tasks"
+'''
+tools = { "uv" = "0.8.13", "python" = "3.13.7" }
+
+[tasks."setup:quick"]
+description = "Quick setup - just Python deps and Ansible collections (no pre-commit)"
+run = '''
+echo "⚡ Quick Setup (deps only)"
+echo "=========================="
+
+# Ensure we have the venv
+[ ! -d ".venv" ] && uv venv
+
+# Install Python deps
+echo "Installing Python dependencies..."
+uv sync --extra dev || echo "⚠️  Some optional dependencies may have failed"
+
+# Install Ansible collections
+echo "Installing Ansible collections..."
+uv run ansible-galaxy collection install -r requirements.yml --force
+
+echo "✅ Quick setup complete!"
+'''
+tools = { "uv" = "0.8.13", "python" = "3.13.7" }
+
 [tasks."setup:mcp"]
 description = "Generate .mcp.json from template using Infisical secrets"
 run = "./scripts/generate-mcp-config.sh"
@@ -77,8 +199,8 @@ tools = { "act" = "0.2.80" }
 # ENVIRONMENT - Environment switching
 # ============================================================================
 
-[tasks."env:show"]
-description = "Show current environment configuration"
+[tasks."env:status"]
+description = "Show current environment configuration and connectivity"
 run = '''
 echo "🌍 Current Environment Configuration:"
 echo "===================================="
@@ -86,53 +208,167 @@ echo "NOMAD_ADDR: ${NOMAD_ADDR:-not set}"
 echo "CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR:-not set}"
 echo "VAULT_ADDR: ${VAULT_ADDR:-not set}"
 echo ""
-if [[ "${NOMAD_ADDR}" == *"192.168.11.11"* ]]; then
-  echo "📍 Environment: LOCAL (192.168.11.11)"
-elif [[ "${NOMAD_ADDR}" == *"100.108.219.48"* ]]; then
-  echo "📍 Environment: REMOTE/TAILSCALE (100.108.219.48)"
+
+# Determine active environment
+if grep -q "^\\[env\\]" .mise.local.toml 2>/dev/null; then
+  echo "📍 Environment: LOCAL (using .mise.local.toml)"
+  echo "   IPs: 192.168.11.11 (LAN)"
 else
-  echo "📍 Environment: UNKNOWN"
+  echo "📍 Environment: REMOTE/TAILSCALE (using .mise.toml defaults)"
+  echo "   IPs: 100.108.219.48 (Tailscale)"
+fi
+
+echo ""
+echo "🧪 Testing connectivity:"
+echo "------------------------"
+
+# Test actual connectivity using current environment variables
+if [ -n "${NOMAD_ADDR}" ]; then
+  if curl -s --connect-timeout 2 "${NOMAD_ADDR}/v1/status/leader" >/dev/null 2>&1; then
+    echo "Nomad:  ✅ Connected to ${NOMAD_ADDR}"
+  else
+    echo "Nomad:  ❌ Cannot reach ${NOMAD_ADDR}"
+  fi
+fi
+
+if [ -n "${CONSUL_HTTP_ADDR}" ]; then
+  if curl -s --connect-timeout 2 "${CONSUL_HTTP_ADDR}/v1/status/leader" >/dev/null 2>&1; then
+    echo "Consul: ✅ Connected to ${CONSUL_HTTP_ADDR}"
+  else
+    echo "Consul: ❌ Cannot reach ${CONSUL_HTTP_ADDR}"
+  fi
+fi
+
+if [ -n "${VAULT_ADDR}" ]; then
+  if curl -s --connect-timeout 2 "${VAULT_ADDR}/v1/sys/health" >/dev/null 2>&1; then
+    echo "Vault:  ✅ Connected to ${VAULT_ADDR}"
+  else
+    echo "Vault:  ❌ Cannot reach ${VAULT_ADDR}"
+  fi
 fi
 '''
 
 [tasks."env:local"]
-description = "Switch to local environment using .mise.local.toml"
+description = "Switch to local environment (LAN IPs: 192.168.11.11)"
 run = '''
 echo "🔄 Switching to LOCAL environment..."
 echo "===================================="
-echo "💡 Using mise environment profiles:"
-echo "   export MISE_ENV=local"
-echo "   mise activate  # (or restart shell)"
+
+# Create/update .mise.local.toml with local environment
+cat > .mise.local.toml << 'EOF'
+# Local environment configuration (LAN access)
+# This file is auto-generated by 'mise run env:local'
+# To switch back to remote, run 'mise run env:remote'
+
+[env]
+NOMAD_REGION = "global"
+NOMAD_ADDR = "http://192.168.11.11:4646"
+CONSUL_HTTP_ADDR = "http://192.168.11.11:8500"
+VAULT_ADDR = "http://192.168.11.11:8200"
+EOF
+
+echo "✅ Local environment activated in .mise.local.toml"
 echo ""
-echo "Current environment settings in .mise.local.toml:"
-echo "  NOMAD_ADDR=http://192.168.11.11:4646"
-echo "  CONSUL_HTTP_ADDR=http://192.168.11.11:8500"
-echo "  VAULT_ADDR=http://192.168.11.11:8200"
+echo "📋 Configuration:"
+echo "  NOMAD_ADDR       = http://192.168.11.11:4646"
+echo "  CONSUL_HTTP_ADDR = http://192.168.11.11:8500"
+echo "  VAULT_ADDR       = http://192.168.11.11:8200"
 echo ""
-echo "🧪 Testing connectivity to local environment:"
-echo "Nomad: $(curl -s --connect-timeout 2 http://192.168.11.11:4646/v1/status/leader 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
-echo "Consul: $(curl -s --connect-timeout 2 http://192.168.11.11:8500/v1/status/leader 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
-echo "Vault: $(curl -s --connect-timeout 2 http://192.168.11.11:8200/v1/sys/health 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
+
+# Reload mise environment
+eval "$(mise env)"
+
+echo "🧪 Testing connectivity to LOCAL environment:"
+echo "----------------------------------------------"
+if curl -s --connect-timeout 2 http://192.168.11.11:4646/v1/status/leader >/dev/null 2>&1; then
+  echo "Nomad:  ✅ Connected"
+else
+  echo "Nomad:  ❌ Cannot reach (are you on the local network?)"
+fi
+
+if curl -s --connect-timeout 2 http://192.168.11.11:8500/v1/status/leader >/dev/null 2>&1; then
+  echo "Consul: ✅ Connected"
+else
+  echo "Consul: ❌ Cannot reach (are you on the local network?)"
+fi
+
+if curl -s --connect-timeout 2 http://192.168.11.11:8200/v1/sys/health >/dev/null 2>&1; then
+  echo "Vault:  ✅ Connected"
+else
+  echo "Vault:  ❌ Cannot reach (are you on the local network?)"
+fi
+
+echo ""
+echo "💡 To apply changes in current shell:"
+echo "   eval \"\$(mise env)\""
+echo ""
+echo "Or start a new shell session for changes to take effect."
 '''
 
 [tasks."env:remote"]
-description = "Switch to remote/tailscale environment (default)"
+description = "Switch to remote/Tailscale environment (IPs: 100.108.219.48)"
 run = '''
 echo "🔄 Switching to REMOTE/TAILSCALE environment..."
-echo "==============================================="
-echo "💡 Using default mise environment:"
-echo "   unset MISE_ENV"
-echo "   mise activate  # (or restart shell)"
+echo "================================================"
+
+# Comment out the [env] section in .mise.local.toml to use defaults
+if [ -f .mise.local.toml ]; then
+  # Create backup
+  cp .mise.local.toml .mise.local.toml.bak
+
+  # Comment out all environment variables
+  cat > .mise.local.toml << 'EOF'
+# Local environment configuration (LAN access)
+# Uncomment the [env] section below to activate local environment
+# Comment it out to use default (Tailscale) environment
+
+#[env]
+#NOMAD_REGION = "global"
+#NOMAD_ADDR = "http://192.168.11.11:4646"
+#CONSUL_HTTP_ADDR = "http://192.168.11.11:8500"
+#VAULT_ADDR = "http://192.168.11.11:8200"
+EOF
+
+  echo "✅ Remote environment activated (disabled .mise.local.toml overrides)"
+else
+  echo "✅ Using default remote environment"
+fi
+
 echo ""
-echo "Current environment settings in .mise.toml:"
-echo "  NOMAD_ADDR=http://100.108.219.48:4646"
-echo "  CONSUL_HTTP_ADDR=http://100.108.219.48:8500"
-echo "  VAULT_ADDR=http://100.108.219.48:8200"
+echo "📋 Configuration (from .mise.toml):"
+echo "  NOMAD_ADDR       = http://100.108.219.48:4646"
+echo "  CONSUL_HTTP_ADDR = http://100.108.219.48:8500"
+echo "  VAULT_ADDR       = http://100.108.219.48:8200"
 echo ""
-echo "🧪 Testing connectivity to remote environment:"
-echo "Nomad: $(curl -s --connect-timeout 2 http://100.108.219.48:4646/v1/status/leader 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
-echo "Consul: $(curl -s --connect-timeout 2 http://100.108.219.48:8500/v1/status/leader 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
-echo "Vault: $(curl -s --connect-timeout 2 http://100.108.219.48:8200/v1/sys/health 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
+
+# Reload mise environment
+eval "$(mise env)"
+
+echo "🧪 Testing connectivity to REMOTE environment:"
+echo "-----------------------------------------------"
+if curl -s --connect-timeout 2 http://100.108.219.48:4646/v1/status/leader >/dev/null 2>&1; then
+  echo "Nomad:  ✅ Connected"
+else
+  echo "Nomad:  ❌ Cannot reach (is Tailscale connected?)"
+fi
+
+if curl -s --connect-timeout 2 http://100.108.219.48:8500/v1/status/leader >/dev/null 2>&1; then
+  echo "Consul: ✅ Connected"
+else
+  echo "Consul: ❌ Cannot reach (is Tailscale connected?)"
+fi
+
+if curl -s --connect-timeout 2 http://100.108.219.48:8200/v1/sys/health >/dev/null 2>&1; then
+  echo "Vault:  ✅ Connected"
+else
+  echo "Vault:  ❌ Cannot reach (is Tailscale connected?)"
+fi
+
+echo ""
+echo "💡 To apply changes in current shell:"
+echo "   eval \"\$(mise env)\""
+echo ""
+echo "Or start a new shell session for changes to take effect."
 '''
 
 [tasks."env:test"]
@@ -1316,7 +1552,27 @@ tools = { "vault" = "1.20.2" }
 # HOOKS
 # ============================================================================
 [hooks]
-enter = "echo 'Welcome to the Andromeda-Orchestration repository!'"
+# Auto-install tools, show environment, and check project setup on directory enter
+enter = '''
+mise i -q
+
+# Show current environment
+if grep -q "^\\[env\\]" .mise.local.toml 2>/dev/null; then
+  echo "📍 Environment: LOCAL (192.168.11.11)"
+else
+  echo "📍 Environment: REMOTE/TAILSCALE (100.108.219.48)"
+fi
+
+# Check if Python deps are installed
+if [ ! -d ".venv" ] || [ ! -f ".venv/bin/ansible" ]; then
+  echo "⚠️  Python/Ansible environment not set up"
+  echo "   Run 'mise run setup' to initialize the project"
+  echo "   Or 'mise run setup:quick' for a minimal setup"
+fi
+
+# Remind about environment commands
+echo "💡 Environment commands: mise run env:status | env:local | env:remote"
+'''
 leave = "echo 'Goodbye!'"
 
 # Default environment (remote/tailscale)
