@@ -45,37 +45,63 @@
 
 ## 📋 Active Tasks
 
-### Apply Infrastructure Configuration (NEW - CRITICAL)
+### Deploy Vault in Production Mode (NEW - TOP PRIORITY)
+
+- **Description**: Migrate Vault from dev mode to production with persistent storage
+- **Status**: Not Started
+- **Priority**: P0 (CRITICAL - Blocks ALL production services)
+- **Blockers**: None
+- **Impact**: Without persistent Vault, we cannot:
+  - Store PostgreSQL credentials properly
+  - Manage PowerDNS secrets
+  - Deploy any production-ready services
+  - Maintain secrets across restarts
+- **Next Actions**:
+  1. Create Raft storage configuration
+  2. Deploy Vault with persistent volumes
+  3. Initialize and unseal Vault
+  4. Migrate existing secrets from Infisical
+
+### Apply Infrastructure Configuration (BLOCKED)
 
 - **Description**: Apply repository domain changes to running infrastructure
-- **Status**: In Progress
-- **Priority**: P0 (Critical - Blocks everything)
-- **Blockers**: None
+- **Status**: Blocked by Vault
+- **Priority**: P0 (Critical - But depends on Vault)
+- **Blockers**: Vault in dev mode prevents proper secret management
 - **Related**: PRs #71, #72, #76 (merged but not applied)
-- **Next Actions**:
-  1. Run Ansible site.yml to apply group_vars
-  2. Restart Consul/Nomad with new configuration
-  3. Re-deploy Nomad jobs with new domain variables
+- **Next Actions**: Wait for Vault production deployment
 
-### Deploy PostgreSQL Backend (NEW - PREREQUISITE)
+### Create NetBox DNS Zones (Can do in parallel with Vault)
+
+- **Description**: Execute PR #76 playbooks to create zones in NetBox
+- **Status**: Ready to Start
+- **Priority**: P0 (Critical - Can be done now)
+- **Blockers**: None (NetBox is running, playbooks are ready)
+- **Related**: PR #76 (merged but not executed)
+- **Next Actions**:
+  1. Run setup-zones.yml to create spaceships.work zones
+  2. Run populate-records.yml to add DNS records
+  3. Verify zones in NetBox UI
+
+### Deploy PostgreSQL Backend (BLOCKED)
 
 - **Description**: Deploy PostgreSQL for PowerDNS backend
-- **Status**: Not Started
+- **Status**: Blocked
 - **Priority**: P0 (Critical - PowerDNS dependency)
-- **Blockers**: Infrastructure configuration must be applied first
+- **Blockers**: Vault must be in production mode for persistent credentials
 - **Related**: PowerDNS deployment
 
-### PowerDNS Integration Updates
+### PowerDNS Integration Updates (BLOCKED)
 
 - **Description**: Sync new zones to PowerDNS
 - **Status**: Blocked
 - **Priority**: P0 (Critical)
 - **Blockers**:
-  1. Infrastructure not updated with new configuration
+  1. Vault not in production mode
   2. PostgreSQL backend not deployed
-  3. PowerDNS not deployed yet
+  3. Infrastructure configuration not applied
 - **Related**: [Master Plan](./domain-migration-master-plan.md), Issue #28
-- **Next Actions**: Wait for prerequisites to complete
+- **Next Actions**: Wait for Vault deployment
 
 ### Ansible Playbook Migration
 
@@ -120,10 +146,12 @@
 
 - **Completed PRs**: 3 (PR #71, #72, #76) ✅ (merged but not applied to infrastructure)
 - **Remaining PRs**: 3 (PR #4, #5, #6)
-- **Progress**: 50% repository changes, 10% infrastructure changes
-- **Risk Level**: MEDIUM - Infrastructure ready for PowerDNS but port conflicts remain
-- **Tomorrow's Focus**: Resolve port 53 conflicts and deploy PowerDNS
-- **Key Finding**: Infrastructure audit shows clean slate for DNS deployment
+- **Progress**: 50% repository changes, 0% infrastructure changes
+- **Risk Level**: HIGH - Vault in dev mode blocks all production deployments
+- **Tomorrow's Focus**:
+  1. Deploy Vault in production mode (CRITICAL)
+  2. Execute NetBox DNS zone creation (can do in parallel)
+- **Key Finding**: Vault dev mode is the root blocker - fixing this unblocks everything else
 
 ## 🔗 Quick Links
 

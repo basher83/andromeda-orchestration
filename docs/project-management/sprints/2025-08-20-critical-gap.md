@@ -169,6 +169,33 @@ This critical gap has been communicated through:
 2. Then: Apply domain variables to infrastructure
 3. Finally: Sync NetBox zones and test resolution
 
+## August 22 Update - Root Cause Identified: Vault Dev Mode
+
+### THE REAL BLOCKER
+
+After DNS IPAM audit and further analysis, the root cause of all deployment issues is clear:
+
+### The Real Blocker
+
+Vault is running in dev mode with no persistence
+
+This blocks EVERYTHING:
+
+- PostgreSQL cannot store credentials persistently
+- PowerDNS cannot access stable database passwords
+- Any restart loses ALL secrets
+- Production deployments are impossible
+
+### Priority Shift
+
+**STOP** trying to deploy production services on dev-mode Vault!
+
+**New Priority Order:**
+
+1. **Deploy Vault in production mode** with Raft storage
+2. **Create NetBox DNS zones** (can do in parallel, doesn't need Vault)
+3. Then and only then: PostgreSQL, PowerDNS, etc.
+
 ## August 22 Update - DNS IPAM Audit Results
 
 ### Infrastructure Assessment Completed
