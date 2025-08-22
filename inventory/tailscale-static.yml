@@ -1,0 +1,47 @@
+---
+# Static Tailscale inventory for remote development
+# Generated from: tailscale status
+# Use this when the dynamic inventory has issues with localhost delegation
+
+all:
+  hosts:
+    nomad-server-1:
+      ansible_host: 100.108.219.48
+      ansible_user: ansible
+      ansible_python_interpreter: /usr/bin/python3
+    nomad-server-2:
+      ansible_host: 100.112.25.28
+      ansible_user: ansible
+      ansible_python_interpreter: /usr/bin/python3
+    nomad-server-3:
+      ansible_host: 100.73.191.53
+      ansible_user: ansible
+      ansible_python_interpreter: /usr/bin/python3
+    nomad-client-1:
+      ansible_host: 100.89.113.45
+      ansible_user: ansible
+      ansible_python_interpreter: /usr/bin/python3
+    nomad-client-2:
+      ansible_host: 100.122.184.49
+      ansible_user: ansible
+      ansible_python_interpreter: /usr/bin/python3
+    nomad-client-3:
+      ansible_host: 100.118.136.20
+      ansible_user: ansible
+      ansible_python_interpreter: /usr/bin/python3
+
+  children:
+    nomad_servers:
+      hosts:
+        nomad-server-1:
+        nomad-server-2:
+        nomad-server-3:
+    nomad_clients:
+      hosts:
+        nomad-client-1:
+        nomad-client-2:
+        nomad-client-3:
+    nomad:
+      children:
+        nomad_servers:
+        nomad_clients:
