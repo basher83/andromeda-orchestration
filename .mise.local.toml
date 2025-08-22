@@ -1,0 +1,5 @@
+[env]
+NOMAD_REGION = "global"
+NOMAD_ADDR = "http://192.168.11.11:4646"
+CONSUL_HTTP_ADDR = "http://192.168.11.11:8500"
+VAULT_ADDR = "http://192.168.11.11:8200"

@@ -74,6 +74,110 @@ fi
 tools = { "act" = "0.2.80" }
 
 # ============================================================================
+# ENVIRONMENT - Environment switching
+# ============================================================================
+
+[tasks."env:show"]
+description = "Show current environment configuration"
+run = '''
+echo "🌍 Current Environment Configuration:"
+echo "===================================="
+echo "NOMAD_ADDR: ${NOMAD_ADDR:-not set}"
+echo "CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR:-not set}"
+echo "VAULT_ADDR: ${VAULT_ADDR:-not set}"
+echo ""
+if [[ "${NOMAD_ADDR}" == *"192.168.11.11"* ]]; then
+  echo "📍 Environment: LOCAL (192.168.11.11)"
+elif [[ "${NOMAD_ADDR}" == *"100.108.219.48"* ]]; then
+  echo "📍 Environment: REMOTE/TAILSCALE (100.108.219.48)"
+else
+  echo "📍 Environment: UNKNOWN"
+fi
+'''
+
+[tasks."env:local"]
+description = "Switch to local environment using .mise.local.toml"
+run = '''
+echo "🔄 Switching to LOCAL environment..."
+echo "===================================="
+echo "💡 Using mise environment profiles:"
+echo "   export MISE_ENV=local"
+echo "   mise activate  # (or restart shell)"
+echo ""
+echo "Current environment settings in .mise.local.toml:"
+echo "  NOMAD_ADDR=http://192.168.11.11:4646"
+echo "  CONSUL_HTTP_ADDR=http://192.168.11.11:8500"
+echo "  VAULT_ADDR=http://192.168.11.11:8200"
+echo ""
+echo "🧪 Testing connectivity to local environment:"
+echo "Nomad: $(curl -s --connect-timeout 2 http://192.168.11.11:4646/v1/status/leader 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
+echo "Consul: $(curl -s --connect-timeout 2 http://192.168.11.11:8500/v1/status/leader 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
+echo "Vault: $(curl -s --connect-timeout 2 http://192.168.11.11:8200/v1/sys/health 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
+'''
+
+[tasks."env:remote"]
+description = "Switch to remote/tailscale environment (default)"
+run = '''
+echo "🔄 Switching to REMOTE/TAILSCALE environment..."
+echo "==============================================="
+echo "💡 Using default mise environment:"
+echo "   unset MISE_ENV"
+echo "   mise activate  # (or restart shell)"
+echo ""
+echo "Current environment settings in .mise.toml:"
+echo "  NOMAD_ADDR=http://100.108.219.48:4646"
+echo "  CONSUL_HTTP_ADDR=http://100.108.219.48:8500"
+echo "  VAULT_ADDR=http://100.108.219.48:8200"
+echo ""
+echo "🧪 Testing connectivity to remote environment:"
+echo "Nomad: $(curl -s --connect-timeout 2 http://100.108.219.48:4646/v1/status/leader 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
+echo "Consul: $(curl -s --connect-timeout 2 http://100.108.219.48:8500/v1/status/leader 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
+echo "Vault: $(curl -s --connect-timeout 2 http://100.108.219.48:8200/v1/sys/health 2>/dev/null && echo "✅ OK" || echo "❌ Failed")"
+'''
+
+[tasks."env:test"]
+description = "Test connectivity to current environment"
+run = '''
+echo "🧪 Testing Current Environment Connectivity:"
+echo "==========================================="
+echo "Target addresses:"
+echo "  Nomad: ${NOMAD_ADDR:-not set}"
+echo "  Consul: ${CONSUL_HTTP_ADDR:-not set}"
+echo "  Vault: ${VAULT_ADDR:-not set}"
+echo ""
+echo "Connectivity tests:"
+if [ -n "${NOMAD_ADDR}" ]; then
+  if curl -s --connect-timeout 3 "${NOMAD_ADDR}/v1/status/leader" >/dev/null 2>&1; then
+    echo "  Nomad: ✅ OK"
+  else
+    echo "  Nomad: ❌ Failed"
+  fi
+else
+  echo "  Nomad: ⚠️  Address not set"
+fi
+
+if [ -n "${CONSUL_HTTP_ADDR}" ]; then
+  if curl -s --connect-timeout 3 "${CONSUL_HTTP_ADDR}/v1/status/leader" >/dev/null 2>&1; then
+    echo "  Consul: ✅ OK"
+  else
+    echo "  Consul: ❌ Failed"
+  fi
+else
+  echo "  Consul: ⚠️  Address not set"
+fi
+
+if [ -n "${VAULT_ADDR}" ]; then
+  if curl -s --connect-timeout 3 "${VAULT_ADDR}/v1/sys/health" >/dev/null 2>&1; then
+    echo "  Vault: ✅ OK"
+  else
+    echo "  Vault: ❌ Failed"
+  fi
+else
+  echo "  Vault: ⚠️  Address not set"
+fi
+'''
+
+# ============================================================================
 # UTILITY - Helper tasks
 # ============================================================================
 
@@ -1215,6 +1319,7 @@ tools = { "vault" = "1.20.2" }
 enter = "echo 'Welcome to the Andromeda-Orchestration repository!'"
 leave = "echo 'Goodbye!'"
 
+# Default environment (remote/tailscale)
 [env]
 _.file = ".env.json"
 NOMAD_REGION = "global"
