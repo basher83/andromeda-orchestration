@@ -1,6 +1,6 @@
 # Domain Migration Master Plan: .local → spaceships.work
 
-**Status**: 🚧 IN PROGRESS - 50% Complete
+**Status**: 🚧 IN PROGRESS - 30% Complete (Code updated, infrastructure NOT)
 **Epic**: [#18](https://github.com/basher83/andromeda-orchestration/issues/18)
 **Created**: 2025-01-19
 **Target Completion**: 2025-01-24
@@ -97,42 +97,46 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 - Variable defaults allow instant reversion
 - Test in dev environment first
 
-### Sprint 2: NetBox DNS Infrastructure (Day 2) ✅ COMPLETE
+### Sprint 2: NetBox DNS Infrastructure (Day 2) ⚠️ PARTIALLY COMPLETE
 
 **Duration**: 3 hours
 **PR**: #76
 
-#### PR #76: NetBox DNS Zone Migration ✅ MERGED
+#### PR #76: NetBox DNS Playbook Updates ✅ MERGED (Playbooks only, NOT executed)
 
 **Branch**: `feat/netbox-dns-zones-migration`
 **Estimated Time**: 3 hours
 **Commit**: 9567b22
 **Dependencies**: PR #71 merged
 
+**IMPORTANT**: PR #76 only updated the playbook code to use variables. The actual NetBox zones have NOT been created yet.
+
 **Pre-Implementation Tasks**:
 
-- [x] Backup existing NetBox DNS zones (archived to playbooks/.archive/)
-- [x] Document current .local zones
-- [x] Lower TTLs to 60 seconds
+- [ ] Backup existing NetBox DNS zones
+- [ ] Document current .local zones
+- [ ] Lower TTLs to 60 seconds
 
 **Implementation Checklist**:
 
-1. **Zone Setup** (`playbooks/infrastructure/netbox/dns/setup-zones.yml`):
-   - [x] Update nameserver references to use `{{ homelab_domain }}`
-   - [x] Create spaceships.work forward zone
-   - [x] Create doggos.spaceships.work forward zone
-   - [x] Create og.spaceships.work forward zone
-   - [x] Create reverse zones for all subnets
+1. **Playbook Updates** (`playbooks/infrastructure/netbox/dns/setup-zones.yml`):
+   - [x] Update nameserver references to use `{{ homelab_domain }}` in code
+   - [ ] RUN playbook to create spaceships.work forward zone
+   - [ ] RUN playbook to create doggos.spaceships.work forward zone
+   - [ ] RUN playbook to create og.spaceships.work forward zone
+   - [ ] RUN playbook to create reverse zones for all subnets
 
 2. **Record Population** (`playbooks/infrastructure/netbox/dns/populate-records.yml`):
-   - [x] Replace all `zone: "homelab.local"` with `zone: "{{ homelab_domain }}"`
-   - [x] Update all FQDN references
-   - [x] Ensure PTR records point to new domain
+   - [x] Replace all `zone: "homelab.local"` with `zone: "{{ homelab_domain }}` in code
+   - [x] Update all FQDN references in code
+   - [x] Ensure PTR records point to new domain in code
+   - [ ] RUN playbook to actually populate records in NetBox
 
 3. **Testing Updates** (`playbooks/infrastructure/netbox/dns/test-dns-resolution.yml`):
-   - [x] Update test queries to new domain
-   - [x] Add parallel testing for both domains
-   - [x] Include macOS-specific tests
+   - [x] Update test queries to new domain in code
+   - [x] Add parallel testing for both domains in code
+   - [x] Include macOS-specific tests in code
+   - [ ] RUN tests to verify resolution
 
 **Testing Commands**:
 
@@ -308,11 +312,12 @@ grep -r '\.local' \
 - [x] Nomad jobs deploy with new domain
 - [x] Traefik routing functional
 
-**Sprint 2**: ✅ COMPLETE
+**Sprint 2**: ⚠️ PARTIALLY COMPLETE
 
-- [x] NetBox zones created
-- [x] Records populated
-- [x] API accessible
+- [x] Playbook code updated to use variables
+- [ ] NetBox zones created (playbooks NOT executed)
+- [ ] Records populated (playbooks NOT executed)
+- [ ] API serving new zones
 
 **Sprint 3**:
 

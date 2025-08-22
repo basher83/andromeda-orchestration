@@ -3,6 +3,7 @@
 **Sprint Goal**: 🚨 CRITICAL domain migration (.local → spaceships.work) - Sprints 3-5
 
 **Previous Sprint**: [Archived](./completed/2025-08.md)
+**Last Updated**: August 22, 2025 21:15 UTC
 
 ---
 
@@ -10,23 +11,33 @@
 
 ## 🎯 Sprint Goals (August 20-24)
 
-### Today (Aug 20) - Sprint 3: PowerDNS Integration
+### Aug 20 - Sprint 3: PowerDNS Integration
 
 - **PR #4**: PowerDNS sync and integration (REVISED: 5.5 hrs)
-- **Status**: In Progress - Critical gap discovered
-- **Blockers**: Infrastructure not updated with new domain configuration
-- **Next Actions**:
-  1. Apply repository changes to infrastructure first
-  2. Deploy PostgreSQL backend
-  3. Then proceed with PowerDNS deployment
+- **Status**: ⚠️ Partially Complete - Infrastructure gaps discovered
+- **Completed**: PostgreSQL deployed, PowerDNS job created
+- **Blockers**: Port 53 conflicts, HCL2 variable passing issues
 
-### Tomorrow (Aug 21) - Sprint 4: Ansible Updates
+### Aug 21 - Sprint 4: Ansible Updates
 
 - **PR #5**: Update all Ansible playbooks (3 hrs)
-- **Status**: Planning
+- **Status**: Not Started (Delayed due to Sprint 3 issues)
 - **Target**: Fix remaining .local references
 
-### Aug 22-24 - Sprint 5: Documentation & Validation
+### Aug 22 (Today) - Infrastructure Assessment & Tooling
+
+- **DNS IPAM Audit**: ✅ COMPLETED
+  - Tailscale connectivity verified
+  - Static inventory created (`inventory/tailscale-static.yml`)
+  - Audit reports generated for all 6 Nomad nodes
+  - Consul DNS confirmed on port 8600
+  - No conflicting DNS services found (ready for PowerDNS)
+- **Environment Setup**: ✅ COMPLETED
+  - Mise/uv environment switching fixed
+  - Tailscale documentation updated with safety guidelines
+  - CHANGELOG updated with domain migration progress
+
+### Aug 23-24 - Sprint 5: Documentation & Validation
 
 - **PR #6**: Documentation and CI/CD (2 hrs)
 - **Status**: Planning
@@ -82,20 +93,37 @@
 - **Blockers**: None
 - **Related**: Issue #18
 
-## ✅ Completed (Aug 19-20)
+## ✅ Completed (Aug 19-22)
+
+### August 19-20
 
 - ✅ PR #71: homelab_domain variable setup (merged)
 - ✅ PR #72: Nomad HCL2 variables (merged)
-- ✅ PR #76: NetBox DNS playbook migration (merged)
+- ✅ PR #76: NetBox DNS playbook updates (merged - code only, NOT executed)
 - ✅ PR #73-74: Dependency updates (merged)
+
+### August 22
+
+- ✅ DNS IPAM Infrastructure Audit completed
+  - All nodes using external DNS (Google/Cloudflare)
+  - Consul DNS operational on port 8600
+  - No DNS service conflicts detected
+  - Infrastructure ready for PowerDNS deployment
+- ✅ Tailscale remote development environment fixed
+  - Static inventory created to avoid delegation issues
+  - Documentation updated with critical safety info
+- ✅ Mise/uv environment management improved
+  - Setup tasks automated
+  - Environment switching between local/remote working
 
 ## 📊 Sprint Metrics
 
 - **Completed PRs**: 3 (PR #71, #72, #76) ✅ (merged but not applied to infrastructure)
 - **Remaining PRs**: 3 (PR #4, #5, #6)
-- **Progress**: 50% repository changes, 0% infrastructure changes
-- **Risk Level**: HIGH - Critical gap discovered, timeline at risk
-- **Today's Focus**: Apply configuration changes to infrastructure FIRST
+- **Progress**: 50% repository changes, 10% infrastructure changes
+- **Risk Level**: MEDIUM - Infrastructure ready for PowerDNS but port conflicts remain
+- **Tomorrow's Focus**: Resolve port 53 conflicts and deploy PowerDNS
+- **Key Finding**: Infrastructure audit shows clean slate for DNS deployment
 
 ## 🔗 Quick Links
 

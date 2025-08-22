@@ -68,9 +68,9 @@
   - Status: MUST DO IMMEDIATELY
 
 - **Domain Migration PRs** (6 total)
-  - PR #71: homelab_domain variable ✅ MERGED (not applied)
-  - PR #72: Nomad HCL2 variables ✅ MERGED (not applied)
-  - PR #76: NetBox DNS zones ✅ MERGED (not applied)
+  - PR #71: homelab_domain variable ✅ MERGED (not applied to infrastructure)
+  - PR #72: Nomad HCL2 variables ✅ MERGED (not applied to infrastructure)
+  - PR #76: NetBox DNS playbook updates ✅ MERGED (playbooks updated, NOT executed in NetBox)
   - PR #4: PowerDNS sync (Day 3) - BLOCKED
   - PR #5: Ansible playbooks (Day 4) - PLANNED
   - PR #6: Documentation & CI (Day 5) - PLANNED
