@@ -42,15 +42,45 @@ table inet filter {
         # Allow Vault API
         tcp dport 8200 accept
 
+        # Allow HTTP/HTTPS traffic (Traefik)
+        tcp dport { 80, 443 } accept
+
+        # Allow Traefik dashboard/admin
+        tcp dport 8080 accept
+
+        # Allow Nomad dynamic port range (20000-32000) for workload services
+        tcp dport 20000-32000 accept
+        udp dport 20000-32000 accept
+
         # Drop everything else
         drop
     }
 
     chain forward {
         type filter hook forward priority 0; policy drop;
+
+        # Allow Docker bridge forwarding
+        iifname "docker0" accept
+        oifname "docker0" ct state established,related accept
+        oifname "docker0" accept
     }
 
     chain output {
         type filter hook output priority 0; policy accept;
+    }
+}
+
+# NAT table for Docker DNS redirection to Consul
+table ip nat {
+    chain prerouting {
+        type nat hook prerouting priority -100; policy accept;
+
+        # Redirect Docker container DNS queries to Consul
+        ip saddr 172.17.0.0/16 udp dport 53 dnat to {{ ansible_default_ipv4.address }}:8600
+        ip saddr 172.17.0.0/16 tcp dport 53 dnat to {{ ansible_default_ipv4.address }}:8600
+    }
+
+    chain postrouting {
+        type nat hook postrouting priority 100; policy accept;
     }
 }
