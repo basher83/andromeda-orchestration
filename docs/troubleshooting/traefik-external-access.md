@@ -30,16 +30,20 @@ The issue stems from conflicts between **nftables** and **iptables** firewall ma
 ### Step 1: Verify the Issue
 
 Check if both firewall systems are active:
+
 ```bash
 systemctl is-active nftables    # Should return: active
 systemctl is-active iptables    # Should return: inactive (desired state)
 ```
 
 Check for Docker DNS configuration:
+
 ```bash
 cat /etc/docker/daemon.json
 ```
+
 Should contain:
+
 ```json
 {
   "dns": ["192.168.10.21"],
@@ -50,11 +54,13 @@ Should contain:
 ### Step 2: Disable iptables and Consolidate to nftables
 
 Run the disable-iptables playbook:
+
 ```bash
 uv run ansible-playbook playbooks/fix/disable-iptables.yml -i inventory/doggos-homelab/infisical.proxmox.yml
 ```
 
 This will:
+
 - ✅ Backup existing iptables rules
 - ✅ Flush all iptables chains
 - ✅ Disable iptables services
@@ -101,6 +107,7 @@ uv run ansible-playbook playbooks/infrastructure/network/update-nftables-traefik
 ### Step 5: Restart Docker
 
 After firewall changes, restart Docker to clear old iptables rules:
+
 ```bash
 ansible nomad-client-2-holly -i inventory/doggos-homelab/infisical.proxmox.yml -m systemd -a "name=docker state=restarted" --become
 ```
@@ -108,6 +115,7 @@ ansible nomad-client-2-holly -i inventory/doggos-homelab/infisical.proxmox.yml -
 ### Step 6: Verify Fix
 
 Test external access:
+
 ```bash
 curl -f http://192.168.11.21:8080/ping          # Should return: OK
 curl -f http://192.168.11.21:8080/dashboard/    # Should return: HTML content
