@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-08-22] - Domain Migration Completion & Infrastructure Hardening
+
+### Added
+
+- **Comprehensive Troubleshooting Documentation**
+  - Created `docs/troubleshooting/ansible-nomad-playbooks.md` - Complete guide for Nomad deployment issues
+  - Added `docs/troubleshooting/domain-migration.md` - Domain migration troubleshooting guide
+  - Added `docs/troubleshooting/dns-resolution-loops.md` - DNS resolution issue fixes
+  - Added `docs/troubleshooting/traefik-external-access.md` - External access configuration guide
+
+- **Assessment and Monitoring Playbooks**
+  - `playbooks/assessment/nomad-job-status.yml` - Comprehensive job status reporting with detailed health checks
+  - Automated report generation in `reports/nomad/` for tracking deployment status
+
+- **Infrastructure Fix Playbooks**
+  - `playbooks/fix/disable-iptables.yml` - Resolve iptables conflicts with Docker/nftables
+  - `playbooks/fix/fix-dns-resolution-loop.yml` - Fix DNS resolution loops in infrastructure
+  - `playbooks/infrastructure/network/update-nftables-traefik.yml` - Proper nftables configuration for Traefik
+
+- **Mise Environment Management**
+  - Implemented environment switching between local (192.168.11.11) and remote/Tailscale (100.108.219.48)
+  - Added comprehensive setup tasks (`mise run setup`, `mise run setup:quick`)
+  - Created `docs/getting-started/mise-setup-guide.md` - Complete mise integration documentation
+
+### Changed
+
+- **Traefik Load Balancer Hardening**
+  - Enhanced `nomad-jobs/core-infrastructure/traefik.nomad.hcl` with improved health checks
+  - Added proper DNS resolution configuration for Docker containers
+  - Implemented robust service discovery with Consul integration
+  - Fixed external access issues with proper entrypoint configuration
+
+- **Nomad Deployment Reliability**
+  - Improved `playbooks/infrastructure/nomad/deploy-job.yml` with better error handling
+  - Added job validation and planning steps before deployment
+  - Enhanced feedback and status reporting during deployments
+
+- **Network Configuration**
+  - Updated `roles/system_base/templates/nftables.conf.j2` for better Docker/Traefik compatibility
+  - Resolved conflicts between iptables and nftables
+  - Ensured proper DNS forwarding for containerized services
+
+### Fixed
+
+- **Domain Migration Issues**
+  - Resolved DNS resolution loops affecting service discovery
+  - Fixed Traefik external access for spaceships.work domain
+  - Corrected Consul DNS forwarding for Docker containers
+  - Eliminated iptables/nftables conflicts causing connectivity issues
+
+### Infrastructure Impact
+
+- **Scope**: Complete Traefik redeployment across Nomad cluster
+- **Services Affected**: All HTTP/HTTPS ingress traffic routing
+- **Migration Status**: Successfully migrated to spaceships.work domain
+- **Stability**: Significantly improved with comprehensive health checks and monitoring
+
 ### Milestones and Tracking
 
 - Role-first refactor: playbook soup cleanup (Aug 2025) — due 2025-08-31
