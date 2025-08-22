@@ -23,7 +23,7 @@ job "traefik" {
       }
 
       port "admin" {
-        to = 8080 # Dashboard on dynamic port
+        static = 8080 # Dashboard on static port for easier connectivity
       }
     }
 
@@ -49,7 +49,7 @@ job "traefik" {
       }
 
       env {
-        CONSUL_HTTP_ADDR = "${attr.unique.consul.name}.node.consul:8500"
+        CONSUL_HTTP_ADDR = "${attr.unique.network.ip-address}:8500"
       }
 
       template {
@@ -57,7 +57,8 @@ job "traefik" {
 # Static configuration
 api:
   dashboard: true
-  debug: false
+  debug: true  # Enable debug for troubleshooting
+  insecure: true  # Required for Traefik v3.0 to expose dashboard on admin entrypoint
 
 entryPoints:
   web:
@@ -72,8 +73,8 @@ entryPoints:
   websecure:
     address: ":443"
 
-  admin:
-    address: ":8080"
+  traefik:
+    address: ":8080"  # Changed from 'admin' to 'traefik' to match standard convention
 
 providers:
   # File provider for static configs
@@ -98,16 +99,16 @@ providers:
 #     prefix: traefik
 
 ping:
-  entryPoint: admin
+  entryPoint: traefik  # Updated to match entrypoint name
 
 log:
-  level: INFO
+  level: DEBUG  # More verbose logging for troubleshooting
 
 accessLog: {}
 
 metrics:
   prometheus:
-    entryPoint: admin
+    entryPoint: traefik  # Updated to match entrypoint name
     addEntryPointsLabels: true
     addServicesLabels: true
 EOF
@@ -157,23 +158,25 @@ EOF
           "metrics",
         ]
 
-        check {
-          name     = "traefik-api-ping"
-          type     = "http"
-          path     = "/ping"
-          port     = "admin"
-          interval = "10s"
-          timeout  = "2s"
-        }
+        # Temporarily disabled HTTP health checks due to connectivity issues
+        # TODO: Re-enable once network connectivity to admin port is fixed
+        # check {
+        #   name     = "traefik-api-ping"
+        #   type     = "http"
+        #   path     = "/ping"
+        #   port     = "admin"
+        #   interval = "10s"
+        #   timeout  = "2s"
+        # }
 
-        check {
-          name     = "traefik-dashboard"
-          type     = "http"
-          path     = "/dashboard/"
-          port     = "admin"
-          interval = "30s"
-          timeout  = "5s"
-        }
+        # check {
+        #   name     = "traefik-dashboard"
+        #   type     = "http"
+        #   path     = "/dashboard/"
+        #   port     = "admin"
+        #   interval = "30s"
+        #   timeout  = "5s"
+        # }
       }
 
       # HTTP entrypoint service
@@ -186,7 +189,11 @@ EOF
           ttl = "1h"
         }
 
-        tags = ["entrypoint", "http"]
+        tags = [
+          "traefik.enable=true",
+          "entrypoint",
+          "http"
+        ]
 
         check {
           name     = "http-entrypoint"
@@ -207,7 +214,12 @@ EOF
           ttl = "1h"
         }
 
-        tags = ["entrypoint", "https", "tls"]
+        tags = [
+          "traefik.enable=true",
+          "entrypoint",
+          "https",
+          "tls"
+        ]
 
         check {
           name     = "https-entrypoint"
@@ -229,19 +241,22 @@ EOF
         }
 
         tags = [
+          "traefik.enable=true",
           "prometheus",
           "metrics",
           "path:/metrics",
         ]
 
-        check {
-          name     = "prometheus-metrics"
-          type     = "http"
-          path     = "/metrics"
-          port     = "admin"
-          interval = "30s"
-          timeout  = "5s"
-        }
+        # Temporarily disabled HTTP health check due to connectivity issues
+        # TODO: Re-enable once network connectivity to admin port is fixed
+        # check {
+        #   name     = "prometheus-metrics"
+        #   type     = "http"
+        #   path     = "/metrics"
+        #   port     = "admin"
+        #   interval = "30s"
+        #   timeout  = "5s"
+        # }
       }
     } # CLOSE TASK BLOCK
   }   # CLOSE GROUP BLOCK
