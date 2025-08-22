@@ -36,7 +36,8 @@
       "Bash(rg:*)",
       "mcp__github__get_job_logs",
       "Bash(git commit:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npx markdownlint-cli2:*)"
     ]
   },
   "statusLine": {
