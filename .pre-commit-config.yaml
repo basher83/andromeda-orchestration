@@ -23,7 +23,7 @@ repos:
         args: [--fix=lf]
       - id: pretty-format-json
         args: [--autofix]
-        exclude: ^(\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|uv\.lock|kics-results/.*\.json)$
+        exclude: ^(\.env\.json|\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|uv\.lock|kics-results/.*\.json)$
 
   # YAML formatting
   - repo: https://github.com/adrienverge/yamllint
