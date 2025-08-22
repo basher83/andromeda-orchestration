@@ -1,0 +1,28 @@
+---
+# Update nftables rules to allow Traefik HTTP, HTTPS, and admin ports
+- name: Update nftables rules for Traefik
+  hosts: tag_nomad
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Update nftables configuration for Traefik
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/../../../roles/system_base/templates/nftables.conf.j2"
+        dest: /etc/nftables.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: true
+      notify: Reload nftables
+
+    - name: Reload nftables configuration
+      ansible.builtin.service:
+        name: nftables
+        state: reloaded
+
+  handlers:
+    - name: Reload nftables
+      ansible.builtin.service:
+        name: nftables
+        state: reloaded
