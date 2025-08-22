@@ -11,9 +11,9 @@
     wait_for_healthy: "{{ wait | default(true) }}"
     nomad_namespace: "default"  # namespace is a reserved word in Jinja2
     # Domain variables will be provided by inventory or can be overridden
-    homelab_domain: "{{ homelab_domain | default('spaceships.work', true) }}"
-    cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
-    fqdn_suffix: "{{ fqdn_suffix | default(cluster_subdomain + '.' + homelab_domain if cluster_subdomain else homelab_domain, true) }}"
+    homelab_domain: "{{ hostvars[inventory_hostname]['homelab_domain'] | default('spaceships.work', true) }}"
+    cluster_subdomain: "{{ hostvars[inventory_hostname]['cluster_subdomain'] | default('', true) }}"
+    fqdn_suffix: "{{ hostvars[inventory_hostname]['fqdn_suffix'] | default(cluster_subdomain + '.' + homelab_domain if cluster_subdomain else homelab_domain, true) }}"
 
   tasks:
     - name: Validate job file exists
@@ -119,26 +119,35 @@
       register: job_info
 
     - name: Wait for healthy deployment
-      community.general.nomad_job_info:
-        host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
-        port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
-        use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ nomad_namespace }}"
-        name: "{{ job_name }}"
-      register: job_status
-      until: job_status.jobs[0].Status == "running" and job_status.jobs[0].JobSummary.Summary | json_query('*.Running') | sum > 0
-      retries: 60
-      delay: 5
+      ansible.builtin.uri:
+        url: "{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}"
+        method: GET
+        headers:
+          Content-Type: "application/json"
+      register: job_summary_status
+      until: >
+        job_summary_status.json.Summary is defined and
+        job_summary_status.json.Summary | json_query('*.Running') | sum > 0
+      retries: 30
+      delay: 10
+      when: wait_for_healthy | bool
+
+    - name: Get job summary for final status
+      ansible.builtin.uri:
+        url: "{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}"
+        method: GET
+        headers:
+          Content-Type: "application/json"
+      register: job_summary
       when: wait_for_healthy | bool
 
     - name: Display final job status
       ansible.builtin.debug:
         msg:
           - "Job deployed successfully!"
-          - "Name: {{ job_status.jobs[0].Name }}"
-          - "Status: {{ job_status.jobs[0].Status }}"
-          - "Type: {{ job_status.jobs[0].Type }}"
-          - "Running allocations: {{ job_status.jobs[0].JobSummary.Summary | json_query('*.Running') | sum }}"
+          - "Name: {{ job_name }}"
+          - "Status: running"
+          - "Running allocations: {{ job_summary.json.Summary | json_query('*.Running') | sum }}"
       when: wait_for_healthy | bool
 
 # Usage examples:
