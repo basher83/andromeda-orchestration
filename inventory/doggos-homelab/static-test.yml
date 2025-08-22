@@ -1,0 +1,21 @@
+---
+all:
+  hosts:
+    nomad-server-1:
+      ansible_host: 192.168.11.11
+      ansible_user: root
+    nomad-server-2:
+      ansible_host: 192.168.11.12
+      ansible_user: root
+    nomad-server-3:
+      ansible_host: 192.168.11.13
+      ansible_user: root
+    nomad-client-1:
+      ansible_host: 192.168.11.20
+      ansible_user: root
+    nomad-client-2:
+      ansible_host: 192.168.11.21
+      ansible_user: root
+    nomad-client-3:
+      ansible_host: 192.168.11.22
+      ansible_user: root
