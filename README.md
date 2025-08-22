@@ -172,7 +172,13 @@ See [docs/implementation/secrets-management/infisical-setup.md](docs/implementat
 
 ## Troubleshooting
 
+### General Issues
 See [docs/getting-started/troubleshooting.md](docs/getting-started/troubleshooting.md) for common issues and solutions.
+
+### Ansible-Nomad Playbooks
+For issues with Nomad job deployment and management:
+- [Ansible-Nomad Playbook Troubleshooting](docs/troubleshooting/ansible-nomad-playbooks.md)
+- [Domain Migration Troubleshooting](docs/troubleshooting/domain-migration.md)
 
 ## License
 
