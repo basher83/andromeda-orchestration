@@ -10,7 +10,7 @@
 
 ## Error Examples
 
-```
+```text
 Driver Failure: Failed to pull `traefik:v3.0`: Error response from daemon:
 Get "https://registry-1.docker.io/v2/": dial tcp: lookup registry-1.docker.io
 on 127.0.0.53:53: server misbehaving
@@ -29,6 +29,7 @@ on 127.0.0.53:53: server misbehaving
 ### Configuration Conflicts
 
 Multiple DNS configurations fighting each other:
+
 - `/etc/systemd/resolved.conf` - Main systemd-resolved config
 - `/etc/systemd/resolved.conf.d/consul.conf` - Consul-specific DNS settings
 - `/etc/netplan/50-cloud-init.yaml` - Network interface DNS settings
@@ -126,12 +127,14 @@ consul catalog nodes -service=<service-name>
 ## Lesson Learned
 
 When you see:
+
 - Container startup failures
 - "Server misbehaving" DNS errors
 - Services not appearing in Consul
 - Network connectivity issues
 
 **Check DNS first!** The classic "It's always DNS" rule applies heavily in containerized environments where DNS resolution is critical for:
+
 - Image registry access
 - Service discovery
 - Inter-service communication

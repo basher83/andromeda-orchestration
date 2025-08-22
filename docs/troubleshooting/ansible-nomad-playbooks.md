@@ -18,7 +18,8 @@ This guide documents common issues encountered when running Ansible playbooks fo
 ### Issue: Missing Python Dependencies
 
 **Symptoms:**
-```
+
+```text
 Failed to import the required Python library (python-nomad) on [host]'s Python
 ```
 
@@ -38,6 +39,7 @@ uv run python -c "import infisicalsdk; print('infisicalsdk available')"
 ```
 
 **Prevention:**
+
 - Use `uv sync` instead of manually adding individual packages
 - All required dependencies are defined in `pyproject.toml`
 - Dependencies include:
@@ -51,7 +53,8 @@ uv run python -c "import infisicalsdk; print('infisicalsdk available')"
 ### Issue: Unexpected sudo Prompts for localhost Operations
 
 **Symptoms:**
-```
+
+```text
 Task failed: Premature end of stream waiting for become success.
 >>> Standard Error
 sudo: a password is required
@@ -73,12 +76,14 @@ vars:
 ```
 
 **Why This Happens:**
+
 - `inventory/doggos-homelab/group_vars/all/ansible.yml` sets `ansible_become: true` by default
 - This is correct for infrastructure management on remote hosts
 - But localhost API calls (Nomad, Consul, Vault) don't need sudo
 - Playbook-level `become: false` doesn't always override inventory settings
 
 **Best Practice:**
+
 - Keep `ansible_become: true` in inventory for infrastructure tasks
 - Explicitly override with `-e ansible_become=false` for API-only playbooks
 - Consider creating separate inventory groups for API vs infrastructure operations
@@ -90,7 +95,8 @@ vars:
 ### Issue: Recursive Template Variables
 
 **Symptoms:**
-```
+
+```text
 Recursive loop detected in template: maximum recursion depth exceeded
 ```
 
@@ -113,6 +119,7 @@ job_name: "{{ hostvars[inventory_hostname]['job_name'] | default('', true) }}"
 ```
 
 **Prevention:**
+
 - Never define a variable in terms of itself
 - Use `hostvars[inventory_hostname]['var_name']` for extra variables
 - Test playbooks with and without `-e` parameters
@@ -125,7 +132,8 @@ job_name: "{{ hostvars[inventory_hostname]['job_name'] | default('', true) }}"
 ### Issue: Incorrect Nomad API Response Handling
 
 **Symptoms:**
-```
+
+```text
 Error while resolving value: object of type 'list' has no attribute 'Name'
 ```
 
@@ -133,6 +141,7 @@ Error while resolving value: object of type 'list' has no attribute 'Name'
 Assuming `nomad_job_info` returns a single object, when it actually returns a list of objects.
 
 **API Response Structure:**
+
 ```json
 // nomad_job_info always returns a list
 [
@@ -168,6 +177,7 @@ Running: "{{ specific_job_result.result[0].JobSummary.Summary | default({}) | js
 ```
 
 **Key Points:**
+
 - `nomad_job_info` without `name` parameter returns all jobs (list)
 - `nomad_job_info` with `name` parameter returns single job in a list `[job]`
 - Always use `result[0]` for specific job data
@@ -180,7 +190,8 @@ Running: "{{ specific_job_result.result[0].JobSummary.Summary | default({}) | js
 ### Issue: Job File Not Found
 
 **Symptoms:**
-```
+
+```text
 Task failed: Action failed: Unknown error.
 stat: {"exists": false}
 ```
@@ -202,6 +213,7 @@ uv run ansible-playbook deploy-job.yml \
 ```
 
 **Prevention:**
+
 - Always use `$(pwd)/path/to/file` for job file parameters
 - Validate file existence in playbooks with `stat` module
 - Consider using `playbook_dir` variable for relative paths in playbooks
@@ -211,6 +223,7 @@ uv run ansible-playbook deploy-job.yml \
 ## Quick Reference Commands
 
 ### Environment Setup
+
 ```bash
 # Set local environment
 export MISE_ENV=local
@@ -223,6 +236,7 @@ echo "VAULT_ADDR: ${VAULT_ADDR}"
 ```
 
 ### Dependency Management
+
 ```bash
 # Sync all project dependencies
 uv sync
@@ -232,6 +246,7 @@ uv run python -c "import nomad, infisicalsdk; print('All dependencies available'
 ```
 
 ### Deployment Commands
+
 ```bash
 # Deploy job with proper overrides
 uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
@@ -252,6 +267,7 @@ uv run ansible-playbook playbooks/assessment/nomad-job-status.yml \
 ```
 
 ### Testing Connectivity
+
 ```bash
 # Test simple localhost connection
 uv run ansible localhost \
@@ -272,6 +288,7 @@ nomad job status traefik
 ## Debugging Tips
 
 ### Enable Verbose Output
+
 ```bash
 # Add -v for basic verbosity
 uv run ansible-playbook playbook.yml -v
@@ -281,6 +298,7 @@ uv run ansible-playbook playbook.yml -vvv
 ```
 
 ### Test Variable Resolution
+
 ```bash
 # Test variable access
 uv run ansible localhost -m debug -a "var=homelab_domain" \
@@ -288,6 +306,7 @@ uv run ansible localhost -m debug -a "var=homelab_domain" \
 ```
 
 ### Validate Inventory
+
 ```bash
 # List inventory hosts
 uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --list

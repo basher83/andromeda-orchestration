@@ -5,6 +5,7 @@ This directory contains playbooks that are no longer current but are kept for re
 ## Files
 
 ### `fix-docker-consul-dns-iptables.yml`
+
 - **Status**: Archived (2025-08-22)
 - **Reason**: Uses outdated iptables approach for Docker DNS redirection
 - **Replacement**: `../infrastructure/consul-nomad/configure-docker-consul-dns.yml`

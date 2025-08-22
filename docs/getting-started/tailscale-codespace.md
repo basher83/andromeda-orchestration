@@ -113,6 +113,51 @@ eval "$(mise env)"
 
 This ensures you're using Tailscale IPs (100.x.x.x) instead of local LAN IPs (192.168.x.x).
 
+## Python Interpreter Configuration
+
+### Setting the Correct Python Path
+
+The Nomad nodes use Python 3 at `/usr/bin/python3`. If you encounter Python interpreter errors:
+
+```bash
+# Force Python 3 interpreter
+ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3 uv run ansible-playbook playbook.yml \
+  -i inventory/tailscale/ansible_tailscale_inventory.py \
+  --limit "tag_nomad_server,tag_nomad_client" \
+  -u ansible
+
+# Or specify in playbook vars
+vars:
+  ansible_python_interpreter: /usr/bin/python3
+```
+
+## Playbook Delegation Issues
+
+### Avoiding Localhost Resolution Problems
+
+When playbooks delegate tasks to localhost, they may incorrectly resolve to your Tailscale device. Use `local_action` instead of `delegate_to: localhost`:
+
+✅ **CORRECT:**
+
+```yaml
+- name: Create local directory
+  local_action:
+    module: ansible.builtin.file
+    path: "{{ report_dir }}"
+    state: directory
+  run_once: true
+```
+
+❌ **WRONG - May fail with SSH timeouts:**
+
+```yaml
+- name: Create local directory
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ report_dir }}"
+    state: directory
+```
+
 ## Troubleshooting
 
 ### "Failed to look up local user" Error
@@ -123,19 +168,50 @@ This means you're using the wrong SSH user. Use `-u ansible` not the default Cod
 
 You're trying to SSH as `root`. Tailscale policies restrict root access. Use `-u ansible`.
 
+### Python Interpreter Not Found
+
+The nodes use `/usr/bin/python3`, not `/usr/bin/python3.12`. Use environment variable `ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3` or set `ansible_python_interpreter` in your playbook.
+
 ### Connection Timeouts to 192.168.x.x
 
 You're trying to reach local LAN IPs from a remote environment. Use Tailscale IPs (100.x.x.x) or ensure you're using the Tailscale inventory.
+
+### Localhost Delegation Failures
+
+If tasks fail when delegating to localhost with SSH timeout errors, the playbook is trying to SSH to your Tailscale device instead of running locally. Replace `delegate_to: localhost` with `local_action`.
 
 ### Accidentally Including Proxmox Hosts
 
 If you see `lloyd`, `holly`, or `mable` in your playbook output, STOP! You're using the wrong tag filter. These are hypervisors and should not be managed directly.
 
+## Infrastructure Details
+
+### Current Node Configuration
+
+All Nomad nodes are running:
+
+- **OS**: Ubuntu 24.04
+- **Python**: 3.12.3 at `/usr/bin/python3`
+- **Network**: 192.168.10.x (2.5G network)
+- **SSH User**: `ansible` (not root)
+
+### Node IP Addresses
+
+| Node | Local IP | Role | Proxmox Host |
+|------|----------|------|--------------|
+| nomad-server-1 | 192.168.10.11 | Server | lloyd |
+| nomad-server-2 | 192.168.10.12 | Server | holly |
+| nomad-server-3 | 192.168.10.13 | Server | mable |
+| nomad-client-1 | 192.168.10.20 | Client | lloyd |
+| nomad-client-2 | 192.168.10.21 | Client | holly |
+| nomad-client-3 | 192.168.10.22 | Client | mable |
+
 ## Quick Reference
 
 | Task | Safe Command |
 |------|-------------|
-| Ping Nomad nodes | `ansible all -i inventory/tailscale/ansible_tailscale_inventory.py --limit "tag_nomad_server,tag_nomad_client" -u ansible -m ping` |
+| Ping Nomad nodes | `uv run ansible all -i inventory/tailscale/ansible_tailscale_inventory.py --limit "tag_nomad_server,tag_nomad_client" -u ansible -m ping` |
+| Test connectivity | `uv run ansible-playbook playbooks/assessment/simple-connectivity-test.yml -i inventory/tailscale/ansible_tailscale_inventory.py --limit "tag_nomad_server,tag_nomad_client" -u ansible` |
 | List Nomad services | `consul members` |
 | Check Nomad status | `nomad node status` |
 | Deploy to Nomad | `nomad job run <job.hcl>` |

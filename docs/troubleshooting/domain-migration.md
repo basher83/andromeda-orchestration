@@ -17,12 +17,14 @@ This guide covers issues specific to the `.local` → `spaceships.work` domain m
 ### Issue: Nomad Parse API Returns 400 Bad Request
 
 **Symptoms:**
-```
+
+```text
 Warning: Failed to parse job with variables. Falling back to direct deployment.
 Error: HTTP Error 400: Bad Request
 ```
 
 **Root Cause:**
+
 - HCL2 variable syntax not properly formatted
 - Variable names don't match between playbook and HCL file
 - Missing variable definitions in job file
@@ -30,6 +32,7 @@ Error: HTTP Error 400: Bad Request
 **Solution:**
 
 1. **Verify HCL2 variable syntax in job file:**
+
 ```hcl
 # At the top of .nomad.hcl file
 variable "homelab_domain" {
@@ -44,7 +47,8 @@ tags = [
 ]
 ```
 
-2. **Check playbook variable passing:**
+1. **Check playbook variable passing:**
+
 ```yaml
 Variables:
   homelab_domain: "{{ homelab_domain }}"
@@ -52,13 +56,15 @@ Variables:
   fqdn_suffix: "{{ fqdn_suffix | default('', true) }}"
 ```
 
-3. **Validate manually:**
+1. **Validate manually:**
+
 ```bash
 # Test HCL parsing directly
 NOMAD_VAR_homelab_domain=spaceships.work nomad job plan traefik.nomad.hcl
 ```
 
 **Prevention:**
+
 - Always validate HCL syntax before deployment
 - Use consistent variable names between Ansible and HCL
 - Test with fallback to direct deployment (without variables)
@@ -70,6 +76,7 @@ NOMAD_VAR_homelab_domain=spaceships.work nomad job plan traefik.nomad.hcl
 ### Issue: Services Not Appearing in Consul
 
 **Symptoms:**
+
 - Job shows as "running" in Nomad
 - Services missing from `consul catalog services`
 - Only old services (like `netdata-child`) visible
@@ -77,12 +84,14 @@ NOMAD_VAR_homelab_domain=spaceships.work nomad job plan traefik.nomad.hcl
 **Diagnostic Steps:**
 
 1. **Check job allocation status:**
+
 ```bash
 nomad job status traefik
 nomad alloc status <allocation-id>
 ```
 
-2. **Verify Consul integration:**
+1. **Verify Consul integration:**
+
 ```bash
 # Check if job has Consul service blocks
 nomad job inspect traefik | grep -A 10 -B 5 service
@@ -91,7 +100,8 @@ nomad job inspect traefik | grep -A 10 -B 5 service
 nomad alloc exec <allocation-id> consul members
 ```
 
-3. **Check allocation logs:**
+1. **Check allocation logs:**
+
 ```bash
 nomad alloc logs <allocation-id>
 ```
@@ -99,6 +109,7 @@ nomad alloc logs <allocation-id>
 **Common Causes:**
 
 1. **Missing service blocks in job:**
+
 ```hcl
 # Ensure job has service registration
 service {
@@ -116,7 +127,8 @@ service {
 }
 ```
 
-2. **Consul connection issues:**
+1. **Consul connection issues:**
+
 ```hcl
 # Check consul stanza in Nomad config
 consul {
@@ -132,6 +144,7 @@ consul {
 ```
 
 **Solution:**
+
 - Ensure service blocks are properly defined
 - Verify Consul connectivity from Nomad agents
 - Check Nomad-Consul integration configuration
@@ -143,6 +156,7 @@ consul {
 ### Issue: Environment Variables Not Set After Migration
 
 **Symptoms:**
+
 ```bash
 echo $NOMAD_ADDR     # Shows old IP or empty
 echo $CONSUL_HTTP_ADDR # Shows old IP or empty
@@ -154,6 +168,7 @@ Environment files (`.mise.local.toml`) not properly activated or loaded.
 **Solution:**
 
 1. **Verify mise environment setup:**
+
 ```bash
 # Check current environment
 export MISE_ENV=local
@@ -165,7 +180,8 @@ echo "CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR}"
 echo "VAULT_ADDR: ${VAULT_ADDR}"
 ```
 
-2. **Check mise configuration files:**
+1. **Check mise configuration files:**
+
 ```bash
 # Main config
 cat .mise.toml
@@ -174,7 +190,8 @@ cat .mise.toml
 cat .mise.local.toml
 ```
 
-3. **Verify file structure:**
+1. **Verify file structure:**
+
 ```toml
 # .mise.local.toml should have:
 [env]
@@ -184,6 +201,7 @@ VAULT_ADDR = "http://192.168.11.11:8200"
 ```
 
 **Prevention:**
+
 - Always run `export MISE_ENV=local && eval "$(mise env)"` before operations
 - Verify environment variables before running playbooks
 - Use mise tasks for environment switching
@@ -195,6 +213,7 @@ VAULT_ADDR = "http://192.168.11.11:8200"
 ### Issue: Services Still Resolving to Old Domains
 
 **Symptoms:**
+
 - Services accessible via old `.local` addresses
 - New `spaceships.work` addresses not resolving
 - Mixed resolution between old/new domains
@@ -202,6 +221,7 @@ VAULT_ADDR = "http://192.168.11.11:8200"
 **Diagnostic Steps:**
 
 1. **Test DNS resolution:**
+
 ```bash
 # Test new domain resolution
 dig traefik.spaceships.work
@@ -211,14 +231,16 @@ nslookup traefik.spaceships.work
 dig @192.168.11.11 traefik.doggos.spaceships.work
 ```
 
-2. **Check DNS server configuration:**
+1. **Check DNS server configuration:**
+
 ```bash
 # Verify DNS server settings
 dig @192.168.11.11 spaceships.work SOA
 dig @192.168.11.11 ns1.spaceships.work A
 ```
 
-3. **Cache clearing:**
+1. **Cache clearing:**
+
 ```bash
 # Clear local DNS cache (macOS)
 sudo dscacheutil -flushcache
@@ -229,6 +251,7 @@ sudo systemctl restart systemd-resolved
 ```
 
 **Solution:**
+
 - Verify DNS zones are properly configured in NetBox/PowerDNS
 - Update client DNS server settings to point to infrastructure DNS
 - Clear DNS caches on all client machines
@@ -241,6 +264,7 @@ sudo systemctl restart systemd-resolved
 ### Issue: Uncertain Migration Status
 
 **Symptoms:**
+
 - Unclear which services are using new vs old domains
 - Mixed environment state
 - Partial migration completion
@@ -248,6 +272,7 @@ sudo systemctl restart systemd-resolved
 **Validation Checklist:**
 
 1. **Verify job status:**
+
 ```bash
 # Check all running jobs
 uv run ansible-playbook playbooks/assessment/nomad-job-status.yml \
@@ -255,7 +280,8 @@ uv run ansible-playbook playbooks/assessment/nomad-job-status.yml \
   -e ansible_become=false
 ```
 
-2. **Check service registration:**
+1. **Check service registration:**
+
 ```bash
 # Count services in Consul
 consul catalog services | wc -l
@@ -270,7 +296,8 @@ consul catalog services | wc -l
 # - powerdns-auth (if deployed)
 ```
 
-3. **Verify domain usage:**
+1. **Verify domain usage:**
+
 ```bash
 # Search for remaining .local references
 rg '\.local' --type yaml --type hcl nomad-jobs/
@@ -280,7 +307,8 @@ rg '\.local' --type yaml playbooks/ inventory/
 nomad job inspect traefik | grep -i domain
 ```
 
-4. **Test connectivity:**
+1. **Test connectivity:**
+
 ```bash
 # Test service endpoints
 curl -I http://192.168.11.11:8080/ping  # Traefik health
@@ -289,6 +317,7 @@ nomad node status                        # Nomad cluster
 ```
 
 **Success Criteria:**
+
 - ✅ All Nomad jobs showing as "running"
 - ✅ 10+ services registered in Consul
 - ✅ No `.local` references in active configurations
