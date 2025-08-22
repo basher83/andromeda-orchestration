@@ -121,7 +121,7 @@ Based on the audit, the current DNS resolution flow appears to be:
 {% endif %}
 
 3. **Service Discovery**:
-   - Consul DNS on port 8600: {{ 'Available' if 8600 in all_dns_nodes[0][1].dns.ports_open else 'Not configured' }}
+   - Consul DNS on port 8600: {% if all_dns_nodes | length > 0 and 8600 in all_dns_nodes[0][1].dns.ports_open %}Available{% else %}Not configured{% endif %}
 
 ### IPAM Current State
 
@@ -135,7 +135,7 @@ Based on the audit, the current DNS resolution flow appears to be:
 {% if not services_summary or 'pdns' not in services_summary %}
 - ❌ No PowerDNS installation detected
 {% endif %}
-{% if 8600 not in all_dns_nodes[0][1].dns.ports_open %}
+{% if all_dns_nodes | length > 0 and 8600 not in all_dns_nodes[0][1].dns.ports_open %}
 - ❌ Consul DNS not configured on port 8600
 {% endif %}
 - ❌ No centralized DNS management API
@@ -184,7 +184,7 @@ Based on this audit, the following actions are recommended:
 - DHCP services if currently provided
 
 ### Data to Preserve
-- {{ all_dns_nodes | map(attribute='1.dns.custom_hosts_entries') | sum }} custom host entries
+- {% if all_dns_nodes | length > 0 %}{{ all_dns_nodes | map(attribute='1.dns.custom_hosts_entries') | sum }}{% else %}0{% endif %} custom host entries
 - All DHCP reservations
 - DNS zone configurations
 - Service-specific DNS records

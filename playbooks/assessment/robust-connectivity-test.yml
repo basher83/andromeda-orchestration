@@ -15,12 +15,12 @@
 
   tasks:
     - name: Create connectivity report directory
-      delegate_to: localhost
-      run_once: true
-      ansible.builtin.file:
+      local_action:
+        module: ansible.builtin.file
         path: "{{ connectivity_report_dir }}"
         state: directory
         mode: '0755'
+      run_once: true
 
     - name: Gather network facts for all hosts
       ansible.builtin.setup:
@@ -127,8 +127,8 @@
             same_network_count: "{{ test_results | selectattr('same_network', 'equalto', true) | list | length }}"
 
     - name: Save node connectivity report
-      delegate_to: localhost
-      ansible.builtin.copy:
+      local_action:
+        module: ansible.builtin.copy
         content: "{{ node_connectivity_report | to_nice_yaml }}"
         dest: "{{ connectivity_report_dir }}/connectivity_{{ ansible_hostname }}_{{ timestamp }}.yml"
         mode: '0644'

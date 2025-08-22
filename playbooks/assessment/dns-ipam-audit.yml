@@ -22,12 +22,12 @@
 
   tasks:
     - name: Create report directory
-      delegate_to: localhost
-      run_once: true
-      ansible.builtin.file:
+      local_action:
+        module: ansible.builtin.file
         path: "{{ report_dir }}"
         state: directory
         mode: '0755'
+      run_once: true
 
     # DNS Configuration Discovery
     - name: Read resolv.conf
@@ -142,6 +142,7 @@
         cmd: hostname -f
       register: hostname_fqdn
       changed_when: false
+      failed_when: false
 
     - name: Test DNS resolution
       ansible.builtin.command:
@@ -279,15 +280,15 @@
             routing_table: "{{ routing_table.stdout_lines[:20] }}"
 
     - name: Save individual node DNS/IPAM report
-      delegate_to: localhost
-      ansible.builtin.copy:
+      local_action:
+        module: ansible.builtin.copy
         content: "{{ dns_ipam_report | to_nice_yaml }}"
         dest: "{{ report_dir }}/dns_ipam_node_{{ ansible_hostname }}_{{ timestamp }}.yml"
         mode: '0644'
 
 - name: Generate DNS/IPAM infrastructure summary report
   hosts: localhost
-  gather_facts: false
+  gather_facts: true
   vars:
     report_dir: "{{ playbook_dir }}/../../reports/dns-ipam"
     timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
@@ -304,6 +305,7 @@
         file: "{{ item.path }}"
         name: "dns_node_{{ item.path | basename | regex_replace('dns_ipam_node_(.+)_.*\\.yml', '\\1') }}"
       loop: "{{ node_reports.files }}"
+      when: node_reports.files | length > 0
 
     - name: Generate summary report
       ansible.builtin.template:
@@ -312,6 +314,7 @@
         mode: '0644'
       vars:
         all_nodes: "{{ hostvars }}"
+      when: node_reports.files | length > 0
 
     - name: Display completion message
       ansible.builtin.debug:
