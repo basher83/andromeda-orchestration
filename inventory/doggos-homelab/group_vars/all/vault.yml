@@ -1,0 +1,39 @@
+---
+# Vault Production Configuration with Auto-Unseal
+# Configured for transit auto-unseal using master Vault on lloyd
+
+# Vault mode and storage
+vault_mode: "production"
+vault_storage_backend: "raft"
+vault_ui_enabled: true
+vault_tls_disable: true  # Start without TLS, enable in Phase 2
+
+# Raft cluster configuration - define in host_vars to avoid self-join
+# Default empty - each host should define its own join targets
+vault_raft_retry_join: []
+
+# Auto-unseal configuration using transit backend
+vault_auto_unseal_enabled: true
+vault_auto_unseal_type: "transit"
+vault_auto_unseal_config:
+  address: "http://192.168.10.11:8200"  # Master Vault on lloyd
+  token: "{{ lookup('infisical.vault.read_secrets',
+             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+             env_slug='prod',
+             path='/apollo-13/vault',
+             secret_name='VAULT_TRANSIT_TOKEN').value }}"
+  disable_renewal: false
+  key_name: "autounseal"
+  mount_path: "transit/"
+
+# Telemetry and audit
+vault_telemetry_enabled: true
+vault_telemetry_prometheus_retention_time: "24h"
+vault_audit_enabled: true
+
+# Performance settings
+vault_max_lease_ttl: "768h"
+vault_default_lease_ttl: "768h"
+vault_disable_mlock: false

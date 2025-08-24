@@ -3,7 +3,7 @@
 # This playbook deploys Vault with Raft storage for production use
 
 - name: Deploy Vault in Production Mode
-  hosts: "{{ target_hosts | default('vault_servers') }}"
+  hosts: "{{ target_hosts | default('tag_server') }}"
   become: true
   gather_facts: true
   serial: 1  # Deploy one at a time for Raft cluster formation
@@ -40,14 +40,14 @@
     vault_mode: "production"
     vault_storage_backend: "raft"
     vault_ui_enabled: true
-    vault_tls_disable: "{{ vault_tls_disable | default(true) }}"  # Override in inventory for TLS
+    vault_tls_disable: true  # Override in inventory for TLS
 
     # Raft configuration
     vault_raft_node_id: "{{ ansible_hostname }}"
-    vault_raft_retry_join: "{{ groups['vault_servers'] | map('extract', hostvars, 'ansible_default_ipv4') | map(attribute='address') | map('regex_replace', '^(.*)$', 'http://\\1:8200') | list }}"
 
-    # Auto-unseal configuration (customize in inventory)
-    vault_auto_unseal_enabled: "{{ vault_auto_unseal_enabled | default(false) }}"
+    # Auto-unseal configuration (will be loaded from group_vars)
+    # vault_auto_unseal_enabled: defined in group_vars
+    # vault_auto_unseal_config: defined in group_vars
 
     # Telemetry
     vault_telemetry_enabled: true
@@ -80,7 +80,7 @@
     - name: Initialize Vault (first node only)
       when:
         - not vault_init_status.json.initialized
-        - inventory_hostname == groups['vault_servers'][0]
+        - inventory_hostname == groups['tag_server'][0]
       block:
         - name: Initialize Vault cluster
           ansible.builtin.uri:
