@@ -1576,9 +1576,9 @@ echo "💡 Environment commands: mise run env:status | env:local | env:remote"
 leave = "echo 'Goodbye!'"
 
 # Default environment (remote/tailscale)
-[env]
-_.file = ".env.json"
-NOMAD_REGION = "global"
-NOMAD_ADDR = "http://100.108.219.48:4646"
-CONSUL_HTTP_ADDR = "http://100.108.219.48:8500"
-VAULT_ADDR = "http://100.108.219.48:8200"
+# [env]
+# _.file = ".env.json"
+# NOMAD_REGION = "global"
+# NOMAD_ADDR = "http://100.108.219.48:4646"
+# CONSUL_HTTP_ADDR = "http://100.108.219.48:8500"
+# VAULT_ADDR = "http://100.108.219.48:8200"

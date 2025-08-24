@@ -1,0 +1,228 @@
+---
+# Reset Vault Production Environment
+# This playbook completely removes Vault installation and data for fresh start
+
+- name: Reset Vault Production Environment
+  hosts: "{{ target_hosts | default('tag_server') }}"
+  become: true
+  gather_facts: true
+
+  vars:
+    vault_user: "vault"
+    vault_group: "vault"
+    vault_service_name: "vault"
+    vault_base_dir: "/opt/vault"
+    vault_config_dir: "/etc/vault.d"
+    vault_data_dir: "/opt/vault/data"
+    vault_log_dir: "/var/log/vault"
+    vault_tls_dir: "/opt/vault/tls"
+
+  pre_tasks:
+    - name: Confirm reset operation
+      ansible.builtin.pause:
+        prompt: |
+
+          ⚠️  WARNING: VAULT COMPLETE RESET ⚠️
+
+          This will PERMANENTLY DELETE:
+          - All Vault data and configuration
+          - Raft storage and cluster state
+          - Service files and logs
+          - User accounts and directories
+
+          Node: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})
+
+          This action is IRREVERSIBLE!
+
+          Type 'RESET' to confirm destruction of all Vault data:
+      register: confirmation
+      delegate_to: localhost
+      run_once: true
+
+    - name: Abort if not confirmed
+      ansible.builtin.fail:
+        msg: "Reset aborted - confirmation not provided"
+      when: confirmation.user_input != "RESET"
+      delegate_to: localhost
+      run_once: true
+
+  tasks:
+    - name: Stop Vault service
+      ansible.builtin.systemd:
+        name: "{{ vault_service_name }}"
+        state: stopped
+        enabled: false
+      failed_when: false
+      ignore_errors: true
+
+    - name: Kill any remaining Vault processes
+      ansible.builtin.shell: |
+        pkill -f vault || true
+        sleep 2
+        pkill -9 -f vault || true
+      changed_when: false
+      failed_when: false
+      ignore_errors: true
+
+    - name: Remove systemd service file
+      ansible.builtin.file:
+        path: "/etc/systemd/system/{{ vault_service_name }}.service"
+        state: absent
+
+    - name: Remove vault-dev systemd service file
+      ansible.builtin.file:
+        path: "/etc/systemd/system/vault-dev.service"
+        state: absent
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Remove Vault data directory
+      ansible.builtin.file:
+        path: "{{ vault_data_dir }}"
+        state: absent
+
+    - name: Remove Vault base directory
+      ansible.builtin.file:
+        path: "{{ vault_base_dir }}"
+        state: absent
+
+    - name: Remove Vault configuration directory
+      ansible.builtin.file:
+        path: "{{ vault_config_dir }}"
+        state: absent
+
+    - name: Remove Vault log directory
+      ansible.builtin.file:
+        path: "{{ vault_log_dir }}"
+        state: absent
+
+    - name: Remove Vault user
+      ansible.builtin.user:
+        name: "{{ vault_user }}"
+        state: absent
+        remove: true
+      failed_when: false
+
+    - name: Remove Vault group
+      ansible.builtin.group:
+        name: "{{ vault_group }}"
+        state: absent
+      failed_when: false
+
+    - name: Remove Vault binary (if installed via role)
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/usr/local/bin/vault"
+        - "/usr/bin/vault"
+
+    - name: Remove environment variables
+      ansible.builtin.lineinfile:
+        path: /etc/environment
+        regexp: "^VAULT_ADDR="
+        state: absent
+
+    - name: Remove vault profile script
+      ansible.builtin.file:
+        path: /etc/profile.d/vault.sh
+        state: absent
+
+    - name: Remove any vault initialization files
+      ansible.builtin.find:
+        paths: ["/root", "/home"]
+        patterns: "vault-init-*.txt"
+        recurse: true
+      register: init_files
+
+    - name: Delete vault initialization files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ init_files.files }}"
+      when: init_files.files | length > 0
+
+    - name: Remove any vault backup files
+      ansible.builtin.find:
+        paths: ["/opt", "/var/backup", "/root"]
+        patterns: "vault*.snapshot"
+        recurse: true
+      register: backup_files
+
+    - name: Delete vault backup files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ backup_files.files }}"
+      when: backup_files.files | length > 0
+
+    - name: Remove vault from Consul services (if registered)
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:8500/v1/agent/service/deregister/vault"
+        method: PUT
+        status_code: [200, 404]
+      failed_when: false
+      ignore_errors: true
+
+    - name: Clean up any remaining vault processes or files
+      ansible.builtin.shell: |
+        # Clean up any vault-related cron jobs
+        crontab -l | grep -v vault | crontab - || true
+
+        # Remove any vault-related temp files
+        find /tmp -name "*vault*" -type f -delete || true
+
+        # Clear any vault-related environment variables from running processes
+        unset VAULT_ADDR VAULT_TOKEN VAULT_CACERT || true
+      changed_when: false
+      failed_when: false
+
+  post_tasks:
+    - name: Verify cleanup completion
+      ansible.builtin.shell: |
+        echo "=== Vault Cleanup Verification ==="
+        echo "Processes:"
+        ps aux | grep vault | grep -v grep || echo "  No vault processes found ✓"
+        echo
+        echo "Services:"
+        systemctl list-units | grep vault || echo "  No vault services found ✓"
+        echo
+        echo "Directories:"
+        ls -la /opt/ | grep vault || echo "  No vault directories in /opt ✓"
+        ls -la /etc/ | grep vault || echo "  No vault directories in /etc ✓"
+        echo
+        echo "Users:"
+        getent passwd vault || echo "  No vault user found ✓"
+        echo
+        echo "Binaries:"
+        which vault || echo "  No vault binary in PATH ✓"
+        echo
+        echo "Environment:"
+        env | grep -i vault || echo "  No vault environment variables ✓"
+      register: cleanup_verification
+      changed_when: false
+
+    - name: Display cleanup results
+      ansible.builtin.debug:
+        msg: "{{ cleanup_verification.stdout_lines }}"
+
+    - name: Reset completion summary
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "VAULT RESET COMPLETED"
+          - "=========================================="
+          - ""
+          - "Node: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})"
+          - "Timestamp: {{ ansible_date_time.iso8601 }}"
+          - ""
+          - "✅ Vault services stopped and disabled"
+          - "✅ All Vault data and configuration removed"
+          - "✅ Vault user and group removed"
+          - "✅ Vault binaries removed"
+          - "✅ System configuration cleaned"
+          - ""
+          - "The system is now ready for fresh Vault deployment."
+          - "=========================================="
