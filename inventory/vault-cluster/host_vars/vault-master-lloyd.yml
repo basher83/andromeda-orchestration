@@ -1,0 +1,44 @@
+---
+# Host variables for Vault master node (lloyd)
+# Auto-unseal transit engine configuration
+
+ansible_host: vault-master-lloyd.tailfb3ea.ts.net
+ansible_user: ansible
+
+# Vault configuration
+vault_role: master
+vault_node_id: vault-master
+vault_cluster_name: "vault-master"
+vault_datacenter: "doggos-cluster"
+
+# Auto-unseal configuration
+vault_transit_enabled: true
+vault_transit_address: "http://192.168.10.11:8200"
+vault_transit_key_name: "autounseal"
+vault_transit_mount_path: "transit"
+
+# Proxmox VM configuration
+proxmox_node: lloyd
+vm_id: 3100
+vm_memory: 2048
+vm_cores: 2
+vm_storage: 20
+
+# Network configuration
+vault_bind_addr: "0.0.0.0"
+vault_cluster_addr: "http://{{ ansible_default_ipv4.address }}:8201"
+vault_api_addr: "http://{{ ansible_default_ipv4.address }}:8200"
+
+# Storage configuration
+vault_data_dir: "/opt/vault/data"
+vault_config_dir: "/etc/vault.d"
+vault_log_dir: "/var/log/vault"
+vault_user: "vault"
+vault_group: "vault"
+
+# Performance and resource limits
+vault_max_lease_ttl: "768h"
+vault_default_lease_ttl: "168h"
+vault_log_level: "INFO"
+vault_disable_cache: false
+vault_disable_mlock: false
