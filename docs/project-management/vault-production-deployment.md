@@ -26,6 +26,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Critical Impact
 
 **Current Blocker**: Vault running in dev mode prevents:
+
 - PostgreSQL credential persistence
 - PowerDNS secret management
 - Infrastructure configuration application
@@ -76,6 +77,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 **Assessment Completed**: August 23, 2025 02:57 UTC
 
 **Infrastructure Status**: All systems ready for production deployment
+
 - **Node Count**: 3 Vault target nodes (nomad-server-1-lloyd, nomad-server-2-holly, nomad-server-3-mable)
 - **Network**: 100% connectivity success rate between all 9 nodes tested
 - **Storage**: 55-56GB available per node (far exceeds 10GB minimum)
@@ -83,22 +85,26 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 - **Time Sync**: Perfect synchronization, <1 second skew
 
 **Current Vault Dev Mode Status**:
+
 - **lloyd (192.168.10.11)**: v1.20.2, PID 759, 7h43m uptime, inmem storage, `/usr/bin/vault`
 - **holly (192.168.10.12)**: v1.20.1, PID 765, 7h43m uptime, inmem storage, `/usr/local/bin/vault`
 - **mable (192.168.10.13)**: v1.20.1, PID 767, 7h28m uptime, inmem storage, `/usr/local/bin/vault`
 
 **Version Standardization**:
+
 - **Target Version**: 1.20.2 (latest patch release)
 - **Action Required**: Upgrade holly and mable from 1.20.1 → 1.20.2
 - **Binary Location**: Standardize on `/usr/local/bin/vault`
 - **Compatibility**: 1.20.1 and 1.20.2 are compatible for Raft clustering
 
 **Port Verification**:
+
 - Vault API (8200) and cluster (8201) ports available and accessible
 - No conflicts with existing services
 - Cross-node connectivity verified
 
 **Dependencies**:
+
 - No persistent data to preserve (dev mode inmem storage)
 - No services dependent on dev mode tokens
 - Clean state for production deployment
@@ -112,6 +118,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 1: Prepare Deployment Configuration ✅ COMPLETE
 
 - [x] **Update Inventory Variables**
+
   ```yaml
   # Added to inventory/doggos-homelab/group_vars/all/main.yml
   vault_mode: "production"
@@ -153,6 +160,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 3: Deploy Production Vault ✅ COMPLETE
 
 - [x] **Execute Production Deployment**
+
   ```bash
   # Deployed to all three nodes sequentially
   uv run ansible-playbook playbooks/infrastructure/vault/deploy-vault-prod.yml \
@@ -207,9 +215,11 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 1: Enable Audit Logging ✅ COMPLETE
 
 - [x] **File Audit Backend**
+
   ```bash
   vault audit enable file file_path=/var/log/vault/audit.log
   ```
+
   - [x] Verify audit log creation
   - [x] Audit log active at `/var/log/vault/audit.log` (4KB+ of structured JSON logs)
   - [x] Confirm structured JSON logging (HMAC-protected sensitive data)
@@ -217,6 +227,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 2: Create Service Policies ✅ COMPLETE
 
 - [x] **PostgreSQL Database Policy**
+
   ```hcl
   # Policy for PostgreSQL secret management
   path "database/creds/postgresql-*" {
@@ -228,6 +239,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
   ```
 
 - [x] **PowerDNS Service Policy**
+
   ```hcl
   # Policy for PowerDNS secret access
   path "secret/data/powerdns/*" {
@@ -246,16 +258,20 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 3: Enable Secret Engines ✅ COMPLETE
 
 - [x] **Database Secrets Engine**
+
   ```bash
   vault secrets enable database
   ```
+
   - [x] Database engine enabled at `database/` path
   - [x] Plugin version: v1.20.2+builtin.vault
 
 - [x] **KV v2 Engine**
+
   ```bash
   vault secrets enable -path=secret kv-v2
   ```
+
   - [x] KV v2 engine enabled at `secret/` path
   - [x] Plugin version: v0.24.0+builtin
 
@@ -271,6 +287,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 1: PostgreSQL Integration
 
 - [ ] **Database Configuration**
+
   ```bash
   vault write database/config/postgresql \
     plugin_name=postgresql-database-plugin \
@@ -286,6 +303,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 2: Nomad Integration
 
 - [ ] **JWT Auth Backend**
+
   ```bash
   vault auth enable -path=nomad jwt
   vault write auth/nomad/config \
@@ -302,6 +320,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 3: PowerDNS Secret Management
 
 - [ ] **Store PowerDNS Configuration**
+
   ```bash
   vault kv put secret/powerdns/config \
     api_key="<generated-key>" \
@@ -319,6 +338,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 1: Cluster Health Verification
 
 - [ ] **Vault Status Checks**
+
   ```bash
   # On each node
   vault status
@@ -363,6 +383,7 @@ Deploy HashiCorp Vault in production mode with Raft storage to replace the curre
 ### Step 1: Backup Configuration
 
 - [ ] **Raft Snapshot Setup**
+
   ```bash
   # Daily snapshot cron job
   vault operator raft snapshot save /opt/vault-snapshots/vault.$(date +%Y%m%d).snapshot
