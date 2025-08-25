@@ -8,7 +8,17 @@
 
   vars:
     vault_addr: "http://{{ ansible_default_ipv4.address }}:8200"
-    vault_token: "root"  # Dev mode token
+    # Use Infisical lookup for root token - NO HARDCODED SECRETS
+    vault_token: "{{ lookup('infisical.vault.read_secrets',
+                       env='prod',
+                       path='/apollo-13/vault',
+                       secret_name='VAULT_DEV_ROOT_TOKEN') }}"
+
+  pre_tasks:
+    - name: Validate Infisical token is available
+      ansible.builtin.fail:
+        msg: "VAULT_DEV_ROOT_TOKEN not found in Infisical at /apollo-13/vault"
+      when: vault_token is undefined or vault_token == ""
 
   tasks:
     - name: Wait for master Vault to be ready
@@ -85,7 +95,7 @@
           - "Master Vault Address: {{ vault_addr }}"
           - "Transit Engine: Enabled at /transit"
           - "Auto-unseal Key: autounseal (aes256-gcm96)"
-          - "Auto-unseal Token: {{ autounseal_token_result.json.auth.client_token }}"
+          - "Auto-unseal Token: {{ autounseal_token_result.json.auth.client_token[:8] }}...{{ autounseal_token_result.json.auth.client_token[-4:] }} (masked)"
           - ""
           - "Next: Store the auto-unseal token in Infisical and deploy production cluster"
 
@@ -98,7 +108,7 @@
         msg:
           - "Store this token in Infisical:"
           - "Path: /apollo-13/vault/transit-token"
-          - "Value: {{ vault_autounseal_token }}"
+          - "Value: {{ vault_autounseal_token[:8] }}...{{ vault_autounseal_token[-4:] }} (masked - use variable above)"
           - ""
           - "Use this command to store it:"
           - "infisical secrets set VAULT_TRANSIT_TOKEN='{{ vault_autounseal_token }}' --path='/apollo-13/vault' --env=prod"
