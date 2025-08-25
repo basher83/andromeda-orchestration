@@ -33,13 +33,6 @@ repos:
         args: [--config-file=.yamllint]
         types: [yaml]
 
-  # Ansible linting - Disabled in pre-commit due to module import issues
-  # Run via: task lint:ansible or uv run ansible-lint
-  # - repo: https://github.com/ansible/ansible-lint
-  #   rev: v24.2.0
-  #   hooks:
-  #     - id: ansible-lint
-
   # Python code quality (for custom modules/plugins)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.3.4
@@ -56,13 +49,6 @@ repos:
         additional_dependencies: [types-requests, types-pyyaml]
         files: \.(py)$
         exclude: ^(tests/|docs/|archive/)
-
-  # Security checks - Disabled due to version conflicts
-  # Run via: task security
-  # - repo: https://github.com/Yelp/detect-secrets
-  #   rev: v1.4.0
-  #   hooks:
-  #     - id: detect-secrets
 
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py

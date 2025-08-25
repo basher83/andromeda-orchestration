@@ -1,0 +1,56 @@
+---
+# Ansible Inventory for Vault Production Cluster
+# Generated for Hercules-Vault-Infra
+all:
+  children:
+    vault_master:
+      hosts:
+        vault-master-lloyd:
+          ansible_host: vault-master-lloyd.tailfb3ea.ts.net
+          ansible_user: ansible
+          vault_role: master
+          vault_node_id: vault-master
+          proxmox_node: lloyd
+          vm_id: 3100
+
+    vault_production:
+      hosts:
+        vault-prod-1-holly:
+          ansible_host: vault-prod-1-holly.tailfb3ea.ts.net
+          ansible_user: ansible
+          vault_role: production
+          vault_node_id: vault-prod-1
+          proxmox_node: holly
+          vm_id: 3201
+
+        vault-prod-2-mable:
+          ansible_host: vault-prod-2-mable.tailfb3ea.ts.net
+          ansible_user: ansible
+          vault_role: production
+          vault_node_id: vault-prod-2
+          proxmox_node: mable
+          vm_id: 3202
+
+        vault-prod-3-lloyd:
+          ansible_host: vault-prod-3-lloyd.tailfb3ea.ts.net
+          ansible_user: ansible
+          vault_role: production
+          vault_node_id: vault-prod-3
+          proxmox_node: lloyd
+          vm_id: 3203
+
+    # Group all Vault nodes for common configuration
+    vault_cluster:
+      children:
+        vault_master: {}
+        vault_production: {}
+      vars:
+        vault_datacenter: "doggos-cluster"
+        vault_domain: "vault.spaceships.work"
+        vault_port: 8200
+        vault_cluster_port: 8201
+        vault_data_dir: "/opt/vault/data"
+        vault_config_dir: "/etc/vault.d"
+        vault_log_dir: "/opt/vault/logs"
+        vault_user: "vault"
+        ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
