@@ -1,0 +1,60 @@
+---
+# Host variables for Vault production node 2 (mable)
+# Production cluster member with auto-unseal
+
+ansible_host: vault-prod-2-mable.tailfb3ea.ts.net
+ansible_user: ansible
+
+# Vault configuration
+vault_role: production
+vault_node_id: vault-prod-2
+vault_cluster_name: "vault-production"
+vault_datacenter: "doggos-cluster"
+
+# Auto-unseal configuration (points to master)
+vault_auto_unseal_enabled: true
+vault_transit_address: "http://vault-master-lloyd.tailfb3ea.ts.net:8200"
+vault_transit_key_name: "autounseal"
+vault_transit_mount_path: "transit"
+
+# Proxmox VM configuration
+proxmox_node: mable
+vm_id: 3202
+vm_memory: 2048
+vm_cores: 2
+vm_storage: 20
+
+# Network configuration
+vault_bind_addr: "0.0.0.0"
+vault_cluster_addr: "http://{{ ansible_default_ipv4.address }}:8201"
+vault_api_addr: "http://{{ ansible_default_ipv4.address }}:8200"
+
+# Raft storage configuration
+vault_storage_backend: "raft"
+vault_raft_node_id: "vault-prod-2"
+vault_raft_performance_multiplier: 1
+vault_raft_trailing_logs: 10000
+vault_raft_snapshot_threshold: 8192
+vault_raft_snapshot_interval: "5s"
+
+# Storage configuration
+vault_data_dir: "/opt/vault/data"
+vault_config_dir: "/etc/vault.d"
+vault_log_dir: "/var/log/vault"
+vault_user: "vault"
+vault_group: "vault"
+
+# Performance and resource limits
+vault_max_lease_ttl: "768h"
+vault_default_lease_ttl: "168h"
+vault_log_level: "INFO"
+vault_disable_cache: false
+vault_disable_mlock: false
+
+# Audit configuration
+vault_audit_enabled: true
+vault_audit_file_path: "/var/log/vault/audit.log"
+
+# UI and telemetry
+vault_ui_enabled: true
+vault_telemetry_enabled: true
