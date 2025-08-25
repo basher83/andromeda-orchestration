@@ -1,0 +1,37 @@
+---
+# Test connectivity to Vault cluster VMs
+- name: Test Vault Cluster Connectivity
+  hosts: vault_cluster
+  gather_facts: true
+  tasks:
+    - name: Ping all Vault nodes
+      ansible.builtin.ping:
+      register: ping_result
+
+    - name: Check cloud-init completion
+      ansible.builtin.stat:
+        path: /var/lib/cloud/instance/boot-finished
+      register: cloud_init_status
+
+    - name: Verify Vault installation
+      ansible.builtin.command:
+        cmd: vault version
+      register: vault_version
+      failed_when: false
+
+    - name: Check Vault service status
+      ansible.builtin.systemd:
+        name: vault
+      register: vault_service
+
+    - name: Display node status
+      ansible.builtin.debug:
+        msg: |
+          Node: {{ inventory_hostname }}
+          IP: {{ ansible_host }}
+          Proxmox Node: {{ proxmox_node }}
+          Role: {{ vault_role }}
+          Cloud-init Complete: {{ cloud_init_status.stat.exists | default('unknown') }}
+          Vault Installed: {{ vault_version.rc == 0 }}
+          Vault Version: {{ vault_version.stdout | default('not installed') }}
+          Vault Service State: {{ vault_service.status.ActiveState | default('unknown') }}

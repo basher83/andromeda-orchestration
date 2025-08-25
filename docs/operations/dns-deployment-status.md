@@ -19,9 +19,9 @@ Successfully deployed DNS zones to NetBox. PowerDNS integration now targets Mode
 
 **Forward Zones:**
 
-- `homelab.local` - Primary homelab domain
-- `doggos.local` - Doggos cluster domain
-- `og.local` - OG homelab cluster domain
+- `homelab.spaceships.work` - Primary homelab domain
+- `doggos.spaceships.work` - Doggos cluster domain
+- `og.spaceships.work` - OG homelab cluster domain
 
 **Reverse Zones:**
 
@@ -31,7 +31,7 @@ Successfully deployed DNS zones to NetBox. PowerDNS integration now targets Mode
 
 **DNS Records:**
 
-- Nameserver: `ns1.homelab.local` (192.168.11.20)
+- Nameserver: `ns1.homelab.spaceships.work` (192.168.11.20)
 - NS records for all zones
 - SOA records configured
 - Total: 6 zones, 11 records
