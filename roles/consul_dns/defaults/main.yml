@@ -1,6 +1,9 @@
 ---
 # Consul DNS Configuration Defaults
 
+# Homelab domain (replaces hardcoded .local domains)
+homelab_domain: "spaceships.work"
+
 # Consul DNS settings
 consul_dns_port: 8600
 consul_domain: consul

@@ -1,6 +1,9 @@
 ---
 # defaults file for nomad role
 
+# Homelab domain (replaces hardcoded .local domains)
+homelab_domain: "spaceships.work"
+
 # Installation options
 nomad_install_package: true
 nomad_version: "1.10.0" # Default Nomad version
