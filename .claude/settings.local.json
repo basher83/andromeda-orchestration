@@ -38,7 +38,8 @@
       "Bash(git commit:*)",
       "Bash(git log:*)",
       "Bash(npx markdownlint-cli2:*)",
-      "mcp__github__get_issue"
+      "mcp__github__get_issue",
+      "Bash(grep:*)"
     ]
   },
   "statusLine": {
