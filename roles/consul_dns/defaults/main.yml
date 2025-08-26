@@ -1,6 +1,10 @@
 ---
 # Consul DNS Configuration Defaults
 
+# Homelab domain (replaces hardcoded .local domains)
+# Default is commented out - must be set in inventory group_vars
+# homelab_domain: "spaceships.work"
+
 # Consul DNS settings
 consul_dns_port: 8600
 consul_domain: consul
@@ -12,7 +16,11 @@ consul_dns_method: systemd-resolved
 
 # Service registration defaults
 consul_register_services: true
-consul_service_token: "{{ lookup('community.general.infisical', '/apollo-13/consul/acl-bootstrap-token', env_slug='prod', secret_type='shared') }}"
+consul_service_token: >-
+  {{ lookup('community.general.infisical',
+    '/apollo-13/consul/acl-bootstrap-token',
+    env_slug='prod',
+    secret_type='shared') | default('', true) }}
 
 # Infrastructure services to register
 consul_infrastructure_services:

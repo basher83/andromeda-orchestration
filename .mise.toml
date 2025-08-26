@@ -680,6 +680,13 @@ description = "Lint Nomad files"
 run = "nomad fmt -check -recursive nomad-jobs"
 tools = { "nomad" = "1.10.4" }
 
+[tasks."lint:domains"]
+description = "Check for hardcoded .local domains"
+run = '''
+echo "🔍 Checking for .local domains..."
+./scripts/lint-no-dot-local.sh
+'''
+
 [tasks."fmt:nomad"]
 description = "Format Nomad files"
 run = "nomad fmt -recursive nomad-jobs"

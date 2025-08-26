@@ -1,6 +1,16 @@
 ---
 # Main tasks for consul_dns role
 
+- name: Assert homelab_domain is configured and not .local
+  ansible.builtin.assert:
+    that:
+      - homelab_domain is defined
+      - homelab_domain is string
+      - homelab_domain | length > 0
+      - homelab_domain is not match("\.local$")
+    fail_msg: "homelab_domain must be set in inventory group_vars and must not end with .local"
+    success_msg: "homelab_domain is properly configured: {{ homelab_domain }}"
+
 - name: Include OS-specific variables
   include_vars: "{{ ansible_os_family }}.yml"
   failed_when: false

@@ -65,6 +65,16 @@ repos:
       - id: markdownlint-cli2
         args: [--fix]
 
+  # Custom hooks
+  - repo: local
+    hooks:
+      - id: no-dot-local
+        name: Check for .local domains
+        entry: scripts/lint-no-dot-local.sh
+        language: script
+        files: \.(yml|yaml|hcl|nomad|tf)$
+        pass_filenames: false
+
 # Configuration for specific tools
 default_language_version:
   # Use the system's Python 3 to avoid pinning to a specific minor version
