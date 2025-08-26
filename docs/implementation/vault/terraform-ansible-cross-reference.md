@@ -138,6 +138,7 @@ terraform apply -var-file="production.tfvars"
 ```
 
 **Terraform Outputs:**
+
 - VM IDs and names
 - IP addresses assigned
 - DNS configurations
@@ -152,6 +153,7 @@ uv run ansible-playbook playbooks/infrastructure/vault/configure-production-node
 ```
 
 **Ansible Inputs:**
+
 - VM connectivity via Terraform-assigned IPs
 - Host variables aligned with Terraform resources
 - Service configuration using infrastructure details
