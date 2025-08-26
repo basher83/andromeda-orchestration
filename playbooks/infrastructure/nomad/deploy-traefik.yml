@@ -85,12 +85,12 @@
       ansible.builtin.debug:
         msg:
           - "Traefik deployed successfully!"
-          - "Dashboard: https://traefik.lab.local (configure DNS to point to Nomad client)"
+          - "Dashboard: https://traefik.{{ homelab_domain }} (configure DNS to point to Nomad client)"
           - "HTTP: Port 80 (redirects to HTTPS)"
           - "HTTPS: Port 443"
           - "Health: http://{{ traefik_service.json[0].ServiceAddress }}:{{ traefik_service.json[0].ServicePort }}/ping"
           - ""
-          - "Configure DNS to point *.lab.local to one of your Nomad client IPs"
+          - "Configure DNS to point *.{{ homelab_domain }} to one of your Nomad client IPs"
 
 # Usage:
 # ansible-playbook deploy-traefik.yml -i inventory/doggos-homelab/infisical.proxmox.yml
