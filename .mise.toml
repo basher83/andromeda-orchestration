@@ -523,11 +523,11 @@ description = "Run KICS infrastructure security scan"
 run = '''
 echo "🔍 Running KICS security scan..."
 mkdir -p kics-results
-# Exclude non-source and prototype/debug paths to reduce noise in results
+# Use the optimized kics.config file for faster, focused scanning
 docker run -t -v "$(pwd)":/path checkmarx/kics scan \
   -p /path \
-  --exclude-paths \
-  "/path/.venv/**,/path/kics-results/**,/path/docs/**,/path/playbooks/infrastructure/.debug/**,/path/playbooks/infrastructure/.archive/**"
+  --config /path/kics.config \
+  -o /path/kics-results
 echo "✅ KICS scan complete! Results saved to kics-results/"
 '''
 
