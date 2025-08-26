@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-08-25] - Vault Production Cluster Deployment
+
+### Added
+
+- **Vault Production Infrastructure**
+  - Created dedicated `inventory/vault-cluster/` with production configuration
+  - Added 4-node Vault cluster inventory (1 transit master + 3 Raft storage nodes)
+  - Implemented `playbooks/infrastructure/vault/configure-production-nodes.yml` for secure deployment
+  - Added `playbooks/infrastructure/vault/reset-vault.yml` for cluster reset operations
+  - Added `playbooks/infrastructure/vault/unseal-vault.yml` for automated unsealing
+
+- **Security Enhancements**
+  - Integrated Infisical for all Vault secrets management (no hardcoded tokens)
+  - Implemented token masking in debug output (shows first 8 + last 4 chars only)
+  - Added pre-deployment validation for secret availability
+  - Transit engine accessibility verification before deployment
+
+- **Documentation**
+  - Added Terraform-Ansible cross-reference documentation for Vault deployment
+  - Updated DNS deployment status with new domain names
+
+### Changed
+
+- **Vault Deployment Architecture**
+  - Migrated from dev mode to production Raft storage backend
+  - Implemented auto-unseal using transit engine on master node
+  - Configured comprehensive audit logging and telemetry
+  - Added systemd service configuration for production stability
+
+### Fixed
+
+- **Pre-commit Configuration**
+  - Removed disabled Ansible linting and security checks from `.pre-commit-config.yaml`
+  - Restored full security scanning capabilities
+
+### Infrastructure Impact
+
+- **Scope**: Complete Vault cluster replacement (dev → production)
+- **Nodes Affected**:
+  - vault-master-lloyd (192.168.10.14): Transit engine master
+  - vault-prod-1-holly (192.168.10.15): Raft storage node
+  - vault-prod-2-mable (192.168.10.16): Raft storage node
+  - vault-prod-3-lloyd (192.168.10.17): Raft storage node
+- **Security**: Zero secrets exposure, all credentials via Infisical
+- **Phase Completion**: Phase 2 of Vault deployment complete
+
 ## [2025-08-22] - Domain Migration Completion & Infrastructure Hardening
 
 ### Added

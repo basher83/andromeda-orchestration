@@ -1,0 +1,153 @@
+---
+# Clean up Vault services and health checks from Consul
+# This playbook removes stale Vault registrations from Consul catalog
+
+- name: Clean up Vault services from Consul
+  hosts: localhost
+  gather_facts: false
+  vars:
+    consul_servers:
+      - host: "192.168.11.11"
+        name: "nomad-server-1"
+      - host: "192.168.11.12"
+        name: "nomad-server-2"
+      - host: "192.168.11.13"
+        name: "nomad-server-3"
+    consul_clients:
+      - host: "192.168.11.20"
+        name: "nomad-client-1"
+      - host: "192.168.11.21"
+        name: "nomad-client-2"
+      - host: "192.168.11.22"
+        name: "nomad-client-3"
+
+  tasks:
+    - name: Check for Vault services in Consul catalog
+      ansible.builtin.uri:
+        url: "http://{{ consul_servers[0].host }}:8500/v1/catalog/service/vault"
+        method: GET
+        status_code: [200]
+      register: vault_services
+      failed_when: false
+
+    - name: Display found Vault services
+      ansible.builtin.debug:
+        msg: "Found {{ vault_services.json | length }} Vault service registrations"
+      when: vault_services.status == 200
+
+    - name: Attempt to deregister Vault from each agent
+      ansible.builtin.uri:
+        url: "http://{{ item.host }}:8500/v1/agent/service/deregister/vault"
+        method: PUT
+        status_code: [200, 404]
+      loop: "{{ consul_servers + consul_clients }}"
+      loop_control:
+        label: "{{ item.name }}"
+      failed_when: false
+      register: deregister_results
+
+    - name: Check for any Vault health checks
+      ansible.builtin.uri:
+        url: "http://{{ consul_servers[0].host }}:8500/v1/health/checks/vault"
+        method: GET
+        status_code: [200]
+      register: vault_checks
+      failed_when: false
+
+    - name: Display health check status
+      ansible.builtin.debug:
+        msg: "Found {{ vault_checks.json | default([]) | length }} Vault health checks"
+      when: vault_checks.status == 200
+
+    - name: Force deregister from catalog if service still exists
+      block:
+        - name: Get catalog node services for each node with Vault
+          ansible.builtin.uri:
+            url: "http://{{ consul_servers[0].host }}:8500/v1/catalog/node-services/{{ item }}"
+            method: GET
+            status_code: [200]
+          loop:
+            - "nomad-server-1"
+            - "nomad-server-2"
+            - "nomad-server-3"
+          register: node_services
+          failed_when: false
+
+        - name: Find Vault service IDs
+          ansible.builtin.set_fact:
+            vault_service_ids: >-
+              {{
+                node_services.results |
+                selectattr('json.Services', 'defined') |
+                map(attribute='json.Services') |
+                list |
+                flatten |
+                selectattr('Service', 'equalto', 'vault') |
+                map(attribute='ID') |
+                list
+              }}
+          when: node_services.results is defined
+
+        - name: Deregister Vault services by ID
+          ansible.builtin.uri:
+            url: "http://{{ consul_servers[0].host }}:8500/v1/catalog/deregister"
+            method: PUT
+            body_format: json
+            body:
+              Node: "{{ item.node }}"
+              ServiceID: "{{ item.id }}"
+            status_code: [200]
+          loop: "{{ vault_services_to_remove | default([]) }}"
+          vars:
+            vault_services_to_remove: >-
+              {% set services = [] %}
+              {% for result in node_services.results %}
+                {% if result.json is defined and result.json.Services is defined %}
+                  {% for service in result.json.Services %}
+                    {% if service.Service == 'vault' %}
+                      {% set _ = services.append({'node': result.json.Node.Node, 'id': service.ID}) %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+              {{ services }}
+          when: vault_services_to_remove | length > 0
+          failed_when: false
+
+      when: vault_services.status == 200 and vault_services.json | length > 0
+
+    - name: Verify cleanup
+      block:
+        - name: Check if Vault services still exist
+          ansible.builtin.uri:
+            url: "http://{{ consul_servers[0].host }}:8500/v1/catalog/service/vault"
+            method: GET
+            status_code: [200]
+          register: final_check
+          failed_when: false
+
+        - name: Report final status
+          ansible.builtin.debug:
+            msg: >-
+              {% if final_check.json | length == 0 %}
+              ✅ Successfully cleaned up all Vault services from Consul
+              {% else %}
+              ⚠️  Warning: {{ final_check.json | length }} Vault service(s) still remain in Consul
+              {% endif %}
+          when: final_check.status == 200
+
+        - name: List remaining services if any
+          ansible.builtin.debug:
+            var: final_check.json
+          when: final_check.status == 200 and final_check.json | length > 0
+
+    - name: Display all Consul services
+      ansible.builtin.uri:
+        url: "http://{{ consul_servers[0].host }}:8500/v1/catalog/services"
+        method: GET
+        status_code: [200]
+      register: all_services
+
+    - name: Show current service list
+      ansible.builtin.debug:
+        msg: "Current Consul services: {{ all_services.json.keys() | list | join(', ') }}"

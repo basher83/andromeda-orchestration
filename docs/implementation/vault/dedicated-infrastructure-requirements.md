@@ -3,6 +3,7 @@
 ## Overview
 
 This document outlines the system requirements for a dedicated 4-VM Vault infrastructure consisting of:
+
 - 1 Master Vault (auto-unseal provider)
 - 3 Production Vault nodes (Raft cluster)
 
@@ -37,12 +38,14 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ### Bandwidth Considerations
 
 **1 Gbps NICs are sufficient** for this environment because:
+
 - Vault API requests are typically small (JSON payloads)
 - Raft consensus traffic is minimal
 - No high-throughput data streaming
 - Homelab/staging environment usage patterns
 
 **10 Gbps NICs would be overkill** unless:
+
 - Handling thousands of concurrent API requests
 - Large secret payloads (>1MB consistently)
 - High-frequency certificate generation workloads
@@ -50,12 +53,14 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ### Network Topology
 
 **Single NIC per VM** is recommended:
+
 - Simplifies configuration and management
 - Reduces potential network failure points
 - Adequate bandwidth for Vault operations
 - Cost-effective for homelab environments
 
 **Multiple NICs** would only be needed for:
+
 - Network segmentation requirements (management vs. application traffic)
 - High-availability network redundancy
 - Compliance requirements for traffic separation
@@ -63,10 +68,12 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ## Port Requirements
 
 ### Master Vault
+
 - **8200**: Vault API (for auto-unseal requests)
 - **22**: SSH management
 
 ### Production Vault Cluster
+
 - **8200**: Vault API (client requests)
 - **8201**: Raft cluster communication (inter-node)
 - **22**: SSH management
@@ -74,18 +81,21 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ## Storage Requirements
 
 ### Master Vault
+
 - **40 GB total**:
   - 20 GB OS and applications
   - 10 GB Vault data (Transit keys, minimal storage)
   - 10 GB logs and temporary files
 
 ### Production Vault Nodes
+
 - **100 GB total per node**:
   - 20 GB OS and applications
   - 60 GB Vault data (secrets, Raft storage)
   - 20 GB audit logs and temporary files
 
 ### Storage Type
+
 - **SSD recommended** for all nodes
 - **NVMe preferred** for production nodes if available
 - Vault benefits from low-latency storage for encryption operations
@@ -93,16 +103,19 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ## Resource Scaling Guidelines
 
 ### CPU Scaling Triggers
+
 - CPU utilization consistently >70%
 - API response times >100ms
 - High encryption/decryption workloads
 
 ### Memory Scaling Triggers
+
 - Memory utilization >80%
 - Increased cache requirements
 - Large number of concurrent sessions
 
 ### Storage Scaling Triggers
+
 - Disk usage >80%
 - Rapid audit log growth
 - Increased secret volume
@@ -110,27 +123,32 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ## High Availability Considerations
 
 ### Minimum Requirements
+
 - **3 production nodes** for Raft quorum
 - **1 master node** for auto-unseal (single point acceptable in homelab)
 
 ### Enhanced HA (Future)
+
 - **2 master nodes** with load balancer for auto-unseal redundancy
 - **5 production nodes** for increased fault tolerance
 
 ## Security Hardening
 
 ### OS Level
+
 - Minimal OS installation
 - Firewall configuration (ufw/iptables)
 - Regular security updates
 - SSH key-based authentication only
 
 ### Network Level
+
 - VLANs for Vault traffic isolation
 - Firewall rules limiting port access
 - Network segmentation from general workloads
 
 ### Vault Level
+
 - TLS encryption for all communications
 - Regular key rotation
 - Audit logging enabled
@@ -139,11 +157,13 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ## Monitoring Requirements
 
 ### Resource Monitoring
+
 - CPU, memory, disk utilization
 - Network throughput and latency
 - Storage IOPS and latency
 
 ### Vault-Specific Monitoring
+
 - API response times
 - Raft cluster health
 - Auto-unseal operation success rates
@@ -152,12 +172,14 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ## Backup Requirements
 
 ### Data to Backup
+
 - Raft snapshots (encrypted)
 - Configuration files
 - TLS certificates
 - Audit logs
 
 ### Backup Storage
+
 - **50 GB** minimum for backup retention
 - Off-site storage recommended
 - Encrypted backup media
@@ -165,16 +187,19 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ## Migration Strategy
 
 ### Phase 1: Create New VMs
+
 1. Provision 4 VMs with specifications above
 2. Install and configure base OS
 3. Install Vault binaries
 
 ### Phase 2: Migrate Services
+
 1. Migrate master Vault from lloyd
 2. Migrate production Vault from holly/mable
 3. Add third production node
 
 ### Phase 3: Cleanup
+
 1. Remove Vault from Nomad servers
 2. Optimize Nomad server resources
 3. Update DNS/load balancer configurations
@@ -182,11 +207,13 @@ This document outlines the system requirements for a dedicated 4-VM Vault infras
 ## Cost Optimization
 
 ### Resource Right-sizing
+
 - Start with minimum specifications
 - Monitor utilization for 30 days
 - Scale up based on actual usage patterns
 
 ### Shared Resources
+
 - Use same storage pool for multiple VMs
 - Leverage Proxmox resource sharing
 - Consider memory ballooning for non-production VMs

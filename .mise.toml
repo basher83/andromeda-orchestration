@@ -502,6 +502,176 @@ run = "markdownlint-cli2 --fix **/*.md"
 tools = { "markdownlint-cli2" = "0.18.1" }
 
 # ============================================================================
+# SECURITY
+# ============================================================================
+
+[tasks."security:secrets"]
+description = "Run Infisical secrets detection scan"
+run = '''
+echo "🔍 Running Infisical secrets scan..."
+if [ -f "./scripts/scan-secrets.sh" ]; then
+  ./scripts/scan-secrets.sh full
+  echo "✅ Infisical secrets scan complete!"
+else
+  echo "⚠️  scan-secrets.sh script not found"
+  echo "Consider using: infisical scan"
+fi
+'''
+
+[tasks."security:kics"]
+description = "Run KICS infrastructure security scan"
+run = '''
+echo "🔍 Running KICS security scan..."
+mkdir -p kics-results
+# Exclude non-source and prototype/debug paths to reduce noise in results
+docker run -t -v "$(pwd)":/path checkmarx/kics scan \
+  -p /path \
+  --exclude-paths \
+  "/path/.venv/**,/path/kics-results/**,/path/docs/**,/path/playbooks/infrastructure/.debug/**,/path/playbooks/infrastructure/.archive/**"
+echo "✅ KICS scan complete! Results saved to kics-results/"
+'''
+
+[tasks.security]
+description = "Run all security scans"
+depends = ["security:secrets", "security:kics"]
+
+# ============================================================================
+# CLEANUP & MAINTENANCE
+# ============================================================================
+
+[tasks.clean]
+description = "Remove generated files and caches"
+run = '''
+echo "🧹 Cleaning up generated files and caches..."
+fd -t d -H '^__pycache__$' . -x rm -rf {} || true
+fd -e pyc . -x rm {} || true
+fd -t d -H '^\\.pytest_cache$' . -x rm -rf {} || true
+fd -t d -H '^\\.mypy_cache$' . -x rm -rf {} || true
+fd -t d -H '^\\.ruff_cache$' . -x rm -rf {} || true
+fd -t d '\\.egg-info$' . -x rm -rf {} || true
+rm -rf build/ dist/
+echo "✅ Cleanup complete!"
+'''
+tools = { "fd" = "10.2.0" }
+
+# ============================================================================
+# DOCUMENTATION HELPERS
+# ============================================================================
+
+[tasks.todos]
+description = "Find all TODO tags in documentation"
+run = '''
+if [ -f "./scripts/find-todos.sh" ]; then
+  ./scripts/find-todos.sh
+else
+  echo "🔍 Searching for TODOs..."
+  rg -i "TODO" --type md --type py --type yaml -g "*.hcl" -g "*.nomad" -n | head -50
+fi
+'''
+tools = { "rg" = "14.1.1" }
+
+[tasks.tags]
+description = "Find all tags (TODO, FIXME, BUG, etc.) in code and documentation"
+run = '''
+if [ -n "${1:-}" ]; then
+  TAG="$1"
+else
+  TAG=""
+fi
+
+if [ -f "./scripts/find-tags.sh" ] && [ -x "./scripts/find-tags.sh" ]; then
+  ./scripts/find-tags.sh "$TAG"
+else
+  echo "🏷️  Searching for tags..."
+  if [ -n "$TAG" ]; then
+    rg -i "$TAG" --type md --type py --type yaml -g "*.hcl" -g "*.nomad" -n | head -50
+  else
+    for tag in TODO FIXME BUG HACK NOTE SECURITY WARNING; do
+      echo ""
+      echo "=== $tag tags ==="
+      rg -i "\\b$tag\\b" --type md --type py --type yaml -g "*.hcl" -g "*.nomad" -n | head -20 || echo "No $tag tags found"
+    done
+  fi
+fi
+'''
+tools = { "rg" = "14.1.1" }
+
+[tasks."tags:critical"]
+description = "Find critical issues (SECURITY, FIXME, BUG)"
+run = '''
+echo "⚠️  Searching for critical tags..."
+for tag in SECURITY FIXME BUG; do
+  echo ""
+  echo "=== $tag tags ==="
+  rg -i "\\b$tag\\b" --type md --type py --type yaml -g "*.hcl" -g "*.nomad" -n | head -20 || echo "No $tag tags found"
+done
+'''
+tools = { "rg" = "14.1.1" }
+
+# ============================================================================
+# TESTING
+# ============================================================================
+
+[tasks.test]
+description = "Run all tests"
+depends = ["test:syntax", "test:python"]
+
+[tasks."test:syntax"]
+description = "Check playbook syntax"
+run = '''
+echo "🔍 Checking playbook syntax..."
+fd -e yml . playbooks -x sh -c 'echo "  Checking: {}" && \
+  uv run ansible-playbook {} --syntax-check 2>&1 | \
+  grep -v "WARNING" | grep -v "DEPRECATION" || true'
+echo "✅ Syntax check complete!"
+'''
+tools = { "fd" = "10.2.0", "uv" = "0.8.13" }
+
+[tasks."test:python"]
+description = "Run Python tests"
+run = '''
+if [ -d "tests" ] && [ -n "$(fd -e py '^test_' tests 2>/dev/null)" ]; then
+  uv run pytest tests/
+else
+  echo "No Python tests found - consider adding tests for custom modules"
+  echo "Modules needing tests:"
+  ls plugins/modules/*.py 2>/dev/null | head -5 | sed 's/^/  - /'
+fi
+'''
+tools = { "uv" = "0.8.13", "fd" = "10.2.0" }
+
+[tasks."test:quick"]
+description = "Quick smoke test (syntax only, no inventory)"
+run = '''
+echo "🚀 Running quick smoke tests..."
+# Test that a simple playbook can be parsed
+echo "---
+- name: Smoke test
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Test task
+      debug:
+        msg: 'Smoke test passed'" | uv run ansible-playbook --syntax-check /dev/stdin
+echo "✅ Ansible is working correctly"
+
+# Test that custom modules exist
+echo "Testing custom modules exist..."
+if [ -f "plugins/modules/consul_acl_token.py" ] && [ -f "plugins/modules/nomad_job.py" ]; then
+  echo "✅ Custom modules found"
+else
+  echo "❌ Custom modules not found"
+  exit 1
+fi
+'''
+tools = { "uv" = "0.8.13" }
+
+[tasks.hooks]
+description = "Run all pre-commit hooks"
+run = "uv run pre-commit run --all-files"
+tools = { "uv" = "0.8.13", "pre-commit" = "4.3.0" }
+
+# ============================================================================
 # NOMAD
 # ============================================================================
 # Nomad Development Tasks

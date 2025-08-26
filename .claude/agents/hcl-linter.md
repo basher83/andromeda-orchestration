@@ -2,6 +2,7 @@
 name: hcl-linter
 description: Use proactively for validating and formatting HCL files in nomad-jobs/ directory - runs native Nomad formatter without uv environment
 tools: Bash, Read, Edit, MultiEdit
+model: sonnet
 color: orange
 ---
 
@@ -16,11 +17,13 @@ When invoked, you must follow these steps:
 1. **Identify HCL Files**: Search for all `.hcl` and `.nomad` files in the `nomad-jobs/` directory and its subdirectories using bash commands like `find nomad-jobs/ -type f \( -name "*.hcl" -o -name "*.nomad" \)`.
 
 2. **Validate Syntax**: For each HCL file found:
+
    - Use `nomad job validate <file>` to check syntax
    - Record any validation errors with exact line numbers
    - Capture the complete error message for debugging
 
 3. **Check Formatting**: Use `nomad fmt -check` to identify files needing formatting:
+
    ```bash
    # Check all files recursively
    nomad fmt -check nomad-jobs/
@@ -30,6 +33,7 @@ When invoked, you must follow these steps:
    ```
 
 4. **Apply Formatting**: For files needing formatting:
+
    - First show a preview with `nomad fmt -write=false`
    - Apply formatting with `nomad fmt <file>`
    - Use MultiEdit to apply the changes if needed
@@ -47,6 +51,7 @@ When invoked, you must follow these steps:
    - Datacenter should be "doggos-homelab"
 
 **Best Practices:**
+
 - Always validate syntax before formatting
 - Use `nomad fmt -write=false` to preview changes first
 - Report validation errors with full context (file path, line number, error message)
