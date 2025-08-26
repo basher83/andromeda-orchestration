@@ -17,13 +17,16 @@ FILES_TO_CHECK=$(find . -type f \( -name "*.yml" -o -name "*.yaml" -o -name "*.h
   ! -path "*/.venv/*" \
   ! -path "*/docs/*" \
   ! -path "*/.git/*" \
-  2>/dev/null || true)
+  2>/dev/null) || {
+  echo -e "${RED}ERROR:${NC} Failed to find files to check"
+  exit 2
+}
 
 # Track if we found any violations
 FOUND_VIOLATIONS=0
 
 # Check each file for .local domains
-for file in $FILES_TO_CHECK; do
+while IFS= read -r -d '' file; do
   # Skip if file doesn't exist (race condition protection)
   [ -f "$file" ] || continue
 
@@ -34,7 +37,7 @@ for file in $FILES_TO_CHECK; do
     grep -n -E '(^[^#]*)(lab\.local|homelab\.local|traefik\.local|vault\.local|consul\.local|nomad\.local)' "$file" | head -3
     FOUND_VIOLATIONS=1
   fi
-done
+done < <(printf '%s\0' $FILES_TO_CHECK)
 
 # Summary
 if [ $FOUND_VIOLATIONS -eq 0 ]; then

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project uses a configurable `homelab_domain` variable to avoid hardcoding domain names. The default domain is `spaceships.work`, replacing the legacy `.local` domains that conflict with mDNS on macOS systems.
+This project uses a configurable `homelab_domain` variable to avoid hardcoding domain names. The default domain is `spaceships.work`, which replaces the legacy `.local` domains that conflict with mDNS on macOS systems.
 
 ## Configuration Locations
 
