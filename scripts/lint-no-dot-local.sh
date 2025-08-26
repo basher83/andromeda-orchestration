@@ -10,22 +10,11 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-# Files to check (excluding archives, docs, and virtual environments)
-FILES_TO_CHECK=$(find . -type f \( -name "*.yml" -o -name "*.yaml" -o -name "*.hcl" -o -name "*.nomad" -o -name "*.tf" \) \
-  ! -path "*/.archive/*" \
-  ! -path "*/reports/*" \
-  ! -path "*/.venv/*" \
-  ! -path "*/docs/*" \
-  ! -path "*/.git/*" \
-  2>/dev/null) || {
-  echo -e "${RED}ERROR:${NC} Failed to find files to check"
-  exit 2
-}
-
 # Track if we found any violations
 FOUND_VIOLATIONS=0
 
 # Check each file for .local domains
+# Using process substitution to avoid subshell issues
 while IFS= read -r -d '' file; do
   # Skip if file doesn't exist (race condition protection)
   [ -f "$file" ] || continue
@@ -37,7 +26,13 @@ while IFS= read -r -d '' file; do
     grep -n -E '(^[^#]*)(lab\.local|homelab\.local|traefik\.local|vault\.local|consul\.local|nomad\.local)' "$file" | head -3
     FOUND_VIOLATIONS=1
   fi
-done < <(printf '%s\0' "$FILES_TO_CHECK")
+done < <(find . -type f \( -name "*.yml" -o -name "*.yaml" -o -name "*.hcl" -o -name "*.nomad" -o -name "*.tf" \) \
+  ! -path "*/.archive/*" \
+  ! -path "*/reports/*" \
+  ! -path "*/.venv/*" \
+  ! -path "*/docs/*" \
+  ! -path "*/.git/*" \
+  -print0 2>/dev/null)
 
 # Summary
 if [ $FOUND_VIOLATIONS -eq 0 ]; then
