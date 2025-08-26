@@ -81,6 +81,16 @@ Please provide as much information as possible:
 - Prepare security advisory if needed
 - Release fix and notify affected users
 
+**Target remediation timelines (by severity):**
+
+- Critical: fix or effective mitigation within 7–14 days
+- High: within 30 days
+- Medium: within 60 days
+- Low/Informational: best effort, scheduled as capacity allows
+
+**Coordinated disclosure:**
+
+- We prefer coordinated disclosure. Unless we agree otherwise in writing, we aim to publish an advisory once a fix or reasonable mitigation is available, or 90 days after acknowledgment—whichever comes first.
 ## 🛡️ Security Measures
 
 ### 🔐 Repository Security
