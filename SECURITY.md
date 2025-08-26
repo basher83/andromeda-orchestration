@@ -4,6 +4,7 @@
 
 Security is paramount to the andromeda-orchestration project and its infrastructure. We take the security of this
 repository and its users seriously and appreciate your help in keeping our systems safe.
+
 ## 🚨 Supported Versions
 
 As a continuously updated documentation repository, we maintain security for:
@@ -37,6 +38,7 @@ Instead, please report security vulnerabilities through one of these secure chan
 
 - Email: security (at) example.org (used only if you cannot access GitHub Security Advisories)
 - Expected first response: within 48 hours (business days)
+
 ### 📋 What to Include in Your Report
 
 Please provide as much information as possible:
@@ -91,6 +93,7 @@ Please provide as much information as possible:
 **Coordinated disclosure:**
 
 - We prefer coordinated disclosure. Unless we agree otherwise in writing, we aim to publish an advisory once a fix or reasonable mitigation is available, or 90 days after acknowledgment—whichever comes first.
+
 ## 🛡️ Security Measures
 
 ### 🔐 Repository Security
@@ -203,7 +206,6 @@ The following are generally out of scope:
 - [Mise Setup Guide](./docs/getting-started/mise-setup-guide.md)
 - [Repository Setup Guide](./docs/getting-started/README.md)
 
-
 ### Scripts
 
 - `scripts/generate-mcp-config.sh` - Secure config generation
@@ -242,6 +244,7 @@ We support responsible security research and will not pursue legal action agains
 We consider activities conducted consistent with this policy to constitute “good-faith” research.
 We will not initiate or support legal action under anti-hacking or anti-circumvention laws (including
 computer misuse or DMCA §1201) against parties who comply with this policy and report vulnerabilities responsibly.
+
 ### Privacy
 
 Security reports may contain sensitive information. We commit to:
