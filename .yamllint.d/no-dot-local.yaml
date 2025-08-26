@@ -1,0 +1,16 @@
+---
+# Custom yamllint rule to prevent .local domain usage
+# .local domains conflict with mDNS on macOS systems
+
+extends: default
+
+rules:
+  # Prevent .local domain usage in YAML files
+  comments:
+    require-starting-space: true
+    min-spaces-from-content: 2
+
+  # Note: yamllint doesn't support custom content rules directly
+  # This configuration serves as documentation
+  # Use grep-based checks in CI/CD or pre-commit hooks instead:
+  # grep -r "\.local\>" --include="*.yml" --include="*.yaml" && exit 1 || exit 0
