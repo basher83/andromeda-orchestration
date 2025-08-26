@@ -171,7 +171,7 @@
 
                   tags = [
                     "traefik.enable=true",
-                    "traefik.http.routers.api.rule=Host(`traefik.local`)",
+                    "traefik.http.routers.api.rule=Host(`traefik.{{ homelab_domain }}`)",
                     "traefik.http.routers.api.service=api@internal"
                   ]
 
