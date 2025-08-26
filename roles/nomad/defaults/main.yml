@@ -2,7 +2,8 @@
 # defaults file for nomad role
 
 # Homelab domain (replaces hardcoded .local domains)
-homelab_domain: "spaceships.work"
+# Default is commented out - must be set in inventory group_vars
+# homelab_domain: "spaceships.work"
 
 # Installation options
 nomad_install_package: true

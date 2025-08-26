@@ -2,7 +2,8 @@
 # Consul DNS Configuration Defaults
 
 # Homelab domain (replaces hardcoded .local domains)
-homelab_domain: "spaceships.work"
+# Default is commented out - must be set in inventory group_vars
+# homelab_domain: "spaceships.work"
 
 # Consul DNS settings
 consul_dns_port: 8600
