@@ -33,11 +33,10 @@ Instead, please report security vulnerabilities through one of these secure chan
 3. Fill out the security advisory form
 4. Submit your report
 
-#### Direct Contact
+#### Direct Contact (fallback only)
 
-- **GitHub:** Create a private security advisory
-- **Response Time:** Within 48 hours
-
+- Email: security (at) example.org (used only if you cannot access GitHub Security Advisories)
+- Expected first response: within 48 hours (business days)
 ### 📋 What to Include in Your Report
 
 Please provide as much information as possible:
