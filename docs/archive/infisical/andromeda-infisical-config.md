@@ -14,37 +14,17 @@ This document contains project-specific Infisical configuration details for the 
 ```plain
 Project: andromeda-orchestration-homelab (7b832220-24c0-45bc-a5f1-ce9794a31259)
 ├─ 📁 /apollo-13/
-│  ├─ 📂 proxmox/ (shared credentials at this level)
-│  │  ├─ 🌍 dev, prod, staging
-│  │  │  🔑 ANSIBLE_TOKEN_ID
-│  │  │  🔑 ANSIBLE_USERNAME
-│  │  ├─ 📂 og-homelab/
-│  │  │  └─ 🌍 dev, prod, staging
-│  │  │     🔑 ANSIBLE_TOKEN_SECRET_OG
-│  │  │     🔑 API_URL
-│  │  └─ 📂 doggos-homelab/
-│  │     └─ 🌍 dev, prod, staging
-│  │        🔑 ANSIBLE_TOKEN_SECRET_DOGGOS
-│  │        🔑 API_URL
-│  │
 │  ├─ 📂 consul/
-│  │  └─ 🌍 dev, prod, staging
-│  │     🔑 CONSUL_MASTER_TOKEN
-│  │
 │  ├─ 📂 nomad/
-│  │  └─ 🌍 dev, prod, staging
-│  │     🔑 MANAGEMENT_TOKEN
-│  │
 │  └─ 📂 vault/
-│     └─ 🌍 dev, prod, staging
-│        🔑 VAULT_DEV_ROOT_TOKEN
-│
 └─ 📁 /services/
-   ├─ 📂 netbox/
-   │  └─ 🌍 dev, prod, staging
-   │     🔑 NETBOX_USERNAME
-   │     🔑 NETBOX_API_KEY
-   └─ 📂 powerdns/ (ready for secrets)
+|    ├─ 📂 netbox/
+|    ├─ 📂 netdata/
+|    ├─ 📂 postgresql/
+|    └─ 📂 powerdns/
+└─ 📁 /proxmox/
+   ├─ 📂 doggos-homelab/
+   └─ 📂 og-homelab/
 ```
 
 ## Authentication

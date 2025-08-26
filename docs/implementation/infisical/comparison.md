@@ -1,8 +1,10 @@
 # Secrets Management Comparison: 1Password Connect vs Infisical
 
+> **Historical Document**: This comparison was created during the migration from 1Password to Infisical. 1Password has been fully deprecated and removed from the project. This document is retained for historical context only.
+
 ## Executive Summary
 
-This document provides a comprehensive comparison between 1Password Connect (current implementation) and Infisical (proposed alternative) for secrets management in our Ansible automation project. Based on thorough research, Infisical emerges as the recommended solution due to its open-source nature, cost efficiency, and superior infrastructure-as-code integration capabilities.
+This document provides a comprehensive comparison between 1Password Connect (former implementation) and Infisical (current solution) for secrets management in our Ansible automation project. Infisical was selected due to its open-source nature, cost efficiency, and superior infrastructure-as-code integration capabilities.
 
 **Update**: Infisical has recently added game-changing features including:
 
