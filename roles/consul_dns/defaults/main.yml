@@ -15,7 +15,11 @@ consul_dns_method: systemd-resolved
 
 # Service registration defaults
 consul_register_services: true
-consul_service_token: "{{ lookup('community.general.infisical', '/apollo-13/consul/acl-bootstrap-token', env_slug='prod', secret_type='shared') | default('', true) }}"
+consul_service_token: >-
+  {{ lookup('community.general.infisical',
+    '/apollo-13/consul/acl-bootstrap-token',
+    env_slug='prod',
+    secret_type='shared') | default('', true) }}
 
 # Infrastructure services to register
 consul_infrastructure_services:

@@ -37,7 +37,7 @@ while IFS= read -r -d '' file; do
     grep -n -E '(^[^#]*)(lab\.local|homelab\.local|traefik\.local|vault\.local|consul\.local|nomad\.local)' "$file" | head -3
     FOUND_VIOLATIONS=1
   fi
-done < <(printf '%s\0' $FILES_TO_CHECK)
+done < <(printf '%s\0' "$FILES_TO_CHECK")
 
 # Summary
 if [ $FOUND_VIOLATIONS -eq 0 ]; then
