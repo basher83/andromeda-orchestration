@@ -236,9 +236,9 @@ jobs:
         uses: checkmarx/kics-github-action@v2.1.13
         with:
           path: '.'
+          config_path: './kics.config'
           output_path: kics-results
           output_formats: 'json,sarif'
-          exclude_paths: '.venv/,kics-results/,docs/,playbooks/infrastructure/.debug/,playbooks/infrastructure/.archive/'
           fail_on: high
           enable_comments: true
 
