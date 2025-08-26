@@ -239,6 +239,9 @@ We support responsible security research and will not pursue legal action agains
 - Avoid privacy violations, data destruction, or service disruption
 - Give us reasonable time to address issues before disclosure
 
+We consider activities conducted consistent with this policy to constitute “good-faith” research.
+We will not initiate or support legal action under anti-hacking or anti-circumvention laws (including
+computer misuse or DMCA §1201) against parties who comply with this policy and report vulnerabilities responsibly.
 ### Privacy
 
 Security reports may contain sensitive information. We commit to:
