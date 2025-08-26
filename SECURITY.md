@@ -2,9 +2,8 @@
 
 ## 🛡️ Mission Security Statement
 
-Security is paramount to our documentation infrastructure. We take the security of our documentation
+Security is paramount to the andromeda-orchestration project and its infrastructure. We take the security of this
 repository and its users seriously and appreciate your help in keeping our systems safe.
-
 ## 🚨 Supported Versions
 
 As a continuously updated documentation repository, we maintain security for:
