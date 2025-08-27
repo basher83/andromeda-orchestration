@@ -198,9 +198,12 @@ jobs:
           sudo install -m 0755 nomad /usr/local/bin/nomad
           nomad version
 
-      - name: Run nomad fmt -check
+      - name: Format and check Nomad files
         run: |
           if [ -d "nomad-jobs" ]; then
+            echo "Running nomad fmt to auto-fix formatting issues..."
+            nomad fmt -recursive nomad-jobs
+            echo "Checking if all files are properly formatted..."
             nomad fmt -check -recursive nomad-jobs
           else
             echo "No nomad-jobs directory found."
