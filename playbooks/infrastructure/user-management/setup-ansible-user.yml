@@ -6,7 +6,7 @@
   vars:
     # Use root for initial setup, then switch to ansible user
     ansible_user: "{{ 'root' if ansible_user_setup | default(true) else 'ansible' }}"
-    ansible_password: "{{ 'bluegatofeline' if inventory_hostname in groups.get('all', []) and ansible_user == 'root' else omit }}"
+    ansible_password: "{{ vault_pbs_password if inventory_hostname in groups.get('all', []) and ansible_user == 'root' else omit }}"
     ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
   tasks:
     - name: Get staging SSH public key from doggos-homelab host
