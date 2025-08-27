@@ -524,7 +524,7 @@ run = '''
 echo "🔍 Running KICS security scan..."
 mkdir -p kics-results
 # Use the optimized kics.config file for faster, focused scanning
-docker run -t -v "$(pwd)":/path checkmarx/kics scan \
+docker run -t -v "$(pwd)":/path checkmarx/kics:latest scan \
   -p /path \
   --config /path/kics.config \
   -o /path/kics-results
