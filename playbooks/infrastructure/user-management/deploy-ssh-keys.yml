@@ -3,7 +3,7 @@
   hosts: all
   vars:
     ansible_user: root
-    ansible_password: bluegatofeline
+    ansible_password: "{{ vault_pbs_password }}"
     ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
   tasks:
     - name: Get staging SSH public key from doggos-homelab host

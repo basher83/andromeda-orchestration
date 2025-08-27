@@ -55,7 +55,7 @@
           - ""
           - "Or use the API directly with your token:"
           - ""
-          - "export NETBOX_TOKEN='your-token-here'"
+          - "export NETBOX_TOKEN='{{ netbox_token }}'"
           - ""
           - "Then run the curl commands below:"
 

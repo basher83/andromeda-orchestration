@@ -11,7 +11,7 @@
         name: pbs
         ansible_host: 192.168.30.200
         ansible_user: root
-        ansible_password: bluegatofeline
+        ansible_password: "{{ vault_pbs_password }}"
 
 - name: Restart PBS Netdata
   hosts: pbs
