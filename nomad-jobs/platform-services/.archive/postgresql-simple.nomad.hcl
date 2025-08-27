@@ -146,7 +146,7 @@ job "postgresql" {
 
       env {
         PGPASSWORD    = "" # Same as main postgres password
-        PDNS_PASSWORD = ""      # PowerDNS user password
+        PDNS_PASSWORD = "" # PowerDNS user password
       }
 
       template {
