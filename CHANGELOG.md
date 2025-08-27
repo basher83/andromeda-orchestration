@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-08-26] - Infrastructure Modernization & Security Hardening
+
+### Changed
+
+- **Complete Migration from Taskfile to Mise**
+  - Migrated all development tasks to `.mise.toml` for unified tool management
+  - Implemented auto-installation of development tools
+  - Added smart caching for improved performance
+  - Removed deprecated `Taskfile.yml`
+  - Provides consistent cross-platform development experience
+  - Fixes #62
+
+- **Domain Parametrization Completion**
+  - Completed domain parametrization across all active playbooks
+  - Added lint prevention for hardcoded `.local` domains
+  - Ensures all services use configurable `homelab_domain` variable
+  - Fixes #19, #24
+
+### Removed
+
+- **Complete 1Password Purge**
+  - Removed all 1Password Connect documentation and examples
+  - Deleted legacy inventory files using 1Password
+  - Removed 1Password Ansible plugin and scripts
+  - Migration to Infisical for secrets management complete
+  - Cleaned up over 1000 lines of deprecated 1Password code
+
+### Security
+
+- **Security Policy and Scanning**
+  - Added comprehensive `SECURITY.md` policy document
+  - Optimized KICS configuration for improved CI performance
+  - Added Infisical secret scanning to development setup
+  - Updated pre-commit hooks for security scanning
+  - Fixes #82
+
+### Documentation
+
+- **Infrastructure Documentation Consolidation**
+  - Consolidated Infisical configuration into single guide
+  - Updated CLAUDE.md with accurate infrastructure state
+  - Added comprehensive infrastructure repository cross-reference
+  - Cleaned up archived documentation
+
 ## [2025-08-27] - Security Hardening & Status Check Implementation
 
 ### Security
@@ -18,7 +62,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated affected playbooks to use environment variables or Infisical lookups
   - Affected files: `fix-nftables-compatibility.yml`, `update-server-consul-token.yml`
 
+- **Credential Cleanup**
+  - Removed hardcoded passwords from archived PostgreSQL job
+  - Cleaned up hardcoded credentials in infrastructure playbooks
+  - Removed hardcoded tokens from Consul/Nomad integration playbooks
+  - Security scan revealed and fixed multiple credential exposures
+
 ### Added
+
+- **Three-Tier Project Management System**
+  - Implemented Strategic/Tactical/Operational project management tiers
+  - Added Architecture Decision Records (ADR) framework with template
+  - Created dynamic GitHub badges to eliminate manual date updates
+  - Consolidated scattered project docs into organized structure
+  - Moved technical documents to appropriate implementation directories
 
 - **Dual-Approach HashiCorp Service Status Checks**
   - Created ADR-2025-08-27 documenting architectural decision for status check strategy
@@ -31,6 +88,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Downgraded Python from 3.13 to 3.12 for `infisical-python` package compatibility
   - Pinned `infisical-python==2.3.5` (last version with Linux wheels for Python 3.12)
   - Updated `.mise.toml` and `pyproject.toml` with Python version constraints
+
+- **Enhanced Documentation**
+  - Added technology badges to README with space exploration visual theme
+  - Created comprehensive infrastructure repository cross-reference
+  - Restructured inventory with clean archived file organization
 
 ### Changed
 
