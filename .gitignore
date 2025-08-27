@@ -40,7 +40,6 @@ scripts/set-1password-env.sh
 *.swp
 *.swo
 *~
-.github/copilot-instructions.md
 .cursor/rules/codacy.mdc
 
 # OS
