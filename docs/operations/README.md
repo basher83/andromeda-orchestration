@@ -6,6 +6,7 @@ This directory contains operational guides, runbooks, and procedures for managin
 
 ### Core Operations Guides
 
+- **[ansible-inventory.md](ansible-inventory.md)** - Ansible inventory structure, management, and best practices
 - **[dns-deployment-status.md](dns-deployment-status.md)** - Current status and tracking of DNS infrastructure deployment
 - **[firewall-port-strategy.md](firewall-port-strategy.md)** - Port allocation and firewall configuration strategies
 - **[powerdns-deployment-final.md](powerdns-deployment-final.md)** - Final PowerDNS deployment procedures and validation
@@ -35,6 +36,7 @@ This directory contains operational guides, runbooks, and procedures for managin
 
 ### For Routine Operations
 
+- **Manage Inventories** → [ansible-inventory.md](ansible-inventory.md)
 - **Deploy PowerDNS** → [powerdns-deployment-final.md](powerdns-deployment-final.md)
 - **Configure Monitoring** → [netdata/README.md](netdata/README.md)
 - **Access Vault** → [vault-access.md](vault-access.md)

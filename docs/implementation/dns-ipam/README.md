@@ -25,6 +25,16 @@ The master implementation plan covering all 5 phases:
 - Success criteria
 - Implementation checklists
 
+#### 🚨 [domain-migration-master-plan.md](domain-migration-master-plan.md)
+
+Critical migration from `.local` to `spaceships.work` domain:
+
+- Sprint breakdown with specific PRs
+- HCL2 variable configuration
+- Infrastructure gap analysis
+- Rollback procedures
+- Success validation criteria
+
 #### 🧪 [testing-strategy.md](testing-strategy.md)
 
 Comprehensive testing approach:
@@ -87,6 +97,11 @@ NetBox Integration Patterns:
 ## Getting Started
 
 1. Review the `implementation-plan.md` for overall strategy
-2. Follow `phase1-guide.md` for current implementation
-3. Use `testing-strategy.md` to validate changes
-4. Check assessment reports for baseline data
+2. Check `domain-migration-master-plan.md` for critical .local migration tasks
+3. Follow `phase1-guide.md` for current implementation
+4. Use `testing-strategy.md` to validate changes
+5. Check assessment reports for baseline data
+
+## Archive
+
+- **[archive/](./archive/)** - Historical domain migration planning and implementation documents from January 2025

@@ -9,10 +9,12 @@ This directory contains detailed implementation guides for various infrastructur
 DNS and IP Address Management implementation documentation (including NetBox IPAM)
 
 - **implementation-plan.md** - Master plan for DNS & IPAM overhaul (5 phases)
+- **domain-migration-master-plan.md** - Critical .local to spaceships.work migration plan
 - **phase1-guide.md** - Phase 1: Consul DNS Foundation
 - **phase3-netbox-deployment.md** - Phase 3: NetBox IPAM deployment and configuration
 - **netbox-integration-patterns.md** - Comprehensive NetBox automation patterns with Ansible
 - **testing-strategy.md** - Testing approach for DNS/IPAM changes
+- **archive/** - Historical domain migration documents
 
 ### 🌐 [powerdns/](powerdns/)
 
@@ -78,6 +80,17 @@ Following the DNS & IPAM roadmap:
 - Check specific service directories for configuration details
 - Review integration patterns in respective guides
 - Refer to operational docs in [`../operations/`](../operations/)
+
+## Infrastructure Documentation
+
+### 📚 [imported-infrastructure.md](imported-infrastructure.md)
+
+Documentation of Ansible roles and configurations imported from terraform-homelab repository:
+
+- Consul and Nomad roles
+- Network configuration patterns
+- ACL and security configurations
+- Integration components
 
 ## Related Resources
 
