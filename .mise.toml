@@ -97,7 +97,23 @@ else
 fi
 
 echo ""
-echo "📋 Step 6: Verification..."
+echo "🔐 Step 6: Setting up Infisical secret scanning..."
+echo "-------------------------------------------------"
+if command -v infisical >/dev/null 2>&1; then
+  # Install pre-commit hook for secret scanning
+  infisical scan install --pre-commit-hook >/dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "✅ Infisical pre-commit hook installed for secret scanning"
+  else
+    echo "⚠️  Infisical pre-commit hook already installed"
+  fi
+else
+  echo "ℹ️  Skipping Infisical setup (not installed)"
+  echo "   Install with: brew install infisical/brew/infisical"
+fi
+
+echo ""
+echo "📋 Step 7: Verification..."
 echo "---------------------------"
 echo "Python version: $(uv run python --version)"
 echo "Ansible version: $(uv run ansible --version | head -1)"
@@ -516,6 +532,43 @@ else
   echo "⚠️  scan-secrets.sh script not found"
   echo "Consider using: infisical scan"
 fi
+'''
+
+[tasks."security:setup-infisical"]
+description = "Install and configure Infisical secret scanning hooks"
+run = '''
+echo "🔐 Setting up Infisical secret scanning..."
+if ! command -v infisical >/dev/null 2>&1; then
+  echo "❌ Infisical CLI not installed"
+  echo "📦 Install with: brew install infisical/brew/infisical"
+  echo "Or visit: https://infisical.com/docs/cli/overview"
+  exit 1
+fi
+
+# Install pre-commit hook
+echo "📎 Installing pre-commit hook..."
+infisical scan install --pre-commit-hook >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+  echo "✅ Infisical pre-commit hook installed successfully"
+else
+  echo "ℹ️  Infisical pre-commit hook already installed"
+fi
+
+# Verify installation
+if grep -q "MANAGED BY INFISICAL CLI" .git/hooks/pre-commit 2>/dev/null; then
+  echo "✅ Pre-commit hook verified in .git/hooks/pre-commit"
+  echo ""
+  echo "Secret scanning will run automatically on every commit."
+  echo "To temporarily disable: git config hooks.infisical-scan false"
+  echo "To re-enable: git config --unset hooks.infisical-scan"
+else
+  echo "⚠️  Pre-commit hook not found - installation may have failed"
+fi
+
+# Run a test scan
+echo ""
+echo "🧪 Running test scan on current repository..."
+infisical scan --source . --no-git --redact
 '''
 
 [tasks."security:kics"]
