@@ -6,8 +6,22 @@ plugin: netbox.netbox.nb_inventory
 api_endpoint: https://192.168.30.213  # NetBox URL (LXC 213 on pve1)
 validate_certs: false  # Set to true in production with proper certs
 
-# API token will be set via environment variable: NETBOX_TOKEN
-# token: set via NETBOX_TOKEN environment variable
+# API token retrieved from Infisical
+token: >-
+  {{ (lookup('infisical.vault.read_secrets',
+             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+             env_slug='staging',
+             path='/apollo-13/services/netbox',
+             secret_name='NETBOX_API_KEY')).value }}
+
+# Enable caching to handle connection failures gracefully
+cache: true
+cache_plugin: ansible.builtin.jsonfile
+cache_timeout: 86400  # 24 hours - use cached data if NetBox is unreachable
+cache_connection: .ansible_cache/netbox
+cache_prefix: netbox_inventory
 
 # Grouping configuration
 group_by:
