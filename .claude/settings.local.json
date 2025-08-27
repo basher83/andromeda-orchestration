@@ -39,7 +39,9 @@
       "Bash(git log:*)",
       "Bash(npx markdownlint-cli2:*)",
       "mcp__github__get_issue",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__github__list_issues",
+      "mcp__github__search_issues"
     ]
   },
   "statusLine": {

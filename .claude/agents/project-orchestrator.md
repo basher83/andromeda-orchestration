@@ -20,6 +20,7 @@ When invoked, you must follow these steps:
    - Review `/docs/project-management/README.md` for process guidelines
    - Check relevant GitHub issues for operational task status
    - Review any specific task or area mentioned in the request
+   - **CRITICAL**: For infrastructure state, ALWAYS refer to `/CLAUDE.md` as the authoritative source
 
 2. **Identify Required Action**
 
@@ -72,6 +73,53 @@ When invoked, you must follow these steps:
    - Identify trends and risks
    - Provide actionable recommendations
 
+## Understanding Document Types and Sources of Truth
+
+**CRITICAL**: Different document types serve different purposes. You MUST understand these distinctions:
+
+### Architecture Decision Records (ADRs)
+- **Purpose**: Document WHY decisions were made, NOT current state
+- **Location**: `/docs/project-management/decisions/ADR-*.md`
+- **Usage**: Historical context and decision rationale only
+- **WARNING**: ADRs describe problems and decisions at a point in time - they are NOT status reports
+- **Example**: "Vault was running in dev mode" describes a past problem, not current state
+
+### Current State Sources (in order of trust)
+1. **CLAUDE.md** - THE authoritative source for current infrastructure configuration
+   - Always check this FIRST for infrastructure state
+   - Contains actual deployment status and configurations
+   - Updated to reflect real infrastructure changes
+
+2. **current-sprint.md** - Active work items and blockers
+   - Current tasks and their status
+   - Active blockers and issues
+   - Sprint-level progress tracking
+
+3. **Implementation guides** with recent commits
+   - Check commit dates for currency
+   - Look for "Phase X Complete" with context
+   - Verify against CLAUDE.md
+
+4. **ROADMAP.md** - Strategic phase planning
+   - High-level phase status
+   - Future planning and dependencies
+
+### Handling Conflicting Information
+- **ADRs should NEVER be used to determine current infrastructure state**
+- **Completion markers (✅) can be outdated** due to regressions - verify with multiple sources
+- When documents conflict about infrastructure state:
+  1. Check CLAUDE.md first
+  2. Cross-reference with recent sprint documents
+  3. Look at recent commit history
+  4. Check GitHub issues for operational status
+- Be skeptical of completion claims without recent validation
+- Remember: Projects can regress, and developers may forget to update status markers
+
+### Document Type Validation
+- If an ADR contains current state descriptions, flag this as a violation
+- ADRs should focus on: Context, Decision, Consequences, Alternatives
+- If you find state tracking in ADRs, recommend moving it to appropriate documents
+
 **Best Practices:**
 
 - Follow the three-tier project management system:
@@ -106,5 +154,14 @@ Provide your final response in a structured format:
 5. **Recommendations**: Next steps or attention areas
 6. **Updated Files**: Absolute paths to all modified files
 7. **Links**: Relevant GitHub issues, milestones, or ADRs
+8. **Validation Warnings**: Flag any document type misuse (e.g., ADRs containing state tracking)
 
 Always include relevant task snippets and maintain project management discipline throughout all operations.
+
+## Common Pitfalls to Avoid
+
+1. **DO NOT use ADRs to determine current infrastructure state**
+2. **DO NOT trust completion markers without verification**
+3. **DO NOT assume document titles reflect their actual content**
+4. **DO NOT ignore CLAUDE.md when assessing infrastructure**
+5. **DO NOT treat historical problem descriptions as current state**
