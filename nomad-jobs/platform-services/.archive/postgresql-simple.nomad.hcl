@@ -53,7 +53,7 @@ job "postgresql" {
       env {
         PGHOST_ADDR       = "0.0.0.0"
         POSTGRES_USER     = "postgres"
-        POSTGRES_PASSWORD = "temporary-dev-password" # Will use Vault later
+        POSTGRES_PASSWORD = "" # Will use Vault later
         POSTGRES_DB       = "postgres"
         PGDATA            = "/var/lib/postgresql/data"
       }
@@ -145,8 +145,8 @@ job "postgresql" {
       }
 
       env {
-        PGPASSWORD    = "temporary-dev-password" # Same as main postgres password
-        PDNS_PASSWORD = "pdns-dev-password"      # PowerDNS user password
+        PGPASSWORD    = "" # Same as main postgres password
+        PDNS_PASSWORD = ""      # PowerDNS user password
       }
 
       template {
