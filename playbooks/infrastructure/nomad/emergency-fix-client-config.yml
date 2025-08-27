@@ -7,7 +7,7 @@
   hosts: tag_client
   become: true
   vars:
-    nomad_client_token: "[REDACTED_NOMAD_TOKEN]"
+    nomad_client_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"
 
   tasks:
     - name: Create emergency Nomad client configuration

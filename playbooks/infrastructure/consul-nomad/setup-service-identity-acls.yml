@@ -70,7 +70,7 @@
           -role-name=nomad-server \
           -token={{ consul_management_token }}
       with_items:
-        - "00b57268-c5f9-edb4-bc90-639fb4ab3232"  # Server token
+        - "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"  # Server token
       register: token_update
       failed_when: false  # Don't fail if role already attached
 

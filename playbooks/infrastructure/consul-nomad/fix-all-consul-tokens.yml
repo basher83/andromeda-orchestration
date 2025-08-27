@@ -8,7 +8,7 @@
   become: true
   serial: 1  # Process one at a time
   vars:
-    consul_agent_token: "00b57268-c5f9-edb4-bc90-639fb4ab3232"  # Server token
+    consul_agent_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"  # Server token
 
   tasks:
     - name: "[SERVER] Update agent token in Consul config"
@@ -48,7 +48,7 @@
   become: true
   serial: 1  # Process one at a time
   vars:
-    consul_agent_token: "[REDACTED_NOMAD_TOKEN]"  # Client token
+    consul_agent_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"  # Client token
 
   tasks:
     - name: "[CLIENT] Update agent token in Consul config"
@@ -120,9 +120,9 @@
           - "CONSUL ACL TOKEN FIX COMPLETED"
           - "=========================================="
           - "Servers fixed: nomad-server-1, nomad-server-2"
-          - "  Token: 00b57268-c5f9-edb4-bc90-639fb4ab3232"
+          - "  Token: "
           - "Clients fixed: nomad-client-1, nomad-client-2, nomad-client-3"
-          - "  Token: [REDACTED_NOMAD_TOKEN]"
+          - "  Token: "
           - "=========================================="
           - "All Consul nodes:"
           - "{{ all_nodes.stdout_lines }}"
