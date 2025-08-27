@@ -2,6 +2,17 @@
 
 HashiCorp Vault deployment and integration documentation for secrets management, PKI, and encryption services.
 
+## 🏗️ Infrastructure Provisioning
+
+The Vault cluster VMs are provisioned via Terraform in a separate repository:
+- **Repository**: [Hercules-Vault-Infra](https://github.com/basher83/Hercules-Vault-Infra)
+- **Purpose**: Terraform code for 4-VM dedicated Vault cluster
+- **Architecture**: 1 Transit Master + 3 Raft nodes (192.168.10.30-33)
+- **Management**: Scalr workspace `production-vault`
+- **Resources**: 14 vCPUs, 28GB RAM, 340GB storage
+
+This repository (andromeda-orchestration) handles the Ansible configuration after VMs are provisioned.
+
 ## 📚 Documentation
 
 ### Core Implementation
@@ -11,6 +22,12 @@ HashiCorp Vault deployment and integration documentation for secrets management,
   - Production deployment with Raft
   - Nomad and Consul integration
   - Operational procedures
+
+- **[production-deployment.md](production-deployment.md)** - Production deployment runbook and tracking
+  - Pre-deployment checklists and validation
+  - Step-by-step deployment procedures
+  - Configuration and integration steps
+  - Success criteria and verification
 
 ### Advanced Patterns
 
@@ -58,6 +75,7 @@ uv run ansible-playbook playbooks/infrastructure/vault/deploy-vault-prod.yml \
 
 ### 🚧 In Progress
 
+- Production deployment (Phase 2 Complete - see [production-deployment.md](production-deployment.md))
 - Testing in homelab environment
 - PKI hierarchy setup
 
@@ -66,7 +84,7 @@ uv run ansible-playbook playbooks/infrastructure/vault/deploy-vault-prod.yml \
 - Master Vault deployment
 - Automated secret rotation
 - Snapshot automation
-- Production deployment
+- Service integrations completion
 
 ## 🏗️ Architecture Overview
 
@@ -132,10 +150,10 @@ uv run ansible-playbook playbooks/infrastructure/vault/deploy-vault-prod.yml \
 
 | Phase | Focus | Duration | Status |
 |-------|-------|----------|--------|
-| 0 | Infrastructure Assessment | 1 day | ⏳ Planned |
-| 1 | Dev Mode Exploration | 1 week | ⏳ Planned |
-| 2 | PKI Infrastructure | 1 week | ⏳ Planned |
-| 3 | Production Deployment | 1 week | ⏳ Planned |
+| 0 | Infrastructure Assessment | 1 day | ✅ Complete |
+| 1 | Production Cluster Setup | 1 week | ✅ Complete |
+| 2 | Configuration & Integration | 1 week | ✅ Complete |
+| 3 | Service Integration | 1 week | 🚧 In Progress |
 | 4 | Secret Rotation | 1 week | ⏳ Planned |
 | 5 | Disaster Recovery | 1 week | ⏳ Planned |
 | 6 | Full Integration | 1 week | ⏳ Planned |

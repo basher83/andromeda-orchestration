@@ -5,6 +5,7 @@
 **Environment**: Development Mode
 **Deployment Date**: 2025-08-06
 **Status**: ✅ Active on all nodes
+**Production Deployment**: See [Implementation Guide](../implementation/vault/production-deployment.md)
 
 ### Node Details
 
