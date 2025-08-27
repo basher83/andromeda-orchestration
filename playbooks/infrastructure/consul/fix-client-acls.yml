@@ -6,7 +6,7 @@
   hosts: tag_client
   become: true
   vars:
-    consul_client_token: "8e0c8f6d-8e00-8011-53f3-a0da44c305d4"
+    consul_client_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"
 
   tasks:
     - name: Remove duplicate ACL blocks

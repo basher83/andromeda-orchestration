@@ -8,7 +8,7 @@
   become: true
   serial: 1  # Process one at a time to minimize disruption
   vars:
-    consul_agent_token: "00b57268-c5f9-edb4-bc90-639fb4ab3232"
+    consul_agent_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"
 
   tasks:
     - name: Update agent token in Consul config

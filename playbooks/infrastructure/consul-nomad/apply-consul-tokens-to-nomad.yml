@@ -7,8 +7,8 @@
   become: true
   vars:
     nomad_config_file: /etc/nomad.d/nomad.hcl
-    nomad_server_token: "00b57268-c5f9-edb4-bc90-639fb4ab3232"
-    nomad_client_token: "8e0c8f6d-8e00-8011-53f3-a0da44c305d4"
+    nomad_server_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"
+    nomad_client_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"
 
   tasks:
     - name: Get node type
