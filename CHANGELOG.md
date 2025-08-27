@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-08-27] - Security Hardening & Status Check Implementation
+
+### Security
+
+- **Critical Token Removal from Git History**
+  - Removed two exposed Nomad tokens from git history
+  - Used `uvx git-filter-repo` to clean entire repository history
+  - Replaced tokens with `[REDACTED]` placeholders throughout history
+  - Updated affected playbooks to use environment variables or Infisical lookups
+  - Affected files: `fix-nftables-compatibility.yml`, `update-server-consul-token.yml`
+
+### Added
+
+- **Dual-Approach HashiCorp Service Status Checks**
+  - Created ADR-2025-08-27 documenting architectural decision for status check strategy
+  - Added `playbooks/assessment/quick-status.yml` for authenticated status verification via Infisical
+  - Implemented `mise run status:quick` for fast unauthenticated connectivity checks (< 1 second)
+  - Implemented `mise run status:full` for comprehensive authenticated checks (~5 seconds)
+  - Added individual service checks: `status:consul`, `status:nomad`, `status:vault`
+
+- **Python Environment Compatibility Fix**
+  - Downgraded Python from 3.13 to 3.12 for `infisical-python` package compatibility
+  - Pinned `infisical-python==2.3.5` (last version with Linux wheels for Python 3.12)
+  - Updated `.mise.toml` and `pyproject.toml` with Python version constraints
+
+### Changed
+
+- **Repository Remote URL**
+  - Updated git remote from `netbox-ansible` to `andromeda-orchestration`
+  - New repository URL: `https://github.com/basher83/andromeda-orchestration.git`
+
+- **Mise Status Tasks**
+  - Fixed logic errors in status checks (was incorrectly reporting "cannot connect" when connected)
+  - Changed Consul checks to use `consul members` instead of `consul info` (avoids ACL permission issues)
+  - Added clear messaging distinguishing unauthenticated vs authenticated checks
+  - Improved error messages with connectivity troubleshooting hints
+
+### Fixed
+
+- **Security Vulnerabilities**
+  - `playbooks/infrastructure/docker/fix-nftables-compatibility.yml` - Now uses dynamic token variables
+  - `playbooks/infrastructure/nomad/update-server-consul-token.yml` - Now uses environment variable lookup
+  - Pre-commit hooks configuration for consistent code quality
+
+### Infrastructure Impact
+
+- **Scope**: Development environment setup and security posture
+- **Breaking Change**: Git history rewritten - collaborators must re-clone or rebase
+- **Python Requirement**: Now requires Python 3.12 (was 3.13)
+- **Security Improvement**: No exposed tokens in repository history
+
 ## [2025-08-25] - Vault Production Cluster Deployment
 
 ### Added
