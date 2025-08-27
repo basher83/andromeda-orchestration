@@ -26,6 +26,9 @@ jq = "latest"  # JSON processing
 consul = "1.21.4"
 nomad = "1.10.4"
 vault = "1.17.5"
+eza = "0.23.0"
+fd = "10.3.0"
+rg = "14.1.1"
 
 [settings]
 # Automatically activate uv-managed virtual environments
@@ -229,91 +232,108 @@ echo "   Run 'mise trust' to apply changes"
 # ============================================================================
 
 [tasks.status]
-description = "Check health of all clusters"
-depends = ["status:consul", "status:nomad", "status:vault"]
-
-[tasks."status:consul"]
-description = "Check Consul cluster health"
+description = "Quick cluster health check (no auth required)"
 run = '''
-echo "🏥 Consul Health Check"
-echo "======================"
+echo "📊 HashiCorp Stack Health Check"
+echo "================================"
 echo ""
 
-# Check connectivity
-if ! consul info &>/dev/null; then
-  echo "❌ Cannot connect to Consul at ${CONSUL_HTTP_ADDR}"
-  exit 1
-fi
-
-# Check for leader
-if consul info 2>/dev/null | grep -q "leader = true"; then
-  echo "✅ Consul cluster has a leader"
-else
-  echo "⚠️  Consul cluster has no leader!"
-fi
-
-# Show members
+# Run each check sequentially for clean output
+mise run status:quick:consul
 echo ""
-echo "Cluster members:"
-consul members 2>/dev/null | head -10 || echo "Error getting members"
-
-# Show basic stats
+mise run status:quick:nomad
 echo ""
-echo "Services registered:"
-consul catalog services 2>/dev/null | wc -l || echo "0"
+mise run status:quick:vault
+
+echo ""
+echo "────────────────────────────────"
+echo "For authenticated status: mise run status:full"
 '''
 
-[tasks."status:nomad"]
-description = "Check Nomad cluster health"
+
+[tasks."status:quick:consul"]
+description = "Quick Consul health check (no auth required)"
 run = '''
-echo "🏥 Nomad Health Check"
-echo "====================="
-echo ""
+echo "🏥 Consul Status"
+echo "────────────────"
 
-# Check connectivity
-if ! nomad status &>/dev/null; then
-  echo "❌ Cannot connect to Nomad at ${NOMAD_ADDR}"
-  exit 1
-fi
-
-# Check for leader
-if nomad server members 2>/dev/null | grep -q "leader=true"; then
-  echo "✅ Nomad cluster has a leader"
+# Check connectivity using members (no auth required)
+if consul members >/dev/null 2>&1; then
+  server_count=$(consul members 2>/dev/null | grep -c "server" || echo "0")
+  client_count=$(consul members 2>/dev/null | grep -c "client" || echo "0")
+  echo "✅ Connected to ${CONSUL_HTTP_ADDR}"
+  echo "   Servers: $server_count | Clients: $client_count"
 else
-  echo "⚠️  Nomad cluster has no leader!"
+  echo "❌ Cannot connect to ${CONSUL_HTTP_ADDR}"
 fi
-
-# Show server members
-echo ""
-echo "Server members:"
-nomad server members 2>/dev/null || echo "Error getting members"
-
-# Show running jobs
-echo ""
-echo "Running jobs:"
-nomad status 2>/dev/null | grep -c "running" || echo "0"
 '''
 
-[tasks."status:vault"]
-description = "Check Vault cluster health"
+[tasks."status:quick:nomad"]
+description = "Quick Nomad health check (no auth required)"
 run = '''
-echo "🏥 Vault Health Check"
-echo "===================="
-echo ""
+echo "🚀 Nomad Status"
+echo "────────────────"
+
+# Check connectivity using server members (no auth required)
+if nomad server members >/dev/null 2>&1; then
+  server_count=$(nomad server members 2>/dev/null | grep -c "^nomad" || echo "0")
+  # Get client count from node status (no auth required)
+  client_count=$(nomad node status 2>/dev/null | grep -c "ready" || echo "0")
+  echo "✅ Connected to ${NOMAD_ADDR}"
+  echo "   Servers: $server_count | Clients: $client_count"
+else
+  echo "❌ Cannot connect to ${NOMAD_ADDR}"
+fi
+'''
+
+[tasks."status:quick:vault"]
+description = "Quick Vault health check (no auth required)"
+run = '''
+echo "🔐 Vault Status"
+echo "────────────────"
 
 # Check connectivity and seal status
-if ! vault status &>/dev/null; then
-  if [ $? -eq 2 ]; then
-    echo "⚠️  Vault is SEALED at ${VAULT_ADDR}"
-    vault status 2>&1 | grep -E "Sealed|Version" || true
-  else
-    echo "❌ Cannot connect to Vault at ${VAULT_ADDR}"
-  fi
-  exit 1
+vault_exit_code=0
+vault status >/dev/null 2>&1 || vault_exit_code=$?
+
+if [ $vault_exit_code -eq 0 ]; then
+  version=$(vault status 2>/dev/null | grep "Version" | awk '{print $2}' || echo "unknown")
+  echo "✅ Connected to ${VAULT_ADDR}"
+  echo "   Version: $version | Status: UNSEALED"
+elif [ $vault_exit_code -eq 2 ]; then
+  echo "⚠️  Connected to ${VAULT_ADDR}"
+  echo "   Status: SEALED (unseal required)"
+else
+  echo "❌ Cannot connect to ${VAULT_ADDR}"
+fi
+'''
+
+[tasks."status:full"]
+description = "Full authenticated status check using Ansible playbook"
+run = '''
+echo "🔐 Running full authenticated status check..."
+echo "==========================================="
+echo ""
+echo "This uses Infisical to retrieve ACL tokens for authentication."
+echo ""
+
+# Source .envrc if it exists to get credentials
+if [ -f .envrc ]; then
+  source .envrc 2>/dev/null || true
 fi
 
-echo "✅ Vault is unsealed and operational"
-vault status 2>/dev/null | grep -E "Version|Sealed|Cluster" || true
+# Export the variables explicitly for the subprocess
+export INFISICAL_UNIVERSAL_AUTH_CLIENT_ID="${INFISICAL_UNIVERSAL_AUTH_CLIENT_ID}"
+export INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET="${INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET}"
+
+# Run the authenticated assessment playbook (localhost only, no inventory needed)
+ANSIBLE_INVENTORY="" uv run ansible-playbook playbooks/assessment/quick-status.yml -i localhost, -c local
+
+echo ""
+echo "For even more detailed assessments, try:"
+echo "  • uv run ansible-playbook playbooks/assessment/consul-assessment.yml -i localhost, -c local"
+echo "  • uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml"
+echo "  • uv run ansible-playbook playbooks/assessment/nomad-cluster-check.yml"
 '''
 
 # ============================================================================
