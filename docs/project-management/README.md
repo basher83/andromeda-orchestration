@@ -1,106 +1,121 @@
-# Project Management Directory
+# Project Management
 
-This directory contains all project tracking documentation for the andromeda-orchestration project, organized for efficient navigation and minimal LLM context usage.
+![Last Updated](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration/main/docs/project-management/README.md)
+![PM Health](https://img.shields.io/badge/PM%20Health-Good-green)
 
-## 🗺️ Navigation Guide
+This directory contains project tracking documentation using a streamlined three-tier system optimized for solo development.
 
-### For Daily Work
+## 🎯 Three-Tier Project Management System
 
-- **[current-sprint.md](./current-sprint.md)** - What's being worked on RIGHT NOW (< 100 lines)
-- **[task-summary.md](./task-summary.md)** - High-level project overview with progress metrics
+### Tier 1: Strategic (Quarterly)
+**[ROADMAP.md](../../ROADMAP.md)** - High-level phases and milestones
+- Updated monthly
+- Links to GitHub milestones
+- Overall project direction
 
-### For Planning
+### Tier 2: Tactical (Weekly/Sprint)
+**[current-sprint.md](./current-sprint.md)** - Active work tracking
+- Updated weekly
+- Current sprint goals and blockers
+- Links to GitHub issues
 
-- **[phases/](./phases/)** - Future phase planning documents
-  - `phase-3-netbox.md` - NetBox integration and DNS migration
-  - `phase-5-multisite.md` - Multi-site expansion and hardening
-  - `phase-6-post-implementation-continuous-improvement.md` - Performance, automation, and maturity
+**[decisions/](./decisions/)** - Architecture Decision Records (ADRs)
+- Critical decisions and their rationale
+- Created as needed for significant choices
+- Template: [ADR-TEMPLATE.md](./decisions/ADR-TEMPLATE.md)
 
-### For History
+### Tier 3: Operational (Daily)
+**[GitHub Issues](https://github.com/basher83/andromeda-orchestration/issues)** - Task tracking
+- All actionable work items
+- Bug reports and feature requests
+- Daily updates via comments
 
-- **[completed/](./completed/)** - Completed tasks organized by month
-  - `2025-07.md` - July completions (Phase 0)
-  - `2025-08.md` - August completions (Phases 1-2)
-- **[archive/](./archive/)** - Historical snapshots
-  - `full-task-list-2025-08-05.md` - Original 700+ line task list
+## 📋 Process Guide
 
-## 📋 Quick Start
+### Weekly Sprint Planning
+1. Review ROADMAP.md for current phase objectives
+2. Update current-sprint.md with week's goals
+3. Link to relevant GitHub issues
+4. Identify and document blockers
 
-1. **Check current work**: Open [current-sprint.md](./current-sprint.md)
-2. **Update task status**: Edit the appropriate file
-3. **Plan next sprint**: Review [task-summary.md](./task-summary.md) and update priorities
-4. **Archive completed work**: Move finished tasks to `completed/YYYY-MM.md`
+### Making Architectural Decisions
+1. Copy ADR-TEMPLATE.md to `decisions/ADR-YYYY-MM-DD-title.md`
+2. Fill out all sections
+3. Update status badge when decision is finalized
+4. Reference in current-sprint.md if relevant
 
-## 🔄 Workflow
+### Monthly Roadmap Review
+1. Update ROADMAP.md phase status
+2. Archive completed sprint documentation
+3. Review and close completed GitHub milestones
+4. Plan next month's objectives
 
-```mermaid
-graph LR
-    A[New Task] --> B[current-sprint.md]
-    B --> C{Status?}
-    C -->|Completed| D[completed/YYYY-MM.md]
-    C -->|Blocked| E[Document in current-sprint.md]
-    C -->|Future| F[phases/phase-X.md]
-```
+## 📊 Quick Status Check
 
-## 📏 File Size Guidelines
-
-- **current-sprint.md**: Max 100 lines (optimal for LLM context)
-- **task-summary.md**: Max 150 lines (overview only)
-- **phase files**: Max 200 lines each
-- **completed files**: No limit (archival)
-
-## 🏷️ Task Format
-
-All tasks follow this standard format:
-
-```markdown
-### [Number]. Task Title
-
-**Description**: Clear, actionable description
-**Status**: Not Started | In Progress | Completed | Blocked
-**Priority**: Critical | High | Medium | Low
-**Blockers**: None | Specific issues
-**Related**: Links to docs
-
-Tasks:
-
-- [ ] Subtask 1
-- [ ] Subtask 2
-```
-
-## 📊 Progress Tracking
-
-Use these commands to track progress:
-
+Run this command to check PM documentation freshness:
 ```bash
-# Count tasks in current sprint
-grep -c "^###" current-sprint.md
-
-# Find blocked items
-grep -A3 "Blocked" current-sprint.md
-
-# Count completed this month
-grep -c "✅" completed/2025-08.md
+mise run pm-status
 ```
 
-## 🔗 Related Documentation
+## 🗂️ Directory Structure
 
-- [Project Management Standards](../standards/project-management-standards.md)
-- [DNS/IPAM Implementation Plan](../implementation/dns-ipam/implementation-plan.md)
-- [Repository Structure](../getting-started/repository-structure.md)
+```
+project-management/
+├── README.md              # This file - process guide
+├── current-sprint.md      # Active sprint work
+├── decisions/             # Architecture Decision Records
+│   ├── ADR-TEMPLATE.md   # Template for new decisions
+│   └── ADR-*.md          # Documented decisions
+├── phases/                # Future phase planning
+│   ├── phase-3-netbox.md
+│   ├── phase-4-dns-integration.md
+│   ├── phase-5-multisite.md
+│   └── phase-6-post-implementation.md
+├── completed/             # Completed work by month
+│   ├── 2025-07.md        # July completions
+│   └── 2025-08.md        # August completions
+└── archive/               # Historical documents
+    └── *.md              # Archived/deprecated docs
+```
 
-## 🧭 Phases Legend
+## 🚀 Quick Links
 
-- **Phase 3: NetBox Integration and DNS Migration** — Integrate NetBox as source of truth; prep DNS migration
-- **Phase 4: PowerDNS-NetBox Integration** — Configure zones, API integration, synchronization
-- **Phase 5: Multi-Site Expansion and Optimization** — Extend to multiple sites; hardening and HA
-- **Phase 6: Post-Implementation & Continuous Improvement** — Operations, automation, and maturity
+- **What's happening now?** → [current-sprint.md](./current-sprint.md)
+- **Where are we heading?** → [ROADMAP.md](../../ROADMAP.md)
+- **Why did we decide that?** → [decisions/](./decisions/)
+- **What did we complete?** → [completed/](./completed/)
 
-See: [Phases Index](./phases/README.md)
+## 🏷️ Status Badges
 
-## 🔖 Status Icons Legend
+All key documents use dynamic GitHub badges to show last update time:
+- No manual date updates needed
+- Automatically reflects git commit times
+- Visual indication of staleness
 
-- ✅ Completed
-- 🚧 In Progress
-- ⏳ Not Started
-- ⛔ Blocked
+Example:
+```markdown
+![Last Updated](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration/main/path/to/file.md)
+```
+
+## 📝 Best Practices
+
+### For Solo Development
+1. **Keep it simple** - Don't duplicate GitHub data locally
+2. **Update regularly** - Weekly sprints, monthly roadmap
+3. **Document decisions** - ADRs for future reference
+4. **Use automation** - Dynamic badges over manual dates
+
+### What NOT to Track Here
+- Individual task details (use GitHub issues)
+- Code discussions (use PR comments)
+- Bug reports (use GitHub issues)
+- Feature requests (use GitHub issues)
+
+## 🔄 Migration Note
+
+This structure was adopted on 2025-01-27 to simplify project management. See [ADR-2025-01-27-project-management-restructure.md](./decisions/ADR-2025-01-27-project-management-restructure.md) for details on why we made this change.
+
+Previous files have been archived for reference:
+- task-summary.md → Merged into ROADMAP.md
+- github-issue-tracker.md → Removed (use GitHub directly)
+- task-list.md → Merged into this README

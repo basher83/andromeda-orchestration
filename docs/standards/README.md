@@ -72,6 +72,16 @@ Comprehensive security practices and procedures.
 - Pre-deployment testing
 - CI/CD testing
 
+### [testing/testing-qa-initiative.md](testing/testing-qa-initiative.md)
+
+Comprehensive testing and QA implementation plan.
+
+- Python unit test requirements for custom modules
+- Molecule testing for Ansible roles
+- Integration testing strategies
+- Security testing procedures
+- Performance testing guidelines
+
 ### [development-workflow.md](development-workflow.md)
 
 [TODO]: End-to-end development processes.
@@ -111,6 +121,15 @@ Comprehensive security practices and procedures.
 - Project phases
 - Success criteria
 - Risk management
+
+### [domain-migration-pr-template.md](domain-migration-pr-template.md)
+
+PR template for domain migration changes.
+
+- Standard checklist for .local migration PRs
+- Testing requirements
+- Rollback procedures
+- Validation criteria
 
 ## 🎯 Purpose
 

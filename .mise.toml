@@ -55,15 +55,11 @@ echo "🚀 Starting Andromeda Orchestration Setup"
 echo "========================================="
 echo ""
 
-# Step 1: Check prerequisites
-echo "🔍 Step 1: Checking prerequisites..."
-echo "------------------------------------"
-if ! command -v uv >/dev/null 2>&1; then
-  echo "❌ uv is not installed. Please install it first:"
-  echo "   curl -LsSf https://astral.sh/uv/install.sh | sh"
-  exit 1
-fi
-echo "✅ uv is installed: $(uv --version)"
+# Step 1: Tool versions (mise handles installation automatically)
+echo "🔍 Step 1: Tool versions..."
+echo "----------------------------"
+echo "✅ uv version: $(uv --version)"
+echo "✅ Python version: $(python --version)"
 
 # Step 2: Create virtual environment
 echo ""
@@ -94,12 +90,8 @@ uv run ansible-galaxy collection install -r requirements.yml --force
 echo ""
 echo "🔧 Step 5: Setting up pre-commit hooks..."
 echo "-----------------------------------------"
-if command -v pre-commit >/dev/null 2>&1; then
-  uv run pre-commit install
-  echo "✅ Pre-commit hooks installed"
-else
-  echo "ℹ️  Skipping pre-commit setup (not installed)"
-fi
+uv run pre-commit install
+echo "✅ Pre-commit hooks installed"
 
 # Step 6: Setup Infisical secret scanning
 echo ""
