@@ -27,6 +27,10 @@ consul = "1.21.4"
 nomad = "1.10.4"
 vault = "1.17.5"
 
+[settings]
+# Automatically activate uv-managed virtual environments
+python.uv_venv_auto = true
+
 [env]
 # Default to local LAN environment (when at home)
 NOMAD_REGION = "global"
@@ -34,8 +38,10 @@ NOMAD_ADDR = "http://192.168.11.11:4646"
 CONSUL_HTTP_ADDR = "http://192.168.11.11:8500"
 VAULT_ADDR = "http://192.168.10.31:8200"
 
-# Default inventory for Ansible commands
-MISE_INVENTORY = "inventory/doggos-homelab/infisical.proxmox.yml"
+# Ansible configuration
+ANSIBLE_INVENTORY = "inventory/environments/doggos-homelab"  # Default to doggos-homelab environment
+ANSIBLE_HOST_KEY_CHECKING = "False"
+ANSIBLE_PYTHON_INTERPRETER = "auto_silent"
 
 # To use Tailscale IPs when remote:
 # Run: mise run env:remote
@@ -418,6 +424,40 @@ rm -rf .ruff_cache .mypy_cache 2>/dev/null || true
 echo "✅ Cleaned up generated files and caches"
 '''
 
+[tasks.pm-status]
+description = "Check PM documentation freshness and health"
+run = '''
+echo "📊 Project Management Health Check"
+echo "=================================="
+echo ""
+echo "📅 Last Updated:"
+echo "  ROADMAP.md: $(git log -1 --format='%ar (%ad)' --date=short ROADMAP.md 2>/dev/null || echo 'Not tracked')"
+echo "  Current Sprint: $(git log -1 --format='%ar (%ad)' --date=short docs/project-management/current-sprint.md 2>/dev/null || echo 'Not tracked')"
+echo ""
+echo "📝 Recent Decisions:"
+ls -lt docs/project-management/decisions/*.md 2>/dev/null | grep -v TEMPLATE | head -3 | while read -r line; do
+  file=$(echo "$line" | awk '{print $NF}')
+  basename "$file" .md
+done || echo "  No ADRs found"
+echo ""
+echo "⚠️  Potentially Stale Files (>7 days old):"
+find docs/project-management -name "*.md" -mtime +7 -not -path "*/archive/*" -not -path "*/completed/*" 2>/dev/null | while read -r file; do
+  echo "  - $(basename "$file"): $(git log -1 --format='%ar' "$file" 2>/dev/null || echo 'untracked')"
+done || echo "  All files are fresh!"
+echo ""
+echo "📊 Sprint Progress:"
+if [ -f "docs/project-management/current-sprint.md" ]; then
+  completed=$(grep -c "✅" docs/project-management/current-sprint.md 2>/dev/null || echo 0)
+  in_progress=$(grep -c "🚧\|In Progress" docs/project-management/current-sprint.md 2>/dev/null || echo 0)
+  blocked=$(grep -c "⛔\|Blocked" docs/project-management/current-sprint.md 2>/dev/null || echo 0)
+  echo "  Completed: $completed | In Progress: $in_progress | Blocked: $blocked"
+else
+  echo "  No current sprint file found"
+fi
+echo ""
+echo "💡 Tip: Run 'mise run pm-status' weekly to keep PM docs fresh!"
+'''
+
 [tasks.help]
 description = "Show how to use Ansible for operations"
 run = '''
@@ -428,6 +468,7 @@ echo "MISE COMMANDS (Development & Status)"
 echo "------------------------------------"
 echo "  mise run setup          # Setup development environment"
 echo "  mise run status         # Check cluster health"
+echo "  mise run pm-status      # Check PM documentation health"
 echo "  mise run lint           # Lint code"
 echo "  mise run test           # Run tests"
 echo "  mise run security       # Security scanning"
@@ -447,7 +488,71 @@ echo ""
 echo "Assessment:"
 echo "  uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml"
 echo ""
-echo "All playbooks use: -i inventory/doggos-homelab/infisical.proxmox.yml"
+echo "Note: Inventory auto-configured via ANSIBLE_INVENTORY environment variable"
+'''
+
+# ============================================================================
+# INVENTORY - Inventory Management Tasks
+# ============================================================================
+
+[tasks."inventory:doggos"]
+description = "Use doggos-homelab inventory"
+run = '''
+echo "🎯 Switching to doggos-homelab inventory"
+echo "export ANSIBLE_INVENTORY='inventory/environments/doggos-homelab'"
+echo ""
+echo "To apply: export ANSIBLE_INVENTORY='inventory/environments/doggos-homelab'"
+echo "Or use:  -i inventory/environments/doggos-homelab"
+'''
+
+[tasks."inventory:og"]
+description = "Use og-homelab inventory"
+run = '''
+echo "🎯 Switching to og-homelab inventory"
+echo "export ANSIBLE_INVENTORY='inventory/environments/og-homelab'"
+echo ""
+echo "To apply: export ANSIBLE_INVENTORY='inventory/environments/og-homelab'"
+echo "Or use:  -i inventory/environments/og-homelab"
+'''
+
+[tasks."inventory:netbox"]
+description = "Use NetBox dynamic inventory"
+run = '''
+echo "🌐 Switching to NetBox inventory"
+echo "export ANSIBLE_INVENTORY='inventory/dynamic/netbox.yml'"
+echo ""
+echo "To apply: export ANSIBLE_INVENTORY='inventory/dynamic/netbox.yml'"
+echo "Or use:  -i inventory/dynamic/netbox.yml"
+echo ""
+echo "Note: Requires Infisical authentication (uses infisical.vault lookup)"
+'''
+
+[tasks."inventory:combined"]
+description = "Use multiple inventories (Proxmox + NetBox)"
+run = '''
+echo "🔗 Using combined inventories"
+echo "export ANSIBLE_INVENTORY='inventory/environments/doggos-homelab:inventory/dynamic/netbox.yml'"
+echo ""
+echo "To apply: export ANSIBLE_INVENTORY='inventory/environments/doggos-homelab:inventory/dynamic/netbox.yml'"
+echo "Or use:  -i inventory/environments/doggos-homelab -i inventory/dynamic/netbox.yml"
+'''
+
+[tasks."inventory:list"]
+description = "List available inventory sources"
+run = '''
+echo "📋 Available Inventory Sources"
+echo "=============================="
+echo ""
+echo "Environments:"
+echo "  • doggos-homelab - Primary homelab (Proxmox)"
+echo "  • og-homelab     - Original homelab (Proxmox)"  
+echo "  • vault-cluster  - Dedicated Vault cluster"
+echo ""
+echo "Dynamic Sources:"
+echo "  • netbox         - NetBox IPAM (with caching)"
+echo "  • tailscale      - Tailscale network inventory"
+echo ""
+echo "Current setting: $ANSIBLE_INVENTORY"
 '''
 
 # Note: Git hooks are handled by pre-commit framework
