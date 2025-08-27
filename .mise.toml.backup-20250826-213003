@@ -1,0 +1,1814 @@
+[settings]
+experimental = true
+auto_install = true
+not_found_auto_install = true
+color = true
+jobs = 4
+pin = true
+
+[settings.python]
+uv_venv_auto = true
+
+[tools]
+act = "0.2.80"
+age = "1.2.1"
+ansible-core = "2.19.0"
+consul = "1.21.4"
+eza = "0.23.0"
+fd = "10.2.0"
+github-markdown-toc = "0.10.0"
+jq = "1.8.1"
+markdownlint-cli2 = "0.18.1"
+node = "24.6.0"
+nomad = "1.10.4"
+pre-commit = "4.3.0"
+python = "3.13.7"
+rg = "14.1.1"
+ruff = "0.12.10"
+sops = "3.10.2"
+uv = "0.8.13"
+vault = "1.20.2"
+
+# ============================================================================
+# CORE TASKS - Primary developer actions
+# ============================================================================
+
+[tasks.setup]
+description = "Complete project setup for new environment (Python deps, Ansible collections)"
+run = '''
+echo "🚀 NetBox Ansible Project Setup"
+echo "================================"
+
+# Check if we're in the right directory
+if [ ! -f "ansible.cfg" ] || [ ! -f "pyproject.toml" ]; then
+  echo "❌ Error: Not in the project root directory"
+  echo "   Please run this from the netbox-ansible repository root"
+  exit 1
+fi
+
+echo ""
+echo "📦 Step 1: Installing mise tools..."
+echo "------------------------------------"
+mise install --yes
+echo "✅ Mise tools installed"
+
+echo ""
+echo "🐍 Step 2: Setting up Python virtual environment..."
+echo "----------------------------------------------------"
+if [ ! -d ".venv" ]; then
+  echo "Creating new virtual environment..."
+  uv venv
+  echo "✅ Virtual environment created"
+else
+  echo "✅ Virtual environment already exists"
+fi
+
+echo ""
+echo "📚 Step 3: Installing Python dependencies..."
+echo "---------------------------------------------"
+echo "Installing main dependencies and dev extras..."
+if uv sync --extra dev; then
+  echo "✅ Python dependencies installed successfully"
+else
+  echo "⚠️  Warning: Some dependencies may have failed to install"
+  echo "   This is often due to platform-specific packages"
+  echo "   Core functionality should still work"
+fi
+
+echo ""
+echo "🎭 Step 4: Installing Ansible collections..."
+echo "---------------------------------------------"
+if uv run ansible-galaxy collection install -r requirements.yml --force; then
+  echo "✅ Ansible collections installed"
+else
+  echo "❌ Failed to install Ansible collections"
+  echo "   Please check your requirements.yml file"
+  exit 1
+fi
+
+echo ""
+echo "🔧 Step 5: Setting up pre-commit hooks (optional)..."
+echo "------------------------------------------------------"
+if command -v pre-commit >/dev/null 2>&1; then
+  uv run pre-commit install
+  echo "✅ Pre-commit hooks installed"
+else
+  echo "ℹ️  Skipping pre-commit setup (not installed)"
+fi
+
+echo ""
+echo "🔐 Step 6: Setting up Infisical secret scanning..."
+echo "-------------------------------------------------"
+if command -v infisical >/dev/null 2>&1; then
+  # Install pre-commit hook for secret scanning
+  infisical scan install --pre-commit-hook >/dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "✅ Infisical pre-commit hook installed for secret scanning"
+  else
+    echo "⚠️  Infisical pre-commit hook already installed"
+  fi
+else
+  echo "ℹ️  Skipping Infisical setup (not installed)"
+  echo "   Install with: brew install infisical/brew/infisical"
+fi
+
+echo ""
+echo "📋 Step 7: Verification..."
+echo "---------------------------"
+echo "Python version: $(uv run python --version)"
+echo "Ansible version: $(uv run ansible --version | head -1)"
+echo "Virtual env location: $(pwd)/.venv"
+
+# Check for Infisical configuration
+echo ""
+# Check both possible Infisical auth methods
+if [ -n "$INFISICAL_TOKEN" ] || \
+   [ -n "$INFISICAL_MACHINE_IDENTITY_CLIENT_ID" ] || \
+   [ -n "$INFISICAL_UNIVERSAL_AUTH_CLIENT_ID" ]; then
+  echo "✅ Infisical credentials detected"
+  # Show which auth method is configured
+  [ -n "$INFISICAL_TOKEN" ] && echo "   Using: Token authentication"
+  [ -n "$INFISICAL_MACHINE_IDENTITY_CLIENT_ID" ] && echo "   Using: Machine Identity"
+  [ -n "$INFISICAL_UNIVERSAL_AUTH_CLIENT_ID" ] && echo "   Using: Universal Auth"
+else
+  echo "ℹ️  Note: Infisical credentials not configured"
+  echo "   Configure in .env.json or set environment variables:"
+  echo "   - INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and _CLIENT_SECRET"
+  echo "   - Or INFISICAL_MACHINE_IDENTITY_CLIENT_ID and _CLIENT_SECRET"
+fi
+
+echo ""
+echo "✨ Setup complete! You're ready to use the project."
+echo ""
+echo "Quick start commands:"
+echo "  mise run env:show           # Check current environment"
+echo "  mise run status:nomad       # Check Nomad cluster status"
+echo "  mise run status:consul      # Check Consul cluster status"
+echo "  uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list"
+echo ""
+echo "For more tasks, run: mise tasks"
+'''
+tools = { "uv" = "0.8.13", "python" = "3.13.7" }
+
+[tasks."setup:quick"]
+description = "Quick setup - just Python deps and Ansible collections (no pre-commit)"
+run = '''
+echo "⚡ Quick Setup (deps only)"
+echo "=========================="
+
+# Ensure we have the venv
+[ ! -d ".venv" ] && uv venv
+
+# Install Python deps
+echo "Installing Python dependencies..."
+uv sync --extra dev || echo "⚠️  Some optional dependencies may have failed"
+
+# Install Ansible collections
+echo "Installing Ansible collections..."
+uv run ansible-galaxy collection install -r requirements.yml --force
+
+echo "✅ Quick setup complete!"
+'''
+tools = { "uv" = "0.8.13", "python" = "3.13.7" }
+
+[tasks."setup:mcp"]
+description = "Generate .mcp.json from template using Infisical secrets"
+run = "./scripts/generate-mcp-config.sh"
+sources = [
+  "mcp.json.template",
+  "scripts/generate-mcp-config.sh",
+  ".infisical.json",
+]
+outputs = [".mcp.json"]
+tools = { "jq" = "latest" }
+
+[tasks."setup:act-symlink"]
+description = "Ensure act is symlinked for VS Code extension"
+run = '''
+# Check if act is installed via mise
+if command -v act >/dev/null 2>&1; then
+  ACT_PATH=$(which act)
+  SYMLINK_PATH="/usr/local/bin/act"
+
+  # Check if symlink already exists and points to correct location
+  if [ -L "$SYMLINK_PATH" ] && [ "$(readlink -f $SYMLINK_PATH)" = "$(readlink -f $ACT_PATH)" ]; then
+    echo "✅ Act symlink already configured correctly"
+  else
+    echo "🔧 Creating symlink for act..."
+    sudo ln -sf "$ACT_PATH" "$SYMLINK_PATH"
+    echo "✅ Act symlinked to $SYMLINK_PATH"
+  fi
+
+  # Verify it works
+  if $SYMLINK_PATH --version >/dev/null 2>&1; then
+    echo "✅ Act is accessible system-wide (version: $($SYMLINK_PATH --version))"
+  else
+    echo "❌ Failed to create working symlink" && exit 1
+  fi
+else
+  echo "⚠️  Act not installed, skipping symlink setup"
+fi
+'''
+tools = { "act" = "0.2.80" }
+
+# ============================================================================
+# ENVIRONMENT - Environment switching
+# ============================================================================
+
+[tasks."env:status"]
+description = "Show current environment configuration and connectivity"
+run = '''
+echo "🌍 Current Environment Configuration:"
+echo "===================================="
+echo "NOMAD_ADDR: ${NOMAD_ADDR:-not set}"
+echo "CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR:-not set}"
+echo "VAULT_ADDR: ${VAULT_ADDR:-not set}"
+echo ""
+
+# Determine active environment
+if grep -q "^\\[env\\]" .mise.local.toml 2>/dev/null; then
+  echo "📍 Environment: LOCAL (using .mise.local.toml)"
+  echo "   IPs: 192.168.11.11 (LAN)"
+else
+  echo "📍 Environment: REMOTE/TAILSCALE (using .mise.toml defaults)"
+  echo "   IPs: 100.108.219.48 (Tailscale)"
+fi
+
+echo ""
+echo "🧪 Testing connectivity:"
+echo "------------------------"
+
+# Test actual connectivity using current environment variables
+if [ -n "${NOMAD_ADDR}" ]; then
+  if curl -s --connect-timeout 2 "${NOMAD_ADDR}/v1/status/leader" >/dev/null 2>&1; then
+    echo "Nomad:  ✅ Connected to ${NOMAD_ADDR}"
+  else
+    echo "Nomad:  ❌ Cannot reach ${NOMAD_ADDR}"
+  fi
+fi
+
+if [ -n "${CONSUL_HTTP_ADDR}" ]; then
+  if curl -s --connect-timeout 2 "${CONSUL_HTTP_ADDR}/v1/status/leader" >/dev/null 2>&1; then
+    echo "Consul: ✅ Connected to ${CONSUL_HTTP_ADDR}"
+  else
+    echo "Consul: ❌ Cannot reach ${CONSUL_HTTP_ADDR}"
+  fi
+fi
+
+if [ -n "${VAULT_ADDR}" ]; then
+  if curl -s --connect-timeout 2 "${VAULT_ADDR}/v1/sys/health" >/dev/null 2>&1; then
+    echo "Vault:  ✅ Connected to ${VAULT_ADDR}"
+  else
+    echo "Vault:  ❌ Cannot reach ${VAULT_ADDR}"
+  fi
+fi
+'''
+
+[tasks."env:local"]
+description = "Switch to local environment (LAN IPs: 192.168.11.11)"
+run = '''
+echo "🔄 Switching to LOCAL environment..."
+echo "===================================="
+
+# Create/update .mise.local.toml with local environment
+cat > .mise.local.toml << 'EOF'
+# Local environment configuration (LAN access)
+# This file is auto-generated by 'mise run env:local'
+# To switch back to remote, run 'mise run env:remote'
+
+[env]
+NOMAD_REGION = "global"
+NOMAD_ADDR = "http://192.168.11.11:4646"
+CONSUL_HTTP_ADDR = "http://192.168.11.11:8500"
+VAULT_ADDR = "http://192.168.11.11:8200"
+EOF
+
+echo "✅ Local environment activated in .mise.local.toml"
+echo ""
+echo "📋 Configuration:"
+echo "  NOMAD_ADDR       = http://192.168.11.11:4646"
+echo "  CONSUL_HTTP_ADDR = http://192.168.11.11:8500"
+echo "  VAULT_ADDR       = http://192.168.11.11:8200"
+echo ""
+
+# Reload mise environment
+eval "$(mise env)"
+
+echo "🧪 Testing connectivity to LOCAL environment:"
+echo "----------------------------------------------"
+if curl -s --connect-timeout 2 http://192.168.11.11:4646/v1/status/leader >/dev/null 2>&1; then
+  echo "Nomad:  ✅ Connected"
+else
+  echo "Nomad:  ❌ Cannot reach (are you on the local network?)"
+fi
+
+if curl -s --connect-timeout 2 http://192.168.11.11:8500/v1/status/leader >/dev/null 2>&1; then
+  echo "Consul: ✅ Connected"
+else
+  echo "Consul: ❌ Cannot reach (are you on the local network?)"
+fi
+
+if curl -s --connect-timeout 2 http://192.168.11.11:8200/v1/sys/health >/dev/null 2>&1; then
+  echo "Vault:  ✅ Connected"
+else
+  echo "Vault:  ❌ Cannot reach (are you on the local network?)"
+fi
+
+echo ""
+echo "💡 To apply changes in current shell:"
+echo "   eval \"\$(mise env)\""
+echo ""
+echo "Or start a new shell session for changes to take effect."
+'''
+
+[tasks."env:remote"]
+description = "Switch to remote/Tailscale environment (IPs: 100.108.219.48)"
+run = '''
+echo "🔄 Switching to REMOTE/TAILSCALE environment..."
+echo "================================================"
+
+# Comment out the [env] section in .mise.local.toml to use defaults
+if [ -f .mise.local.toml ]; then
+  # Create backup
+  cp .mise.local.toml .mise.local.toml.bak
+
+  # Comment out all environment variables
+  cat > .mise.local.toml << 'EOF'
+# Local environment configuration (LAN access)
+# Uncomment the [env] section below to activate local environment
+# Comment it out to use default (Tailscale) environment
+
+#[env]
+#NOMAD_REGION = "global"
+#NOMAD_ADDR = "http://192.168.11.11:4646"
+#CONSUL_HTTP_ADDR = "http://192.168.11.11:8500"
+#VAULT_ADDR = "http://192.168.11.11:8200"
+EOF
+
+  echo "✅ Remote environment activated (disabled .mise.local.toml overrides)"
+else
+  echo "✅ Using default remote environment"
+fi
+
+echo ""
+echo "📋 Configuration (from .mise.toml):"
+echo "  NOMAD_ADDR       = http://100.108.219.48:4646"
+echo "  CONSUL_HTTP_ADDR = http://100.108.219.48:8500"
+echo "  VAULT_ADDR       = http://100.108.219.48:8200"
+echo ""
+
+# Reload mise environment
+eval "$(mise env)"
+
+echo "🧪 Testing connectivity to REMOTE environment:"
+echo "-----------------------------------------------"
+if curl -s --connect-timeout 2 http://100.108.219.48:4646/v1/status/leader >/dev/null 2>&1; then
+  echo "Nomad:  ✅ Connected"
+else
+  echo "Nomad:  ❌ Cannot reach (is Tailscale connected?)"
+fi
+
+if curl -s --connect-timeout 2 http://100.108.219.48:8500/v1/status/leader >/dev/null 2>&1; then
+  echo "Consul: ✅ Connected"
+else
+  echo "Consul: ❌ Cannot reach (is Tailscale connected?)"
+fi
+
+if curl -s --connect-timeout 2 http://100.108.219.48:8200/v1/sys/health >/dev/null 2>&1; then
+  echo "Vault:  ✅ Connected"
+else
+  echo "Vault:  ❌ Cannot reach (is Tailscale connected?)"
+fi
+
+echo ""
+echo "💡 To apply changes in current shell:"
+echo "   eval \"\$(mise env)\""
+echo ""
+echo "Or start a new shell session for changes to take effect."
+'''
+
+[tasks."env:test"]
+description = "Test connectivity to current environment"
+run = '''
+echo "🧪 Testing Current Environment Connectivity:"
+echo "==========================================="
+echo "Target addresses:"
+echo "  Nomad: ${NOMAD_ADDR:-not set}"
+echo "  Consul: ${CONSUL_HTTP_ADDR:-not set}"
+echo "  Vault: ${VAULT_ADDR:-not set}"
+echo ""
+echo "Connectivity tests:"
+if [ -n "${NOMAD_ADDR}" ]; then
+  if curl -s --connect-timeout 3 "${NOMAD_ADDR}/v1/status/leader" >/dev/null 2>&1; then
+    echo "  Nomad: ✅ OK"
+  else
+    echo "  Nomad: ❌ Failed"
+  fi
+else
+  echo "  Nomad: ⚠️  Address not set"
+fi
+
+if [ -n "${CONSUL_HTTP_ADDR}" ]; then
+  if curl -s --connect-timeout 3 "${CONSUL_HTTP_ADDR}/v1/status/leader" >/dev/null 2>&1; then
+    echo "  Consul: ✅ OK"
+  else
+    echo "  Consul: ❌ Failed"
+  fi
+else
+  echo "  Consul: ⚠️  Address not set"
+fi
+
+if [ -n "${VAULT_ADDR}" ]; then
+  if curl -s --connect-timeout 3 "${VAULT_ADDR}/v1/sys/health" >/dev/null 2>&1; then
+    echo "  Vault: ✅ OK"
+  else
+    echo "  Vault: ❌ Failed"
+  fi
+else
+  echo "  Vault: ⚠️  Address not set"
+fi
+'''
+
+# ============================================================================
+# UTILITY - Helper tasks
+# ============================================================================
+
+[tasks."tailscale:auth"]
+run = "sudo tailscale up --accept-routes"
+
+[tasks."tailscale:status"]
+run = "sudo tailscale status"
+
+[tasks."network_utils:install"]
+run = "sudo apt-get update && sudo apt-get install -y iputils-ping iputils-tracepath dnsutils netcat-openbsd curl wget telnet mtr tcpdump"
+
+[tasks.mcp]
+description = "MCP configuration management"
+alias = "m"
+tools = { "jq" = "latest" }
+run = '''
+echo "🔧 MCP Configuration Management"
+echo "================================"
+if [ -f ".mcp.json" ]; then
+  echo "✅ .mcp.json exists"
+  echo ""
+  echo "Available actions:"
+  echo "  1) Regenerate from template (overwrites current)"
+  echo "  2) Validate JSON syntax"
+  echo "  3) Show current servers"
+  echo "  4) Exit"
+  echo ""
+  read -p "Choose action [1-4]: " choice
+  case $choice in
+    1) mise run setup:mcp ;;
+    2) jq empty .mcp.json && echo "✅ Valid JSON" || echo "❌ Invalid JSON" ;;
+    3) jq '.mcpServers | keys[]' .mcp.json 2>/dev/null || echo "❌ Unable to parse servers" ;;
+    4) echo "Exiting..." ;;
+    *) echo "Invalid choice" ;;
+  esac
+else
+  echo "❌ .mcp.json not found"
+  echo ""
+  if [ -f "mcp.json.template" ]; then
+    echo "Template found. Generate config? (y/n)"
+    read -p "> " confirm
+    [ "$confirm" = "y" ] && mise run setup:mcp
+  else
+    echo "No template found. Please create mcp.json.template first."
+  fi
+fi
+'''
+
+[tasks."mcp:clean"]
+description = "Remove generated MCP configuration"
+run = '''
+if [ -f ".mcp.json" ]; then
+  echo "⚠️  This will delete .mcp.json (can be regenerated from template)"
+  read -p "Continue? (y/n): " confirm
+  if [ "$confirm" = "y" ]; then
+    rm -f .mcp.json
+    echo "✅ .mcp.json removed"
+  else
+    echo "Cancelled"
+  fi
+else
+  echo "No .mcp.json file to remove"
+fi
+'''
+# ============================================================================
+# LINTING
+# ============================================================================
+
+[tasks."lint:markdown"]
+description = "Lint Markdown files"
+run = "markdownlint-cli2 **/*.md"
+tools = { "markdownlint-cli2" = "0.18.1" }
+
+[tasks."lint:python"]
+description = "Lint Python files"
+run = "ruff check plugins scripts tests"
+tools = { "ruff" = "0.12.9" }
+
+# ============================================================================
+# FIX
+# ============================================================================
+[tasks."fix:markdown"]
+description = "Fix Markdown files"
+run = "markdownlint-cli2 --fix **/*.md"
+tools = { "markdownlint-cli2" = "0.18.1" }
+
+# ============================================================================
+# SECURITY
+# ============================================================================
+
+[tasks."security:secrets"]
+description = "Run Infisical secrets detection scan"
+run = '''
+echo "🔍 Running Infisical secrets scan..."
+if [ -f "./scripts/scan-secrets.sh" ]; then
+  ./scripts/scan-secrets.sh full
+  echo "✅ Infisical secrets scan complete!"
+else
+  echo "⚠️  scan-secrets.sh script not found"
+  echo "Consider using: infisical scan"
+fi
+'''
+
+[tasks."security:setup-infisical"]
+description = "Install and configure Infisical secret scanning hooks"
+run = '''
+echo "🔐 Setting up Infisical secret scanning..."
+if ! command -v infisical >/dev/null 2>&1; then
+  echo "❌ Infisical CLI not installed"
+  echo "📦 Install with: brew install infisical/brew/infisical"
+  echo "Or visit: https://infisical.com/docs/cli/overview"
+  exit 1
+fi
+
+# Install pre-commit hook
+echo "📎 Installing pre-commit hook..."
+infisical scan install --pre-commit-hook >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+  echo "✅ Infisical pre-commit hook installed successfully"
+else
+  echo "ℹ️  Infisical pre-commit hook already installed"
+fi
+
+# Verify installation
+if grep -q "MANAGED BY INFISICAL CLI" .git/hooks/pre-commit 2>/dev/null; then
+  echo "✅ Pre-commit hook verified in .git/hooks/pre-commit"
+  echo ""
+  echo "Secret scanning will run automatically on every commit."
+  echo "To temporarily disable: git config hooks.infisical-scan false"
+  echo "To re-enable: git config --unset hooks.infisical-scan"
+else
+  echo "⚠️  Pre-commit hook not found - installation may have failed"
+fi
+
+# Run a test scan
+echo ""
+echo "🧪 Running test scan on current repository..."
+infisical scan --source . --no-git --redact
+'''
+
+[tasks."security:kics"]
+description = "Run KICS infrastructure security scan"
+run = '''
+echo "🔍 Running KICS security scan..."
+mkdir -p kics-results
+# Use the optimized kics.config file for faster, focused scanning
+docker run -t -v "$(pwd)":/path checkmarx/kics:latest scan \
+  -p /path \
+  --config /path/kics.config \
+  -o /path/kics-results
+echo "✅ KICS scan complete! Results saved to kics-results/"
+'''
+
+[tasks.security]
+description = "Run all security scans"
+depends = ["security:secrets", "security:kics"]
+
+# ============================================================================
+# CLEANUP & MAINTENANCE
+# ============================================================================
+
+[tasks.clean]
+description = "Remove generated files and caches"
+run = '''
+echo "🧹 Cleaning up generated files and caches..."
+fd -t d -H '^__pycache__$' . -x rm -rf {} || true
+fd -e pyc . -x rm {} || true
+fd -t d -H '^\\.pytest_cache$' . -x rm -rf {} || true
+fd -t d -H '^\\.mypy_cache$' . -x rm -rf {} || true
+fd -t d -H '^\\.ruff_cache$' . -x rm -rf {} || true
+fd -t d '\\.egg-info$' . -x rm -rf {} || true
+rm -rf build/ dist/
+echo "✅ Cleanup complete!"
+'''
+tools = { "fd" = "10.2.0" }
+
+# ============================================================================
+# DOCUMENTATION HELPERS
+# ============================================================================
+
+[tasks.todos]
+description = "Find all TODO tags in documentation"
+run = '''
+if [ -f "./scripts/find-todos.sh" ]; then
+  ./scripts/find-todos.sh
+else
+  echo "🔍 Searching for TODOs..."
+  rg -i "TODO" --type md --type py --type yaml -g "*.hcl" -g "*.nomad" -n | head -50
+fi
+'''
+tools = { "rg" = "14.1.1" }
+
+[tasks.tags]
+description = "Find all tags (TODO, FIXME, BUG, etc.) in code and documentation"
+run = '''
+if [ -n "${1:-}" ]; then
+  TAG="$1"
+else
+  TAG=""
+fi
+
+if [ -f "./scripts/find-tags.sh" ] && [ -x "./scripts/find-tags.sh" ]; then
+  ./scripts/find-tags.sh "$TAG"
+else
+  echo "🏷️  Searching for tags..."
+  if [ -n "$TAG" ]; then
+    rg -i "$TAG" --type md --type py --type yaml -g "*.hcl" -g "*.nomad" -n | head -50
+  else
+    for tag in TODO FIXME BUG HACK NOTE SECURITY WARNING; do
+      echo ""
+      echo "=== $tag tags ==="
+      rg -i "\\b$tag\\b" --type md --type py --type yaml -g "*.hcl" -g "*.nomad" -n | head -20 || echo "No $tag tags found"
+    done
+  fi
+fi
+'''
+tools = { "rg" = "14.1.1" }
+
+[tasks."tags:critical"]
+description = "Find critical issues (SECURITY, FIXME, BUG)"
+run = '''
+echo "⚠️  Searching for critical tags..."
+for tag in SECURITY FIXME BUG; do
+  echo ""
+  echo "=== $tag tags ==="
+  rg -i "\\b$tag\\b" --type md --type py --type yaml -g "*.hcl" -g "*.nomad" -n | head -20 || echo "No $tag tags found"
+done
+'''
+tools = { "rg" = "14.1.1" }
+
+# ============================================================================
+# TESTING
+# ============================================================================
+
+[tasks.test]
+description = "Run all tests"
+depends = ["test:syntax", "test:python"]
+
+[tasks."test:syntax"]
+description = "Check playbook syntax"
+run = '''
+echo "🔍 Checking playbook syntax..."
+fd -e yml . playbooks -x sh -c 'echo "  Checking: {}" && \
+  uv run ansible-playbook {} --syntax-check 2>&1 | \
+  grep -v "WARNING" | grep -v "DEPRECATION" || true'
+echo "✅ Syntax check complete!"
+'''
+tools = { "fd" = "10.2.0", "uv" = "0.8.13" }
+
+[tasks."test:python"]
+description = "Run Python tests"
+run = '''
+if [ -d "tests" ] && [ -n "$(fd -e py '^test_' tests 2>/dev/null)" ]; then
+  uv run pytest tests/
+else
+  echo "No Python tests found - consider adding tests for custom modules"
+  echo "Modules needing tests:"
+  ls plugins/modules/*.py 2>/dev/null | head -5 | sed 's/^/  - /'
+fi
+'''
+tools = { "uv" = "0.8.13", "fd" = "10.2.0" }
+
+[tasks."test:quick"]
+description = "Quick smoke test (syntax only, no inventory)"
+run = '''
+echo "🚀 Running quick smoke tests..."
+# Test that a simple playbook can be parsed
+echo "---
+- name: Smoke test
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Test task
+      debug:
+        msg: 'Smoke test passed'" | uv run ansible-playbook --syntax-check /dev/stdin
+echo "✅ Ansible is working correctly"
+
+# Test that custom modules exist
+echo "Testing custom modules exist..."
+if [ -f "plugins/modules/consul_acl_token.py" ] && [ -f "plugins/modules/nomad_job.py" ]; then
+  echo "✅ Custom modules found"
+else
+  echo "❌ Custom modules not found"
+  exit 1
+fi
+'''
+tools = { "uv" = "0.8.13" }
+
+[tasks.hooks]
+description = "Run all pre-commit hooks"
+run = "uv run pre-commit run --all-files"
+tools = { "uv" = "0.8.13", "pre-commit" = "4.3.0" }
+
+# ============================================================================
+# NOMAD
+# ============================================================================
+# Nomad Development Tasks
+[tasks."lint:nomad"]
+description = "Lint Nomad files"
+run = "nomad fmt -check -recursive nomad-jobs"
+tools = { "nomad" = "1.10.4" }
+
+[tasks."lint:domains"]
+description = "Check for hardcoded .local domains"
+run = '''
+echo "🔍 Checking for .local domains..."
+./scripts/lint-no-dot-local.sh
+'''
+
+[tasks."fmt:nomad"]
+description = "Format Nomad files"
+run = "nomad fmt -recursive nomad-jobs"
+tools = { "nomad" = "1.10.4" }
+
+[tasks."validate:nomad"]
+description = "Validate all Nomad job syntax"
+run = '''
+echo "🔍 Validating Nomad jobs..."
+failed=0
+for file in $(find nomad-jobs -name "*.nomad.hcl"); do
+  echo "Validating $file..."
+  if ! nomad job validate "$file"; then
+    failed=1
+  fi
+done
+if [ $failed -eq 1 ]; then
+  echo "❌ Some jobs failed validation"
+  exit 1
+else
+  echo "✅ All jobs validated successfully"
+fi
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."validate:nomad:job"]
+description = "Validate specific Nomad job (usage: mise run validate:nomad:job -- <job-file>)"
+run = 'nomad job validate "$1"'
+tools = { "nomad" = "1.10.4" }
+
+[tasks."plan:nomad"]
+description = "Plan a specific Nomad job (usage: mise run plan:nomad -- <job-file>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run plan:nomad -- <job-file>"
+  echo "Example: mise run plan:nomad -- nomad-jobs/core-infrastructure/traefik.nomad.hcl"
+  exit 1
+fi
+nomad job plan "$1"
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."status:nomad"]
+description = "Show status of all Nomad jobs"
+run = '''
+echo "📊 Nomad Cluster Status:"
+echo "======================="
+nomad job status
+echo ""
+echo "📍 Node Status:"
+echo "==============="
+nomad node status
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."stop:nomad"]
+description = "Stop a Nomad job (usage: mise run stop:nomad -- <job-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run stop:nomad -- <job-name>"
+  echo "Available jobs:"
+  nomad job status | grep -v "ID" | awk "{print \$1}"
+  exit 1
+fi
+nomad job stop "$1"
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."logs:nomad"]
+description = "Show logs for a Nomad allocation (usage: mise run logs:nomad -- <alloc-id>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run logs:nomad -- <alloc-id>"
+  echo "Recent allocations:"
+  nomad job status | grep -v "ID" | head -5 | while read job _; do
+    echo "Job: $job"
+    nomad job status "$job" | grep "running\|failed" | head -3
+  done
+  exit 1
+fi
+nomad alloc logs "$1"
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."deploy:traefik"]
+description = "Deploy Traefik load balancer"
+run = '''
+echo "🚀 Deploying Traefik..."
+nomad job run nomad-jobs/core-infrastructure/traefik.nomad.hcl
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."deploy:postgresql"]
+description = "Deploy PostgreSQL database"
+run = '''
+echo "🚀 Deploying PostgreSQL..."
+nomad job run nomad-jobs/platform-services/postgresql.nomad.hcl
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."deploy:powerdns"]
+description = "Deploy PowerDNS with variables"
+run = '''
+echo "🚀 Deploying PowerDNS..."
+# Using your Ansible deployment pattern with uv
+uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml \
+  -e job=nomad-jobs/platform-services/powerdns-auth.nomad.hcl
+'''
+tools = { "nomad" = "1.10.4", "uv" = "0.8.12" }
+
+[tasks."health:nomad"]
+description = "Check health of Nomad services in Consul"
+run = '''
+echo "🏥 Nomad Service Health in Consul:"
+echo "=================================="
+consul catalog services | grep -E "(traefik|postgres|powerdns)" | while read service; do
+  echo "Service: $service"
+  consul health service "$service" | head -10
+  echo ""
+done
+'''
+tools = { "nomad" = "1.10.4", "consul" = "1.21.4" }
+
+[tasks."debug:nomad"]
+description = "Debug failed Nomad allocation (usage: mise run debug:nomad -- <job-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run debug:nomad -- <job-name>"
+  echo "Failed jobs:"
+  nomad job status | grep failed
+  exit 1
+fi
+
+echo "🔍 Debugging job: $1"
+echo "=================="
+nomad job status "$1"
+echo ""
+
+echo "📋 Recent allocations:"
+alloc_id=$(nomad job status "$1" | grep -E "failed|running" | head -1 | awk "{print \$1}")
+if [ -n "$alloc_id" ]; then
+  echo "Allocation: $alloc_id"
+  nomad alloc status "$alloc_id"
+  echo ""
+  echo "📝 Logs:"
+  nomad alloc logs "$alloc_id"
+fi
+'''
+tools = { "nomad" = "1.10.4" }
+
+[tasks."clean:nomad"]
+description = "Clean up completed/failed Nomad allocations"
+run = '''
+echo "🧹 Cleaning up Nomad allocations..."
+echo "Stopping failed jobs..."
+nomad job status | grep failed | awk "{print \$1}" | while read job; do
+  echo "Stopping failed job: $job"
+  nomad job stop -purge "$job" || true
+done
+
+echo "✅ Cleanup complete"
+'''
+tools = { "nomad" = "1.10.4" }
+
+# Combined tasks
+[tasks."ci:nomad"]
+description = "Run all Nomad CI checks (format, validate)"
+run = '''
+echo "🔧 Running Nomad CI checks..."
+mise run fmt:nomad
+mise run lint:nomad
+mise run validate:nomad
+echo "✅ All Nomad CI checks passed!"
+'''
+depends = ["fmt:nomad", "lint:nomad", "validate:nomad"]
+
+[tasks."deploy:core"]
+description = "Deploy core infrastructure (Traefik)"
+run = '''
+echo "🚀 Deploying core infrastructure..."
+mise run deploy:traefik
+echo "⏳ Waiting for Traefik to be ready..."
+sleep 10
+mise run status:nomad
+'''
+depends = ["deploy:traefik"]
+
+[tasks."deploy:platform"]
+description = "Deploy platform services (PostgreSQL, PowerDNS)"
+run = '''
+echo "🚀 Deploying platform services..."
+mise run deploy:postgresql
+echo "⏳ Waiting for PostgreSQL..."
+sleep 15
+mise run deploy:powerdns
+echo "⏳ Waiting for PowerDNS..."
+sleep 10
+mise run status:nomad
+'''
+depends = ["deploy:postgresql", "deploy:powerdns"]
+
+# ============================================================================
+# CONSUL
+# ============================================================================
+
+[tasks."validate:consul"]
+description = "Validate Consul configuration files"
+run = '''
+echo "🔍 Validating Consul configurations..."
+failed=0
+for file in $(find . -name "*.hcl" -path "*/consul/*" -o -name "consul.json"); do
+  if [ -f "$file" ]; then
+    echo "Validating $file..."
+    if ! consul validate "$file"; then
+      failed=1
+    fi
+  fi
+done
+if [ $failed -eq 1 ]; then
+  echo "❌ Some Consul configs failed validation"
+  exit 1
+else
+  echo "✅ All Consul configs validated successfully"
+fi
+'''
+tools = { "consul" = "1.21.4" }
+
+# Cluster Status & Monitoring
+[tasks."status:consul"]
+description = "Show Consul cluster status"
+run = '''
+echo "📊 Consul Cluster Status:"
+echo "========================"
+consul members
+echo ""
+echo "🎯 Consul Leader:"
+echo "================="
+consul operator raft list-peers
+echo ""
+echo "💾 Consul Info:"
+echo "==============="
+consul info
+'''
+tools = { "consul" = "1.21.4" }
+
+[tasks."health:consul"]
+description = "Check Consul cluster health"
+run = '''
+echo "🏥 Consul Health Checks:"
+echo "========================"
+consul operator raft list-peers
+echo ""
+echo "🔍 Service Health Overview:"
+echo "==========================="
+consul catalog services | while read service; do
+  echo "Service: $service"
+  healthy=$(consul health service "$service" | grep -c "passing" || echo "0")
+  total=$(consul health service "$service" | grep -c "critical\|warning\|passing" || echo "0")
+  echo "  Status: $healthy/$total healthy"
+done
+'''
+tools = { "consul" = "1.21.4" }
+
+[tasks."nodes:consul"]
+description = "List Consul nodes and their status"
+run = '''
+echo "🖥️  Consul Nodes:"
+echo "=================="
+consul catalog nodes -detailed
+echo ""
+echo "🔧 Node Health:"
+echo "==============="
+consul catalog nodes | tail -n +2 | while read node address; do
+  echo "Node: $node ($address)"
+  consul health node "$node" | head -5
+  echo ""
+done
+'''
+tools = { "consul" = "1.21.4" }
+
+# Service Discovery
+[tasks."services:consul"]
+description = "List all registered services"
+run = '''
+echo "🎯 Consul Services:"
+echo "==================="
+consul catalog services -tags
+echo ""
+echo "📍 Service Details:"
+echo "==================="
+consul catalog services | while read service; do
+  echo "Service: $service"
+  consul catalog service "$service" | jq -r ".[] | \"  Node: \\(.Node) Address: \\(.ServiceAddress):\\(.ServicePort) Health: \\(.Checks | length) checks\""
+  echo ""
+done
+'''
+tools = { "consul" = "1.21.4", "jq" = "latest" }
+
+[tasks."service:consul"]
+description = "Get details for specific service (usage: mise run service:consul -- <service-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run service:consul -- <service-name>"
+  echo "Available services:"
+  consul catalog services
+  exit 1
+fi
+echo "🎯 Service Details: $1"
+echo "======================"
+consul catalog service "$1" | jq .
+echo ""
+echo "🏥 Health Status:"
+echo "================="
+consul health service "$1"
+'''
+tools = { "consul" = "1.21.4", "jq" = "latest" }
+
+[tasks."dns:consul"]
+description = "Test Consul DNS resolution (usage: mise run dns:consul -- <service-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run dns:consul -- <service-name>"
+  echo "Examples:"
+  echo "  mise run dns:consul -- traefik"
+  echo "  mise run dns:consul -- postgres"
+  exit 1
+fi
+echo "🔍 DNS Resolution Test for: $1"
+echo "==============================="
+echo "A record:"
+dig @localhost -p 8600 "$1.service.consul" A
+echo ""
+echo "SRV record:"
+dig @localhost -p 8600 "$1.service.consul" SRV
+'''
+tools = { "consul" = "1.21.4" }
+
+# KV Store Operations
+[tasks."kv:list"]
+description = "List Consul KV store keys (usage: mise run kv:list -- [prefix])"
+run = '''
+prefix=${1:-""}
+echo "🗂️  Consul KV Keys: $prefix"
+echo "=========================="
+consul kv get -recurse -keys "$prefix" | sort
+'''
+tools = { "consul" = "1.21.4" }
+
+[tasks."kv:get"]
+description = "Get Consul KV value (usage: mise run kv:get -- <key>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run kv:get -- <key>"
+  echo "Common keys in your setup:"
+  echo "  pdns/db/host"
+  echo "  pdns/db/port"
+  echo "  pdns/db/name"
+  exit 1
+fi
+echo "🔑 KV Value for: $1"
+echo "==================="
+consul kv get "$1"
+'''
+tools = { "consul" = "1.21.4" }
+
+[tasks."kv:put"]
+description = "Set Consul KV value (usage: mise run kv:put -- <key> <value>)"
+run = '''
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "Usage: mise run kv:put -- <key> <value>"
+  echo "Example: mise run kv:put -- pdns/db/host postgres.service.consul"
+  exit 1
+fi
+echo "📝 Setting KV: $1 = $2"
+consul kv put "$1" "$2"
+'''
+tools = { "consul" = "1.21.4" }
+
+[tasks."kv:setup-powerdns"]
+description = "Setup PowerDNS KV configuration"
+run = '''
+echo "🔧 Setting up PowerDNS KV configuration..."
+consul kv put pdns/db/host "postgres.service.consul"
+consul kv put pdns/db/port "5432"
+consul kv put pdns/db/name "powerdns"
+consul kv put pdns/db/user "pdns"
+echo "✅ PowerDNS KV configuration complete"
+echo ""
+echo "📋 Current values:"
+mise run kv:list -- pdns/
+'''
+tools = { "consul" = "1.21.4" }
+
+# Health & Debugging
+[tasks."checks:consul"]
+description = "Show all health checks"
+run = '''
+echo "🏥 All Health Checks:"
+echo "====================="
+consul catalog services | while read service; do
+  echo "Service: $service"
+  consul health checks "$service" | head -10
+  echo ""
+done
+'''
+tools = { "consul" = "1.21.4" }
+
+[tasks."logs:consul"]
+description = "Follow Consul logs (if running via systemd)"
+run = '''
+echo "📝 Consul Logs:"
+echo "==============="
+if command -v journalctl >/dev/null; then
+  sudo journalctl -u consul -f --no-pager
+else
+  echo "⚠️  journalctl not available. Check your Consul logs manually."
+  echo "Common locations:"
+  echo "  - /var/log/consul/"
+  echo "  - /opt/consul/logs/"
+  echo "  - Docker: docker logs <consul-container>"
+fi
+'''
+tools = { "consul" = "1.21.4" }
+
+[tasks."debug:consul"]
+description = "Debug Consul connectivity and configuration"
+run = '''
+echo "🔍 Consul Debug Information:"
+echo "============================"
+echo "1. Connection Test:"
+consul members 2>/dev/null && echo "✅ Consul connection OK" || echo "❌ Consul connection failed"
+echo ""
+echo "2. Agent Info:"
+consul info | grep -E "(Version|Datacenter|Server)"
+echo ""
+echo "3. DNS Test:"
+dig @localhost -p 8600 consul.service.consul +short 2>/dev/null && echo "✅ Consul DNS OK" || echo "❌ Consul DNS failed"
+echo ""
+echo "4. Environment:"
+echo "CONSUL_HTTP_ADDR: ${CONSUL_HTTP_ADDR:-not set}"
+echo "CONSUL_HTTP_TOKEN: ${CONSUL_HTTP_TOKEN:+***set***}"
+echo ""
+echo "5. Critical Services:"
+for svc in traefik postgres powerdns-auth consul; do
+  if consul catalog service "$svc" >/dev/null 2>&1; then
+    echo "✅ $svc registered"
+  else
+    echo "❌ $svc not found"
+  fi
+done
+'''
+tools = { "consul" = "1.21.4" }
+
+# Integration with your infrastructure
+[tasks."nomad-services:consul"]
+description = "Show services registered by Nomad"
+run = '''
+echo "🎯 Nomad-Registered Services:"
+echo "============================="
+consul catalog services -tags | grep -E "(traefik|postgres|powerdns)" | while read service; do
+  echo "Service: $service"
+  consul catalog service "$service" | jq -r ".[] | \"  Node: \\(.Node) Port: \\(.ServicePort) Tags: \\(.ServiceTags | join(\",\"))\""
+  echo ""
+done
+'''
+tools = { "consul" = "1.21.4", "jq" = "latest" }
+
+[tasks."traefik-services:consul"]
+description = "Show services configured for Traefik"
+run = '''
+echo "🚦 Traefik-Enabled Services:"
+echo "============================"
+consul catalog services | while read service; do
+  tags=$(consul catalog service "$service" | jq -r ".[0].ServiceTags[]?" 2>/dev/null | grep "traefik" || true)
+  if [ -n "$tags" ]; then
+    echo "Service: $service"
+    echo "Traefik tags:"
+    echo "$tags" | sed "s/^/  /"
+    echo ""
+  fi
+done
+'''
+tools = { "consul" = "1.21.4", "jq" = "latest" }
+
+# Maintenance
+[tasks."backup:consul"]
+description = "Backup Consul data (KV store)"
+run = '''
+backup_dir="backups/consul/$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup_dir"
+echo "💾 Backing up Consul data to: $backup_dir"
+echo "======================================"
+consul snapshot save "$backup_dir/consul-snapshot.snap"
+consul kv export > "$backup_dir/kv-export.json"
+echo "✅ Backup complete"
+ls -la "$backup_dir"
+'''
+tools = { "consul" = "1.21.4" }
+
+[tasks."cleanup:consul"]
+description = "Clean up deregistered services and checks"
+run = '''
+echo "🧹 Consul Cleanup:"
+echo "=================="
+echo "Deregistered services will be cleaned automatically by Consul"
+echo "Manual cleanup options:"
+echo "1. Force leave dead nodes:"
+echo "   consul force-leave <node-name>"
+echo ""
+echo "2. Current dead nodes:"
+consul members | grep "left\|failed" || echo "No dead nodes found"
+'''
+tools = { "consul" = "1.21.4" }
+
+# Combined tasks
+[tasks."ci:consul"]
+description = "Run Consul health checks and validation"
+run = '''
+echo "🔧 Running Consul CI checks..."
+mise run validate:consul
+mise run health:consul
+echo "✅ Consul CI checks complete!"
+'''
+depends = ["validate:consul", "health:consul"]
+
+[tasks."dashboard:consul"]
+description = "Open Consul UI (if available)"
+run = '''
+consul_ui="http://localhost:8500"
+echo "🌐 Opening Consul UI: $consul_ui"
+if command -v open >/dev/null; then
+  open "$consul_ui"
+elif command -v xdg-open >/dev/null; then
+  xdg-open "$consul_ui"
+else
+  echo "Please open: $consul_ui"
+fi
+'''
+tools = { "consul" = "1.21.4" }
+
+# ============================================================================
+# VAULT
+# ============================================================================
+# Vault Development Tasks
+
+# Cluster Status & Health
+[tasks."status:vault"]
+description = "Show Vault cluster status"
+run = '''
+echo "🔐 Vault Cluster Status:"
+echo "========================"
+vault status
+echo ""
+echo "🔑 Auth Methods:"
+echo "================"
+vault auth list
+echo ""
+echo "🎯 Secret Engines:"
+echo "=================="
+vault secrets list
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."health:vault"]
+description = "Check Vault health and seal status"
+run = '''
+echo "🏥 Vault Health Check:"
+echo "======================"
+if vault status >/dev/null 2>&1; then
+  echo "✅ Vault is reachable"
+  sealed=$(vault status -format=json | jq -r .sealed)
+  if [ "$sealed" = "false" ]; then
+    echo "✅ Vault is unsealed"
+  else
+    echo "❌ Vault is sealed"
+  fi
+else
+  echo "❌ Cannot reach Vault"
+  exit 1
+fi
+echo ""
+echo "📊 Vault System Health:"
+vault read sys/health -format=json | jq .
+'''
+tools = { "vault" = "1.20.2", "jq" = "latest" }
+
+[tasks."unseal:vault"]
+description = "Unseal Vault (interactive)"
+run = '''
+echo "🔓 Unsealing Vault:"
+echo "==================="
+if vault status | grep -q "Sealed.*false"; then
+  echo "✅ Vault is already unsealed"
+else
+  echo "🔑 Please provide unseal key:"
+  vault operator unseal
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# Authentication
+[tasks."auth:vault"]
+description = "Authenticate to Vault (interactive)"
+run = '''
+echo "🔐 Vault Authentication:"
+echo "========================"
+echo "Current token info:"
+vault token lookup 2>/dev/null || echo "No valid token"
+echo ""
+echo "Available auth methods:"
+vault auth list
+echo ""
+echo "💡 Login examples:"
+echo "  vault login                    # Token auth"
+echo "  vault login -method=userpass  # Username/password"
+echo "  vault login -method=oidc      # OIDC/SSO"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."token:vault"]
+description = "Show current token information"
+run = '''
+echo "🎫 Current Token Information:"
+echo "============================="
+vault token lookup
+'''
+tools = { "vault" = "1.20.2" }
+
+# Secret Management (KV v2)
+[tasks."secrets:list"]
+description = "List secrets in KV store (usage: mise run secrets:list -- [path])"
+run = '''
+path=${1:-""}
+echo "🗂️  Vault Secrets: $path"
+echo "======================="
+vault kv list "secret/$path" 2>/dev/null || vault kv list "$path" 2>/dev/null || echo "No secrets found or insufficient permissions"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."secret:get"]
+description = "Get secret from KV store (usage: mise run secret:get -- <path>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run secret:get -- <path>"
+  echo "Examples:"
+  echo "  mise run secret:get -- pdns"
+  echo "  mise run secret:get -- database/postgres"
+  exit 1
+fi
+echo "🔑 Secret: $1"
+echo "=============="
+vault kv get "secret/$1" 2>/dev/null || vault kv get "$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."secret:put"]
+description = "Store secret in KV store (usage: mise run secret:put -- <path> key=value [key2=value2...])"
+run = '''
+if [ $# -lt 2 ]; then
+  echo "Usage: mise run secret:put -- <path> key=value [key2=value2...]"
+  echo "Examples:"
+  echo "  mise run secret:put -- pdns db_password=secret123 api_key=abc123"
+  echo "  mise run secret:put -- database/postgres password=supersecret"
+  exit 1
+fi
+path=$1
+shift
+echo "📝 Storing secret: $path"
+vault kv put "secret/$path" "$@"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."secret:delete"]
+description = "Delete secret from KV store (usage: mise run secret:delete -- <path>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run secret:delete -- <path>"
+  echo "⚠️  This will permanently delete the secret!"
+  exit 1
+fi
+echo "🗑️  Deleting secret: $1"
+echo "Are you sure? (y/N)"
+read -r confirm
+if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+  vault kv delete "secret/$1"
+  echo "✅ Secret deleted"
+else
+  echo "❌ Cancelled"
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# Database Secrets Engine (PowerDNS Integration)
+[tasks."db:status"]
+description = "Show database secrets engine status"
+run = '''
+echo "🗄️  Database Secrets Engine:"
+echo "============================="
+echo "Configurations:"
+vault list database/config/ 2>/dev/null || echo "No database configs found"
+echo ""
+echo "Roles:"
+vault list database/roles/ 2>/dev/null || echo "No database roles found"
+echo ""
+echo "Active leases:"
+vault list sys/leases/lookup/database/creds/ 2>/dev/null || echo "No active leases"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."db:config"]
+description = "Show database connection configuration (usage: mise run db:config -- <name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run db:config -- <config-name>"
+  echo "Available configs:"
+  vault list database/config/
+  exit 1
+fi
+echo "🔧 Database Config: $1"
+echo "======================"
+vault read "database/config/$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."db:role"]
+description = "Show database role configuration (usage: mise run db:role -- <role-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run db:role -- <role-name>"
+  echo "Available roles:"
+  vault list database/roles/
+  exit 1
+fi
+echo "👤 Database Role: $1"
+echo "===================="
+vault read "database/roles/$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."db:creds"]
+description = "Generate database credentials (usage: mise run db:creds -- <role-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run db:creds -- <role-name>"
+  echo "Available roles:"
+  vault list database/roles/
+  exit 1
+fi
+echo "🔑 Generating credentials for role: $1"
+echo "======================================"
+vault read "database/creds/$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."db:setup-powerdns"]
+description = "Setup PowerDNS database secrets engine"
+run = '''
+echo "🔧 Setting up PowerDNS Database Secrets Engine..."
+echo "=================================================="
+
+# Get PostgreSQL connection details from user
+echo "Please provide PostgreSQL connection details:"
+read -p "PostgreSQL host (default: postgres.service.consul): " pghost
+read -p "PostgreSQL port (default: 5432): " pgport
+pghost=${pghost:-postgres.service.consul}
+pgport=${pgport:-5432}
+
+echo ""
+echo "Creating database configuration..."
+vault write database/config/powerdns-database \
+  plugin_name="postgresql-database-plugin" \
+  allowed_roles="powerdns-role" \
+  connection_url="postgresql://{{username}}:{{password}}@$pghost:$pgport/powerdns" \
+  username="vaultuser" \
+  password="vaultpass" \
+  password_authentication="scram-sha-256"
+
+echo ""
+echo "Creating PowerDNS role..."
+vault write database/roles/powerdns-role \
+  db_name="powerdns-database" \
+  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD ''{{password}}'' VALID UNTIL ''{{expiration}}''; \
+    GRANT USAGE ON SCHEMA public TO \"{{name}}\"; \
+    GRANT SELECT, INSERT, UPDATE, DELETE ON domains, records, supermasters, comments, domainmetadata, cryptokeys, tsigkeys TO \"{{name}}\"; \
+    GRANT SELECT, USAGE ON domains_id_seq, records_id_seq, comments_id_seq, domainmetadata_id_seq, cryptokeys_id_seq, tsigkeys_id_seq TO \"{{name}}\";" \
+  default_ttl="1h" \
+  max_ttl="24h"
+
+echo ""
+echo "✅ PowerDNS database secrets engine setup complete!"
+echo ""
+echo "Test with: mise run db:creds -- powerdns-role"
+'''
+tools = { "vault" = "1.20.2" }
+
+# Policies
+[tasks."policies:vault"]
+description = "List Vault policies"
+run = '''
+echo "📋 Vault Policies:"
+echo "=================="
+vault policy list
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."policy:vault"]
+description = "Show specific policy (usage: mise run policy:vault -- <policy-name>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run policy:vault -- <policy-name>"
+  echo "Available policies:"
+  vault policy list
+  exit 1
+fi
+echo "📋 Policy: $1"
+echo "============="
+vault policy read "$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+# Leases Management
+[tasks."leases:vault"]
+description = "List active leases"
+run = '''
+echo "⏰ Active Vault Leases:"
+echo "======================="
+vault list sys/leases/lookup/ 2>/dev/null || echo "No active leases found"
+echo ""
+echo "Database leases:"
+vault list sys/leases/lookup/database/creds/ 2>/dev/null || echo "No database leases"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."lease:revoke"]
+description = "Revoke specific lease (usage: mise run lease:revoke -- <lease-id>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run lease:revoke -- <lease-id>"
+  echo "Active leases:"
+  mise run leases:vault
+  exit 1
+fi
+echo "🗑️  Revoking lease: $1"
+vault lease revoke "$1"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."leases:revoke-prefix"]
+description = "Revoke all leases with prefix (usage: mise run leases:revoke-prefix -- <prefix>)"
+run = '''
+if [ -z "$1" ]; then
+  echo "Usage: mise run leases:revoke-prefix -- <prefix>"
+  echo "Examples:"
+  echo "  mise run leases:revoke-prefix -- database/creds/powerdns-role/"
+  exit 1
+fi
+echo "🗑️  Revoking all leases with prefix: $1"
+echo "Are you sure? (y/N)"
+read -r confirm
+if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+  vault lease revoke -prefix "$1"
+  echo "✅ Leases revoked"
+else
+  echo "❌ Cancelled"
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# Debugging & Maintenance
+[tasks."debug:vault"]
+description = "Debug Vault connectivity and configuration"
+run = '''
+echo "🔍 Vault Debug Information:"
+echo "==========================="
+echo "1. Connection Test:"
+vault status >/dev/null 2>&1 && echo "✅ Vault connection OK" || echo "❌ Vault connection failed"
+echo ""
+echo "2. Seal Status:"
+sealed=$(vault status -format=json 2>/dev/null | jq -r .sealed 2>/dev/null || echo "unknown")
+echo "Sealed: $sealed"
+echo ""
+echo "3. Authentication:"
+vault token lookup >/dev/null 2>&1 && echo "✅ Valid token" || echo "❌ No valid token"
+echo ""
+echo "4. Environment:"
+echo "VAULT_ADDR: ${VAULT_ADDR:-not set}"
+echo "VAULT_TOKEN: ${VAULT_TOKEN:+***set***}"
+echo "VAULT_NAMESPACE: ${VAULT_NAMESPACE:-not set}"
+echo ""
+echo "5. Critical Configurations:"
+echo "Secret engines:"
+vault secrets list -format=json 2>/dev/null | jq -r 'keys[]' | grep -E "(secret|database)" || echo "Cannot list secret engines"
+echo ""
+echo "Database configs:"
+vault list database/config/ 2>/dev/null | grep -E "(powerdns|postgres)" || echo "No database configs found"
+'''
+tools = { "vault" = "1.20.2", "jq" = "latest" }
+
+[tasks."logs:vault"]
+description = "Show Vault logs (if running via systemd)"
+run = '''
+echo "📝 Vault Logs:"
+echo "==============="
+if command -v journalctl >/dev/null; then
+  sudo journalctl -u vault -f --no-pager
+else
+  echo "⚠️  journalctl not available. Check your Vault logs manually."
+  echo "Common locations:"
+  echo "  - /var/log/vault/"
+  echo "  - /opt/vault/logs/"
+  echo "  - Docker: docker logs <vault-container>"
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# Backup & Restore
+[tasks."backup:vault"]
+description = "Backup Vault data (requires appropriate permissions)"
+run = '''
+backup_dir="backups/vault/$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$backup_dir"
+echo "💾 Backing up Vault data to: $backup_dir"
+echo "==========================================="
+
+echo "Backing up KV secrets..."
+vault kv list -format=json secret/ 2>/dev/null | jq -r '.[]' | while read path; do
+  echo "Backing up secret/$path"
+  vault kv get -format=json "secret/$path" > "$backup_dir/secret-$(echo $path | tr '/' '-').json"
+done
+
+echo "Backing up policies..."
+vault policy list | while read policy; do
+  if [ "$policy" != "default" ] && [ "$policy" != "root" ]; then
+    echo "Backing up policy: $policy"
+    vault policy read "$policy" > "$backup_dir/policy-$policy.hcl"
+  fi
+done
+
+echo "✅ Backup complete"
+ls -la "$backup_dir"
+'''
+tools = { "vault" = "1.20.2", "jq" = "latest" }
+
+# Integration Tasks
+[tasks."setup:vault-powerdns"]
+description = "Complete PowerDNS Vault integration setup"
+run = '''
+echo "🔧 Complete PowerDNS Vault Setup:"
+echo "=================================="
+
+echo "1. Setting up database secrets engine..."
+mise run db:setup-powerdns
+
+echo ""
+echo "2. Creating PowerDNS secrets..."
+echo "Please provide PowerDNS secrets:"
+read -p "Database password for pdns user: " -s db_password
+echo ""
+read -p "PowerDNS API key: " api_key
+
+vault kv put secret/pdns \
+  db_password="$db_password" \
+  api_key="$api_key"
+
+echo ""
+echo "✅ PowerDNS Vault integration complete!"
+echo ""
+echo "Test database credentials:"
+echo "  mise run db:creds -- powerdns-role"
+echo ""
+echo "View stored secrets:"
+echo "  mise run secret:get -- pdns"
+'''
+tools = { "vault" = "1.20.2" }
+
+[tasks."test:vault-integration"]
+description = "Test Vault integration with infrastructure"
+run = '''
+echo "🧪 Testing Vault Integration:"
+echo "============================="
+
+echo "1. Testing KV secrets..."
+if vault kv get secret/pdns >/dev/null 2>&1; then
+  echo "✅ PowerDNS secrets accessible"
+else
+  echo "❌ PowerDNS secrets not found"
+fi
+
+echo ""
+echo "2. Testing database secrets engine..."
+if vault read database/creds/powerdns-role >/dev/null 2>&1; then
+  echo "✅ PowerDNS database credentials can be generated"
+else
+  echo "❌ PowerDNS database role not working"
+fi
+
+echo ""
+echo "3. Testing Consul integration..."
+if vault kv get secret/consul >/dev/null 2>&1; then
+  echo "✅ Consul secrets found"
+else
+  echo "⚠️  Consul secrets not configured"
+fi
+
+echo ""
+echo "4. Testing Nomad integration..."
+# This would test Nomad's ability to get secrets
+echo "ℹ️  Nomad integration test requires running job"
+'''
+tools = { "vault" = "1.20.2" }
+
+# Combined tasks
+[tasks."ci:vault"]
+description = "Run Vault health checks"
+run = '''
+echo "🔧 Running Vault CI checks..."
+mise run health:vault
+mise run debug:vault
+echo "✅ Vault CI checks complete!"
+'''
+depends = ["health:vault", "debug:vault"]
+
+[tasks."dashboard:vault"]
+description = "Open Vault UI (if available)"
+run = '''
+vault_ui="${VAULT_ADDR:-http://localhost:8200}/ui"
+echo "🌐 Opening Vault UI: $vault_ui"
+if command -v open >/dev/null; then
+  open "$vault_ui"
+elif command -v xdg-open >/dev/null; then
+  xdg-open "$vault_ui"
+else
+  echo "Please open: $vault_ui"
+fi
+'''
+tools = { "vault" = "1.20.2" }
+
+# ============================================================================
+# HOOKS
+# ============================================================================
+[hooks]
+# Auto-install tools, show environment, and check project setup on directory enter
+enter = '''
+mise i -q
+
+# Show current environment
+if grep -q "^\\[env\\]" .mise.local.toml 2>/dev/null; then
+  echo "📍 Environment: LOCAL (192.168.11.11)"
+else
+  echo "📍 Environment: REMOTE/TAILSCALE (100.108.219.48)"
+fi
+
+# Check if Python deps are installed
+if [ ! -d ".venv" ] || [ ! -f ".venv/bin/ansible" ]; then
+  echo "⚠️  Python/Ansible environment not set up"
+  echo "   Run 'mise run setup' to initialize the project"
+  echo "   Or 'mise run setup:quick' for a minimal setup"
+fi
+
+# Remind about environment commands
+echo "💡 Environment commands: mise run env:status | env:local | env:remote"
+'''
+leave = "echo 'Goodbye!'"
+
+# Default environment (remote/tailscale)
+# [env]
+# _.file = ".env.json"
+# NOMAD_REGION = "global"
+# NOMAD_ADDR = "http://100.108.219.48:4646"
+# CONSUL_HTTP_ADDR = "http://100.108.219.48:8500"
+# VAULT_ADDR = "http://100.108.219.48:8200"
