@@ -6,7 +6,10 @@
   hosts: tag_server
   become: true
   vars:
-    nomad_server_token: "[REDACTED_NOMAD_SERVER_TOKEN]"
+    # Token should be provided via extra vars or retrieved from Infisical
+    # Example: -e nomad_server_token=YOUR_TOKEN
+    # Or use Infisical lookup as shown in consul-assessment.yml
+    nomad_server_token: "{{ lookup('env', 'NOMAD_SERVER_TOKEN') | default('MUST_PROVIDE_TOKEN', true) }}"
 
   tasks:
     - name: Update Consul token in Nomad configuration
