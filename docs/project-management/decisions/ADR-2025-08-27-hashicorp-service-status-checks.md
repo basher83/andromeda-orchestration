@@ -44,6 +44,7 @@ We will implement a **dual-approach strategy**:
 ## Consequences
 
 ### Positive
+
 - **Clear separation of concerns**: Connectivity vs authentication checks
 - **Security**: Authentication tokens remain in Infisical, never exposed in shell environment
 - **Consistency**: Single authentication pattern across all infrastructure code
@@ -52,11 +53,13 @@ We will implement a **dual-approach strategy**:
 - **Future-proof**: Pattern scales as more services are added
 
 ### Negative
+
 - **Two patterns to maintain**: Both mise tasks and Ansible playbooks
 - **Slightly more complex**: Developers need to understand when to use which approach
 - **Ansible dependency**: Full checks require working Ansible environment
 
 ### Risks
+
 - **Confusion about which to use**: Mitigated by clear documentation and naming
 - **Drift between approaches**: Mitigated by regular testing of both patterns
 - **Performance of Ansible checks**: Accepted trade-off for security and consistency
