@@ -1,13 +1,31 @@
 # Roadmap: Service-Aware DNS & IPAM Overhaul
 
+![Last Updated](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration/main/ROADMAP.md)
+![Current Phase](https://img.shields.io/badge/Current%20Phase-3--4%20NetBox%20%26%20PowerDNS-yellow)
+![Status](https://img.shields.io/badge/Status-Active%20Development-green)
+
 A phased approach to move from ad-hoc DNS to a robust, service-aware infrastructure using Consul, PowerDNS, NetBox, and Nomad.
 
-## Current Status: Phase 0 Complete ✅
+## 📊 Current Status: Phase 3-4 In Progress 🚧
 
-- Infrastructure assessments completed (2025-07-27)
-- Current DNS/IPAM state documented
-- Consul health checks performed
-- Ready to begin Phase 1 implementation
+### ✅ Completed
+- **Phase 0**: Infrastructure assessments (July 2025)
+- **Phase 1**: Consul foundation (August 2025)
+- **Phase 2**: PowerDNS deployment preparation (August 2025)
+
+### 🚧 Active Work
+- **Phase 3**: NetBox Integration (40% complete)
+  - NetBox deployed and operational
+  - DNS zones configured
+  - Integration with PowerDNS in progress
+- **Phase 4**: Domain Migration (.local → spaceships.work)
+  - Critical priority due to macOS mDNS conflicts
+  - Code updated, infrastructure deployment pending
+
+### 🔗 Links
+- [Current Sprint](docs/project-management/current-sprint.md)
+- [GitHub Milestone](https://github.com/basher83/andromeda-orchestration/milestone/1)
+- [Architecture Decisions](docs/project-management/decisions/)
 
 ---
 

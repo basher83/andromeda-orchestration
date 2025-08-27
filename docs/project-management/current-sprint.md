@@ -1,15 +1,15 @@
-# Current Sprint: August 20-24, 2025
+# Current Sprint
 
-**Sprint Goal**: 🚨 CRITICAL domain migration (.local → spaceships.work) - Sprints 3-5
+![Last Updated](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration/main/docs/project-management/current-sprint.md)
+![Sprint Status](https://img.shields.io/badge/Sprint-2025--01--27%20to%202025--02--03-blue)
+![Priority](https://img.shields.io/badge/Priority-Critical-red)
 
-**Previous Sprint**: [Archived](./completed/2025-08.md)
-**Last Updated**: August 22, 2025 21:15 UTC
+**Sprint Goal**: 🚨 CRITICAL domain migration (.local → spaceships.work) + Vault Production Deployment
 
----
+## 🔗 Quick Links
+- [ROADMAP](../../ROADMAP.md) | [GitHub Issues](https://github.com/basher83/andromeda-orchestration/issues) | [Domain Migration Plan](../implementation/dns-ipam/domain-migration-master-plan.md) | [Architecture Decisions](./decisions/)
 
-## Navigation: [Task Summary](./task-summary.md) | [Domain Master Plan](./domain-migration-master-plan.md) | [Phases](./phases/)
-
-## 🎯 Sprint Goals (August 20-24)
+## 🎯 Sprint Goals
 
 ### Aug 20 - Sprint 3: PowerDNS Integration
 
@@ -51,6 +51,7 @@
 - **Status**: Not Started
 - **Priority**: P0 (CRITICAL - Blocks ALL production services)
 - **Blockers**: None
+- **Deployment Guide**: [docs/implementation/vault/production-deployment.md](../implementation/vault/production-deployment.md)
 - **Impact**: Without persistent Vault, we cannot:
   - Store PostgreSQL credentials properly
   - Manage PowerDNS secrets
@@ -100,7 +101,7 @@
   1. Vault not in production mode
   2. PostgreSQL backend not deployed
   3. Infrastructure configuration not applied
-- **Related**: [Master Plan](./domain-migration-master-plan.md), Issue #28
+- **Related**: [Master Plan](../implementation/dns-ipam/domain-migration-master-plan.md), Issue #28
 - **Next Actions**: Wait for Vault deployment
 
 ### Ansible Playbook Migration
@@ -155,7 +156,7 @@
 
 ## 🔗 Quick Links
 
-- [Domain Migration Master Plan](./domain-migration-master-plan.md)
+- [Domain Migration Master Plan](../implementation/dns-ipam/domain-migration-master-plan.md)
 - [GitHub Epic #18](https://github.com/basher83/andromeda-orchestration/issues/18)
 - [Phase 4: DNS Integration](./phases/phase-4-dns-integration.md)
 - [PowerDNS Job](../nomad-jobs/platform-services/powerdns-auth.nomad.hcl)

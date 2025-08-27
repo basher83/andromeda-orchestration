@@ -713,7 +713,7 @@ Tasks:
 
 - [DNS & IPAM Implementation Plan](../../implementation/dns-ipam/implementation-plan.md) - Master implementation roadmap
 - [Phase 1 Implementation Guide](../../implementation/dns-ipam/phase1-guide.md) - Consul DNS setup guide
-- [Imported Infrastructure](../imported-infrastructure.md) - Documentation of imported roles and modules
+- [Imported Infrastructure](../../implementation/imported-infrastructure.md) - Documentation of imported roles and modules
 - [Repository Structure](../../getting-started/repository-structure.md) - Updated project organization
 - [NetBox Integration Patterns](../../implementation/dns-ipam/netbox-integration-patterns.md) - NetBox configuration and usage
 - [Infisical Setup and Migration](../../implementation/infisical/infisical-setup.md) - Secret management transition

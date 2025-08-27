@@ -20,7 +20,7 @@
 | **Phase 2: Implementation**       | ✅ Complete    | 100%     | [August 2025](./completed/2025-08.md)                                      |
 | **Phase 3: Migration**            | 🚧 In Progress | 40%      | [Phase 3](./phases/phase-3-netbox.md)                                      |
 | **Phase 4: DNS Integration**      | 🚧 In Progress | 40%      | [Active](./current-sprint.md) - Domain migration 50% complete              |
-| **Testing & QA**                  | 🆕 Planning    | 0%       | [Initiative](./phases/testing-qa-initiative.md)                            |
+| **Testing & QA**                  | 🆕 Planning    | 0%       | [Initiative](../standards/testing/testing-qa-initiative.md)                |
 | **Phase 5: Multi-Site Expansion** | 🔮 Future      | 0%       | [Planning](./phases/phase-5-multisite.md)                                  |
 | **Phase 6: Post-Implementation**  | 🔮 Future      | 0%       | [Planning](./phases/phase-6-post-implementation-continuous-improvement.md) |
 
