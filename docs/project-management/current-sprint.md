@@ -7,6 +7,7 @@
 **Sprint Goal**: 🚨 CRITICAL domain migration (.local → spaceships.work) + Vault Production Deployment
 
 ## 🔗 Quick Links
+
 - [ROADMAP](../../ROADMAP.md) | [GitHub Issues](https://github.com/basher83/andromeda-orchestration/issues) | [Domain Migration Plan](../implementation/dns-ipam/domain-migration-master-plan.md) | [Architecture Decisions](./decisions/)
 
 ## 🎯 Sprint Goals

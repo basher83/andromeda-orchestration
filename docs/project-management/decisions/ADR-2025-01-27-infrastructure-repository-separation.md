@@ -11,12 +11,14 @@ Accepted
 ## Context
 
 The infrastructure management was becoming complex with multiple tools and layers:
+
 - Terraform for infrastructure provisioning (VMs, networks, storage)
 - Ansible for configuration management and service deployment
 - Nomad for container orchestration
 - Scalr for Terraform workflow automation
 
 Initially, infrastructure and configuration were mixed across repositories, leading to:
+
 - Unclear boundaries between provisioning and configuration
 - Difficult to track which repository manages what
 - Complex dependencies between repositories
@@ -52,6 +54,7 @@ Terraform (Infrastructure) → Ansible (Configuration) → Nomad (Orchestration)
 ```
 
 ### Naming Convention
+
 - Infrastructure repos: `[Service]-Infra` or `[Service]-infrastructure`
 - Configuration repos: `[Service]-orchestration` or `[Service]-config`
 - Application repos: `[Service]-app` or just `[Service]`
@@ -59,6 +62,7 @@ Terraform (Infrastructure) → Ansible (Configuration) → Nomad (Orchestration)
 ## Consequences
 
 ### Positive
+
 - Clear separation of concerns
 - Each repository has a single, well-defined purpose
 - Independent versioning and release cycles
@@ -67,12 +71,14 @@ Terraform (Infrastructure) → Ansible (Configuration) → Nomad (Orchestration)
 - State isolation (each Terraform repo has its own state)
 
 ### Negative
+
 - More repositories to manage
 - Cross-repository dependencies need documentation
 - Deployment requires coordination between repos
 - Initial learning curve for team members
 
 ### Risks
+
 - Repository sprawl if not managed carefully
 - Documentation drift between repositories
 - Coordination overhead for major changes
@@ -80,25 +86,30 @@ Terraform (Infrastructure) → Ansible (Configuration) → Nomad (Orchestration)
 ## Alternatives Considered
 
 ### Alternative 1: Monolithic Repository
+
 - Pros: Everything in one place, simpler to understand initially
 - Rejected: Becomes unmanageable at scale, mixing concerns
 
 ### Alternative 2: Tool-Based Separation
+
 - Separate by tool (Terraform repo, Ansible repo, etc.)
 - Rejected: Doesn't align with logical service boundaries
 
 ### Alternative 3: Environment-Based Separation
+
 - One repo per environment (dev, staging, prod)
 - Rejected: Code duplication, difficult to promote changes
 
 ## Implementation
 
 ### Current State
+
 1. ✅ Hercules-Vault-Infra: Vault infrastructure separated
 2. ✅ terraform-homelab: Managing Nomad/Consul cluster
 3. ✅ andromeda-orchestration: Consolidated configuration management
 
 ### Future Steps
+
 1. ⏳ Create NetBox-Infra for dedicated NetBox VMs
 2. ⏳ Create Monitoring-Infra for observability stack
 3. ⏳ Consider extracting Nomad jobs to separate orchestration repo
@@ -114,6 +125,7 @@ Terraform (Infrastructure) → Ansible (Configuration) → Nomad (Orchestration)
 ## Migration Path
 
 For new infrastructure components:
+
 1. Create dedicated Terraform repository
 2. Configure Scalr workspace with VCS integration
 3. Document in INFRASTRUCTURE-REPOS.md

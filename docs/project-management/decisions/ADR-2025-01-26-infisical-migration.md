@@ -11,6 +11,7 @@ Accepted
 ## Context
 
 The project was using 1Password CLI (op) for secrets management in Ansible, but encountered several challenges:
+
 - 1Password CLI required interactive authentication, breaking automation
 - Complex syntax for secret retrieval in Ansible playbooks
 - No native Ansible collection support
@@ -19,6 +20,7 @@ The project was using 1Password CLI (op) for secrets management in Ansible, but 
 - Desktop app dependency for CLI authentication
 
 Meanwhile, Infisical emerged as a better fit:
+
 - Native Ansible collection (`infisical.vault`)
 - Machine identity support for non-interactive auth
 - Open source with self-hosting option
@@ -30,9 +32,11 @@ Meanwhile, Infisical emerged as a better fit:
 Migrate all secret management from 1Password to Infisical:
 
 ### Architecture
+
 1. **Infisical Cloud** for secret storage (initially)
 2. **Machine Identity** authentication for Ansible
 3. **Project Structure**:
+
    ```
    /apollo-13/           # Main project
    ├── /services/        # Service credentials
@@ -43,6 +47,7 @@ Migrate all secret management from 1Password to Infisical:
    ```
 
 ### Integration Pattern
+
 ```yaml
 # In Ansible playbooks
 netbox_token: >-
@@ -56,6 +61,7 @@ netbox_token: >-
 ```
 
 ### Secret Scanning Integration
+
 ```bash
 # Pre-commit hook
 infisical scan install --pre-commit-hook
@@ -67,6 +73,7 @@ infisical scan --verbose
 ## Consequences
 
 ### Positive
+
 - Non-interactive authentication enables CI/CD automation
 - Native Ansible integration reduces complexity
 - Machine identities provide better security model
@@ -75,6 +82,7 @@ infisical scan --verbose
 - Can self-host later if needed
 
 ### Negative
+
 - Migration effort required for existing secrets
 - Team needs to learn new tool
 - Dependency on Infisical cloud (initially)
@@ -82,6 +90,7 @@ infisical scan --verbose
 - Less mature than 1Password
 
 ### Risks
+
 - Infisical service availability
 - Potential for secret scanning false positives
 - Virtual environment compatibility issues
@@ -90,18 +99,22 @@ infisical scan --verbose
 ## Alternatives Considered
 
 ### Alternative 1: Continue with 1Password
+
 - Pros: Already partially implemented, mature product
 - Rejected: Interactive auth breaks automation, expensive for teams
 
 ### Alternative 2: HashiCorp Vault Only
+
 - Pros: Industry standard, powerful features
 - Rejected: Overhead for small deployments, complex setup
 
 ### Alternative 3: Ansible Vault
+
 - Pros: Built into Ansible, no external dependencies
 - Rejected: No centralized management, difficult key rotation
 
 ### Alternative 4: AWS Secrets Manager
+
 - Pros: Managed service, AWS integration
 - Rejected: Cloud lock-in, cost at scale
 
@@ -119,13 +132,16 @@ infisical scan --verbose
 ## Workarounds
 
 ### Virtual Environment Issue
+
 When Infisical Ansible collection fails with "worker was found in a dead state":
+
 ```bash
 # Use CLI to export secret as environment variable
 export NETBOX_TOKEN=$(infisical run --env=staging --path="/apollo-13/services/netbox" -- printenv NETBOX_API_KEY)
 ```
 
 ### Always Use uv run
+
 ```bash
 # Ensures proper Python environment
 uv run ansible-playbook playbooks/site.yml -i inventory/doggos-homelab/infisical.proxmox.yml

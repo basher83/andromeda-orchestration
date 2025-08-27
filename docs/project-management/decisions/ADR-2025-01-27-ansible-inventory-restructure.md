@@ -11,6 +11,7 @@ Accepted
 ## Context
 
 The Ansible inventory structure had become problematic with multiple dynamic inventory sources:
+
 - NetBox warnings appearing when using Proxmox inventory due to all YAML files being scanned
 - Mixing static and dynamic inventories caused confusion
 - Environment variable conflicts between different inventory plugins
@@ -23,7 +24,8 @@ The Ansible inventory structure had become problematic with multiple dynamic inv
 Implement a structured inventory organization with clear separation of concerns:
 
 ### New Directory Structure
-```
+
+```plain
 inventory/
 ├── environments/        # Environment-specific inventories
 │   ├── doggos-homelab/  # Primary environment
@@ -51,6 +53,7 @@ inventory/
    - Provides resilience when NetBox is temporarily unavailable
 
 3. **Environment Variables in mise.toml**
+
    ```toml
    [env]
    ANSIBLE_INVENTORY = "inventory/environments/doggos-homelab"
@@ -58,6 +61,7 @@ inventory/
    ```
 
 4. **Python Virtual Environment Auto-activation**
+
    ```toml
    [settings]
    python.uv_venv_auto = true
@@ -66,6 +70,7 @@ inventory/
 ## Consequences
 
 ### Positive
+
 - Clean separation prevents cross-contamination of inventory sources
 - NetBox warnings eliminated when using other inventories
 - Consistent secret management across all plugins
@@ -74,11 +79,13 @@ inventory/
 - Auto-activation of Python venv prevents Infisical collection issues
 
 ### Negative
+
 - More directories to navigate (mitigated by clear naming)
 - Need to specify inventory path more explicitly
 - Initial setup slightly more complex for new users
 
 ### Risks
+
 - Cache staleness if infrastructure changes rapidly (24-hour window)
 - Infisical dependency for all inventory access
 - Breaking change for existing playbooks using old paths
@@ -86,14 +93,17 @@ inventory/
 ## Alternatives Considered
 
 ### Alternative 1: Single Flat Directory
+
 - Keep all inventory files in one directory
 - Rejected: Caused NetBox warnings and confusion about which files were active
 
 ### Alternative 2: Separate Repos for Each Environment
+
 - Split environments into different repositories
 - Rejected: Overhead of multiple repos for a solo developer
 
 ### Alternative 3: All Static Inventories
+
 - Convert all dynamic sources to static files
 - Rejected: Loses benefits of dynamic discovery and automation
 

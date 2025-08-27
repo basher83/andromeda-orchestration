@@ -12,31 +12,45 @@ Infrastructure automation projects involve complex dependencies, multiple system
 
 ### Task Tracking
 
-#### Task Organization System
+#### Three-Tier Project Management System
 
-All tasks must be tracked in a central task list with clear categorization:
+Project management follows the three-tier system established in [ADR-2025-01-27](../project-management/decisions/ADR-2025-01-27-project-management-restructure.md):
 
-**Task Format:**
+**Tier 1: Strategic (Quarterly)**
+- **Location**: `/ROADMAP.md` in repository root
+- **Content**: High-level phases, milestones, completion percentages
+- **Update Frequency**: Monthly
+- **Links**: GitHub milestones for phase tracking
+
+**Tier 2: Tactical (Weekly/Sprint)** 
+- **Location**: `/docs/project-management/current-sprint.md`
+- **Content**: Active sprint goals, blockers, in-progress work
+- **Update Frequency**: Weekly
+- **Format**:
 
 ```markdown
-#### [Priority #] Task Title
-**Description**: Clear, actionable description of the task
-**Status**: Not Started | In Progress | Completed | Blocked
-**Blockers**: None | Specific blocking issues
-**Related**: Links to relevant documentation or dependencies
+### Task Name
 
-Tasks:
-- [ ] Specific subtask 1
-- [ ] Specific subtask 2
-- [x] Completed subtask 3
+- **Description**: Clear description of the work
+- **Status**: Not Started | In Progress | Completed | Blocked
+- **Priority**: P0 (Critical) | P1 (High) | P2 (Medium) | P3 (Low)
+- **Blockers**: None | Specific blocking issues
+- **Related**: Links to GitHub issues, PRs, or docs
+- **Next Actions**: Specific actionable steps
 ```
+
+**Tier 3: Operational (Daily)**
+- **Location**: GitHub Issues
+- **Content**: Individual tasks, bug reports, feature requests
+- **Update Frequency**: As work progresses
+- **Labels**: Priority, status, component tags
 
 **Priority Levels:**
 
-- **Critical**: System down or security issue (resolve immediately)
-- **High**: Implementation blockers or urgent requirements (1-3 days)
-- **Medium**: Important features or improvements (1-2 weeks)
-- **Low**: Nice-to-have or future enhancements (as time permits)
+- **P0 (Critical)**: System down, security issue, or deployment blocker (resolve immediately)
+- **P1 (High)**: Implementation blockers or urgent requirements (1-3 days)
+- **P2 (Medium)**: Important features or improvements (1-2 weeks)
+- **P3 (Low)**: Nice-to-have or future enhancements (as time permits)
 
 **Status Definitions:**
 
@@ -59,47 +73,57 @@ Break down large tasks into actionable subtasks:
 #### Project Documentation Structure
 
 ```text
+ROADMAP.md                           # Strategic planning (repo root)
 docs/
 ├── project-management/
-│   ├── task-list.md              # Central task tracking
-│   ├── roadmap.md                # High-level project phases
-│   └── decision-log.md           # Architectural decisions
+│   ├── README.md                   # Process guide & standards
+│   ├── current-sprint.md          # Active sprint work (tactical)
+│   ├── decisions/                 # Architecture Decision Records
+│   │   ├── ADR-TEMPLATE.md       # Template for new decisions
+│   │   └── ADR-YYYY-MM-DD-*.md   # Documented decisions
+│   ├── phases/                    # Detailed phase planning
+│   │   └── phase-X-*.md          # Phase-specific guides
+│   ├── completed/                 # Archived sprint work
+│   │   └── YYYY-MM.md            # Monthly completed tasks
+│   └── archive/                   # Historical/deprecated docs
 ├── implementation/
-│   ├── implementation-plan.md    # Detailed implementation guide
-│   └── phase-X-guide.md          # Phase-specific guides
+│   ├── */implementation-plan.md   # Component implementation guides
+│   └── */patterns.md             # Integration patterns
 └── operations/
-    ├── runbooks/                 # Operational procedures
-    └── post-mortem/              # Incident reviews
+    ├── runbooks/                  # Operational procedures
+    └── troubleshooting/           # Issue resolution guides
 ```
 
 #### Required Documentation
 
-**Task Lists** (`task-list.md`):
+**Strategic Planning** (`ROADMAP.md`):
 
-- Project status overview
-- Tasks organized by priority
-- Progress metrics
-- Risk items and blockers
-- Related documentation links
+- Phase status with completion percentages
+- GitHub milestone links
+- Current phase indication with badges
+- Success criteria for each phase
+- Cross-references to detailed phase docs
 
-**Progress Reports** (in task list):
+**Sprint Tracking** (`current-sprint.md`):
 
-- Overall progress percentage
-- Phase breakdown
-- Active issues
-- Recommendations for next actions
+- Sprint goals and timeline (with dynamic badges)
+- Active tasks with priority and status
+- Blockers and risks
+- Completed work section
+- Sprint metrics (progress %, velocity)
+- Links to GitHub issues and PRs
 
-**Decision Logs** (`decision-log.md`):
+**Architecture Decisions** (`decisions/ADR-YYYY-MM-DD-*.md`):
 
-```markdown
-## Decision: [Title]
-**Date**: YYYY-MM-DD
-**Status**: Proposed | Accepted | Rejected | Superseded
-**Context**: Why this decision is needed
-**Decision**: What was decided
-**Consequences**: Impact of this decision
-**Alternatives**: Other options considered
-```
+Using the [ADR Template](../project-management/decisions/ADR-TEMPLATE.md):
+
+- **Status**: Proposed | Accepted | Rejected | Superseded
+- **Context**: Problem or decision driver
+- **Decision**: Chosen solution
+- **Consequences**: Positive, negative, and risks
+- **Alternatives**: Other options considered
+- **Implementation**: Action items
+- **References**: Related documentation
 
 ### Project Phases
 
@@ -177,35 +201,34 @@ Define measurable success criteria for each phase:
 
 #### Status Update Frequency
 
-**Daily Standup Format** (during active implementation):
+**Three-Tier Update Cadence**:
 
-- What was completed yesterday
-- What's planned for today
-- Current blockers
-- Help needed
+- **Strategic (Monthly)**: Update ROADMAP.md phase percentages and milestones
+- **Tactical (Weekly)**: Update current-sprint.md with goals, blockers, and progress
+- **Operational (Daily)**: Update GitHub issues with comments and status changes
 
-**Weekly Status Reports**:
+**Sprint Planning (Weekly)**:
+
+1. Review ROADMAP.md for current phase objectives
+2. Update current-sprint.md with week's goals
+3. Link to relevant GitHub issues
+4. Identify and document blockers
+
+**Dynamic Status Badges** (automatic updates):
 
 ```markdown
-## Week of [Date]
-
-### Completed This Week
-- Major accomplishment 1
-- Major accomplishment 2
-
-### Planned Next Week
-- Priority task 1
-- Priority task 2
-
-### Blockers & Risks
-- Issue 1: Impact and mitigation
-- Risk 1: Probability and plan
-
-### Metrics
-- Tasks completed: X/Y
-- Progress: X%
-- Timeline: On track | At risk | Delayed
+![Last Updated](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration/main/path/to/file.md)
+![Sprint Status](https://img.shields.io/badge/Sprint-YYYY--MM--DD%20to%20YYYY--MM--DD-blue)
+![Priority](https://img.shields.io/badge/Priority-Critical-red)
 ```
+
+**Sprint Metrics** (in current-sprint.md):
+
+- Completed tasks vs total
+- Phase progress percentage  
+- Active blockers count
+- Risk level assessment
+- Links to GitHub milestone
 
 #### Stakeholder Communication
 
@@ -269,14 +292,26 @@ Define measurable success criteria for each phase:
 
 ### Decision Tracking
 
-#### Decision Process
+#### Architecture Decision Records (ADRs)
 
-1. **Problem Statement**: Clear description of issue
-2. **Options Analysis**: Evaluate alternatives
-3. **Recommendation**: Proposed solution with rationale
-4. **Review**: Team/stakeholder input
-5. **Decision**: Final choice with reasoning
-6. **Implementation**: Action items and timeline
+All significant architectural decisions must be documented using ADRs as per [ADR-2025-01-27](../project-management/decisions/ADR-2025-01-27-project-management-restructure.md).
+
+**Creating an ADR**:
+
+1. Copy `/docs/project-management/decisions/ADR-TEMPLATE.md`
+2. Name it `ADR-YYYY-MM-DD-descriptive-title.md`
+3. Fill out all sections
+4. Update status badge when decision is finalized
+5. Reference in current-sprint.md if relevant
+
+**ADR Process**:
+
+1. **Identify**: Significant decision needed
+2. **Document**: Create ADR with context and alternatives
+3. **Review**: Share for team/stakeholder input
+4. **Decide**: Update status to Accepted/Rejected
+5. **Implement**: Track action items in GitHub issues
+6. **Reference**: Link from relevant documentation
 
 #### Change Management
 
@@ -297,49 +332,74 @@ Define measurable success criteria for each phase:
 
 ## Rationale
 
-Structured project management provides:
+The three-tier project management system provides:
 
-1. **Visibility**: All stakeholders understand progress and issues
-2. **Accountability**: Clear ownership and responsibilities
-3. **Predictability**: Consistent delivery patterns
-4. **Quality**: Systematic approach reduces errors
-5. **Learning**: Documented decisions and outcomes for future projects
-6. **Risk Reduction**: Early identification and mitigation of issues
+1. **Clear Separation of Concerns**:
+   - Strategic (ROADMAP.md): Quarterly planning, phase management
+   - Tactical (current-sprint.md): Weekly goals, active work tracking
+   - Operational (GitHub Issues): Daily task execution
+
+2. **Automatic Dating**: Dynamic GitHub badges eliminate manual date updates
+3. **Single Source of Truth**: Each tier has one authoritative location
+4. **Reduced Overhead**: No duplication between local files and GitHub
+5. **Better Visibility**: Stakeholders can engage at appropriate level
+6. **Documented Decisions**: ADRs capture why, not just what
+
+**When to Use Each Tier**:
+
+- **ROADMAP.md**: Phase transitions, milestone planning, quarterly reviews
+- **current-sprint.md**: Sprint planning, blocker tracking, weekly updates  
+- **GitHub Issues**: Bug reports, feature requests, task assignments
+- **ADRs**: Architectural decisions, technology choices, process changes
 
 ## Examples
 
-### Good Example - Well-Managed Task
+### Good Example - Sprint Task (current-sprint.md)
 
 ```markdown
-#### 5. Deploy PowerDNS to Nomad
-**Description**: Deploy PowerDNS as authoritative DNS server in Nomad
-**Status**: Completed (2025-08-01)
-**Blockers**: None
-**Related**: PowerDNS Nomad job, Phase 2 of ROADMAP
+### Deploy Vault in Production Mode
 
-Tasks:
-- [x] Generate secure passwords for MySQL and API access
-- [x] Store PowerDNS secrets in Consul KV
-- [x] Create host volumes on Nomad clients
-- [x] Deploy PowerDNS Nomad job
-- [x] Verify services are running and healthy
-
-**Deployment Details**:
-- Running on nomad-client-1 (allocation: b87b56bf)
-- DNS service: 192.168.11.20:53
-- API service: Dynamic port via Traefik
+- **Description**: Migrate Vault from dev mode to production with persistent storage
+- **Status**: In Progress
+- **Priority**: P0 (Critical - Blocks ALL production services)
+- **Blockers**: None
+- **Related**: [docs/implementation/vault/production-deployment.md](../implementation/vault/production-deployment.md)
+- **Next Actions**:
+  1. Create Raft storage configuration
+  2. Deploy Vault with persistent volumes
+  3. Initialize and unseal Vault
+  4. Migrate existing secrets from Infisical
 ```
 
-### Bad Example - Poorly Tracked Task
+### Good Example - Strategic Planning (ROADMAP.md)
+
+```markdown
+## Phase 3: Hook up NetBox → PowerDNS
+
+![Status](https://img.shields.io/badge/Status-40%25%20Complete-yellow)
+
+- ✅ NetBox deployed and operational
+- ✅ DNS zones configured
+- 🚧 Integration with PowerDNS in progress
+- ⏳ Sync script development
+
+**GitHub Milestone**: [Phase 3: NetBox Integration](https://github.com/basher83/andromeda-orchestration/milestone/3)
+```
+
+### Bad Example - Mixed Concerns
 
 ```markdown
 #### DNS Migration
 Need to move DNS from old system to new system.
 Status: Working on it
-- Setup new DNS
+- Setup new DNS  
 - Move records
 - Test everything
+- Update documentation
+- Train team
 ```
+
+*Issues: Mixes strategic, tactical, and operational concerns. Should be split across tiers.*
 
 ### Good Example - Risk Documentation
 
@@ -378,79 +438,108 @@ Even exceptions should have minimal documentation:
 
 ## Migration
 
-### Adopting Standards for Existing Projects
+### Adopting Three-Tier System
 
-1. **Assessment** (Week 1):
-   - Create initial task list from current state
-   - Identify all in-flight work
-   - Document known issues and blockers
+Per [ADR-2025-01-27](../project-management/decisions/ADR-2025-01-27-project-management-restructure.md):
 
-2. **Organization** (Week 2):
-   - Prioritize all tasks
-   - Create project phases if applicable
-   - Set up documentation structure
+1. **Strategic Setup**:
+   - Create/update ROADMAP.md with phases and milestones
+   - Add dynamic GitHub badges for automatic dating
+   - Link to GitHub milestones
 
-3. **Communication** (Week 3):
-   - Establish update cadence
-   - Create first status report
-   - Share with stakeholders
+2. **Tactical Setup**:
+   - Create current-sprint.md for active work
+   - Set up decisions/ directory with ADR template
+   - Archive old tracking files (task-list.md, task-summary.md)
 
-4. **Refinement** (Ongoing):
-   - Continuously improve task descriptions
-   - Update progress regularly
-   - Capture decisions as made
+3. **Operational Setup**:
+   - Move detailed tasks to GitHub issues
+   - Set up labels (priority:P0-P3, status tags)
+   - Create milestones for phases
+
+4. **Weekly Workflow**:
+   - Monday: Update current-sprint.md with week's goals
+   - Daily: Update GitHub issues
+   - Friday: Archive completed work, plan next sprint
+   - Monthly: Update ROADMAP.md percentages
 
 ### Templates
 
 **New Project Checklist**:
 
 ```markdown
-- [ ] Create project task list
-- [ ] Define project phases
-- [ ] Identify success criteria
-- [ ] Set up documentation structure
-- [ ] Schedule kickoff meeting
-- [ ] Establish communication plan
-- [ ] Create initial risk register
+- [ ] Create/update ROADMAP.md with phases
+- [ ] Add GitHub milestones for each phase
+- [ ] Create current-sprint.md from template
+- [ ] Set up decisions/ with ADR template
+- [ ] Create GitHub issue labels (priority:P0-P3)
+- [ ] Add dynamic badges to key documents
+- [ ] Document in ADR if significant architecture
 ```
 
-**Weekly Review Checklist**:
+**Weekly Sprint Checklist**:
 
 ```markdown
-- [ ] Update task statuses
-- [ ] Calculate progress metrics
-- [ ] Review blockers
-- [ ] Update risk register
-- [ ] Prepare status report
-- [ ] Plan next week's priorities
+- [ ] Review ROADMAP.md for phase objectives
+- [ ] Update current-sprint.md with week's goals
+- [ ] Archive last week's completed tasks
+- [ ] Create/update GitHub issues for new work
+- [ ] Link sprint tasks to GitHub milestone
+- [ ] Document blockers and risks
+- [ ] Update phase percentage if milestone hit
 ```
 
 ## Tools
 
-### Progress Tracking
+### Project Management Commands
 
 ```bash
-# Count completed vs total tasks
-grep -c "^\- \[x\]" docs/project-management/task-list.md
-grep -c "^\- \[ \]" docs/project-management/task-list.md
+# Check PM documentation freshness
+mise run pm-status
 
-# Find blocked tasks
-grep -B2 "Blocked" docs/project-management/task-list.md
+# Quick HashiCorp service status checks
+mise run status:quick     # All services (unauthenticated)
+mise run status:consul    # Consul only
+mise run status:nomad     # Nomad only
+mise run status:vault     # Vault only
+
+# Full authenticated status checks
+mise run status:full      # Comprehensive check with Infisical tokens
 ```
 
-### Status Generation
+### GitHub CLI for Task Management
 
 ```bash
-# Generate quick status
-echo "## Quick Status $(date +%Y-%m-%d)"
-echo "Completed tasks: $(grep -c '^\- \[x\]' task-list.md)"
-echo "Pending tasks: $(grep -c '^\- \[ \]' task-list.md)"
-echo "In Progress: $(grep -c 'In Progress' task-list.md)"
+# List issues for current milestone
+gh issue list --milestone "Sprint 2025-01-27"
+
+# Create new issue
+gh issue create --title "Task title" --label "priority:P0" --milestone "Sprint 2025-01-27"
+
+# View issue status
+gh issue view NUMBER
+
+# List pull requests
+gh pr list --state open
+```
+
+### Sprint Progress Tracking
+
+```bash
+# Find blocked tasks in current sprint
+grep -B2 "Blocked" docs/project-management/current-sprint.md
+
+# Count GitHub issues by label
+gh issue list --label "priority:P0" --json number --jq length
 ```
 
 ## References
 
-- [Task List](../project-management/task-list.md) - Current project tracking
-- [Implementation Roadmap](../implementation/dns-ipam/implementation-plan.md) - Phase planning example
-- [Mission Control Project Management](https://github.com/basher83/docs/blob/main/flight-manuals/gitops/project-management.md) - Space-themed patterns
-- [Information Architecture](https://github.com/basher83/docs/blob/main/mission-control/information-architecture.md) - Documentation philosophy
+- [ROADMAP](../../ROADMAP.md) - Strategic planning and phase tracking
+- [Current Sprint](../project-management/current-sprint.md) - Active tactical work
+- [Project Management README](../project-management/README.md) - Process guide
+- [ADR-2025-01-27](../project-management/decisions/ADR-2025-01-27-project-management-restructure.md) - Three-tier system decision
+- [ADR Template](../project-management/decisions/ADR-TEMPLATE.md) - Architecture decision template
+- [Implementation Plans](../implementation/dns-ipam/implementation-plan.md) - Phase planning example
+- [GitHub Issues](https://github.com/basher83/andromeda-orchestration/issues) - Operational task tracking
+- [GitHub Milestones](https://github.com/basher83/andromeda-orchestration/milestones) - Phase milestones
