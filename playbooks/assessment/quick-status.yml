@@ -55,9 +55,9 @@
                          project_id=infisical_project_id,
                          env_slug=infisical_env,
                          path='/apollo-13/consul',
-                         secret_name='CONSUL_ACL_TOKEN_DOGGOS')).value }}
+                         secret_name='CONSUL_MASTER_TOKEN')).value }}
           no_log: true
-          when: lookup('env', 'CONSUL_HTTP_TOKEN', '') == ''
+          when: lookup('env', 'CONSUL_HTTP_TOKEN') | default('', true) == ''
 
         - name: Test Consul connectivity with authentication
           ansible.builtin.uri:
@@ -107,10 +107,10 @@
                          project_id=infisical_project_id,
                          env_slug=infisical_env,
                          path='/apollo-13/nomad',
-                         secret_name='NOMAD_ACL_TOKEN_DOGGOS',
+                         secret_name='NOMAD_TOKEN',
                          errors='ignore') | default({})).value | default('') }}
           no_log: true
-          when: lookup('env', 'NOMAD_TOKEN', '') == ''
+          when: lookup('env', 'NOMAD_TOKEN') | default('', true) == ''
 
         - name: Test Nomad connectivity
           ansible.builtin.uri:
@@ -170,10 +170,10 @@
                          project_id=infisical_project_id,
                          env_slug=infisical_env,
                          path='/apollo-13/vault',
-                         secret_name='VAULT_TOKEN_ROOT',
+                         secret_name='VAULT_PROD_ROOT_TOKEN',
                          errors='ignore') | default({})).value | default('') }}
           no_log: true
-          when: lookup('env', 'VAULT_TOKEN', '') == ''
+          when: lookup('env', 'VAULT_TOKEN') | default('', true) == ''
 
         - name: Get Vault health status
           ansible.builtin.uri:
