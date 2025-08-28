@@ -33,6 +33,9 @@ scripts/set-1password-env.sh
 .env
 .envrc
 
+# mise local configuration (contains secrets)
+.mise.local.toml
+
 
 # IDE and AI tools
 .vscode/
