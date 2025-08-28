@@ -5,6 +5,7 @@ This document describes the inventory structure and management approach for the 
 ## Overview
 
 We use multiple inventory sources to manage different aspects of our infrastructure:
+
 - **Proxmox dynamic inventories** for VM and container discovery
 - **NetBox dynamic inventory** for IPAM and network device management
 - **Tailscale inventory** for VPN-connected nodes
@@ -12,7 +13,7 @@ We use multiple inventory sources to manage different aspects of our infrastruct
 
 ## Directory Structure
 
-```
+```plain
 inventory/
 ├── environments/           # Environment-specific inventories
 │   ├── doggos-homelab/    # Primary homelab cluster
@@ -46,6 +47,7 @@ ANSIBLE_INVENTORY = "inventory/environments/doggos-homelab"
 ```
 
 This can be overridden using:
+
 - Environment variable: `export ANSIBLE_INVENTORY=...`
 - Command line: `ansible-playbook -i inventory/path ...`
 - Local mise config: `.mise.local.toml`
@@ -97,18 +99,21 @@ ansible-playbook playbook.yml
 ## Environment-Specific Inventories
 
 ### doggos-homelab
+
 - **Type**: Proxmox dynamic inventory
 - **Purpose**: Primary 3-node cluster running Nomad/Consul/Vault
 - **Hosts**: lloyd, holly, mable nodes
 - **Use Case**: Production workloads
 
 ### og-homelab
+
 - **Type**: Proxmox dynamic inventory
 - **Purpose**: Original homelab infrastructure
 - **Hosts**: proxmoxt430, pve1
 - **Use Case**: Legacy systems and testing
 
 ### vault-cluster
+
 - **Type**: Static inventory
 - **Purpose**: Dedicated 4-VM Vault cluster
 - **Hosts**: vault-master-lloyd, vault-prod-[1-3]
@@ -117,8 +122,9 @@ ansible-playbook playbook.yml
 ## Dynamic Inventories
 
 ### NetBox
+
 - **Purpose**: IPAM and network device management
-- **Features**: 
+- **Features**:
   - Caching for offline operation
   - Grouping by site, role, platform, tags
   - Custom field support
@@ -126,6 +132,7 @@ ansible-playbook playbook.yml
 - **Required**: Infisical authentication (INFISICAL_UNIVERSAL_AUTH_CLIENT_ID/SECRET)
 
 ### Tailscale
+
 - **Purpose**: VPN-connected nodes
 - **Dynamic Script**: `inventory/dynamic/tailscale/ansible_tailscale_inventory.py`
 - **Static Fallback**: `inventory/dynamic/tailscale/static.yml`
@@ -145,14 +152,17 @@ ansible-playbook playbook.yml
 All dynamic inventories use Infisical for secret management:
 
 ### Proxmox Inventories
+
 - **Token Location**: `/apollo-13/proxmox/ANSIBLE_TOKEN_ID` and `ANSIBLE_TOKEN_SECRET`
 - **Environment**: `prod` for doggos-homelab, `prod` for og-homelab
 
 ### NetBox Inventory
+
 - **Token Location**: `/apollo-13/services/netbox/NETBOX_API_KEY`
 - **Environment**: `staging`
 
 ### Required Environment Variables
+
 ```bash
 # Infisical authentication (required for all dynamic inventories)
 export INFISICAL_UNIVERSAL_AUTH_CLIENT_ID="your-client-id"
@@ -162,6 +172,7 @@ export INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET="your-client-secret"
 ## Testing Inventories
 
 ### Verify Inventory Configuration
+
 ```bash
 # Test specific inventory
 ansible-inventory -i inventory/environments/doggos-homelab --graph
@@ -178,6 +189,7 @@ echo $ANSIBLE_INVENTORY
 ```
 
 ### Debugging Inventory Issues
+
 ```bash
 # Verbose output to see plugin details
 ansible-inventory -i inventory/dynamic/netbox.yml --list -vvvv
@@ -192,19 +204,25 @@ rm -rf .ansible_cache/netbox/*
 ## Troubleshooting
 
 ### NetBox Connection Warnings
+
 If you see NetBox connection warnings when not using NetBox:
+
 - These are harmless - NetBox inventory is not loaded unless explicitly specified
 - The warnings only appear if NetBox inventory is in a scanned directory
 
 ### Missing Hosts
+
 If hosts are missing from inventory:
+
 - Check the correct environment is selected: `echo $ANSIBLE_INVENTORY`
 - Verify Proxmox/NetBox connectivity
 - Clear cache if needed: `rm -rf .ansible_cache/netbox`
 - Ensure Infisical credentials are set: `env | grep INFISICAL`
 
 ### Multiple Inventory Sources
+
 When using multiple inventories:
+
 - Order matters - later sources can override earlier ones
 - Use `ansible-inventory --graph` to verify the combined view
 - Group variables are merged, with later sources taking precedence
@@ -212,6 +230,7 @@ When using multiple inventories:
 ## Common Use Cases
 
 ### Development Against Specific Environment
+
 ```bash
 # Work with doggos-homelab only
 export ANSIBLE_INVENTORY="inventory/environments/doggos-homelab"
@@ -222,6 +241,7 @@ ansible nomad-server-1 -m ping
 ```
 
 ### Network Device Management
+
 ```bash
 # Use NetBox for network device operations
 ansible-playbook playbooks/network/configure-switches.yml \
@@ -229,6 +249,7 @@ ansible-playbook playbooks/network/configure-switches.yml \
 ```
 
 ### Cross-Environment Operations
+
 ```bash
 # Target all Proxmox environments
 ansible-playbook playbooks/updates/system-updates.yml \
@@ -237,6 +258,7 @@ ansible-playbook playbooks/updates/system-updates.yml \
 ```
 
 ### Remote Access via Tailscale
+
 ```bash
 # Use Tailscale IPs for remote management
 ansible-playbook playbooks/site.yml \
@@ -246,6 +268,7 @@ ansible-playbook playbooks/site.yml \
 ## Migration Notes
 
 As of 2025-08-26, we migrated from a flat inventory structure to an environment-based hierarchy to:
+
 - Eliminate unwanted NetBox warnings during normal operations
 - Provide better organization for multiple environments
 - Enable easy switching between inventory sources

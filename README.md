@@ -51,8 +51,8 @@ This project provides a framework for managing network infrastructure using Ansi
 
    ```bash
    ./scripts/setup.sh
-   # Or use task for complete setup with dev tools
-   task setup
+   # Or use mise for complete setup with dev tools
+   mise run setup
    ```
 
 3. **Configure Infisical integration**
@@ -94,26 +94,26 @@ Integrated security scanning:
 
 ```bash
 # Show all available tasks
-task
+mise tasks
 
 # Run all linters
-task lint
-
-# Auto-fix issues
-task fix
+mise run lint
 
 # Run tests
-task test
+mise run test
 
 # Run security scans (Infisical + KICS)
-task security
+mise run security
 
 # Run individual security scans
-task security:secrets  # Infisical secrets detection
-task security:kics     # Infrastructure security scan
+mise run security:secrets  # Infisical secrets detection
+mise run security:kics     # Infrastructure security scan
 
-# Run pre-commit hooks manually
-task hooks
+# Check cluster health
+mise run status
+
+# Setup development environment
+mise run setup
 ```
 
 See [docs/implementation/dns-ipam/testing-strategy.md](docs/implementation/dns-ipam/testing-strategy.md) for detailed testing information.

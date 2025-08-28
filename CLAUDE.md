@@ -30,7 +30,7 @@ uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.pro
 
   ```bash
   # Get token via CLI and use environment variable
-  export NETBOX_TOKEN=$(infisical run --env=staging --path="/apollo-13/services/netbox" -- printenv NETBOX_API_KEY)
+  export NETBOX_TOKEN=$(infisical secrets get NETBOX_API_KEY --env=staging --path="/apollo-13/services/netbox" --plain)
   ansible-playbook playbooks/infrastructure/netbox-playbook.yml
   ```
 

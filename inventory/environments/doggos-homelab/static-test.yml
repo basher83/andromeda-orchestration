@@ -2,14 +2,14 @@
 all:
   hosts:
     nomad-server-1:
-      ansible_host: 192.168.11.11
-      ansible_user: root
+      ansible_host: nomad-server-1
+      ansible_user: ansible
     nomad-server-2:
-      ansible_host: 192.168.11.12
-      ansible_user: root
+      ansible_host: nomad-server-2
+      ansible_user: ansible
     nomad-server-3:
-      ansible_host: 192.168.11.13
-      ansible_user: root
+      ansible_host: nomad-server-3
+      ansible_user: ansible
     nomad-client-1:
       ansible_host: 192.168.11.20
       ansible_user: root
@@ -19,3 +19,9 @@ all:
     nomad-client-3:
       ansible_host: 192.168.11.22
       ansible_user: root
+  children:
+    consul_servers:
+      hosts:
+        nomad-server-1:
+        nomad-server-2:
+        nomad-server-3:
