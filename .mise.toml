@@ -39,7 +39,7 @@ python.uv_venv_auto = true
 NOMAD_REGION = "global"
 NOMAD_ADDR = "http://192.168.11.11:4646"
 CONSUL_HTTP_ADDR = "http://192.168.11.11:8500"
-VAULT_ADDR = "http://192.168.10.31:8200"
+# VAULT_ADDR = "http://192.168.10.31:8200"  # Commented out to avoid conflicts with dynamic Vault configuration
 
 # Ansible configuration
 ANSIBLE_INVENTORY = "inventory/environments/doggos-homelab"  # Default to doggos-homelab environment
@@ -565,7 +565,7 @@ echo "=============================="
 echo ""
 echo "Environments:"
 echo "  • doggos-homelab - Primary homelab (Proxmox)"
-echo "  • og-homelab     - Original homelab (Proxmox)"  
+echo "  • og-homelab     - Original homelab (Proxmox)"
 echo "  • vault-cluster  - Dedicated Vault cluster"
 echo ""
 echo "Dynamic Sources:"
