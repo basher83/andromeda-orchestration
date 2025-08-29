@@ -1,0 +1,206 @@
+---
+# Automated PKI Certificate Renewal for Vault Cluster
+# This playbook automatically renews certificates that are near expiration
+# Can be triggered by monitoring systems or run as a scheduled job
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/automated-certificate-renewal.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Check Certificate Expiration Status
+  hosts: vault_production
+  gather_facts: yes
+  serial: 1  # Check one at a time
+  
+  vars:
+    tls_dir: "/opt/vault/tls"
+    renewal_threshold_days: 7  # Renew if less than 7 days remain
+    
+  tasks:
+    - name: Check certificate expiration
+      ansible.builtin.shell: |
+        cert_date=$(openssl x509 -in {{ tls_dir }}/tls.crt -noout -enddate | cut -d= -f2)
+        cert_epoch=$(date -d "$cert_date" +%s 2>/dev/null || date -j -f "%b %d %T %Y %Z" "$cert_date" +%s)
+        now_epoch=$(date +%s)
+        days_left=$(( ($cert_epoch - $now_epoch) / 86400 ))
+        echo "$days_left"
+      register: days_remaining
+      become: true
+      changed_when: false
+
+    - name: Determine if renewal is needed
+      ansible.builtin.set_fact:
+        needs_renewal: "{{ days_remaining.stdout | int <= renewal_threshold_days }}"
+        days_left: "{{ days_remaining.stdout }}"
+
+    - name: Display renewal decision
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: {{ days_left }} days remaining - Renewal {{ 'REQUIRED' if needs_renewal else 'not needed' }}"
+
+- name: Perform Automatic Certificate Renewal
+  hosts: vault_production
+  gather_facts: yes
+  serial: 1  # Process one node at a time for zero downtime
+  
+  vars:
+    vault_addr: "https://192.168.10.33:8200"
+    vault_token: "{{ lookup('env', 'VAULT_TOKEN') | default(lookup('infisical.vault.read_secrets', universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'), universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'), project_id='7b832220-24c0-45bc-a5f1-ce9794a31259', env_slug='prod', path='/apollo-13/vault', secret_name='VAULT_PROD_ROOT_TOKEN').value, true) }}"
+    pki_mount: "pki_int"
+    pki_role: "infrastructure"
+    cert_ttl: "720h"  # 30 days
+    tls_dir: "/opt/vault/tls"
+    backup_dir: "/opt/vault/tls/auto-backup-{{ ansible_date_time.epoch }}"
+    
+  tasks:
+    - name: Skip if renewal not needed
+      ansible.builtin.meta: end_host
+      when: not (hostvars[inventory_hostname].needs_renewal | default(false))
+
+    - name: Log renewal action
+      ansible.builtin.debug:
+        msg: "🔄 Starting automatic certificate renewal for {{ inventory_hostname }}"
+
+    - name: Create backup directory
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        owner: vault
+        group: vault
+        mode: '0700'
+      become: true
+
+    - name: Backup current certificates
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ backup_dir }}/{{ item | basename }}"
+        remote_src: yes
+        owner: vault
+        group: vault
+        mode: '0600'
+      with_items:
+        - "{{ tls_dir }}/tls.crt"
+        - "{{ tls_dir }}/tls.key"
+        - "{{ tls_dir }}/ca-bundle.pem"
+      become: true
+      ignore_errors: true
+
+    - name: Generate new certificate from Vault PKI
+      community.hashi_vault.vault_pki_generate_certificate:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        engine_mount_point: "{{ pki_mount }}"
+        role_name: "{{ pki_role }}"
+        common_name: "{{ inventory_hostname }}.{{ vault_domain }}"
+        alt_names:
+          - "{{ inventory_hostname }}"
+          - "vault.service.consul"
+          - "{{ inventory_hostname }}.vault"
+          - "localhost"
+        ip_sans:
+          - "{{ ansible_host }}"
+          - "127.0.0.1"
+        ttl: "{{ cert_ttl }}"
+        validate_certs: false
+      delegate_to: localhost
+      register: new_cert
+
+    - name: Log certificate generation
+      ansible.builtin.debug:
+        msg: "✅ Generated new certificate with serial: {{ new_cert.data.data.serial_number }}"
+
+    - name: Deploy new certificate
+      ansible.builtin.copy:
+        content: "{{ new_cert.data.data.certificate }}"
+        dest: "{{ tls_dir }}/tls.crt"
+        owner: vault
+        group: vault
+        mode: '0644'
+      become: true
+
+    - name: Deploy new private key
+      ansible.builtin.copy:
+        content: "{{ new_cert.data.data.private_key }}"
+        dest: "{{ tls_dir }}/tls.key"
+        owner: vault
+        group: vault
+        mode: '0600'
+      become: true
+
+    - name: Update CA bundle
+      ansible.builtin.copy:
+        content: |
+          {{ new_cert.data.data.issuing_ca }}
+          {% for ca in new_cert.data.data.ca_chain %}
+          {{ ca }}
+          {% endfor %}
+        dest: "{{ tls_dir }}/ca-bundle.pem"
+        owner: vault
+        group: vault
+        mode: '0644'
+      become: true
+
+    - name: Reload Vault service
+      ansible.builtin.systemd:
+        name: vault
+        state: reloaded
+      become: true
+
+    - name: Wait for Vault to be ready
+      ansible.builtin.uri:
+        url: "https://{{ ansible_host }}:8200/v1/sys/health"
+        method: GET
+        validate_certs: no
+        status_code: [200, 429, 473, 501, 503]
+      register: vault_health
+      until: vault_health.status in [200, 429, 501]
+      retries: 30
+      delay: 2
+
+    - name: Log renewal completion
+      ansible.builtin.debug:
+        msg: "✅ Certificate renewal complete for {{ inventory_hostname }}"
+
+- name: Generate Renewal Report
+  hosts: localhost
+  gather_facts: no
+  
+  tasks:
+    - name: Collect renewal results
+      ansible.builtin.set_fact:
+        renewed_nodes: "{{ hostvars | dict2items | selectattr('value.new_cert', 'defined') | map(attribute='key') | list }}"
+        skipped_nodes: "{{ hostvars | dict2items | rejectattr('value.new_cert', 'defined') | selectattr('value.needs_renewal', 'defined') | rejectattr('value.needs_renewal') | map(attribute='key') | list }}"
+
+    - name: Display renewal report
+      ansible.builtin.debug:
+        msg:
+          - "====================================="
+          - "📊 Automatic Certificate Renewal Report"
+          - "====================================="
+          - ""
+          - "Renewal Summary:"
+          - "  Renewed: {{ renewed_nodes | length }} nodes"
+          - "  Skipped: {{ skipped_nodes | length }} nodes"
+          - ""
+          - "{% if renewed_nodes | length > 0 %}"
+          - "Renewed Nodes:"
+          - "{% for node in renewed_nodes %}"
+          - "  ✅ {{ node }}"
+          - "{% endfor %}"
+          - "{% endif %}"
+          - ""
+          - "{% if skipped_nodes | length > 0 %}"
+          - "Skipped Nodes (certificates still valid):"
+          - "{% for node in skipped_nodes %}"
+          - "  ⏭️  {{ node }}"
+          - "{% endfor %}"
+          - "{% endif %}"
+          - ""
+          - "Next Steps:"
+          - "  • Verify certificate deployment with validate-pki-certificates.yml"
+          - "  • Check Consul health status"
+          - "  • Monitor Vault logs for any issues"
+          - "====================================="
+
+    - name: Send notification if certificates were renewed
+      ansible.builtin.debug:
+        msg: "🔔 NOTIFICATION: {{ renewed_nodes | length }} Vault certificates were automatically renewed"
+      when: renewed_nodes | length > 0
