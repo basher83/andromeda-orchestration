@@ -6,15 +6,20 @@ This document covers the process of replacing self-signed certificates with PKI-
 
 ## Current Implementation Status
 
-- **Completed**: vault-prod-1-holly (192.168.10.31)
-- **Pending**: vault-master-lloyd (192.168.10.30)
-- **Pending**: vault-prod-2-mable (192.168.10.32)
-- **Pending**: vault-prod-3-lloyd (192.168.10.33)
+✅ **COMPLETE** - All production Vault nodes have PKI-issued certificates as of 2025-08-29
+
+| Node | IP Address | Serial Number | Status |
+|------|------------|---------------|--------|
+| vault-prod-1-holly | 192.168.10.31 | `1f:46:19:2f:38:c9:cb:e8:43:47:7b:e3:6a:21:a4:e3:b0:bd:23:71` | ✅ Complete |
+| vault-prod-2-mable | 192.168.10.32 | `35:54:ed:b1:cc:ca:39:e1:0d:b7:f7:e5:33:60:6f:d7:8b:4d:0e:5e` | ✅ Complete |
+| vault-prod-3-lloyd | 192.168.10.33 | `5b:e4:20:fe:f9:2a:5a:0c:2c:53:57:07:21:7b:6f:60:8a:a9:e7:d1` | ✅ Complete |
+| vault-master-lloyd | 192.168.10.30 | N/A - Dev mode (HTTP only) | ⏳ Issue #99 |
 
 ## Certificate Details
 
 ### PKI Hierarchy
-```
+
+```text
 HomeLab Root CA (10 years)
     └── HomeLab Intermediate CA (5 years)
         └── Vault Service Certificates (30 days)
@@ -50,6 +55,7 @@ HomeLab Root CA (10 years)
 ### Vault Configuration
 
 Vault expects certificates at:
+
 ```hcl
 listener "tcp" {
   address = "0.0.0.0:8200"
@@ -63,19 +69,32 @@ listener "tcp" {
 
 ### Prerequisites
 
-1. Set environment variables:
+1. **SSH Access**: Ensure you have the production SSH key:
+
 ```bash
-export VAULT_ADDR='https://192.168.10.31:8200'
-export VAULT_TOKEN='your-root-token'
+# The key should be at ~/.ssh/production
+ls -la ~/.ssh/production
+```
+
+2. **Infisical Authentication**: Set environment variables:
+
+```bash
 export INFISICAL_UNIVERSAL_AUTH_CLIENT_ID='your-client-id'
 export INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET='your-client-secret'
 ```
 
-2. Ensure intermediate CA is configured (Issue #96)
+3. **Vault Leader Identification**: The playbook must point to the active Vault leader:
+
+   - Check with: `vault status` on each node
+   - Update `vault_addr` in playbook if leader changes
+   - Current leader (2025-08-29): vault-prod-3-lloyd (192.168.10.33)
+
+4. **PKI Infrastructure**: Ensure intermediate CA is configured (Issue #96)
 
 ### Single Node Deployment
 
 Deploy to a specific node:
+
 ```bash
 uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certificates.yml \
   -i inventory/environments/vault-cluster/production.yaml \
@@ -85,6 +104,7 @@ uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certi
 ### Full Cluster Deployment
 
 Deploy to all nodes (serial execution for zero downtime):
+
 ```bash
 uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certificates.yml \
   -i inventory/environments/vault-cluster/production.yaml
@@ -196,6 +216,7 @@ After certificate deployment, update Consul service:
 ### Manual Renewal
 
 Before certificate expiration (30 days):
+
 ```bash
 # Check expiration
 vault list -format=json pki_int/certs | \
@@ -211,6 +232,7 @@ uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certi
 ### Automated Renewal (Future - Issue #99)
 
 Automated renewal will be implemented using:
+
 - Scheduled Ansible playbook runs
 - Certificate expiration monitoring
 - Automatic rotation before expiry
@@ -285,12 +307,99 @@ journalctl -u vault -f
 4. **Audit Trail**: All certificate operations logged in Vault audit log
 5. **Zero Downtime**: Serial deployment ensures service availability
 
+## Automation and Monitoring
+
+### Available Playbooks
+
+1. **Certificate Deployment**: `replace-self-signed-certificates.yml`
+   - Deploys PKI-issued certificates to Vault nodes
+   - Supports serial execution for zero downtime
+   - Creates automatic backups before replacement
+
+2. **Certificate Validation**: `validate-pki-certificates.yml`
+   - Comprehensive certificate validation
+   - Chain verification and expiry checks
+   - Certificate/key matching validation
+
+3. **Certificate Monitoring**: `monitor-pki-certificates.yml`
+   - Uses Vault API to track all issued certificates
+   - Checks expiration dates across cluster
+   - Generates renewal recommendations
+
+4. **Automated Renewal**: `automated-certificate-renewal.yml`
+   - Automatically renews expiring certificates
+   - Configurable threshold (default: 7 days)
+   - Zero-downtime serial processing
+
+5. **Consul Integration**: `update-consul-vault-integration.yml`
+   - Deploys CA bundle to Consul agents
+   - Updates service definitions
+   - Validates health checks
+
+6. **TLS Status Check**: `check-vault-tls-status.yml`
+   - Quick TLS configuration assessment
+   - Port and connectivity verification
+   - Service status reporting
+
+### Nomad Periodic Job
+
+Deploy automated monitoring with Nomad:
+
+```bash
+# Deploy the monitoring job
+nomad job run nomad-jobs/platform-services/vault-pki-monitor.nomad.hcl
+
+# Check job status
+nomad job status vault-pki-monitor
+
+# View recent runs
+nomad job history vault-pki-monitor
+```
+
+The job runs every 6 hours and checks certificate expiration across the cluster.
+
+### Manual Operations
+
+#### Check Certificate Status
+
+```bash
+# Quick status check
+uv run ansible-playbook playbooks/infrastructure/vault/validate-pki-certificates.yml \
+  -i inventory/environments/vault-cluster/production.yaml
+
+# Detailed monitoring with Vault API
+uv run ansible-playbook playbooks/infrastructure/vault/monitor-pki-certificates.yml \
+  -i inventory/environments/vault-cluster/production.yaml
+```
+
+#### Trigger Automatic Renewal
+
+```bash
+# Automatic renewal (only renews if needed)
+uv run ansible-playbook playbooks/infrastructure/vault/automated-certificate-renewal.yml \
+  -i inventory/environments/vault-cluster/production.yaml
+
+# Force renewal for specific node
+uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certificates.yml \
+  -i inventory/environments/vault-cluster/production.yaml \
+  --limit vault-prod-1-holly
+```
+
+### Monitoring Best Practices
+
+1. **Regular Checks**: Run validation playbook daily via cron or Nomad
+2. **Threshold Alerts**: Set warning at 7 days, critical at 3 days
+3. **Automatic Renewal**: Enable automated renewal at 7-day threshold
+4. **Backup Retention**: Keep last 3 certificate backups per node
+5. **Audit Logging**: All certificate operations logged in Vault audit
+
 ## Next Steps
 
-1. Complete deployment to remaining nodes
-2. Implement automated renewal (Issue #99)
+1. ~~Complete deployment to remaining nodes~~ ✅
+2. ~~Implement automated renewal~~ ✅ (Issue #100)
 3. Enable mTLS for client authentication (Issue #98)
-4. Set up monitoring and alerting (Issue #100)
+4. ~~Set up monitoring and alerting~~ ✅ (Issue #100)
+5. Plan vault-master migration to production mode (Issue #99)
 
 ## References
 
