@@ -1,0 +1,83 @@
+# Mise Local Configuration Template
+# Copy this file to .mise.local.toml and add your secrets
+# .mise.local.toml is gitignored and will not be committed
+#
+# This file consolidates all secret management, eliminating the need for direnv
+
+[env]
+# ============================================================================
+# NETWORK CONFIGURATION (Optional - uncomment as needed)
+# ============================================================================
+# Use these to override the default Tailscale addresses when on local LAN
+#NOMAD_REGION = "global"
+#NOMAD_ADDR = "http://192.168.11.11:4646"
+#CONSUL_HTTP_ADDR = "http://192.168.11.11:8500"
+#VAULT_ADDR = "http://192.168.11.11:8200"
+
+# ============================================================================
+# AUTHENTICATION TOKENS (Required for operations)
+# ============================================================================
+
+# Infisical Universal Auth (Required for Ansible playbooks)
+# Get these from: https://app.infisical.com/org/.../project/.../members/identities
+# IMPORTANT: Use the Client ID from Universal Auth, NOT the Identity ID!
+INFISICAL_UNIVERSAL_AUTH_CLIENT_ID = "your-client-id-here"
+INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET = "your-client-secret-here"
+
+# HashiCorp Service Tokens
+VAULT_TOKEN = "hvs.your-vault-token-here"
+CONSUL_HTTP_TOKEN = "your-consul-management-token-here"
+NOMAD_TOKEN = "your-nomad-management-token-here"  # If ACLs are enabled
+
+# NetBox API (for inventory and IPAM operations)
+NETBOX_API_KEY = "your-netbox-api-token-here"
+NETBOX_URL = "http://your-netbox-url:8080"
+
+# ============================================================================
+# MCP & AI ASSISTANT API KEYS (Optional - for Claude Code integrations)
+# ============================================================================
+
+# GitHub Integration
+GITHUB_PERSONAL_ACCESS_TOKEN = "ghp_your-github-pat-here"
+GITHUB_PAT = "ghp_your-github-pat-here"  # Some tools expect this name
+
+# Web Search & Research
+FIRECRAWL_API_KEY = "fc-your-firecrawl-key-here"
+PERPLEXITY_API_KEY = "pplx-your-perplexity-key-here"
+
+# CodeRabbit AI Reviews
+CODERABBITAI_API_KEY = "your-coderabbit-key-here"
+
+# Docker Hub (if using private registries)
+DOCKER_USERNAME = "your-docker-username"
+DOCKER_PAT = "your-docker-pat-here"
+
+# ============================================================================
+# DATABASE CREDENTIALS (Optional - for specific services)
+# ============================================================================
+
+# PostgreSQL (for PowerDNS or other services)
+POSTGRES_USER = "admin"
+POSTGRES_PASSWORD = "your-secure-password-here"
+POSTGRES_DB = "powerdns"
+
+# ============================================================================
+# MONITORING & OBSERVABILITY (Optional)
+# ============================================================================
+
+# Netdata Cloud
+NETDATA_CLAIM_TOKEN = "your-netdata-claim-token-here"
+NETDATA_CLAIM_ROOMS = "your-room-id-here"
+
+# Grafana Cloud
+GRAFANA_CLOUD_API_KEY = "your-grafana-api-key-here"
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# 1. This file should NEVER be committed to version control
+# 2. Use strong, unique tokens for each service
+# 3. Rotate tokens regularly according to your security policy
+# 4. Consider using 1Password CLI or similar for additional security:
+#    VAULT_TOKEN = "$(op read 'op://Private/Vault Token/credential')"
+# 5. For CI/CD, use GitHub Secrets or similar instead of this file

@@ -56,11 +56,12 @@ export CONSUL_HTTP_TOKEN=$(infisical secrets get CONSUL_MASTER_TOKEN --env=prod 
 consul members  # Should work!
 ```
 
-### Or via .envrc
+### Or via .mise.local.toml
 
 ```bash
-echo 'export CONSUL_HTTP_TOKEN=$(infisical secrets get CONSUL_MASTER_TOKEN --env=prod --path="/apollo-13/consul/" --plain)' >> .envrc
-direnv allow
+# Add to your .mise.local.toml
+echo 'CONSUL_HTTP_TOKEN = "'$(infisical secrets get CONSUL_MASTER_TOKEN --env=prod --path="/apollo-13/consul/" --plain)'"' >> .mise.local.toml
+# Mise automatically loads these variables
 ```
 
 ## Troubleshooting

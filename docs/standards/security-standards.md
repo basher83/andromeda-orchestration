@@ -126,7 +126,7 @@ reports/**/*.log
 
 # Environment files
 .env
-.envrc
+.mise.local.toml
 *-env.sh
 ```
 

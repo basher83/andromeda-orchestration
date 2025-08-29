@@ -58,13 +58,12 @@ Infisical serves as the primary secret management solution for the andromeda-orc
 Using machine identity for automation and CI/CD:
 
 ```bash
-# Required environment variables
-export INFISICAL_UNIVERSAL_AUTH_CLIENT_ID="your-client-id"
-export INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET="your-client-secret"
-export INFISICAL_ENV="prod"  # or staging, dev
+# Required environment variables (add to .mise.local.toml)
+INFISICAL_UNIVERSAL_AUTH_CLIENT_ID = "your-client-id"
+INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET = "your-client-secret"
 ```
 
-These are typically managed by direnv or mise for automatic loading.
+These should be added to your `.mise.local.toml` file for automatic loading. See `.mise.local.toml.example` for the complete template.
 
 ## Secret Organization
 
@@ -291,12 +290,14 @@ The free tier is more generous than officially documented. All project types are
        version: ">=1.1.2"
    ```
 
-3. **Environment Variables** (managed by direnv or mise):
+3. **Environment Variables** (managed by mise):
 
-   ```bash
-   export INFISICAL_UNIVERSAL_AUTH_CLIENT_ID="your-client-id"
-   export INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET="your-client-secret"
-   export INFISICAL_ENV="prod"  # or staging, dev
+   Add to your `.mise.local.toml`:
+
+   ```toml
+   [env]
+   INFISICAL_UNIVERSAL_AUTH_CLIENT_ID = "your-client-id"
+   INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET = "your-client-secret"
    ```
 
 ## Testing and Verification

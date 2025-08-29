@@ -55,13 +55,17 @@ This project provides a framework for managing network infrastructure using Ansi
    mise run setup
    ```
 
-3. **Configure Infisical integration**
+3. **Configure secrets and authentication**
 
    ```bash
-   # Set up Infisical machine identity environment variables
-   export INFISICAL_TOKEN="your-machine-identity-token"
-   export INFISICAL_PROJECT_ID="your-project-id"
-   export INFISICAL_ENV="prod"  # or dev/staging
+   # Copy the template and add your secrets
+   cp .mise.local.toml.example .mise.local.toml
+
+   # Edit with your actual tokens and credentials
+   # The file is gitignored and won't be committed
+   $EDITOR .mise.local.toml
+
+   # Mise will automatically load these environment variables
    ```
 
 4. **Test the setup**
