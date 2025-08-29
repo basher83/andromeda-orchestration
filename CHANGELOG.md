@@ -7,7 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Test commit
+## [2025-08-28] - Vault-Consul Integration & Secret Management Consolidation
+
+### Added
+
+- **Comprehensive Vault-Consul Integration**
+  - Added 15+ new Ansible playbooks for Vault-Consul ACL integration
+  - Implemented automated Consul agent deployment for Vault nodes
+  - Created TLS configuration and health check management playbooks
+  - Added service registration and verification workflows
+  - Network requirements documentation for Vault-Consul communication
+
+- **Secret Management Consolidation**
+  - Created `.mise.local.toml.example` template for all development secrets
+  - Consolidated API keys, tokens, and credentials in single location
+  - Eliminated direnv in favor of mise-only environment management
+  - Added comprehensive documentation for token management approach
+
+### Changed
+
+- **Vault Cluster Configuration**
+  - Updated inventory from Tailscale to static IP addresses
+  - Enhanced Vault production cluster documentation
+  - Improved credential references to use production tokens
+
+- **Development Environment**
+  - Removed direnv completely (package and shell hooks)
+  - Fixed 1Password SSH commit signing configuration
+  - Added `SSH_AUTH_SOCK` to shell configuration for proper agent connection
+  - Gitignored KICS security scan results (auto-generated files)
+
+### Fixed
+
+- **Security Vulnerabilities**
+  - Replaced hardcoded Consul gossip encryption keys with environment variables
+  - Fixed exposed keys in `roles/consul/defaults/main.yml`
+  - Secured fix playbook by removing hardcoded encryption key
+
+- **Git Commit Signing**
+  - Resolved 1Password SSH agent connection issues
+  - Fixed `op-ssh-sign` authentication errors
+  - Properly configured SSH_AUTH_SOCK for 1Password integration
+
+### Documentation
+
+- **Infrastructure Updates**
+  - Added Consul-Vault network requirements guide
+  - Updated Infisical documentation to use mise instead of direnv
+  - Enhanced Vault access documentation with current configuration
+
+### Infrastructure Impact
+
+- **Scope**: Vault cluster and development environment
+- **Breaking Changes**: None - all changes backward compatible
+- **Security Improvement**: No hardcoded secrets in repository
+- **Developer Experience**: Simplified secret management with single configuration file
 
 ## [2025-08-26] - Infrastructure Modernization & Security Hardening
 
