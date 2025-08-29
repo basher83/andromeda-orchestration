@@ -70,7 +70,7 @@ mise run pm-status
 
 ## 🗂️ Directory Structure
 
-```
+```text
 project-management/
 ├── README.md              # This file - process guide
 ├── current-sprint.md      # Active sprint work

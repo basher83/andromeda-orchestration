@@ -46,7 +46,7 @@ Implement a clear separation of concerns across repositories:
 
 ### Workflow Separation
 
-```
+```text
 Terraform (Infrastructure) → Ansible (Configuration) → Nomad (Orchestration)
          ↓                            ↓                        ↓
     Provision VMs              Configure Services      Deploy Containers

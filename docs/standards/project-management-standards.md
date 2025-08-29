@@ -16,13 +16,15 @@ Infrastructure automation projects involve complex dependencies, multiple system
 
 Project management follows the three-tier system established in [ADR-2025-01-27](../project-management/decisions/ADR-2025-01-27-project-management-restructure.md):
 
-**Tier 1: Strategic (Quarterly)**
+#### Tier 1: Strategic (Quarterly)
+
 - **Location**: `/ROADMAP.md` in repository root
 - **Content**: High-level phases, milestones, completion percentages
 - **Update Frequency**: Monthly
 - **Links**: GitHub milestones for phase tracking
 
-**Tier 2: Tactical (Weekly/Sprint)** 
+#### Tier 2: Tactical (Weekly/Sprint)
+
 - **Location**: `/docs/project-management/current-sprint.md`
 - **Content**: Active sprint goals, blockers, in-progress work
 - **Update Frequency**: Weekly
@@ -39,7 +41,8 @@ Project management follows the three-tier system established in [ADR-2025-01-27]
 - **Next Actions**: Specific actionable steps
 ```
 
-**Tier 3: Operational (Daily)**
+#### Tier 3: Operational (Daily)
+
 - **Location**: GitHub Issues
 - **Content**: Individual tasks, bug reports, feature requests
 - **Update Frequency**: As work progresses
@@ -225,7 +228,7 @@ Define measurable success criteria for each phase:
 **Sprint Metrics** (in current-sprint.md):
 
 - Completed tasks vs total
-- Phase progress percentage  
+- Phase progress percentage
 - Active blockers count
 - Risk level assessment
 - Links to GitHub milestone
@@ -348,7 +351,7 @@ The three-tier project management system provides:
 **When to Use Each Tier**:
 
 - **ROADMAP.md**: Phase transitions, milestone planning, quarterly reviews
-- **current-sprint.md**: Sprint planning, blocker tracking, weekly updates  
+- **current-sprint.md**: Sprint planning, blocker tracking, weekly updates
 - **GitHub Issues**: Bug reports, feature requests, task assignments
 - **ADRs**: Architectural decisions, technology choices, process changes
 
@@ -392,14 +395,14 @@ The three-tier project management system provides:
 #### DNS Migration
 Need to move DNS from old system to new system.
 Status: Working on it
-- Setup new DNS  
+- Setup new DNS
 - Move records
 - Test everything
 - Update documentation
 - Train team
 ```
 
-*Issues: Mixes strategic, tactical, and operational concerns. Should be split across tiers.*
+_Issues: Mixes strategic, tactical, and operational concerns. Should be split across tiers._
 
 ### Good Example - Risk Documentation
 

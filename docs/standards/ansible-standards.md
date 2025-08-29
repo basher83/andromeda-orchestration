@@ -796,4 +796,6 @@ ansible-playbook site.yml --tags consul
 ### External Resources
 
 - [Ansible Best Practices](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html)
+- [Spacelift Ansible Best Practices](https://spacelift.io/blog/ansible-best-practices) - Comprehensive guide covering variables, secrets, testing, and optimization
+- [How to Evaluate Community Ansible Roles](https://www.jeffgeerling.com/blog/2019/how-evaluate-community-ansible-roles-your-playbooks) - Jeff Geerling's guide for vetting third-party roles
 - [terraform-homelab](https://github.com/basher83/terraform-homelab) - Infrastructure provisioning (source of Proxmox VMs)

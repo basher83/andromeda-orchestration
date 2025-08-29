@@ -37,7 +37,7 @@ Migrate all secret management from 1Password to Infisical:
 2. **Machine Identity** authentication for Ansible
 3. **Project Structure**:
 
-   ```
+   ```text
    /apollo-13/           # Main project
    ├── /services/        # Service credentials
    │   ├── netbox/       # NetBox API tokens

@@ -9,11 +9,13 @@ A phased approach to move from ad-hoc DNS to a robust, service-aware infrastruct
 ## 📊 Current Status: Phase 3-4 In Progress 🚧
 
 ### ✅ Completed
+
 - **Phase 0**: Infrastructure assessments (July 2025)
 - **Phase 1**: Consul foundation (August 2025)
 - **Phase 2**: PowerDNS deployment preparation (August 2025)
 
 ### 🚧 Active Work
+
 - **Phase 3**: NetBox Integration (40% complete)
   - NetBox deployed and operational
   - DNS zones configured
@@ -23,6 +25,7 @@ A phased approach to move from ad-hoc DNS to a robust, service-aware infrastruct
   - Code updated, infrastructure deployment pending
 
 ### 🔗 Links
+
 - [Current Sprint](docs/project-management/current-sprint.md)
 - [GitHub Milestone](https://github.com/basher83/andromeda-orchestration/milestone/1)
 - [Architecture Decisions](docs/project-management/decisions/)

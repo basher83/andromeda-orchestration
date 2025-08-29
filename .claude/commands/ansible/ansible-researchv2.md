@@ -2,7 +2,7 @@
 allowed-tools: mcp__github-repo-content-search, mcp__github-code-search, mcp__github-starred-repositories, mcp__github-stargazers-list, mcp__github-list-repositories, mcp__github-search-repositories, mcp__github-get-repository, mcp__github-get-commit, mcp__github-get-repository-content, mcp__github-get-file-content, mcp__github-list-releases, mcp__github-list-repository-issues, mcp__github-list-repository-commits, mcp__github-list-repository-branches, mcp__github-list-repository-tags, mcp__github-list-repository-contributors, mcp__github-list-repository-pull-requests, mcp__github-search-code, mcp__github-search-commits, mcp__github-search-issues, mcp__github-search-prs, mcp__github-search-users, Read, Write, Grep, Glob, WebFetch
 argument-hint: search <collection-name> | analyze <github-repo> | discover <technology> | quality <repo-url>
 description: Research Ansible collections using GitHub API to find quality modules, discover patterns, and analyze community collections directly from source repositories
-model: sonnet
+model: claude-opus-4-1-20250805
 ---
 
 ## Context
@@ -38,7 +38,7 @@ When searching for collections:
    **Tier 1 - Major Multi-Domain Collections**:
    - community.general (800+ modules including Proxmox, Nomad, Consul, Keycloak)
    - ansible.builtin - Core functionality
-   
+
    **Tier 2 - Specialized Collections**:
    - netbox.netbox - NetBox DCIM/IPAM
    - community.proxmox - Dedicated Proxmox (complements community.general)
@@ -47,7 +47,7 @@ When searching for collections:
    - infisical.vault - Infisical secrets
    - community.docker - Containers
    - community.crypto - Certificates
-   
+
    **Discovery Approach**:
    - Start with collection-level exploration
    - Use pattern matching (e.g., `community.general.nomad*`) for specific modules

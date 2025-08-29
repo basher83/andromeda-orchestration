@@ -24,6 +24,7 @@ globs:
   - "!docs/archive/**"
   - "!docs/project-management/archive/**"
   - "!**/archive/**"
+  - "!.ansible/collections/**"
 # Use the existing .markdownlint.json for rules
 config: .markdownlint.json
 

@@ -34,7 +34,7 @@ You must generate a single Markdown code block containing the complete agent def
 allowed-tools: <inferred-tool-1>, <inferred-tool-2>
 argument-hint: add [tagId] | remove [tagId] | list (if applicable)
 description: <generated-action-oriented-description>
-model: haiku | sonnet | opus <default to sonnet unless otherwise specified>
+model: claude-opus-4-1-20250805 | claude-sonnet-4-20250514 (opus for complex tasks, sonnet for less complex tasks)
 ---
 
 ## Context

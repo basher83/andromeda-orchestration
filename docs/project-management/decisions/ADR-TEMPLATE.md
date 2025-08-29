@@ -19,28 +19,34 @@ What we're doing and how we're doing it.
 ## Consequences
 
 ### Positive
+
 - What becomes easier or better?
 
 ### Negative
+
 - What becomes harder or more complex?
 
 ### Risks
+
 - What could go wrong?
 - What are we uncertain about?
 
 ## Alternatives Considered
 
 ### Alternative 1: [Name]
+
 - Description
 - Why we didn't choose it
 
 ### Alternative 2: [Name]
+
 - Description
 - Why we didn't choose it
 
 ## Implementation
 
 Key steps to implement this decision:
+
 1. Step one
 2. Step two
 3. Step three

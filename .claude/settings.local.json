@@ -42,7 +42,12 @@
       "Bash(grep:*)",
       "mcp__github__list_issues",
       "mcp__github__search_issues",
-      "mcp__firecrawl__firecrawl_scrape"
+      "mcp__firecrawl__firecrawl_scrape",
+      "mcp__github__search_repositories",
+      "mcp__github__search_code",
+      "mcp__github__get_file_contents",
+      "mcp__github__list_commits",
+      "Bash(mise run lint:markdown:*)"
     ]
   },
   "statusLine": {
