@@ -36,6 +36,9 @@ scripts/set-1password-env.sh
 # mise local configuration (contains secrets)
 .mise.local.toml
 
+# KICS security scan results (auto-generated)
+kics-results/
+
 
 # IDE and AI tools
 .vscode/
