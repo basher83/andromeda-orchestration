@@ -10,9 +10,9 @@
   serial: 1  # Process one node at a time for zero downtime
 
   vars:
-    # Vault connection for certificate generation
-    vault_addr: "https://192.168.10.31:8200"
-    vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
+    # Vault connection for certificate generation (pointing to leader)
+    vault_addr: "https://192.168.10.33:8200"
+    vault_token: "{{ lookup('env', 'VAULT_TOKEN') | default(lookup('infisical.vault.read_secrets', universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'), universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'), project_id='7b832220-24c0-45bc-a5f1-ce9794a31259', env_slug='prod', path='/apollo-13/vault', secret_name='VAULT_PROD_ROOT_TOKEN').value, true) }}"
 
     # PKI Configuration
     pki_mount: "pki_int"
