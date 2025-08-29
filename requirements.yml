@@ -21,7 +21,7 @@ collections:
 
   # Infisical secrets management
   - name: infisical.vault
-    version: ">=1.1.0"
+    version: ">=1.1.3"
 
   # PostgreSQL management
   - name: community.postgresql

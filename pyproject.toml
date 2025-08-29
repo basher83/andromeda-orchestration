@@ -15,8 +15,12 @@ dependencies = [
     "pytz>=2023.3",
     # Required by community.hashi_vault collection for Vault modules
     "hvac==2.3.0",
-    "infisicalsdk>=1.0.9",
+    "infisicalsdk>=1.0.11",
     "python-nomad>=2.1.0",
+    # Required for HTTPS connections in Ansible
+    "urllib3>=2.0.0",
+    "certifi>=2023.0.0",  # CA certificates for SSL verification
+    "cryptography>=41.0.0",  # Required for SSL/TLS operations
 ]
 
 [project.optional-dependencies]
@@ -36,8 +40,8 @@ dev = [
 
 # Optional secrets integration (install only when needed)
 secrets = [
-    "infisical-python>=2.2.0",
-    "infisicalsdk>=1.0.0",
+    "infisical-python>=2.2.0",  # Note: May not be available on all platforms
+    "infisicalsdk>=1.0.11",  # Fallback SDK that works cross-platform
 ]
 
 [tool.ruff]
