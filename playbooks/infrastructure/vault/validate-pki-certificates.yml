@@ -1,0 +1,159 @@
+---
+# Validate PKI certificates across Vault cluster
+# This playbook checks certificate validity, expiration, and chain validation
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/validate-pki-certificates.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Comprehensive PKI Certificate Validation
+  hosts: vault_production
+  gather_facts: yes
+  
+  vars:
+    tls_dir: "/opt/vault/tls"
+    warning_days: 7  # Warn if certificate expires in less than 7 days
+    critical_days: 3  # Critical if certificate expires in less than 3 days
+    
+  tasks:
+    - name: Check certificate files exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: cert_files
+      loop:
+        - "{{ tls_dir }}/tls.crt"
+        - "{{ tls_dir }}/tls.key"
+        - "{{ tls_dir }}/ca-bundle.pem"
+      become: true
+
+    - name: Verify all certificate files present
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "Certificate file {{ item.item }} is missing!"
+        success_msg: "Certificate file {{ item.item }} exists"
+      loop: "{{ cert_files.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Get certificate expiration date
+      ansible.builtin.shell: |
+        openssl x509 -in {{ tls_dir }}/tls.crt -noout -enddate | cut -d= -f2
+      register: cert_expiry
+      become: true
+      changed_when: false
+
+    - name: Calculate days until expiration
+      ansible.builtin.shell: |
+        cert_date=$(openssl x509 -in {{ tls_dir }}/tls.crt -noout -enddate | cut -d= -f2)
+        cert_epoch=$(date -d "$cert_date" +%s)
+        now_epoch=$(date +%s)
+        days_left=$(( ($cert_epoch - $now_epoch) / 86400 ))
+        echo $days_left
+      register: days_until_expiry
+      become: true
+      changed_when: false
+
+    - name: Get certificate details
+      ansible.builtin.shell: |
+        openssl x509 -in {{ tls_dir }}/tls.crt -noout -text | grep -E "(Subject:|Issuer:|Serial Number:|Not Before:|Not After:)" | sed 's/^[[:space:]]*//'
+      register: cert_details
+      become: true
+      changed_when: false
+
+    - name: Verify certificate chain
+      ansible.builtin.shell: |
+        openssl verify -CAfile {{ tls_dir }}/ca-bundle.pem {{ tls_dir }}/tls.crt
+      register: chain_validation
+      become: true
+      changed_when: false
+      failed_when: false
+
+    - name: Check certificate and key match
+      ansible.builtin.shell: |
+        cert_modulus=$(openssl x509 -noout -modulus -in {{ tls_dir }}/tls.crt | openssl md5)
+        key_modulus=$(openssl rsa -noout -modulus -in {{ tls_dir }}/tls.key | openssl md5)
+        if [ "$cert_modulus" = "$key_modulus" ]; then
+          echo "MATCH"
+        else
+          echo "MISMATCH"
+        fi
+      register: cert_key_match
+      become: true
+      changed_when: false
+
+    - name: Test TLS connection locally
+      ansible.builtin.shell: |
+        echo | openssl s_client -connect {{ ansible_host }}:8200 -CAfile {{ tls_dir }}/ca-bundle.pem 2>/dev/null | grep "Verify return code:" | tail -1
+      register: tls_verify
+      become: true
+      changed_when: false
+      failed_when: false
+
+    - name: Set certificate status
+      ansible.builtin.set_fact:
+        cert_status: >-
+          {%- if days_until_expiry.stdout | int <= critical_days -%}
+          CRITICAL
+          {%- elif days_until_expiry.stdout | int <= warning_days -%}
+          WARNING
+          {%- else -%}
+          OK
+          {%- endif -%}
+        cert_emoji: >-
+          {%- if days_until_expiry.stdout | int <= critical_days -%}
+          🔴
+          {%- elif days_until_expiry.stdout | int <= warning_days -%}
+          🟡
+          {%- else -%}
+          🟢
+          {%- endif -%}
+
+    - name: Display certificate validation results
+      ansible.builtin.debug:
+        msg:
+          - "====================================="
+          - "{{ cert_emoji }} {{ inventory_hostname }} Certificate Status: {{ cert_status }}"
+          - "====================================="
+          - ""
+          - "Certificate Details:"
+          - "{{ cert_details.stdout_lines }}"
+          - ""
+          - "Expiration Status:"
+          - "  Expires: {{ cert_expiry.stdout }}"
+          - "  Days remaining: {{ days_until_expiry.stdout }}"
+          - "  Status: {{ cert_status }}"
+          - ""
+          - "Validation Results:"
+          - "  Chain validation: {{ 'PASSED' if 'OK' in chain_validation.stdout else 'FAILED: ' + chain_validation.stdout }}"
+          - "  Cert/Key match: {{ 'PASSED' if cert_key_match.stdout == 'MATCH' else 'FAILED' }}"
+          - "  TLS verification: {{ 'PASSED' if 'Verify return code: 0' in tls_verify.stdout else 'FAILED' }}"
+          - "====================================="
+
+- name: Certificate Renewal Recommendations
+  hosts: localhost
+  gather_facts: no
+  
+  tasks:
+    - name: Display renewal recommendations
+      ansible.builtin.debug:
+        msg:
+          - "====================================="
+          - "📋 Certificate Management Summary"
+          - "====================================="
+          - ""
+          - "Current Configuration:"
+          - "  • Certificate TTL: 30 days"
+          - "  • Warning threshold: 7 days"
+          - "  • Critical threshold: 3 days"
+          - ""
+          - "Renewal Strategy:"
+          - "  • Manual: Run the replacement playbook every 25 days"
+          - "  • Automated: Implement Issue #100 for automatic rotation"
+          - ""
+          - "To renew certificates manually:"
+          - "  uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certificates.yml \\"
+          - "    -i inventory/environments/vault-cluster/production.yaml"
+          - ""
+          - "To check certificate status:"
+          - "  uv run ansible-playbook playbooks/infrastructure/vault/validate-pki-certificates.yml \\"
+          - "    -i inventory/environments/vault-cluster/production.yaml"
+          - "====================================="
