@@ -25,7 +25,7 @@ consul_client_servers:
 consul_client_network_interface: "eth1"
 
 # Encryption
-consul_encrypt: "6r73CP0icJrap1tsQ17yuqzVguho4/yz+aI/dkVg2Kk="
+consul_encrypt: "$GOSSIP_KEY"
 
 # Service definitions
 consul_services: []
