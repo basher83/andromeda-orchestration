@@ -2,7 +2,7 @@
 # Host variables for Vault master node (lloyd)
 # Auto-unseal transit engine configuration
 
-ansible_host: vault-master-lloyd.tailfb3ea.ts.net
+ansible_host: 192.168.10.30
 ansible_user: ansible
 
 # Vault configuration

@@ -2,7 +2,7 @@
 # Host variables for Vault production node 2 (mable)
 # Production cluster member with auto-unseal
 
-ansible_host: vault-prod-2-mable.tailfb3ea.ts.net
+ansible_host: 192.168.10.32
 ansible_user: ansible
 
 # Vault configuration

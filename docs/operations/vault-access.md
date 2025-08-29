@@ -9,8 +9,8 @@
 
 ### Node Details
 
-| Node | Version | API Address | UI Address | Status |
-|------|---------|-------------|------------|--------|
+| Node                 | Version | API Address                 | UI Address                     | Status |
+| -------------------- | ------- | --------------------------- | ------------------------------ | ------ |
 | nomad-server-1-lloyd | v1.15.5 | <http://192.168.10.11:8200> | <http://192.168.10.11:8200/ui> | Active |
 | nomad-server-2-holly | v1.20.1 | <http://192.168.10.12:8200> | <http://192.168.10.12:8200/ui> | Active |
 | nomad-server-3-mable | v1.20.1 | <http://192.168.10.13:8200> | <http://192.168.10.13:8200/ui> | Active |
@@ -19,13 +19,13 @@
 
 ### Development Mode Access
 
-**⚠️ IMPORTANT**: Dev mode credentials are stored in Infisical for security.
+**⚠️ IMPORTANT**: Credentials are stored in Infisical for security.
 
 To retrieve the dev token:
 
 ```bash
 # Using Infisical CLI
-infisical secrets get VAULT_DEV_ROOT_TOKEN --env=dev --path=/apollo-13/vault
+infisical secrets get VAULT_PROD_ROOT_TOKEN --env=dev --path=/apollo-13/vault
 
 # Or via environment (if Infisical is configured)
 source <(infisical export --env=dev --path=/apollo-13/vault)

@@ -2,7 +2,7 @@
 # Host variables for Vault production node 3 (lloyd)
 # Production cluster member with auto-unseal
 
-ansible_host: vault-prod-3-lloyd.tailfb3ea.ts.net
+ansible_host: 192.168.10.33
 ansible_user: ansible
 
 # Vault configuration
