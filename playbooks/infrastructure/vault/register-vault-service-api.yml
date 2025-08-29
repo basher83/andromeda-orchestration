@@ -1,0 +1,138 @@
+---
+# Register Vault service using Consul API with proper ACL token
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/register-vault-service-api.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Register Vault Service via Consul API
+  hosts: vault_cluster
+  become: true
+  gather_facts: true
+
+  vars:
+    consul_config_dir: "/etc/consul.d"
+
+  tasks:
+    - name: Get node-specific token from Infisical
+      set_fact:
+        node_token_name: "CONSUL_TOKEN_{{ inventory_hostname | upper | replace('-', '_') }}"
+
+    - name: Retrieve token from Infisical
+      ansible.builtin.shell: |
+        infisical secrets get {{ node_token_name }} --env=prod --path=/apollo-13/vault --plain
+      delegate_to: localhost
+      become: false
+      register: consul_token_result
+      environment:
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      changed_when: false
+
+    - name: Remove file-based service configuration
+      ansible.builtin.file:
+        path: "{{ consul_config_dir }}/vault-service.hcl"
+        state: absent
+      notify: reload consul
+
+    - name: Force handlers to run
+      meta: flush_handlers
+
+    - name: Wait for Consul to stabilize
+      ansible.builtin.wait_for:
+        port: 8500
+        host: 127.0.0.1
+        delay: 2
+        timeout: 30
+
+    - name: Register Vault service via API with token
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:8500/v1/agent/service/register"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ consul_token_result.stdout }}"
+        body_format: json
+        body:
+          ID: "vault-{{ inventory_hostname }}"
+          Name: "vault"
+          Tags:
+            - "vault-cluster"
+            - "{{ vault_role }}"
+            - "{{ 'transit' if vault_role == 'master' else 'raft' }}"
+          Port: 8200
+          Address: "{{ ansible_default_ipv4.address }}"
+          Check:
+            CheckID: "vault-health"
+            Name: "Vault Health Check"
+            HTTP: "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
+            TLSSkipVerify: true
+            Interval: "10s"
+            Timeout: "5s"
+            DeregisterCriticalServiceAfter: "90m"
+        status_code: 200
+      register: service_registration
+
+    - name: Display service registration result
+      ansible.builtin.debug:
+        msg:
+          - "✅ Service registered for {{ inventory_hostname }}"
+          - "Status: {{ service_registration.status }}"
+
+    - name: Verify service is registered
+      ansible.builtin.shell: |
+        consul catalog services | grep -c vault || echo "0"
+      register: vault_service_count
+      changed_when: false
+
+    - name: Check service details
+      ansible.builtin.shell: |
+        consul catalog nodes -service=vault
+      register: vault_nodes
+      changed_when: false
+      failed_when: false
+
+    - name: Display verification
+      ansible.builtin.debug:
+        msg:
+          - "================== {{ inventory_hostname }} =================="
+          - "Vault services found: {{ vault_service_count.stdout }}"
+          - "Service nodes: {{ vault_nodes.stdout_lines }}"
+          - "=========================================="
+
+  handlers:
+    - name: reload consul
+      ansible.builtin.systemd:
+        name: consul
+        state: reloaded
+
+- name: Verify from Consul Server
+  hosts: nomad-server-1-lloyd
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Check all vault services from server
+      ansible.builtin.shell: |
+        consul catalog nodes -service=vault
+      register: all_vault_nodes
+      changed_when: false
+      failed_when: false
+
+    - name: Check service health
+      ansible.builtin.shell: |
+        consul catalog nodes -service=vault -status=passing
+      register: healthy_vault_nodes
+      changed_when: false
+      failed_when: false
+
+    - name: Display final summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ ======== VAULT SERVICE REGISTRATION COMPLETE ========"
+          - "Total Vault nodes registered: {{ all_vault_nodes.stdout_lines | length }}"
+          - "Healthy Vault nodes: {{ healthy_vault_nodes.stdout_lines | length }}"
+          - ""
+          - "All Vault nodes:"
+          - "{{ all_vault_nodes.stdout }}"
+          - ""
+          - "Healthy nodes:"
+          - "{{ healthy_vault_nodes.stdout if healthy_vault_nodes.stdout else 'Health checks pending...' }}"
+          - "======================================================"

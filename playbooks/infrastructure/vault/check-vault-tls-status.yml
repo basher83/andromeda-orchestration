@@ -1,0 +1,114 @@
+---
+# Check current Vault TLS configuration status
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/check-vault-tls-status.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Check Vault TLS Configuration Status
+  hosts: vault_cluster
+  gather_facts: true
+
+  tasks:
+    - name: Check Vault configuration file
+      ansible.builtin.slurp:
+        src: /etc/vault.d/vault.hcl
+      register: vault_config
+      become: true
+
+    - name: Parse Vault configuration
+      set_fact:
+        vault_config_content: "{{ vault_config.content | b64decode }}"
+
+    - name: Check if TLS is disabled in config
+      set_fact:
+        tls_disabled: "{{ 'tls_disable = true' in vault_config_content or 'tls_disable=true' in vault_config_content }}"
+
+    - name: Check for TLS certificate paths in config
+      set_fact:
+        has_tls_cert: "{{ 'tls_cert_file' in vault_config_content }}"
+        has_tls_key: "{{ 'tls_key_file' in vault_config_content }}"
+
+    - name: Check listening ports
+      ansible.builtin.shell: |
+        ss -tlnp | grep -E ':(8200|8201)' | grep -v grep || echo "No Vault listeners found"
+      register: listening_ports
+      become: true
+      changed_when: false
+
+    - name: Check for TLS certificate files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: tls_files
+      loop:
+        - /opt/vault/tls/tls.crt
+        - /opt/vault/tls/tls.key
+        - /opt/vault/tls/ca.crt
+      become: true
+
+    - name: Test HTTPS connectivity
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health"
+        method: GET
+        validate_certs: false
+        status_code: [200, 429, 473, 501, 503, -1]
+      register: https_test
+      failed_when: false
+      changed_when: false
+
+    - name: Test HTTP connectivity
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}:8200/v1/sys/health"
+        method: GET
+        status_code: [200, 429, 473, 501, 503, -1]
+      register: http_test
+      failed_when: false
+      changed_when: false
+
+    - name: Check Vault service status
+      ansible.builtin.systemd:
+        name: vault
+      register: vault_service
+      become: true
+
+    - name: Display TLS configuration status
+      ansible.builtin.debug:
+        msg:
+          - "========== {{ inventory_hostname }} TLS Status =========="
+          - "Configuration:"
+          - "  TLS Disabled in Config: {{ tls_disabled }}"
+          - "  Has TLS Cert Config: {{ has_tls_cert }}"
+          - "  Has TLS Key Config: {{ has_tls_key }}"
+          - ""
+          - "Certificate Files:"
+          - "  /opt/vault/tls/tls.crt: {{ 'EXISTS' if tls_files.results[0].stat.exists else 'MISSING' }}"
+          - "  /opt/vault/tls/tls.key: {{ 'EXISTS' if tls_files.results[1].stat.exists else 'MISSING' }}"
+          - "  /opt/vault/tls/ca.crt: {{ 'EXISTS' if tls_files.results[2].stat.exists else 'MISSING' }}"
+          - ""
+          - "Network:"
+          - "  Listening Ports: {{ listening_ports.stdout_lines[0] if listening_ports.stdout_lines else 'None found' }}"
+          - "  HTTPS Test: {{ 'SUCCESS' if https_test.status is defined and https_test.status == 200 else 'FAILED' }}"
+          - "  HTTP Test: {{ 'SUCCESS' if http_test.status is defined and http_test.status == 200 else 'FAILED' }}"
+          - ""
+          - "Service:"
+          - "  Vault Service: {{ vault_service.status.ActiveState }}"
+          - "=================================================="
+
+- name: Summary Report
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Display summary
+      ansible.builtin.debug:
+        msg:
+          - "========================================"
+          - "VAULT TLS CONFIGURATION SUMMARY"
+          - "========================================"
+          - ""
+          - "Based on the checks above, we need to determine:"
+          - "1. Is TLS currently enabled or disabled?"
+          - "2. Are certificates present or need to be generated?"
+          - "3. Which ports are Vault listening on?"
+          - "4. Is HTTPS working or just HTTP?"
+          - ""
+          - "Next steps will be based on these findings."
+          - "========================================"

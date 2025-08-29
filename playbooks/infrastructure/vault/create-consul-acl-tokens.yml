@@ -1,0 +1,220 @@
+---
+# Create and configure Consul ACL tokens for Vault cluster agents
+# Usage:
+# export CONSUL_MASTER_TOKEN=$(infisical secrets get CONSUL_MASTER_TOKEN --env=prod --path=/apollo-13/consul --plain)
+# uv run ansible-playbook playbooks/infrastructure/vault/create-consul-acl-tokens.yml -i inventory/environments/doggos-homelab/proxmox.yml
+
+- name: Create Consul ACL Policy and Tokens for Vault Agents
+  hosts: nomad-server-1-lloyd
+  gather_facts: false
+
+  vars:
+    consul_master_token: "{{ lookup('env', 'CONSUL_MASTER_TOKEN') }}"
+    policy_name: "vault-client-policy"
+    consul_addr: "http://127.0.0.1:8500"
+
+    # Vault nodes that need tokens
+    vault_nodes:
+      - name: "vault-master-lloyd"
+        ip: "192.168.10.30"
+      - name: "vault-prod-1-holly"
+        ip: "192.168.10.31"
+      - name: "vault-prod-2-mable"
+        ip: "192.168.10.32"
+      - name: "vault-prod-3-lloyd"
+        ip: "192.168.10.33"
+
+  tasks:
+    - name: Verify master token is set
+      ansible.builtin.assert:
+        that:
+          - consul_master_token != ""
+        fail_msg: "CONSUL_MASTER_TOKEN environment variable must be set"
+        success_msg: "Master token verified"
+
+    - name: Copy Vault client ACL policy file
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../../roles/consul/files/policies/vault-client.hcl"
+        dest: /tmp/vault-client-policy.hcl
+        mode: '0600'
+      become: true
+
+    - name: Check if policy exists
+      ansible.builtin.shell: |
+        consul acl policy read \
+          -name="{{ policy_name }}" \
+          -token="{{ consul_master_token }}"
+      register: policy_check
+      failed_when: false
+      changed_when: false
+      become: true
+
+    - name: Create Vault client ACL policy
+      ansible.builtin.shell: |
+        consul acl policy create \
+          -name="{{ policy_name }}" \
+          -description="Policy for Vault Consul client agents" \
+          -rules=@/tmp/vault-client-policy.hcl \
+          -token="{{ consul_master_token }}"
+      when: policy_check.rc != 0
+      register: policy_create
+      become: true
+
+    - name: Update policy if it already exists
+      ansible.builtin.shell: |
+        consul acl policy update \
+          -name="{{ policy_name }}" \
+          -description="Policy for Vault Consul client agents" \
+          -rules=@/tmp/vault-client-policy.hcl \
+          -token="{{ consul_master_token }}"
+      when: policy_check.rc == 0
+      register: policy_update
+      become: true
+
+    - name: Create ACL tokens for each Vault node
+      ansible.builtin.shell: |
+        # Check if token already exists for this node
+        existing_token=$(consul acl token list -token="{{ consul_master_token }}" -format=json | \
+          jq -r '.[] | select(.Description == "Consul agent token for {{ item.name }}") | .SecretID')
+
+        if [ -n "$existing_token" ]; then
+          echo "Token already exists for {{ item.name }}: $existing_token"
+          echo "EXISTS:$existing_token"
+        else
+          # Create new token
+          consul acl token create \
+            -description="Consul agent token for {{ item.name }}" \
+            -policy-name="{{ policy_name }}" \
+            -token="{{ consul_master_token }}" \
+            -format=json | jq -r '.SecretID'
+        fi
+      loop: "{{ vault_nodes }}"
+      register: token_results
+      changed_when: "'EXISTS:' not in token_results.stdout"
+      become: true
+
+    - name: Store tokens in local variables
+      set_fact:
+        vault_tokens: "{{ vault_tokens | default({}) | combine({item.item.name: item.stdout_lines[-1] | regex_replace('EXISTS:', '') }) }}"
+      loop: "{{ token_results.results }}"
+      when: item.stdout is defined
+
+    - name: Display token creation summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ ACL Policy '{{ policy_name }}' is configured"
+          - "✅ Tokens created/verified for all Vault nodes"
+          - ""
+          - "Tokens will now be stored in Infisical..."
+
+    - name: Store tokens in Infisical
+      ansible.builtin.shell: |
+        # Store token for {{ item.key }}
+        infisical secrets set CONSUL_TOKEN_{{ item.key | upper | replace('-', '_') }}="{{ item.value }}" \
+          --env=prod \
+          --path="/apollo-13/vault" \
+          --projectId="7b832220-24c0-45bc-a5f1-ce9794a31259"
+      loop: "{{ vault_tokens | dict2items }}"
+      delegate_to: localhost
+      become: false
+      environment:
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      register: infisical_store
+      changed_when: true
+
+    - name: Clean up policy file
+      ansible.builtin.file:
+        path: /tmp/vault-client-policy.hcl
+        state: absent
+      become: true
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg:
+          - "✅ All tasks completed successfully!"
+          - ""
+          - "📦 Tokens stored in Infisical at /apollo-13/vault/:"
+          - "  - CONSUL_TOKEN_VAULT_MASTER_LLOYD"
+          - "  - CONSUL_TOKEN_VAULT_PROD_1_HOLLY"
+          - "  - CONSUL_TOKEN_VAULT_PROD_2_MABLE"
+          - "  - CONSUL_TOKEN_VAULT_PROD_3_LLOYD"
+          - ""
+          - "Next step: Apply tokens to Vault Consul agents"
+
+- name: Apply ACL Tokens to Vault Consul Agents
+  hosts: vault_cluster
+  gather_facts: false
+
+  vars:
+    consul_config_dir: "/etc/consul.d"
+
+  tasks:
+    - name: Get node-specific token from Infisical
+      set_fact:
+        node_token_name: "CONSUL_TOKEN_{{ inventory_hostname | upper | replace('-', '_') }}"
+
+    - name: Retrieve token from Infisical
+      ansible.builtin.shell: |
+        infisical secrets get {{ node_token_name }} --env=prod --path=/apollo-13/vault --plain
+      delegate_to: localhost
+      become: false
+      register: consul_token_result
+      environment:
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      changed_when: false
+
+    - name: Update Consul configuration with ACL token
+      ansible.builtin.lineinfile:
+        path: "{{ consul_config_dir }}/consul.hcl"
+        regexp: '^\s*agent = ""'
+        line: '    agent = "{{ consul_token_result.stdout }}"'
+        backup: yes
+      become: true
+      notify: restart consul
+
+    - name: Verify Consul configuration
+      ansible.builtin.command: consul validate {{ consul_config_dir }}
+      become: true
+      changed_when: false
+
+  handlers:
+    - name: restart consul
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted
+      become: true
+
+- name: Verify Service Registration
+  hosts: vault_cluster
+  gather_facts: false
+
+  tasks:
+    - name: Wait for Consul to stabilize after restart
+      ansible.builtin.wait_for:
+        port: 8500
+        host: 127.0.0.1
+        delay: 5
+        timeout: 30
+      become: true
+
+    - name: Check Consul agent status
+      ansible.builtin.command: consul members
+      register: consul_members
+      become: true
+      changed_when: false
+
+    - name: Check registered services
+      ansible.builtin.command: consul catalog services
+      register: consul_services
+      become: true
+      changed_when: false
+
+    - name: Display verification results
+      ansible.builtin.debug:
+        msg:
+          - "✅ Node: {{ inventory_hostname }}"
+          - "Consul Members: {{ consul_members.stdout_lines | length }} nodes"
+          - "Registered Services: {{ consul_services.stdout }}"
+          - ""

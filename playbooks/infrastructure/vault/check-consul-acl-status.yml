@@ -1,0 +1,92 @@
+---
+# Check Consul ACL token status on Vault nodes
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/check-consul-acl-status.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Check Consul ACL Token Configuration
+  hosts: vault_cluster
+  become: true
+  gather_facts: false
+
+  vars:
+    consul_config_dir: "/etc/consul.d"
+
+  tasks:
+    - name: Check if consul.hcl has agent token configured
+      ansible.builtin.shell: |
+        grep -A2 "tokens {" {{ consul_config_dir }}/consul.hcl | grep "agent = " | sed 's/.*agent = "\(.*\)"/\1/' | head -c 10
+      register: token_check
+      changed_when: false
+      failed_when: false
+
+    - name: Display token configuration status
+      ansible.builtin.debug:
+        msg:
+          - "Node: {{ inventory_hostname }}"
+          - "Token configured: {{ 'Yes' if token_check.stdout | length > 0 else 'No' }}"
+          - "Token prefix: {{ token_check.stdout + '...' if token_check.stdout else 'No token found' }}"
+
+    - name: Check Consul agent self info (includes token info)
+      ansible.builtin.shell: |
+        consul info 2>/dev/null | grep -E "(ACL|agent_acl_tokens|Config)"
+      register: consul_info
+      changed_when: false
+      failed_when: false
+
+    - name: Display Consul ACL info
+      ansible.builtin.debug:
+        msg: "{{ consul_info.stdout_lines }}"
+
+    - name: Test service registration directly with API
+      ansible.builtin.shell: |
+        # Get the agent token from consul.hcl
+        TOKEN=$(grep -A2 "tokens {" {{ consul_config_dir }}/consul.hcl | grep "agent = " | sed 's/.*agent = "\(.*\)"/\1/')
+
+        if [ -n "$TOKEN" ]; then
+          echo "Testing service registration with token..."
+          # Try to register a test service
+          curl -s -X PUT \
+            -H "X-Consul-Token: $TOKEN" \
+            http://127.0.0.1:8500/v1/agent/service/register \
+            -d '{
+              "ID": "test-vault-{{ inventory_hostname }}",
+              "Name": "test-vault",
+              "Port": 8200,
+              "Address": "{{ ansible_default_ipv4.address }}"
+            }'
+
+          # Check if it worked
+          RESULT=$(curl -s http://127.0.0.1:8500/v1/catalog/service/test-vault)
+          if echo "$RESULT" | grep -q "test-vault"; then
+            echo "✅ Service registration successful with token"
+            # Clean up test service
+            curl -s -X PUT \
+              -H "X-Consul-Token: $TOKEN" \
+              http://127.0.0.1:8500/v1/agent/service/deregister/test-vault-{{ inventory_hostname }}
+          else
+            echo "❌ Service registration failed even with token"
+            echo "Response: $RESULT"
+          fi
+        else
+          echo "No token found in configuration"
+        fi
+      register: api_test
+      changed_when: false
+
+    - name: Display API test results
+      ansible.builtin.debug:
+        msg: "{{ api_test.stdout_lines }}"
+
+    - name: Check current Vault service registration status
+      ansible.builtin.shell: |
+        consul catalog services | grep -c vault || echo "0"
+      register: vault_service_count
+      changed_when: false
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg:
+          - "================== Summary for {{ inventory_hostname }} =================="
+          - "Token configured: {{ 'Yes' if token_check.stdout | length > 0 else 'No' }}"
+          - "Vault services registered: {{ vault_service_count.stdout }}"
+          - "=========================================================================="

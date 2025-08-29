@@ -1,0 +1,97 @@
+---
+# Fix Vault health checks to use HTTP instead of HTTPS
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/fix-vault-health-checks.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Fix Vault Health Checks
+  hosts: vault_cluster
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Get node-specific token from Infisical
+      set_fact:
+        node_token_name: "CONSUL_TOKEN_{{ inventory_hostname | upper | replace('-', '_') }}"
+
+    - name: Retrieve token from Infisical
+      ansible.builtin.shell: |
+        infisical secrets get {{ node_token_name }} --env=prod --path=/apollo-13/vault --plain
+      delegate_to: localhost
+      become: false
+      register: consul_token_result
+      environment:
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      changed_when: false
+
+    - name: Deregister the existing service first
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:8500/v1/agent/service/deregister/vault-{{ inventory_hostname }}"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ consul_token_result.stdout }}"
+        status_code: [200, 404]
+      register: deregister_result
+
+    - name: Wait a moment for deregistration
+      ansible.builtin.pause:
+        seconds: 2
+
+    - name: Re-register Vault service with correct HTTP health check
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:8500/v1/agent/service/register"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ consul_token_result.stdout }}"
+        body_format: json
+        body:
+          ID: "vault-{{ inventory_hostname }}"
+          Name: "vault"
+          Tags:
+            - "vault-cluster"
+            - "{{ vault_role }}"
+            - "{{ 'transit' if vault_role == 'master' else 'raft' }}"
+          Port: 8200
+          Address: "{{ ansible_default_ipv4.address }}"
+          Check:
+            CheckID: "vault-health"
+            Name: "Vault Health Check"
+            HTTP: "http://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
+            Interval: "10s"
+            Timeout: "5s"
+            DeregisterCriticalServiceAfter: "90m"
+        status_code: 200
+      register: service_registration
+
+    - name: Display service registration result
+      ansible.builtin.debug:
+        msg:
+          - "✅ Service re-registered for {{ inventory_hostname }}"
+          - "Status: {{ service_registration.status }}"
+          - "Health check now uses HTTP instead of HTTPS"
+
+    - name: Wait for health check to run
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Check health status
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:8500/v1/agent/health/service/name/vault"
+        method: GET
+        headers:
+          X-Consul-Token: "{{ consul_token_result.stdout }}"
+        status_code: [200, 503]
+      register: health_status
+
+    - name: Parse health check result
+      set_fact:
+        check_status: "{{ health_status.json[0].Checks[0].Status if health_status.json and health_status.json[0].Checks else 'unknown' }}"
+      when: health_status.json is defined
+
+    - name: Display health check status
+      ansible.builtin.debug:
+        msg:
+          - "==================== {{ inventory_hostname }} ===================="
+          - "Health Check Status: {{ check_status | default('checking...') }}"
+          - "{{ 'Note: Status will be passing if Vault is running' if check_status == 'passing' else 'Note: Critical status expected if Vault is not running' }}"
+          - "=================================================="

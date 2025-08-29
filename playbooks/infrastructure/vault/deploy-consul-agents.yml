@@ -1,0 +1,287 @@
+---
+# Deploy Consul client agents to Vault cluster VMs
+# Usage: uv run ansible-playbook playbooks/infrastructure/vault/deploy-consul-agents.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Deploy Consul Client Agents to Vault Cluster
+  hosts: vault_cluster
+  become: true
+  gather_facts: true
+
+  vars:
+    consul_version: "1.20.5"
+    consul_datacenter: "dc1"
+    consul_data_dir: "/opt/consul/data"
+    consul_config_dir: "/etc/consul.d"
+    consul_log_dir: "/var/log/consul"
+    consul_user: "consul"
+    consul_group: "consul"
+
+    # Consul servers to join
+    consul_retry_join:
+      - "192.168.11.11"  # nomad-server-1-lloyd
+      - "192.168.11.12"  # nomad-server-2-holly
+      - "192.168.11.13"  # nomad-server-3-mable
+
+    # Gossip encryption key from Infisical with environment variable fallback
+    consul_encrypt: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/consul',
+                 secret_name='GOSSIP_ENCRYPTION_KEY',
+                 errors='ignore') | default({'value': lookup('env', 'CONSUL_ENCRYPT')}, true)).value }}
+
+    # Get ACL token from Infisical (will be created and stored later in the playbook)
+    consul_acl_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_TOKEN_FOR_VAULT',
+                 errors='ignore') | default({'value': lookup('env', 'CONSUL_TOKEN_FOR_VAULT', '')}, true)).value }}
+
+  tasks:
+    - name: Create consul user and group
+      block:
+        - name: Create consul group
+          ansible.builtin.group:
+            name: "{{ consul_group }}"
+            system: true
+            state: present
+
+        - name: Create consul user
+          ansible.builtin.user:
+            name: "{{ consul_user }}"
+            group: "{{ consul_group }}"
+            system: true
+            shell: /bin/false
+            home: /var/lib/consul
+            createhome: false
+            state: present
+
+    - name: Create Consul directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: '0755'
+      loop:
+        - /opt/consul
+        - "{{ consul_data_dir }}"
+        - "{{ consul_config_dir }}"
+        - "{{ consul_log_dir }}"
+        - /var/lib/consul
+
+    - name: Download and install Consul
+      block:
+        - name: Check if Consul is already installed
+          ansible.builtin.stat:
+            path: /usr/local/bin/consul
+          register: consul_binary
+
+        - name: Get installed Consul version
+          ansible.builtin.command: /usr/local/bin/consul version -format=json
+          register: consul_version_output
+          when: consul_binary.stat.exists
+          changed_when: false
+          failed_when: false
+
+        - name: Download Consul binary
+          ansible.builtin.unarchive:
+            src: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip"
+            dest: /usr/local/bin
+            remote_src: true
+            owner: root
+            group: root
+            mode: '0755'
+          when: not consul_binary.stat.exists or (consul_version_output.stdout | default('') | from_json).version | default('') != consul_version
+
+    - name: Generate Consul client configuration
+      ansible.builtin.template:
+        src: consul-client-vault.hcl.j2
+        dest: "{{ consul_config_dir }}/consul.hcl"
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: '0640'
+      notify: restart consul
+
+    - name: Configure Vault service registration
+      ansible.builtin.copy:
+        content: |
+          services {
+            id = "vault-{{ inventory_hostname }}"
+            name = "vault"
+            port = 8200
+            tags = [
+              "vault-cluster",
+              "{{ vault_role }}",
+              "{{ 'transit' if vault_role == 'master' else 'raft' }}"
+            ]
+            check {
+              id = "vault-health"
+              name = "Vault Health Check"
+              http = "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
+              tls_skip_verify = true
+              interval = "10s"
+              timeout = "5s"
+            }
+          }
+        dest: "{{ consul_config_dir }}/vault-service.hcl"
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: '0640'
+      notify: reload consul
+
+    - name: Create Consul systemd service
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=Consul Agent
+          Documentation=https://www.consul.io/
+          Requires=network-online.target
+          After=network-online.target
+          ConditionFileNotEmpty={{ consul_config_dir }}/consul.hcl
+
+          [Service]
+          Type=notify
+          User={{ consul_user }}
+          Group={{ consul_group }}
+          ExecStart=/usr/local/bin/consul agent -config-dir={{ consul_config_dir }}
+          ExecReload=/bin/kill -HUP $MAINPID
+          KillMode=process
+          Restart=on-failure
+          RestartSec=5
+          LimitNOFILE=65536
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/consul.service
+        mode: '0644'
+      notify: restart consul
+
+    - name: Start and enable Consul service
+      ansible.builtin.systemd:
+        name: consul
+        state: started
+        enabled: true
+        daemon_reload: true
+
+    - name: Wait for Consul to be ready
+      ansible.builtin.wait_for:
+        port: 8500
+        host: 127.0.0.1
+        delay: 5
+        timeout: 30
+
+    - name: Verify Consul agent status
+      ansible.builtin.command: consul members
+      register: consul_members
+      changed_when: false
+      failed_when: false
+
+    - name: Display Consul status
+      ansible.builtin.debug:
+        msg:
+          - "Consul agent deployed on {{ inventory_hostname }}"
+          - "Agent status:"
+          - "{{ consul_members.stdout }}"
+
+  handlers:
+    - name: restart consul
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted
+        daemon_reload: true
+
+    - name: reload consul
+      ansible.builtin.systemd:
+        name: consul
+        state: reloaded
+
+- name: Create Vault Client ACL Policy and Token
+  hosts: nomad-server-1-lloyd
+  become: true
+  run_once: true
+
+  vars:
+    consul_master_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_MASTER_TOKEN',
+                 errors='ignore') | default({'value': lookup('env', 'CONSUL_MASTER_TOKEN')}, true)).value }}
+    policy_name: "vault-client-policy"
+
+  tasks:
+    - name: Copy Vault client ACL policy file
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../../roles/consul/files/policies/vault-client.hcl"
+        dest: /tmp/vault-client-policy.hcl
+        mode: '0600'
+
+    - name: Create Vault client ACL policy
+      ansible.builtin.shell: |
+        consul acl policy create \
+          -name="{{ policy_name }}" \
+          -rules=@/tmp/vault-client-policy.hcl \
+          -token="{{ consul_master_token }}"
+      register: policy_create
+      failed_when: false
+      changed_when: policy_create.rc == 0
+
+    - name: Update policy if it already exists
+      ansible.builtin.shell: |
+        consul acl policy update \
+          -name="{{ policy_name }}" \
+          -rules=@/tmp/vault-client-policy.hcl \
+          -token="{{ consul_master_token }}"
+      when: policy_create.rc != 0
+
+    - name: Create ACL token for Vault agents
+      ansible.builtin.shell: |
+        consul acl token create \
+          -description="Vault cluster client agents" \
+          -policy-name="{{ policy_name }}" \
+          -token="{{ consul_master_token }}" \
+          -format=json
+      register: token_result
+
+    - name: Extract token SecretID
+      set_fact:
+        vault_client_token: "{{ (token_result.stdout | from_json).SecretID }}"
+
+    - name: Store token in Infisical using infisical CLI
+      ansible.builtin.shell: |
+        infisical secrets set CONSUL_TOKEN_FOR_VAULT="{{ vault_client_token }}" \
+          --env=prod \
+          --path="/apollo-13/consul" \
+          --projectId="7b832220-24c0-45bc-a5f1-ce9794a31259"
+      delegate_to: localhost
+      environment:
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      when: vault_client_token is defined
+
+    - name: Clean up policy file
+      ansible.builtin.file:
+        path: /tmp/vault-client-policy.hcl
+        state: absent
+
+    - name: Display success message
+      ansible.builtin.debug:
+        msg:
+          - "✅ Vault client ACL policy created: {{ policy_name }}"
+          - "✅ ACL token stored in Infisical at /apollo-13/consul/CONSUL_TOKEN_FOR_VAULT"
+          - ""
+          - "Next steps:"
+          - "1. Update the Vault nodes with the ACL token"
+          - "2. Restart Consul agents on Vault nodes"
+          - "3. Verify service registration in Consul UI"

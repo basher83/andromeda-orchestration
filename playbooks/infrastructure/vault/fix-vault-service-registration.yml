@@ -1,0 +1,99 @@
+---
+# Fix Vault service registration with proper ACL configuration
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/fix-vault-service-registration.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Fix Vault Service Registration in Consul
+  hosts: vault_cluster
+  become: true
+  gather_facts: false
+
+  vars:
+    consul_config_dir: "/etc/consul.d"
+
+  tasks:
+    - name: Remove old service configuration
+      ansible.builtin.file:
+        path: "{{ consul_config_dir }}/vault-service.hcl"
+        state: absent
+      notify: reload consul
+
+    - name: Create corrected Vault service registration
+      ansible.builtin.copy:
+        content: |
+          # Vault service registration - uses agent token from consul.hcl
+          service {
+            id = "vault-{{ inventory_hostname }}"
+            name = "vault"
+            port = 8200
+            address = "{{ ansible_default_ipv4.address }}"
+
+            tags = [
+              "vault-cluster",
+              "{{ vault_role }}",
+              "{{ 'transit' if vault_role == 'master' else 'raft' }}"
+            ]
+
+            check {
+              id = "vault-health"
+              name = "Vault Health Check"
+              http = "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
+              tls_skip_verify = true
+              interval = "10s"
+              timeout = "5s"
+            }
+          }
+        dest: "{{ consul_config_dir }}/vault-service.hcl"
+        owner: consul
+        group: consul
+        mode: '0640'
+      notify: restart consul  # Changed to restart to ensure token is picked up
+
+    - name: Validate Consul configuration
+      ansible.builtin.command: consul validate {{ consul_config_dir }}
+      changed_when: false
+      register: validate_result
+
+    - name: Display validation result
+      ansible.builtin.debug:
+        msg: "{{ validate_result.stdout }}"
+
+    - name: Force handlers to run now
+      meta: flush_handlers
+
+    - name: Wait for Consul to stabilize
+      ansible.builtin.wait_for:
+        port: 8500
+        host: 127.0.0.1
+        delay: 3
+        timeout: 30
+
+    - name: Check Consul service registration
+      ansible.builtin.command: consul catalog services
+      register: consul_services
+      changed_when: false
+
+    - name: Check Vault service details
+      ansible.builtin.shell: |
+        consul catalog nodes -service=vault 2>/dev/null || echo "Vault service not registered yet"
+      register: vault_service_details
+      changed_when: false
+      failed_when: false
+
+    - name: Display service registration status
+      ansible.builtin.debug:
+        msg:
+          - "✅ Node: {{ inventory_hostname }}"
+          - "Registered Services: {{ consul_services.stdout }}"
+          - "Vault Service Details: {{ vault_service_details.stdout }}"
+
+  handlers:
+    - name: reload consul
+      ansible.builtin.systemd:
+        name: consul
+        state: reloaded
+
+    - name: restart consul
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted

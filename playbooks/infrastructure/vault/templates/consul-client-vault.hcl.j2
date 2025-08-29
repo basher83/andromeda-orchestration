@@ -1,0 +1,111 @@
+# Consul client configuration for Vault cluster nodes
+# {{ ansible_managed }}
+
+datacenter = "{{ consul_datacenter }}"
+node_name = "{{ inventory_hostname }}"
+server = false
+
+# Data directory
+data_dir = "{{ consul_data_dir }}"
+
+# Logging
+log_level = "INFO"
+log_file = "{{ consul_log_dir }}/consul.log"
+log_rotate_duration = "24h"
+log_rotate_max_files = 7
+
+# Network configuration
+bind_addr = "{{ ansible_default_ipv4.address }}"
+client_addr = "127.0.0.1"
+
+# UI access (local only)
+ui_config {
+  enabled = true
+}
+
+# Join configuration
+retry_join = {{ consul_retry_join | to_json }}
+retry_interval = "30s"
+retry_max = 10
+
+# Encryption
+encrypt = "{{ consul_encrypt }}"
+
+# ACL Configuration
+acl {
+  enabled = true
+  default_policy = "deny"
+  down_policy = "extend-cache"
+
+  tokens {
+{% if consul_acl_token %}
+    agent = "{{ consul_acl_token }}"
+{% else %}
+    # Token will be added after creation
+    agent = ""
+{% endif %}
+  }
+}
+
+# Performance tuning
+performance {
+  raft_multiplier = 1
+  rpc_hold_timeout = "7s"
+}
+
+# Telemetry for monitoring
+telemetry {
+  prometheus_retention_time = "60s"
+  disable_hostname = false
+
+  # StatsD configuration (if using Netdata)
+  statsd_address = "127.0.0.1:8125"
+
+  # Prefix for metrics
+  metrics_prefix = "consul"
+}
+
+# DNS Configuration
+dns_config {
+  node_ttl = "60s"
+  service_ttl {
+    "*" = "60s"
+  }
+  enable_truncate = true
+}
+
+# Limits
+limits {
+  http_max_conns_per_client = 200
+  rpc_max_conns_per_client = 100
+}
+
+# Enable local script checks
+enable_local_script_checks = true
+
+# Disable remote exec
+disable_remote_exec = true
+
+# Leave on terminate
+leave_on_terminate = true
+
+# Rejoin after leave
+rejoin_after_leave = true
+
+# Auto-encrypt for TLS (optional, configure if needed)
+# auto_encrypt {
+#   tls = true
+# }
+
+# Connect configuration (for service mesh, if needed)
+connect {
+  enabled = false
+}
+
+# Ports configuration
+ports {
+  dns = 8600
+  http = 8500
+  grpc = -1  # Disabled unless needed for Connect
+  serf_lan = 8301
+}

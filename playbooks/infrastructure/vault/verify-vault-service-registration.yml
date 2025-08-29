@@ -1,0 +1,96 @@
+---
+# Verify Vault service registration and check logs
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/verify-vault-service-registration.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Verify Vault Service Registration
+  hosts: vault_cluster
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Check Consul agent logs for errors
+      ansible.builtin.shell: |
+        journalctl -u consul -n 50 --no-pager | grep -E "(vault|error|ERROR|failed|denied)" | tail -10
+      register: consul_logs
+      changed_when: false
+      failed_when: false
+
+    - name: Display recent Consul logs
+      ansible.builtin.debug:
+        msg:
+          - "=== Recent Consul logs for {{ inventory_hostname }} ==="
+          - "{{ consul_logs.stdout_lines }}"
+      when: consul_logs.stdout_lines | length > 0
+
+    - name: Check if vault-service.hcl exists
+      ansible.builtin.stat:
+        path: /etc/consul.d/vault-service.hcl
+      register: service_file
+
+    - name: Display service file status
+      ansible.builtin.debug:
+        msg: "Service file exists: {{ service_file.stat.exists }}"
+
+    - name: Read service configuration if exists
+      ansible.builtin.slurp:
+        src: /etc/consul.d/vault-service.hcl
+      register: service_content
+      when: service_file.stat.exists
+
+    - name: Display service configuration
+      ansible.builtin.debug:
+        msg: "{{ service_content.content | b64decode }}"
+      when: service_file.stat.exists
+
+    - name: Force Consul to reload and parse configs
+      ansible.builtin.shell: |
+        consul reload
+        sleep 2
+        consul catalog services
+      register: reload_result
+      changed_when: false
+
+    - name: Display services after reload
+      ansible.builtin.debug:
+        msg:
+          - "Services after reload: {{ reload_result.stdout_lines[-1] }}"
+
+    - name: Check local agent services
+      ansible.builtin.shell: |
+        consul services list
+      register: local_services
+      changed_when: false
+      failed_when: false
+
+    - name: Display local agent services
+      ansible.builtin.debug:
+        msg:
+          - "Local agent services:"
+          - "{{ local_services.stdout }}"
+
+- name: Check from Consul server perspective
+  hosts: nomad-server-1-lloyd
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Check all registered services from Consul server
+      ansible.builtin.shell: |
+        consul catalog services
+      register: all_services
+      changed_when: false
+
+    - name: Check for vault service specifically
+      ansible.builtin.shell: |
+        consul catalog nodes -service=vault 2>/dev/null || echo "No vault service found"
+      register: vault_nodes
+      changed_when: false
+      failed_when: false
+
+    - name: Display service registration summary
+      ansible.builtin.debug:
+        msg:
+          - "=== Service Registration Summary from Consul Server ==="
+          - "All services: {{ all_services.stdout }}"
+          - "Vault service nodes: {{ vault_nodes.stdout }}"

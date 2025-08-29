@@ -1,0 +1,61 @@
+---
+# Update Consul ACL policy for Vault clients
+# Usage:
+# export CONSUL_MASTER_TOKEN=$(infisical secrets get CONSUL_MASTER_TOKEN --env=prod --path=/apollo-13/consul --plain)
+# uv run ansible-playbook playbooks/infrastructure/vault/update-consul-acl-policy.yml -i inventory/environments/doggos-homelab/proxmox.yml
+
+- name: Update Consul ACL Policy for Vault Clients
+  hosts: nomad-server-1-lloyd
+  gather_facts: false
+
+  vars:
+    consul_master_token: "{{ lookup('env', 'CONSUL_MASTER_TOKEN') }}"
+    policy_name: "vault-client-policy"
+    consul_addr: "http://127.0.0.1:8500"
+
+  tasks:
+    - name: Verify master token is set
+      ansible.builtin.assert:
+        that:
+          - consul_master_token != ""
+        fail_msg: "CONSUL_MASTER_TOKEN environment variable must be set"
+        success_msg: "Master token verified"
+
+    - name: Copy updated Vault client ACL policy file
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../../roles/consul/files/policies/vault-client.hcl"
+        dest: /tmp/vault-client-policy.hcl
+        mode: '0600'
+      become: true
+
+    - name: Update Vault client ACL policy
+      ansible.builtin.shell: |
+        consul acl policy update \
+          -name="{{ policy_name }}" \
+          -description="Policy for Vault Consul client agents (updated)" \
+          -rules=@/tmp/vault-client-policy.hcl \
+          -token="{{ consul_master_token }}"
+      register: policy_update
+      become: true
+
+    - name: Display policy update result
+      ansible.builtin.debug:
+        msg:
+          - "✅ Policy '{{ policy_name }}' has been updated"
+          - "{{ policy_update.stdout }}"
+
+    - name: Clean up policy file
+      ansible.builtin.file:
+        path: /tmp/vault-client-policy.hcl
+        state: absent
+      become: true
+
+    - name: Display next steps
+      ansible.builtin.debug:
+        msg:
+          - "✅ ACL Policy updated successfully!"
+          - ""
+          - "The tokens don't need to be regenerated - the existing tokens"
+          - "will automatically use the updated policy permissions."
+          - ""
+          - "Next: Run the fix-vault-service-registration playbook to apply the service configuration."
