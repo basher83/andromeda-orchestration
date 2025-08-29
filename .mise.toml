@@ -39,7 +39,7 @@ python.uv_venv_auto = true
 NOMAD_REGION = "global"
 NOMAD_ADDR = "http://192.168.11.11:4646"
 CONSUL_HTTP_ADDR = "http://192.168.11.11:8500"
-VAULT_ADDR = "https://vault-prod-1-holly.tailfb3ea.ts.net:8200"  # Commented out to avoid conflicts with dynamic Vault configuration
+# VAULT_ADDR = "https://vault-prod-1-holly.tailfb3ea.ts.net:8200"  # Commented out to avoid conflicts with dynamic Vault configuration
 
 # Ansible configuration
 # ANSIBLE_INVENTORY = "inventory/environments/doggos-homelab"  # Temporarily disabled for Infisical testing
