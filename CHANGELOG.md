@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Test commit
+
 ## [2025-08-26] - Infrastructure Modernization & Security Hardening
 
 ### Changed
 
 - **Complete Migration from Taskfile to Mise**
+
   - Migrated all development tasks to `.mise.toml` for unified tool management
   - Implemented auto-installation of development tools
   - Added smart caching for improved performance
@@ -56,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - **Critical Token Removal from Git History**
+
   - Removed two exposed Nomad tokens from git history
   - Used `uvx git-filter-repo` to clean entire repository history
   - Replaced tokens with `[REDACTED]` placeholders throughout history
@@ -71,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Three-Tier Project Management System**
+
   - Implemented Strategic/Tactical/Operational project management tiers
   - Added Architecture Decision Records (ADR) framework with template
   - Created dynamic GitHub badges to eliminate manual date updates
@@ -78,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Moved technical documents to appropriate implementation directories
 
 - **Dual-Approach HashiCorp Service Status Checks**
+
   - Created ADR-2025-08-27 documenting architectural decision for status check strategy
   - Added `playbooks/assessment/quick-status.yml` for authenticated status verification via Infisical
   - Implemented `mise run status:quick` for fast unauthenticated connectivity checks (< 1 second)
@@ -85,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added individual service checks: `status:consul`, `status:nomad`, `status:vault`
 
 - **Python Environment Compatibility Fix**
+
   - Downgraded Python from 3.13 to 3.12 for `infisical-python` package compatibility
   - Pinned `infisical-python==2.3.5` (last version with Linux wheels for Python 3.12)
   - Updated `.mise.toml` and `pyproject.toml` with Python version constraints
@@ -97,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Repository Remote URL**
+
   - Updated git remote from `netbox-ansible` to `andromeda-orchestration`
   - New repository URL: `https://github.com/basher83/andromeda-orchestration.git`
 
@@ -125,6 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Vault Production Infrastructure**
+
   - Created dedicated `inventory/vault-cluster/` with production configuration
   - Added 4-node Vault cluster inventory (1 transit master + 3 Raft storage nodes)
   - Implemented `playbooks/infrastructure/vault/configure-production-nodes.yml` for secure deployment
@@ -132,6 +141,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `playbooks/infrastructure/vault/unseal-vault.yml` for automated unsealing
 
 - **Security Enhancements**
+
   - Integrated Infisical for all Vault secrets management (no hardcoded tokens)
   - Implemented token masking in debug output (shows first 8 + last 4 chars only)
   - Added pre-deployment validation for secret availability
@@ -171,16 +181,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Comprehensive Troubleshooting Documentation**
+
   - Created `docs/troubleshooting/ansible-nomad-playbooks.md` - Complete guide for Nomad deployment issues
   - Added `docs/troubleshooting/domain-migration.md` - Domain migration troubleshooting guide
   - Added `docs/troubleshooting/dns-resolution-loops.md` - DNS resolution issue fixes
   - Added `docs/troubleshooting/traefik-external-access.md` - External access configuration guide
 
 - **Assessment and Monitoring Playbooks**
+
   - `playbooks/assessment/nomad-job-status.yml` - Comprehensive job status reporting with detailed health checks
   - Automated report generation in `reports/nomad/` for tracking deployment status
 
 - **Infrastructure Fix Playbooks**
+
   - `playbooks/fix/disable-iptables.yml` - Resolve iptables conflicts with Docker/nftables
   - `playbooks/fix/fix-dns-resolution-loop.yml` - Fix DNS resolution loops in infrastructure
   - `playbooks/infrastructure/network/update-nftables-traefik.yml` - Proper nftables configuration for Traefik
@@ -193,12 +206,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Traefik Load Balancer Hardening**
+
   - Enhanced `nomad-jobs/core-infrastructure/traefik.nomad.hcl` with improved health checks
   - Added proper DNS resolution configuration for Docker containers
   - Implemented robust service discovery with Consul integration
   - Fixed external access issues with proper entrypoint configuration
 
 - **Nomad Deployment Reliability**
+
   - Improved `playbooks/infrastructure/nomad/deploy-job.yml` with better error handling
   - Added job validation and planning steps before deployment
   - Enhanced feedback and status reporting during deployments
