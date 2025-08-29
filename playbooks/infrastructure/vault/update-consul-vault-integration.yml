@@ -1,0 +1,150 @@
+---
+# Update Consul agents to properly validate Vault PKI certificates
+# This playbook deploys the CA bundle to Consul agents and updates service definitions
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/update-consul-vault-integration.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Deploy CA Bundle to Consul Agents and Update Vault Service
+  hosts: vault_production
+  gather_facts: yes
+  
+  vars:
+    consul_config_dir: "/etc/consul.d"
+    consul_ca_dir: "/opt/consul/tls"
+    vault_ca_bundle: "/opt/vault/tls/ca-bundle.pem"
+    
+  tasks:
+    - name: Check if Consul agent is installed
+      ansible.builtin.stat:
+        path: /usr/bin/consul
+      register: consul_binary
+      become: true
+
+    - name: Check if Vault CA bundle exists
+      ansible.builtin.stat:
+        path: "{{ vault_ca_bundle }}"
+      register: ca_bundle_file
+      become: true
+
+    - name: Display CA bundle status
+      ansible.builtin.debug:
+        msg: "CA Bundle exists: {{ ca_bundle_file.stat.exists }}"
+
+    - name: Create Consul TLS directory
+      ansible.builtin.file:
+        path: "{{ consul_ca_dir }}"
+        state: directory
+        owner: consul
+        group: consul
+        mode: '0755'
+      become: true
+      when: 
+        - consul_binary.stat.exists
+        - ca_bundle_file.stat.exists
+
+    - name: Copy Vault CA bundle to Consul
+      ansible.builtin.copy:
+        src: "{{ vault_ca_bundle }}"
+        dest: "{{ consul_ca_dir }}/vault-ca-bundle.pem"
+        remote_src: yes
+        owner: consul
+        group: consul
+        mode: '0644'
+      become: true
+      when: 
+        - consul_binary.stat.exists
+        - ca_bundle_file.stat.exists
+      register: ca_deployed
+
+    - name: Check if Consul service definition exists
+      ansible.builtin.stat:
+        path: "{{ consul_config_dir }}/vault.json"
+      register: consul_vault_service
+      become: true
+
+    - name: Deploy updated Vault service definition
+      ansible.builtin.template:
+        src: templates/consul-vault-service.json.j2
+        dest: "{{ consul_config_dir }}/vault.json"
+        owner: consul
+        group: consul
+        mode: '0644'
+      become: true
+      when: consul_binary.stat.exists
+      register: service_updated
+
+    - name: Validate Consul configuration
+      ansible.builtin.command: consul validate {{ consul_config_dir }}
+      become: true
+      when: 
+        - consul_binary.stat.exists
+        - service_updated.changed or ca_deployed.changed
+      register: consul_validate
+
+    - name: Reload Consul configuration
+      ansible.builtin.systemd:
+        name: consul
+        state: reloaded
+      become: true
+      when: 
+        - consul_binary.stat.exists
+        - service_updated.changed or ca_deployed.changed
+        - consul_validate.rc == 0
+
+    - name: Wait for Consul to stabilize
+      ansible.builtin.pause:
+        seconds: 5
+      when: service_updated.changed or ca_deployed.changed
+
+- name: Verify Consul Health Checks
+  hosts: vault_production[0]
+  gather_facts: no
+  
+  vars:
+    consul_addr: "http://{{ ansible_host }}:8500"
+    
+  tasks:
+    - name: Check Vault service health in Consul
+      ansible.builtin.uri:
+        url: "{{ consul_addr }}/v1/health/service/vault"
+        method: GET
+      register: vault_health
+      delegate_to: localhost
+      failed_when: false
+
+    - name: Parse health check results
+      ansible.builtin.set_fact:
+        healthy_nodes: "{{ vault_health.json | selectattr('Checks', 'defined') | selectattr('Checks.0.Status', 'equalto', 'passing') | list | length if vault_health.json is defined else 0 }}"
+        total_nodes: "{{ vault_health.json | length if vault_health.json is defined else 0 }}"
+      when: vault_health.status == 200
+
+    - name: Display health check summary
+      ansible.builtin.debug:
+        msg:
+          - "====================================="
+          - "Consul Vault Service Health Summary"
+          - "====================================="
+          - "Healthy Nodes: {{ healthy_nodes | default(0) }}/{{ total_nodes | default(0) }}"
+          - ""
+          - "{% if vault_health.json is defined %}{% for node in vault_health.json %}"
+          - "Node: {{ node.Node.Node }}"
+          - "  Service Status: {{ node.Checks[1].Status if node.Checks[1] is defined else 'Unknown' }}"
+          - "  TLS Validation: {{ 'Enabled' if not (node.Service.Meta.tls_skip_verify | default(false)) else 'Disabled' }}"
+          - "{% endfor %}{% endif %}"
+          - "====================================="
+      when: vault_health.status == 200
+
+    - name: Report if health checks are failing
+      ansible.builtin.debug:
+        msg:
+          - "⚠️  WARNING: Some Vault nodes are not healthy in Consul"
+          - "This may be due to:"
+          - "1. Consul agents not having the CA bundle"
+          - "2. Certificates not properly deployed"
+          - "3. Network connectivity issues"
+          - ""
+          - "Run the full certificate validation playbook to diagnose:"
+          - "uv run ansible-playbook playbooks/infrastructure/vault/check-vault-tls-status.yml -i inventory/environments/vault-cluster/production.yaml"
+      when: 
+        - vault_health.status == 200
+        - healthy_nodes | int < total_nodes | int
