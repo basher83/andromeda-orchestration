@@ -1,0 +1,269 @@
+---
+# Setup Vault PKI Engine as Root CA
+# This playbook implements Issue #95 - Set up Vault PKI Engine as Root CA
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/setup-pki-root-ca.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Setup Vault PKI Engine as Root Certificate Authority
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    vault_addr: "{{ lookup('env', 'VAULT_ADDR') }}"
+    vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
+
+    # PKI Configuration
+    pki_path: "pki"
+    pki_max_lease_ttl: "87600h"  # 10 years for root CA
+
+    # Root CA Configuration
+    root_ca_common_name: "HomeLab Root CA"
+    root_ca_issuer_name: "root-ca-2025"
+    root_ca_ttl: "87600h"  # 10 years
+
+    # URLs Configuration
+    vault_public_url: "https://vault.spaceships.work:8200"
+
+    # Certificate Roles
+    pki_roles:
+      - name: "infrastructure"
+        description: "Role for Vault, Consul, and Nomad services"
+        allowed_domains:
+          - "spaceships.work"
+          - "consul"
+          - "nomad"
+          - "vault"
+        allow_subdomains: true
+        allow_bare_domains: true
+        allow_glob_domains: false
+        server_flag: true
+        client_flag: true
+        max_ttl: "8760h"  # 1 year
+        ttl: "720h"      # 30 days default
+
+      - name: "service"
+        description: "Role for application services"
+        allowed_domains:
+          - "service.consul"
+          - "app.spaceships.work"
+        allow_subdomains: true
+        allow_bare_domains: false
+        server_flag: true
+        client_flag: false
+        max_ttl: "4320h"  # 6 months
+        ttl: "168h"       # 7 days default
+
+      - name: "client"
+        description: "Role for mTLS client certificates"
+        allowed_domains:
+          - "client.spaceships.work"
+        allow_subdomains: true
+        allow_bare_domains: false
+        server_flag: false
+        client_flag: true
+        max_ttl: "720h"   # 30 days
+        ttl: "24h"        # 1 day default
+
+  tasks:
+    - name: Verify Vault connectivity
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "sys/health"
+        validate_certs: false
+        # This is a status check endpoint
+      register: vault_health
+      failed_when: false
+
+    - name: Check Vault health status
+      ansible.builtin.assert:
+        that:
+          - vault_health is not failed
+        fail_msg: "Cannot connect to Vault at {{ vault_addr }}"
+        success_msg: "Vault is accessible"
+
+    - name: Check if PKI engine is already enabled
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "sys/mounts/{{ pki_path }}"
+        validate_certs: false
+      register: pki_mount_check
+      failed_when: false
+
+    - name: Enable PKI secrets engine
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "sys/mounts/{{ pki_path }}"
+        validate_certs: false
+        data:
+          type: "pki"
+          description: "Root Certificate Authority"
+          config:
+            max_lease_ttl: "{{ pki_max_lease_ttl }}"
+      when: pki_mount_check.data is not defined
+      register: pki_enabled
+
+    - name: Tune PKI mount if already exists
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "sys/mounts/{{ pki_path }}/tune"
+        validate_certs: false
+        data:
+          max_lease_ttl: "{{ pki_max_lease_ttl }}"
+      when: pki_mount_check.data is defined
+
+    - name: Check if Root CA already exists
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "{{ pki_path }}/ca/pem"
+        validate_certs: false
+      register: existing_ca
+      failed_when: false
+
+    - name: Generate Root CA certificate
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "{{ pki_path }}/root/generate/internal"
+        validate_certs: false
+        data:
+          common_name: "{{ root_ca_common_name }}"
+          issuer_name: "{{ root_ca_issuer_name }}"
+          ttl: "{{ root_ca_ttl }}"
+          key_type: "rsa"
+          key_bits: 4096
+          exclude_cn_from_sans: true
+          ou: "Infrastructure"
+          organization: "HomeLab"
+      when: existing_ca.data is not defined or existing_ca.data.data is not defined
+      register: root_ca_result
+
+    - name: Save Root CA certificate to local file
+      ansible.builtin.copy:
+        content: "{{ root_ca_result.data.data.certificate if root_ca_result is not skipped else existing_ca.data.data }}"
+        dest: "/tmp/homelab-root-ca.pem"
+        mode: '0644'
+      delegate_to: localhost
+      when: root_ca_result is not skipped or existing_ca.data.data is defined
+
+    - name: Configure CA and CRL URLs
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "{{ pki_path }}/config/urls"
+        validate_certs: false
+        data:
+          issuing_certificates: "{{ vault_public_url }}/v1/{{ pki_path }}/ca"
+          crl_distribution_points: "{{ vault_public_url }}/v1/{{ pki_path }}/crl"
+          ocsp_servers: "{{ vault_public_url }}/v1/{{ pki_path }}/ocsp"
+
+    - name: Configure CRL settings
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "{{ pki_path }}/config/crl"
+        validate_certs: false
+        data:
+          expiry: "72h"
+          disable: false
+
+    - name: Create PKI roles
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "{{ pki_path }}/roles/{{ item.name }}"
+        validate_certs: false
+        data:
+          allowed_domains: "{{ item.allowed_domains }}"
+          allow_subdomains: "{{ item.allow_subdomains }}"
+          allow_bare_domains: "{{ item.allow_bare_domains }}"
+          allow_glob_domains: "{{ item.allow_glob_domains | default(false) }}"
+          server_flag: "{{ item.server_flag }}"
+          client_flag: "{{ item.client_flag }}"
+          code_signing_flag: false
+          email_protection_flag: false
+          key_type: "rsa"
+          key_bits: 2048
+          max_ttl: "{{ item.max_ttl }}"
+          ttl: "{{ item.ttl }}"
+          enforce_hostnames: true
+          allow_ip_sans: true
+          ou: "{{ item.description }}"
+          organization: "HomeLab"
+      loop: "{{ pki_roles }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Test certificate generation with infrastructure role
+      community.hashi_vault.vault_pki_generate_certificate:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        engine_mount_point: "{{ pki_path }}"
+        role_name: "infrastructure"
+        common_name: "test.vault.spaceships.work"
+        ttl: "24h"
+        validate_certs: false
+      register: test_cert
+
+    - name: Verify test certificate generation
+      ansible.builtin.assert:
+        that:
+          - test_cert is not failed
+          - test_cert.data.data.certificate is defined
+        fail_msg: "Failed to generate test certificate"
+        success_msg: "Successfully generated test certificate"
+
+    - name: Store Root CA in Infisical for backup
+      ansible.builtin.shell: |
+        infisical secrets set ROOT_CA_CERTIFICATE="$(cat /tmp/homelab-root-ca.pem)" \
+          --env=prod \
+          --path=/apollo-13/pki
+      environment:
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      delegate_to: localhost
+      when: root_ca_result is not skipped
+
+    - name: Display PKI setup summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ PKI Infrastructure Setup Complete!"
+          - ""
+          - "🔐 Root CA Configuration:"
+          - "   - Common Name: {{ root_ca_common_name }}"
+          - "   - Issuer Name: {{ root_ca_issuer_name }}"
+          - "   - Valid For: {{ root_ca_ttl }}"
+          - "   - Mount Path: {{ pki_path }}/"
+          - ""
+          - "📝 Certificate Roles Created:"
+          - "   - infrastructure: For HashiCorp services (Vault, Consul, Nomad)"
+          - "   - service: For application services"
+          - "   - client: For mTLS client certificates"
+          - ""
+          - "🌐 CA URLs Configured:"
+          - "   - CA Certificate: {{ vault_public_url }}/v1/{{ pki_path }}/ca"
+          - "   - CRL: {{ vault_public_url }}/v1/{{ pki_path }}/crl"
+          - "   - OCSP: {{ vault_public_url }}/v1/{{ pki_path }}/ocsp"
+          - ""
+          - "📋 Next Steps:"
+          - "   1. Create Intermediate CA (Issue #96)"
+          - "   2. Replace self-signed certificates (Issue #97)"
+          - "   3. Implement mTLS (Issue #98)"
+          - ""
+          - "🔒 Root CA certificate saved to:"
+          - "   - Local: /tmp/homelab-root-ca.pem"
+          - "   - Infisical: /apollo-13/pki/ROOT_CA_CERTIFICATE"
