@@ -1,7 +1,6 @@
 ---
 # Check Vault-Consul integration status
 # Usage:
-# export CONSUL_MASTER_TOKEN=$(infisical secrets get CONSUL_MASTER_TOKEN --env=prod --path=/apollo-13/consul --plain)
 # uv run ansible-playbook playbooks/infrastructure/vault/vault-consul-status.yml -i inventory/environments/doggos-homelab/proxmox.yml
 
 - name: Check Vault-Consul Integration Status
@@ -9,14 +8,21 @@
   gather_facts: false
 
   vars:
-    consul_token: "{{ lookup('env', 'CONSUL_MASTER_TOKEN') }}"
+    consul_token: >-
+      {{ lookup('infisical.vault.read_secrets',
+                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                env_slug='prod',
+                path='/apollo-13/consul',
+                secret_name='CONSUL_MASTER_TOKEN').value }}
 
   tasks:
     - name: Verify master token is set
       ansible.builtin.assert:
         that:
           - consul_token != ""
-        fail_msg: "CONSUL_MASTER_TOKEN environment variable must be set"
+        fail_msg: "Failed to retrieve CONSUL_MASTER_TOKEN from Infisical"
         success_msg: "Master token verified"
 
     - name: Get all Vault service nodes

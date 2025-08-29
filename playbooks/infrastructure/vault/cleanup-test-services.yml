@@ -63,16 +63,23 @@
   gather_facts: false
 
   vars:
-    consul_token: "{{ lookup('env', 'CONSUL_MASTER_TOKEN') }}"
+    consul_token: >-
+      {{ lookup('infisical.vault.read_secrets',
+                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                env_slug='prod',
+                path='/apollo-13/consul',
+                secret_name='CONSUL_MASTER_TOKEN').value }}
 
   tasks:
-    - name: Set master token from environment
+    - name: Set master token from Infisical lookup
       set_fact:
-        master_token: "{{ lookup('env', 'CONSUL_MASTER_TOKEN') }}"
+        master_token: "{{ consul_token }}"
       delegate_to: localhost
       become: false
 
-    - name: Retrieve master token if not in environment
+    - name: Retrieve master token if not already set
       ansible.builtin.shell: |
         infisical secrets get CONSUL_MASTER_TOKEN --env=prod --path=/apollo-13/consul --plain
       delegate_to: localhost
