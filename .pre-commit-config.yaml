@@ -6,7 +6,7 @@
 repos:
   # YAML linting
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         exclude: ^(\.infisical-scan\.toml)$
@@ -27,7 +27,7 @@ repos:
 
   # YAML formatting
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.37.1
     hooks:
       - id: yamllint
         args: [--config-file=.yamllint]
@@ -35,7 +35,7 @@ repos:
 
   # Python code quality (for custom modules/plugins)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.4
+    rev: v0.12.11
     hooks:
       - id: ruff
         args: [--fix]
@@ -43,7 +43,7 @@ repos:
 
   # Python type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.9.0
+    rev: v1.17.1
     hooks:
       - id: mypy
         additional_dependencies: [types-requests, types-pyyaml]
@@ -52,7 +52,7 @@ repos:
 
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
+    rev: v0.11.0.1
     hooks:
       - id: shellcheck
         args: [--severity=warning]
@@ -60,7 +60,7 @@ repos:
   # Markdown linting
   # Using markdownlint-cli2 for better configuration support
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.12.1
+    rev: v0.18.1
     hooks:
       - id: markdownlint-cli2
         args: [--fix]
