@@ -1,27 +1,28 @@
 {
-    "image": "mcr.microsoft.com/devcontainers/universal:3",
-    "runArgs": [
-        "--device=/dev/net/tun"
-    ],
-    "features": {
-        "ghcr.io/tailscale/codespace/tailscale": {}
-    },
-    "postCreateCommand": ".devcontainer/setup-mise.sh",
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "hverlin.mise-vscode",
-                "DavidAnson.vscode-markdownlint",
-                "tamasfe.even-better-toml",
-                "GitHub.copilot",
-                "GitHub.copilot-chat",
-                "HashiCorp.HCL",
-                "samuelcolvin.jinjahtml",
-                "SanjulaGanepola.github-local-actions"
-            ]
-        }
-    },
-    "mounts": [
-        "source=mise-data-volume,target=/mnt/mise-data,type=volume"
-    ]
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hverlin.mise-vscode",
+        "DavidAnson.vscode-markdownlint",
+        "tamasfe.even-better-toml",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "HashiCorp.HCL",
+        "samuelcolvin.jinjahtml",
+        "SanjulaGanepola.github-local-actions"
+      ]
+    }
+  },
+  "features": {
+    "ghcr.io/skriptfabrik/devcontainer-features/infisical-cli:1": {},
+    "ghcr.io/tailscale/codespace/tailscale": {}
+  },
+  "image": "mcr.microsoft.com/devcontainers/universal:3",
+  "mounts": [
+    "source=mise-data-volume,target=/mnt/mise-data,type=volume"
+  ],
+  "postCreateCommand": ".devcontainer/setup-mise.sh",
+  "runArgs": [
+    "--device=/dev/net/tun"
+  ]
 }
