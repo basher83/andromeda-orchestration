@@ -57,107 +57,169 @@ ANSIBLE_PYTHON_INTERPRETER = "auto_silent"
 # ============================================================================
 
 [tasks.setup]
-description = "Complete project setup with all dependencies"
+description = "Smart setup - only installs what's needed"
 run = '''
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "🚀 Starting Andromeda Orchestration Setup"
-echo "========================================="
+echo "🚀 Andromeda Orchestration Smart Setup"
+echo "======================================="
 echo ""
 
-# Step 1: Tool versions (mise handles installation automatically)
-echo "🔍 Step 1: Tool versions..."
-echo "----------------------------"
-echo "✅ uv version: $(uv --version)"
-echo "✅ Python version: $(python --version)"
-
-# Deprecated, handled by python.uv_venv_auto = true
-# Step 2: Create virtual environment
-# echo ""
-# echo "🐍 Step 2: Setting up Python virtual environment..."
-# echo "--------------------------------------------------"
-# if [ ! -d ".venv" ]; then
-#   uv venv
-#   echo "✅ Virtual environment created"
-# else
-#   echo "✅ Virtual environment already exists"
-# fi
-
-# Step 3: Install Python dependencies
-echo ""
-echo "📦 Step 3: Installing Python dependencies..."
-echo "-------------------------------------------"
-uv sync --extra dev --extra secrets || {
-  echo "⚠️  Some optional dependencies failed, continuing..."
+# Step 1: Python dependencies (uv is fast, always sync)
+echo "📦 Step 1: Python dependencies..."
+echo "----------------------------------"
+# Always sync base and dev - uv is fast enough
+uv sync --extra dev || {
+  echo "❌ Failed to install base dependencies"
+  exit 1
 }
 
-# Step 4: Install Ansible collections
-echo ""
-echo "📚 Step 4: Installing Ansible collections..."
-echo "-------------------------------------------"
-uv run ansible-galaxy collection install -r requirements.yml --force
+# Try secrets extra separately (platform-specific)
+if ! uv pip list 2>/dev/null | grep -q "infisical-python"; then
+  echo "   Attempting to install secrets extra..."
+  uv sync --extra secrets 2>/dev/null || {
+    echo "   ⚠️  infisical-python not available for this platform"
+    echo "   Using Infisical CLI instead"
+  }
+fi
+echo "✅ Python environment ready"
 
-# Step 5: Setup pre-commit hooks
+# Step 2: Ansible collections (check if update needed)
 echo ""
-echo "🔧 Step 5: Setting up pre-commit hooks..."
-echo "-----------------------------------------"
-uv run pre-commit install
-echo "✅ Pre-commit hooks installed"
+echo "📚 Step 2: Ansible collections..."
+echo "---------------------------------"
+COLLECTIONS_DIR="$(pwd)/.ansible/collections/ansible_collections"
+REQUIREMENTS_FILE="requirements.yml"
 
-# Step 6: Setup Infisical secret scanning
+# Ensure ansible uses local collections path
+export ANSIBLE_COLLECTIONS_PATH="$(pwd)/.ansible/collections:${ANSIBLE_COLLECTIONS_PATH:-}"
+
+# Check if collections need updating
+needs_update=false
+if [ ! -d "$COLLECTIONS_DIR" ]; then
+  echo "   No collections found, installing..."
+  needs_update=true
+elif [ "$REQUIREMENTS_FILE" -nt "$COLLECTIONS_DIR" ]; then
+  echo "   requirements.yml changed, updating..."
+  needs_update=true
+else
+  # Check if all required collections exist
+  while IFS= read -r collection; do
+    if [[ "$collection" =~ ^[[:space:]]*-[[:space:]]*name:[[:space:]]*(.+) ]]; then
+      coll_name="${BASH_REMATCH[1]}"
+      coll_path="$COLLECTIONS_DIR/${coll_name//.//}"
+      if [ ! -d "$coll_path" ]; then
+        echo "   Missing collection: $coll_name"
+        needs_update=true
+        break
+      fi
+    fi
+  done < "$REQUIREMENTS_FILE"
+fi
+
+if [ "$needs_update" = true ]; then
+  uv run ansible-galaxy collection install -r requirements.yml --force -p "$(pwd)/.ansible/collections"
+  echo "✅ Collections installed/updated"
+else
+  echo "✅ Collections already up-to-date"
+fi
+
+# Step 3: Pre-commit hooks (only if not installed)
 echo ""
-echo "🔐 Step 6: Setting up Infisical secret scanning..."
-echo "-------------------------------------------------"
+echo "🔧 Step 3: Pre-commit hooks..."
+echo "------------------------------"
+if [ ! -f ".git/hooks/pre-commit" ]; then
+  uv run pre-commit install
+  echo "✅ Pre-commit hooks installed"
+else
+  echo "✅ Pre-commit hooks already installed"
+fi
+
+# Step 4: Infisical scanning (optional)
+echo ""
+echo "🔐 Step 4: Security scanning..."
+echo "-------------------------------"
 if command -v infisical >/dev/null 2>&1; then
-  infisical scan install --pre-commit-hook >/dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    echo "✅ Infisical pre-commit hook installed"
+  if ! grep -q "infisical scan" .git/hooks/pre-commit 2>/dev/null; then
+    infisical scan install --pre-commit-hook >/dev/null 2>&1 && \
+      echo "✅ Infisical scanning enabled" || \
+      echo "✅ Infisical scanning already enabled"
   else
-    echo "ℹ️  Infisical hook already installed"
+    echo "✅ Infisical scanning already enabled"
   fi
 else
-  echo "ℹ️  Skipping Infisical (not installed)"
-  echo "   Install: brew install infisical/brew/infisical"
+  echo "ℹ️  Infisical CLI not installed (optional)"
 fi
 
-# Step 7: Verification
+# Step 5: Quick verification
 echo ""
-echo "📋 Step 7: Verification..."
-echo "-------------------------"
-echo "Python: $(uv run python --version)"
-echo "Ansible: $(uv run ansible --version | head -1)"
+echo "📋 Verification"
+echo "--------------"
+echo "• Python: $(uv run python --version 2>&1 | head -1)"
+echo "• Ansible: $(uv run ansible --version 2>&1 | head -1)"
+echo "• Collections: $(find $COLLECTIONS_DIR -maxdepth 2 -type d 2>/dev/null | wc -l) installed"
 
-# Check Infisical credentials
-if [ -n "$INFISICAL_TOKEN" ] || [ -n "$INFISICAL_MACHINE_IDENTITY_CLIENT_ID" ]; then
-  echo "✅ Infisical credentials detected"
+# Check for credentials
+echo ""
+if [ -n "${INFISICAL_TOKEN:-}" ] || [ -n "${INFISICAL_MACHINE_IDENTITY_CLIENT_ID:-}" ]; then
+  echo "✅ Infisical credentials configured"
+elif [ -f ".mise.local.toml" ]; then
+  echo "✅ Local config found (.mise.local.toml)"
 else
-  echo "ℹ️  Infisical credentials not configured"
+  echo "ℹ️  Remember to configure credentials in .mise.local.toml"
 fi
 
 echo ""
-echo "✨ Setup complete! You're ready to use the project."
-echo ""
-echo "Quick start commands:"
-echo "  mise run status      # Check cluster health"
-echo "  mise run lint        # Lint your code"
-echo "  mise run test        # Run tests"
-echo ""
-echo "For more: mise tasks"
+echo "✨ Ready to work! Try: mise run status"
 '''
 tools = { "uv" = "0.8.13", "python" = "3.13.7" }
 
 [tasks."setup:quick"]
-description = "Quick setup - Python deps and Ansible collections only"
+description = "Ultra-fast refresh - sync Python deps only"
 run = '''
-echo "⚡ Quick Setup (dependencies only)"
-echo "=================================="
+echo "⚡ Quick Refresh"
+echo "==============="
 
-[ ! -d ".venv" ] && uv venv
-uv sync --extra dev || echo "⚠️  Some optional deps failed"
+# Just sync Python deps - uv is blazing fast
+uv sync --extra dev 2>/dev/null || uv sync
+
+# Quick check
+echo "✅ $(uv run python --version 2>&1 | head -1)"
+echo "✅ $(uv run ansible --version 2>&1 | head -1)"
+echo ""
+echo "Ready! Run 'mise setup' for full setup if needed."
+'''
+tools = { "uv" = "0.8.13", "python" = "3.13.7" }
+
+[tasks."setup:force"]
+description = "Force reinstall everything (clean slate)"
+run = '''
+echo "🔄 Force Reinstall"
+echo "=================="
+echo ""
+echo "⚠️  This will reinstall all dependencies from scratch"
+echo ""
+
+# Clean Python environment
+echo "Cleaning Python environment..."
+rm -rf .venv
+uv venv
+uv sync --extra dev --extra secrets
+
+# Force reinstall collections
+echo "Reinstalling Ansible collections..."
+rm -rf .ansible/collections
 uv run ansible-galaxy collection install -r requirements.yml --force
 
-echo "✅ Quick setup complete!"
+# Reinstall pre-commit
+echo "Reinstalling pre-commit hooks..."
+uv run pre-commit uninstall 2>/dev/null || true
+uv run pre-commit install
+uv run pre-commit install --install-hooks
+
+echo ""
+echo "✅ Everything reinstalled from scratch!"
 '''
 tools = { "uv" = "0.8.13", "python" = "3.13.7" }
 
