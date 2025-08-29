@@ -1,0 +1,277 @@
+---
+# Replace Self-Signed Certificates with CA-Issued Ones for Vault Cluster
+# This playbook implements Issue #97 - Replace Self-Signed Certificates
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certificates.yml -i inventory/environments/vault-cluster/production.yaml
+
+- name: Replace Self-Signed Certificates with PKI-Issued Certificates
+  hosts: vault_production
+  gather_facts: yes
+  serial: 1  # Process one node at a time for zero downtime
+
+  vars:
+    # Vault connection for certificate generation
+    vault_addr: "https://192.168.10.31:8200"
+    vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
+
+    # PKI Configuration
+    pki_mount: "pki_int"
+    pki_role: "infrastructure"
+    cert_ttl: "720h"  # 30 days
+
+    # Certificate paths on target nodes
+    tls_dir: "/opt/vault/tls"
+    backup_dir: "/opt/vault/tls/backup-{{ ansible_date_time.epoch }}"
+
+    # Check if certificates exist first
+    check_cert_exists: true
+
+    # CA chain paths
+    ca_bundle_path: "/opt/vault/tls/ca-bundle.pem"
+    system_ca_path: "/usr/local/share/ca-certificates"
+
+  tasks:
+    - name: Create backup directory for existing certificates
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        owner: vault
+        group: vault
+        mode: '0700'
+      become: true
+
+    - name: Check if existing certificates exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      with_items:
+        - "{{ tls_dir }}/vault-cert.pem"
+        - "{{ tls_dir }}/vault-key.pem"
+        - "{{ tls_dir }}/vault-ca.pem"
+        - "{{ tls_dir }}/tls.crt"
+        - "{{ tls_dir }}/tls.key"
+      register: cert_files
+      become: true
+
+    - name: Backup existing certificates
+      ansible.builtin.copy:
+        src: "{{ item.item }}"
+        dest: "{{ backup_dir }}/{{ item.item | basename }}"
+        remote_src: yes
+        owner: vault
+        group: vault
+        mode: '0600'
+      with_items: "{{ cert_files.results }}"
+      when: item.stat.exists
+      become: true
+      loop_control:
+        label: "{{ item.item | basename }}"
+
+    - name: Generate new certificate from Vault PKI
+      community.hashi_vault.vault_pki_generate_certificate:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        engine_mount_point: "{{ pki_mount }}"
+        role_name: "{{ pki_role }}"
+        common_name: "{{ inventory_hostname }}.{{ vault_domain }}"
+        alt_names:
+          - "{{ inventory_hostname }}"
+          - "vault.service.consul"
+          - "{{ inventory_hostname }}.vault"
+          - "localhost"
+        ip_sans:
+          - "{{ ansible_host }}"
+          - "127.0.0.1"
+        ttl: "{{ cert_ttl }}"
+        validate_certs: false
+      delegate_to: localhost
+      register: new_cert
+
+    - name: Display certificate serial number for tracking
+      ansible.builtin.debug:
+        msg: "Generated certificate with serial: {{ new_cert.data.data.serial_number }}"
+
+    - name: Write new certificate to file
+      ansible.builtin.copy:
+        content: "{{ new_cert.data.data.certificate }}"
+        dest: "{{ tls_dir }}/tls.crt"
+        owner: vault
+        group: vault
+        mode: '0644'
+      become: true
+
+    - name: Also save certificate with descriptive name
+      ansible.builtin.copy:
+        content: "{{ new_cert.data.data.certificate }}"
+        dest: "{{ tls_dir }}/vault-cert.pem"
+        owner: vault
+        group: vault
+        mode: '0644'
+      become: true
+
+    - name: Write new private key to file
+      ansible.builtin.copy:
+        content: "{{ new_cert.data.data.private_key }}"
+        dest: "{{ tls_dir }}/tls.key"
+        owner: vault
+        group: vault
+        mode: '0600'
+      become: true
+
+    - name: Also save key with descriptive name
+      ansible.builtin.copy:
+        content: "{{ new_cert.data.data.private_key }}"
+        dest: "{{ tls_dir }}/vault-key.pem"
+        owner: vault
+        group: vault
+        mode: '0600'
+      become: true
+
+    - name: Write CA chain to file
+      ansible.builtin.copy:
+        content: |
+          {{ new_cert.data.data.issuing_ca }}
+          {% for ca in new_cert.data.data.ca_chain %}
+          {{ ca }}
+          {% endfor %}
+        dest: "{{ ca_bundle_path }}"
+        owner: vault
+        group: vault
+        mode: '0644'
+      become: true
+
+    - name: Copy CA bundle to system trust store
+      ansible.builtin.copy:
+        src: "{{ ca_bundle_path }}"
+        dest: "{{ system_ca_path }}/vault-ca-chain.crt"
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+      become: true
+
+    - name: Update system CA certificates
+      ansible.builtin.command: update-ca-certificates
+      become: true
+      changed_when: true
+
+    - name: Verify new certificate
+      ansible.builtin.shell: |
+        openssl x509 -in {{ tls_dir }}/tls.crt -text -noout | grep -E "(Subject:|Issuer:)"
+      register: cert_info
+      become: true
+
+    - name: Display certificate information
+      ansible.builtin.debug:
+        msg: "{{ cert_info.stdout_lines }}"
+
+    - name: Test certificate chain validation
+      ansible.builtin.shell: |
+        openssl verify -CAfile {{ ca_bundle_path }} {{ tls_dir }}/tls.crt
+      register: cert_validation
+      become: true
+
+    - name: Display validation result
+      ansible.builtin.debug:
+        msg: "Certificate validation: {{ cert_validation.stdout }}"
+
+    - name: Check Vault service status
+      ansible.builtin.systemd:
+        name: vault
+        state: reloaded
+      become: true
+      register: vault_reload
+
+    - name: Wait for Vault to be ready
+      ansible.builtin.uri:
+        url: "https://{{ ansible_host }}:8200/v1/sys/health"
+        method: GET
+        validate_certs: no  # Skip validation for now as CA might not be in local trust store yet
+        status_code: [200, 429, 473, 501, 503]
+      register: vault_health
+      until: vault_health.status in [200, 429, 501]
+      retries: 30
+      delay: 2
+
+    - name: Display Vault health status
+      ansible.builtin.debug:
+        msg: "Vault node {{ inventory_hostname }} is healthy (status: {{ vault_health.status }})"
+
+- name: Update Consul Health Checks for Vault Service
+  hosts: vault_production
+  gather_facts: no
+
+  vars:
+    consul_config_dir: "/etc/consul.d"
+
+  tasks:
+    - name: Check if Consul agent is installed
+      ansible.builtin.stat:
+        path: /usr/bin/consul
+      register: consul_binary
+      become: true
+
+    - name: Update Consul service definition for Vault
+      ansible.builtin.template:
+        src: consul-vault-service.json.j2
+        dest: "{{ consul_config_dir }}/vault.json"
+        owner: consul
+        group: consul
+        mode: '0644'
+      become: true
+      when: consul_binary.stat.exists
+
+    - name: Reload Consul configuration
+      ansible.builtin.systemd:
+        name: consul
+        state: reloaded
+      become: true
+      when: consul_binary.stat.exists
+
+- name: Verify Certificate Deployment Success
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    vault_nodes:
+      - host: "192.168.10.31"
+        name: "vault-prod-1-holly"
+      - host: "192.168.10.32"
+        name: "vault-prod-2-mable"
+      - host: "192.168.10.33"
+        name: "vault-prod-3-lloyd"
+
+  tasks:
+    - name: Test TLS connections to all Vault nodes
+      ansible.builtin.shell: |
+        echo | openssl s_client -connect {{ item.host }}:8200 -servername {{ item.name }}.vault.spaceships.work 2>/dev/null | \
+          openssl x509 -noout -text | grep -E "(Subject|Issuer):" | head -4
+      loop: "{{ vault_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: tls_tests
+      delegate_to: localhost
+
+    - name: Display TLS test results
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ tls_tests.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Summary report
+      ansible.builtin.debug:
+        msg:
+          - "✅ Certificate Replacement Complete!"
+          - ""
+          - "🔐 All Vault nodes now using PKI-issued certificates:"
+          - "   - Issuer: HomeLab Intermediate CA"
+          - "   - Valid for: 30 days"
+          - "   - Auto-renewal required before expiry"
+          - ""
+          - "📋 Next Steps:"
+          - "   1. Implement automated certificate renewal (Issue #99)"
+          - "   2. Enable mTLS for service communication (Issue #98)"
+          - "   3. Set up monitoring for certificate expiry (Issue #100)"
+          - ""
+          - "🔒 Backup certificates stored in: /opt/vault/tls/backup-*"

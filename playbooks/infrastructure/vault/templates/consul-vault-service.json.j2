@@ -1,0 +1,31 @@
+{
+  "service": {
+    "name": "vault",
+    "tags": [
+      "vault",
+      "{{ vault_role }}",
+      "pki-secured"
+    ],
+    "port": 8200,
+    "address": "{{ ansible_host }}",
+    "meta": {
+      "node": "{{ inventory_hostname }}",
+      "role": "{{ vault_role }}",
+      "certificate_expiry": "{{ cert_ttl | default('720h') }}"
+    },
+    "check": {
+      "id": "vault-health",
+      "name": "Vault Health Check",
+      "http": "https://{{ ansible_host }}:8200/v1/sys/health",
+      "method": "GET",
+      "interval": "10s",
+      "timeout": "5s",
+      "tls_skip_verify": false,
+      "header": {
+        "X-Vault-Request": ["health-check"]
+      },
+      "success_before_passing": 2,
+      "failures_before_critical": 3
+    }
+  }
+}
