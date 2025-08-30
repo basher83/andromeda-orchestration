@@ -6,6 +6,14 @@
 
 [env]
 # ============================================================================
+# SYSTEM CONFIGURATION (macOS specific - uncomment if needed)
+# ============================================================================
+# Fix for macOS fork() safety with Python multiprocessing/Ansible
+# Required on macOS High Sierra and later when using Infisical SDK
+# Source: https://stackoverflow.com/questions/50168647/multiprocessing-causes-python-to-crash-and-gives-an-error-may-have-been-in-progr/72575205#72575205
+# OBJC_DISABLE_INITIALIZE_FORK_SAFETY = "YES"
+
+# ============================================================================
 # NETWORK CONFIGURATION (Optional - uncomment as needed)
 # ============================================================================
 # Use these to override the default Tailscale addresses when on local LAN
