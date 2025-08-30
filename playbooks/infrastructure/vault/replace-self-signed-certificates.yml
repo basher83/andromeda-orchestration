@@ -12,8 +12,7 @@
   vars:
     # Vault connection for certificate generation (pointing to leader)
     vault_addr: "https://192.168.10.33:8200"
-    vault_token: "{{ lookup('env', 'VAULT_TOKEN') | default(lookup('infisical.vault.read_secrets', universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'), universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'), project_id='7b832220-24c0-45bc-a5f1-ce9794a31259', env_slug='prod', path='/apollo-13/vault', secret_name='VAULT_PROD_ROOT_TOKEN').value, true) }}"
-
+    
     # PKI Configuration
     pki_mount: "pki_int"
     pki_role: "infrastructure"
@@ -31,6 +30,19 @@
     system_ca_path: "/usr/local/share/ca-certificates"
 
   tasks:
+    - name: Retrieve Vault token from Infisical
+      set_fact:
+        vault_token: "{{ lookup('env', 'VAULT_TOKEN') | default((lookup('infisical.vault.read_secrets', 
+                         universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                         universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                         project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                         env_slug='prod',
+                         path='/apollo-13/vault',
+                         secret_name='VAULT_PROD_ROOT_TOKEN')).value, true) }}"
+      no_log: true
+      run_once: true
+      delegate_to: localhost
+
     - name: Create backup directory for existing certificates
       ansible.builtin.file:
         path: "{{ backup_dir }}"
@@ -206,10 +218,12 @@
 
   tasks:
     - name: Check if Consul agent is installed
-      ansible.builtin.stat:
-        path: /usr/bin/consul
+      ansible.builtin.command:
+        cmd: which consul
       register: consul_binary
       become: true
+      changed_when: false
+      failed_when: false
 
     - name: Update Consul service definition for Vault
       ansible.builtin.template:
@@ -219,14 +233,14 @@
         group: consul
         mode: '0644'
       become: true
-      when: consul_binary.stat.exists
+      when: consul_binary.rc == 0
 
     - name: Reload Consul configuration
       ansible.builtin.systemd:
         name: consul
         state: reloaded
       become: true
-      when: consul_binary.stat.exists
+      when: consul_binary.rc == 0
 
 - name: Verify Certificate Deployment Success
   hosts: localhost

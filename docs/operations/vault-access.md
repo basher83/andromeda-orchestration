@@ -2,33 +2,35 @@
 
 ## Current Deployment Status
 
-**Environment**: Development Mode
-**Deployment Date**: 2025-08-06
-**Status**: ✅ Active on all nodes
-**Production Deployment**: See [Implementation Guide](../implementation/vault/production-deployment.md)
+**Environment**: Production with PKI Certificates
+**Deployment Date**: 2025-08-30 (PKI certificates)
+**Status**: ✅ Active on all nodes with TLS/HTTPS
+**Certificate Authority**: HomeLab Intermediate CA
+**Certificate Validity**: 30 days (renewal required)
 
-### Node Details
+### Production Cluster Details
 
-| Node                 | Version | API Address                 | UI Address                     | Status |
-| -------------------- | ------- | --------------------------- | ------------------------------ | ------ |
-| nomad-server-1-lloyd | v1.15.5 | <http://192.168.10.11:8200> | <http://192.168.10.11:8200/ui> | Active |
-| nomad-server-2-holly | v1.20.1 | <http://192.168.10.12:8200> | <http://192.168.10.12:8200/ui> | Active |
-| nomad-server-3-mable | v1.20.1 | <http://192.168.10.13:8200> | <http://192.168.10.13:8200/ui> | Active |
+| Node                 | Version | API Address                  | UI Address                      | Status | Certificate Serial |
+| -------------------- | ------- | ---------------------------- | ------------------------------- | ------ | ------------------ |
+| vault-master-lloyd   | v1.20.1 | <http://192.168.10.30:8200>  | <http://192.168.10.30:8200/ui>  | Active | Transit Master (HTTP) |
+| vault-prod-1-holly   | v1.20.1 | <https://192.168.10.31:8200> | <https://192.168.10.31:8200/ui> | Active | 10:4d:e5:dc... |
+| vault-prod-2-mable   | v1.20.1 | <https://192.168.10.32:8200> | <https://192.168.10.32:8200/ui> | Active | 12:dc:60:48... |
+| vault-prod-3-lloyd   | v1.20.1 | <https://192.168.10.33:8200> | <https://192.168.10.33:8200/ui> | Active | 19:74:88:26... |
 
 ## Authentication
 
-### Development Mode Access
+### Production Access
 
 **⚠️ IMPORTANT**: Credentials are stored in Infisical for security.
 
-To retrieve the dev token:
+To retrieve the production root token:
 
 ```bash
 # Using Infisical CLI
-infisical secrets get VAULT_PROD_ROOT_TOKEN --env=dev --path=/apollo-13/vault
+infisical secrets get VAULT_PROD_ROOT_TOKEN --env=prod --path=/apollo-13/vault
 
 # Or via environment (if Infisical is configured)
-source <(infisical export --env=dev --path=/apollo-13/vault)
+source <(infisical export --env=prod --path=/apollo-13/vault)
 
 # Using Ansible lookup
 vault_token: >-
@@ -36,17 +38,19 @@ vault_token: >-
              universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
              universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
              project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-             env_slug='dev',
+             env_slug='prod',
              path='/apollo-13/vault',
-             secret_name='VAULT_DEV_ROOT_TOKEN')).value }}
+             secret_name='VAULT_PROD_ROOT_TOKEN')).value }}
 ```
 
 ### CLI Access
 
 ```bash
-# Set environment variables
-export VAULT_ADDR='http://192.168.10.11:8200'  # or .12, .13 for other nodes
+# Set environment variables (use HTTPS for production nodes)
+export VAULT_ADDR='https://192.168.10.33:8200'  # or .31, .32 for other prod nodes
 export VAULT_TOKEN='<token-from-infisical>'
+# Skip certificate verification if CA not in trust store (temporary)
+export VAULT_SKIP_VERIFY=true  # Remove once CA is in system trust store
 
 # Verify connection
 vault status
@@ -112,11 +116,14 @@ vault secrets enable -path=kv-v2 kv-v2
 ### Health Check
 
 ```bash
-# Via API
-curl -s http://192.168.10.11:8200/v1/sys/health | jq
+# Via API (HTTPS with certificate validation)
+curl -s https://192.168.10.33:8200/v1/sys/health | jq
 
 # Via CLI
 vault status
+
+# Via Consul (with token)
+CONSUL_HTTP_TOKEN=<consul-token> consul catalog nodes -service=vault -detailed
 ```
 
 ### Logs
@@ -128,27 +135,33 @@ sudo journalctl -u vault -f
 
 ## Security Considerations
 
-### Development Mode Limitations
+### Production Deployment Features
 
-⚠️ **Current deployment is in DEVELOPMENT mode**:
+✅ **Current deployment is in PRODUCTION mode**:
 
-- **No persistence**: All data is lost on restart
-- **Auto-unsealed**: No unseal keys required
-- **No TLS**: HTTP only, not HTTPS
-- **Fixed root token**: Not randomly generated
-- **Not for production**: Only for testing and exploration
+- **Raft Storage**: Persistent, replicated storage across 3 nodes
+- **Auto-unseal**: Using Transit master for automatic unsealing
+- **TLS/HTTPS Enabled**: PKI-issued certificates from HomeLab Intermediate CA
+- **Certificate Details**:
+  - Issuer: HomeLab Intermediate CA
+  - Validity: 30 days
+  - Auto-renewal: Pending (Issue #99)
+  - Health checks: Validated by Consul
+- **High Availability**: 3-node Raft cluster
+- **Consul Integration**: Service discovery and health monitoring
 
-### Production Migration Path
+### PKI Certificate Management
 
-When ready for production:
+**Implemented (Issue #97)**:
+- All production nodes using CA-issued certificates
+- Certificates stored in `/opt/vault/tls/`
+- Backup certificates in `/opt/vault/tls/backup-*`
+- Consul health checks validate certificates
 
-1. Use `playbooks/infrastructure/vault/deploy-vault-prod.yml`
-2. Configure Raft storage backend for HA
-3. Enable TLS with proper certificates
-4. Implement auto-unseal (Transit, AWS KMS, etc.)
-5. Configure proper authentication methods (LDAP, OIDC, etc.)
-6. Set up audit logging
-7. Implement backup procedures
+**Next Steps**:
+1. Implement automated certificate renewal (Issue #99)
+2. Enable mTLS for service communication (Issue #98)
+3. Set up monitoring for certificate expiry (Issue #100)
 
 ## Troubleshooting
 
@@ -210,9 +223,43 @@ Services are registered but not using Consul backend. For production:
 4. **Design policies** for least privilege access
 5. **Prepare for production** deployment when ready
 
+## PKI Infrastructure
+
+### Certificate Hierarchy
+
+```
+Root CA (HomeLab Root CA)
+└── Intermediate CA (HomeLab Intermediate CA)
+    ├── vault-prod-1-holly.vault.spaceships.work
+    ├── vault-prod-2-mable.vault.spaceships.work
+    └── vault-prod-3-lloyd.vault.spaceships.work
+```
+
+### Certificate Operations
+
+```bash
+# Verify certificate on a node
+openssl verify -CAfile /opt/vault/tls/ca-bundle.pem /opt/vault/tls/tls.crt
+
+# Check certificate details
+openssl x509 -in /opt/vault/tls/tls.crt -text -noout
+
+# Test TLS connection
+openssl s_client -connect vault-prod-1-holly:8200 -CAfile /opt/vault/tls/ca-bundle.pem
+```
+
+### Playbooks for PKI Management
+
+- `playbooks/infrastructure/vault/setup-pki-root-ca.yml` - Root CA setup
+- `playbooks/infrastructure/vault/setup-pki-intermediate-ca.yml` - Intermediate CA
+- `playbooks/infrastructure/vault/replace-self-signed-certificates.yml` - Deploy PKI certificates
+- `playbooks/infrastructure/vault/automated-certificate-renewal.yml` - Auto-renewal (pending)
+- `playbooks/infrastructure/vault/monitor-pki-certificates.yml` - Certificate monitoring
+
 ## Related Documentation
 
 - [Vault Deployment Strategy](../implementation/vault/deployment-strategy.md)
 - [Enhanced Deployment Strategy](../implementation/vault/enhanced-deployment-strategy.md)
 - [Vault Architecture Diagram](../diagrams/vault-architecture.md)
 - [HashiCorp Stack Integration](../diagrams/hashicorp-stack-integration.md)
+- [PKI Infrastructure Implementation (Issue #94)](https://github.com/basher83/andromeda-orchestration/issues/94)
