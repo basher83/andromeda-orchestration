@@ -221,7 +221,7 @@ tasks:
 1. **Python Dependencies** (in pyproject.toml):
 
    ```bash
-   uv pip install infisical-python infisicalsdk
+   uv pip install infisicalsdk
    ```
 
 2. **Ansible Collection** (in requirements.yml):

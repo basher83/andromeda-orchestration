@@ -229,11 +229,15 @@ exec $SHELL
 
 ### Python Dependencies Failed
 
-If `infisical-python` fails (Windows-only package):
+If `infisicalsdk` fails to install:
 
 ```bash
-# Use quick setup to skip problematic extras
-mise run setup:quick
+# Check if you have the correct Python version
+python --version  # Should be 3.10+
+
+# Or use the Infisical CLI as an alternative
+brew install infisical/cli/infisical  # macOS
+curl -L https://infisical.com/install | sh  # Linux
 ```
 
 ### Verify Tool Versions

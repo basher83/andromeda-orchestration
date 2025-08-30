@@ -271,8 +271,7 @@ The free tier is more generous than officially documented. All project types are
    ```toml
    [project.optional-dependencies]
    secrets = [
-       "infisical-python>=2.2.7",
-       "infisicalsdk>=0.1.0",
+       "infisicalsdk>=1.0.11",  # SDK for infisical.vault Ansible collection
    ]
    ```
 

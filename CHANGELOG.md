@@ -146,9 +146,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Python Environment Compatibility Fix**
 
-  - Downgraded Python from 3.13 to 3.12 for `infisical-python` package compatibility
-  - Pinned `infisical-python==2.3.5` (last version with Linux wheels for Python 3.12)
-  - Updated `.mise.toml` and `pyproject.toml` with Python version constraints
+  - Fixed Infisical SDK package name from `infisical-python` to `infisicalsdk`
+  - Added macOS fork() safety fix for Python multiprocessing with Ansible
+  - Updated `.mise.toml` and `pyproject.toml` with correct package dependencies
 
 - **Enhanced Documentation**
   - Added technology badges to README with space exploration visual theme

@@ -76,10 +76,10 @@ uv sync --extra dev || {
 }
 
 # Try secrets extra separately (platform-specific)
-if ! uv pip list 2>/dev/null | grep -q "infisical-python"; then
+if ! uv pip list 2>/dev/null | grep -q "infisicalsdk"; then
   echo "   Attempting to install secrets extra..."
   uv sync --extra secrets 2>/dev/null || {
-    echo "   ⚠️  infisical-python not available for this platform"
+    echo "   ⚠️  infisicalsdk installation failed"
     echo "   Using Infisical CLI instead"
   }
 fi
