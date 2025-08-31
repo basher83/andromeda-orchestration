@@ -1,3 +1,20 @@
+# PostgreSQL Database Server
+#
+# Required environment variables (set via Nomad variables or deployment):
+#   POSTGRES_PASSWORD - Main postgres superuser password
+#   PDNS_PASSWORD     - PowerDNS database user password
+#   NETDATA_PASSWORD  - Netdata monitoring user password
+#   VAULT_DB_PASSWORD - Vault database management user password
+#
+# To deploy with variables:
+#   nomad job run -var="POSTGRES_PASSWORD=changeme" \
+#                 -var="PDNS_PASSWORD=changeme" \
+#                 -var="NETDATA_PASSWORD=changeme" \
+#                 -var="VAULT_DB_PASSWORD=changeme" \
+#                 postgresql.nomad.hcl
+#
+# Future: These will be managed via Vault dynamic database credentials
+
 job "postgresql" {
   datacenters = ["dc1"]
   type        = "service"
@@ -92,11 +109,11 @@ job "postgresql" {
         EOT
       }
 
-      # Container environment with temporary bootstrap password
+      # Container environment - passwords from Nomad variables or environment
       env {
         PGHOST_ADDR       = "0.0.0.0"
         POSTGRES_USER     = "postgres"
-        POSTGRES_PASSWORD = "temporary-bootstrap-password"
+        POSTGRES_PASSWORD = "${POSTGRES_PASSWORD}"  # Set via Nomad variables or Vault
         PGDATA            = "/var/lib/postgresql/data/pgdata"
       }
 
@@ -138,6 +155,14 @@ job "postgresql" {
         args         = ["/local/create-db.sh"]
       }
 
+      # Environment variables for database user passwords
+      env {
+        POSTGRES_PASSWORD = "${POSTGRES_PASSWORD}"
+        PDNS_PASSWORD     = "${PDNS_PASSWORD}"
+        NETDATA_PASSWORD  = "${NETDATA_PASSWORD}"
+        VAULT_DB_PASSWORD = "${VAULT_DB_PASSWORD}"
+      }
+
       template {
         destination = "local/init.sql"
         data        = <<-EOT
@@ -146,7 +171,7 @@ job "postgresql" {
           $do$
           BEGIN
             IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pdns') THEN
-               CREATE USER pdns WITH PASSWORD 'temporary-pdns-password';
+               CREATE USER pdns WITH PASSWORD '${PDNS_PASSWORD}';
             END IF;
           END
           $do$;
@@ -156,7 +181,7 @@ job "postgresql" {
           $do$
           BEGIN
             IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'netdata') THEN
-               CREATE USER netdata WITH PASSWORD 'netdata_readonly_pass';
+               CREATE USER netdata WITH PASSWORD '${NETDATA_PASSWORD}';
             END IF;
           END
           $do$;
@@ -171,7 +196,7 @@ job "postgresql" {
           $do$
           BEGIN
             IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'vaultuser') THEN
-               CREATE USER vaultuser WITH CREATEDB CREATEROLE LOGIN PASSWORD 'vaultpass';
+               CREATE USER vaultuser WITH CREATEDB CREATEROLE LOGIN PASSWORD '${VAULT_DB_PASSWORD}';
             END IF;
           END
           $do$;
@@ -322,7 +347,7 @@ job "postgresql" {
       }
 
       env {
-        PGPASSWORD = "temporary-bootstrap-password"
+        PGPASSWORD = "${POSTGRES_PASSWORD}"
       }
 
 

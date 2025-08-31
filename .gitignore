@@ -36,6 +36,11 @@ scripts/set-1password-env.sh
 # mise local configuration (contains secrets)
 .mise.local.toml
 
+# Nomad job variable files (contain passwords)
+nomad-jobs/**/*.variables.hcl
+!nomad-jobs/**/*.variables.example.hcl
+!nomad-jobs/**/*.variables.template.hcl
+
 # KICS security scan results (auto-generated)
 kics-results/
 
