@@ -108,7 +108,10 @@ Please provide as much information as possible:
 - **No Direct Secrets:** Never commit secrets directly to the repository
 - **Template Files:** Use `.template` files for configuration examples
 - **Gitignore:** Properly configured to exclude sensitive files
-- **Secret Scanning:** Automated scanning with gitleaks and detect-secrets
+- **Secret Scanning:** Automated scanning with Infisical (`mise run security:secrets`)
+- **Pre-commit Protection:** Secret detection before commits
+- **Dynamic Secrets:** Use Vault/Infisical templates in Nomad jobs
+- **No Hardcoded Passwords:** Even "temporary" passwords become permanent in git history
 
 ### 🏗️ CI/CD Security
 
@@ -134,8 +137,8 @@ Please provide as much information as possible:
 
 ### Security Tools in Use
 
-- **gitleaks:** Scans for exposed secrets
-- **detect-secrets:** Additional secret detection
+- **infisical:** Secret scanning
+- **KICS:** Infrastructure security scanning
 - **shellcheck:** Shell script vulnerability scanning
 - **GitHub Security:** Native security features enabled
 
@@ -144,8 +147,8 @@ Please provide as much information as possible:
 ### Key Security Files
 
 - `.gitignore` - Excludes sensitive files
-- `.gitleaks.toml` - Gitleaks configuration
-- `.secrets.baseline` - Detect-secrets baseline
+- `.infisical-scan.toml` - Infisical secret scanning configuration
+- `kics.config` - KICS infrastructure security scanning configuration
 - `mcp.json.template` - Template for secure configuration
 - `.github/workflows/*` - Secured CI/CD pipelines
 
@@ -216,11 +219,25 @@ The following are generally out of scope:
 - `.mise.toml` - Security tasks and linting
 - `.pre-commit-config.yaml` - Automated security checks
 
+## 📋 Security Findings & Improvements
+
+### Current Findings
+
+- **[2025-08-31: Bootstrap Secrets Assessment](reports/security-incidents/2025-08-31-hardcoded-secrets.md)**
+  - **Status:** Tracked for improvement
+  - **Severity:** MEDIUM (internal infrastructure)
+  - **Context:** Bootstrap passwords identified in PostgreSQL Nomad job
+  - **Action:** Migrating to environment variables and Vault integration
+
+### Resolved Issues
+
+_Tracking improvements as we mature our security practices_
+
 ## 🏆 Security Contributors
 
 We recognize security researchers who have helped improve our security:
 
-_Be the first to help us improve our security!_
+- **Internal Security Scan (2025-08-31):** Identified hardcoded secrets requiring immediate remediation
 
 ## 📞 Contact Information
 

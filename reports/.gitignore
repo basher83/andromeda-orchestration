@@ -37,6 +37,10 @@ nomad/*.txt
 netdata/
 netdata/**/*
 
+# Security incidents - ALWAYS commit these for transparency
+!security-incidents/
+!security-incidents/*.md
+
 # Allow documentation
 !README.md
 !SECURITY.md
