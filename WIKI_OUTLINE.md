@@ -11,7 +11,7 @@ This document provides a high-level structure for organizing the repository wiki
 - **Project Overview**: NetBox-focused Ansible automation for homelab infrastructure
 - **Current Status Dashboard**: DNS & IPAM implementation progress (Phase 3 of 5)
 - **Quick Navigation**: Role-based navigation for different user types
-- **Key Features**: Dynamic inventory, secure secrets management, containerized execution
+- **Key Features**: Multiple dynamic inventory sources, secure secrets management
 - **Infrastructure Highlights**: Consul, Nomad, Vault, PowerDNS, NetBox integration
 
 ### 🚀 Getting Started

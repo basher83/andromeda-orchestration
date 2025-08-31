@@ -1,16 +1,21 @@
 # Andromeda Orchestration
 
-![Vault](https://img.shields.io/badge/Vault-000000?style=for-the-badge&logo=vault&logoColor=)
-![Nomad](https://img.shields.io/badge/Nomad-000000?style=for-the-badge&logo=nomad&logoColor=)
-![Consul](https://img.shields.io/badge/Consul-000000?style=for-the-badge&logo=consul&logoColor=)
-
-![Ansible](https://img.shields.io/badge/Ansible-000000?style=for-the-badge&logo=ansible&logoColor=)
-
-![Proxmox](https://img.shields.io/badge/Proxmox-000000?style=for-the-badge&logo=proxmox&logoColor=)
-![NetBox](https://img.shields.io/badge/NetBox-000000?style=for-the-badge&logo=netbox&logoColor=)
-![Infisical](https://img.shields.io/badge/Infisical-000000?style=for-the-badge&logo=infisical&logoColor=)
+---
 
 [![CI](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml/badge.svg)](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml)
+
+![Ansible](https://img.shields.io/badge/Ansible-000000?style=plastic&logo=ansible&logoColor=)
+
+![Proxmox](https://img.shields.io/badge/Proxmox-000000?style=plastic&logo=proxmox&logoColor=)
+
+![Vault](https://img.shields.io/badge/Vault-000000?style=plastic&logo=vault&logoColor=)
+![Nomad](https://img.shields.io/badge/Nomad-000000?style=plastic&logo=nomad&logoColor=)
+![Consul](https://img.shields.io/badge/Consul-000000?style=plastic&logo=consul&logoColor=)
+
+![Tailscale](https://img.shields.io/badge/Tailscale-000000?style=plastic&logo=tailscale&logoColor=)
+
+![NetBox](https://img.shields.io/badge/NetBox-000000?style=plastic&logo=netbox&logoColor=)
+![Infisical](https://img.shields.io/badge/Infisical-000000?style=plastic&logo=infisical&logoColor=)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/basher83/assets/refs/heads/main/space-gifs/undraw_space-exploration_dhu1.svg" alt="Space Exploration" width="400">
@@ -23,9 +28,8 @@ source-of-truth and secure credential management through Infisical.
 
 This project provides a framework for managing network infrastructure using Ansible with:
 
-- Dynamic inventory from Proxmox (current) and NetBox (planned)
+- Multiple dynamic inventory sources (Proxmox, NetBox, Tailscale)
 - Secure credential management via Infisical
-- Containerized execution environments
 - Best practices for Ansible project organization
 
 **Infrastructure Foundation**: The underlying infrastructure (Proxmox clusters, VMs, networking) is provisioned and managed via [terraform-homelab](https://github.com/basher83/terraform-homelab) using Terraform/OpenTofu with Scalr.

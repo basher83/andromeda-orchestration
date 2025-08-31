@@ -477,7 +477,7 @@ echo "🔍 Scanning for exposed secrets..."
 if [ -f "./scripts/scan-secrets.sh" ]; then
   ./scripts/scan-secrets.sh full
 else
-  infisical scan --source . --verbose
+  infisical scan --baseline-path=.infisical-scan-baseline.json --verbose
 fi
 '''
 

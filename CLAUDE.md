@@ -4,9 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a NetBox-focused Ansible automation project that integrates NetBox as a source of truth for network
-infrastructure management. The project uses containerized Ansible execution environments, dynamic inventory management,
-and secure credential management through Infisical.
+This is an Ansible automation project that is working towards integrating NetBox as a source of truth for network
+infrastructure management. The project uses multiple dynamic inventory sources (Proxmox, NetBox, Tailscale), and secure credential management through Infisical.
 
 **Current Focus**: Implementing a comprehensive DNS & IPAM overhaul to transition from ad-hoc DNS management to a
 service-aware infrastructure using Consul, PowerDNS, and NetBox. See `docs/implementation/dns-ipam/implementation-plan.md` for the

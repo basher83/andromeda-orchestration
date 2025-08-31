@@ -2,7 +2,7 @@
 
 ![Status](https://img.shields.io/badge/Status-Proposed-yellow)
 ![Date](https://img.shields.io/badge/Date-YYYY--MM--DD-lightgrey)
-![Last Updated](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration/main/docs/project-management/decisions/ADR-YYYY-MM-DD-title.md)
+![Last Updated](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration?path=docs%2Fproject-management%2Fdecisions%2FADR-TEMPLATE.md&display_timestamp=author&style=plastic&logo=github)
 
 ## Status
 
