@@ -1,0 +1,153 @@
+# EditorConfig is awesome: https://EditorConfig.org
+# This file defines coding styles for different file types in the repository
+
+# Top-most EditorConfig file
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Python files - PEP 8 standards
+[*.py]
+indent_size = 4
+max_line_length = 120
+
+# YAML files - Ansible and configuration
+[*.{yml,yaml}]
+indent_size = 2
+quote_type = single
+
+# Ansible-specific YAML files
+[{playbooks,roles,inventory,group_vars,host_vars}/**/*.{yml,yaml}]
+indent_size = 2
+# Preserve Ansible's preferred formatting
+max_line_length = 160
+
+# JSON files
+[*.json]
+indent_size = 2
+insert_final_newline = false
+
+# Markdown files
+[*.md]
+max_line_length = 120
+trim_trailing_whitespace = false  # Preserve intentional trailing spaces for line breaks
+
+# Shell scripts
+[*.{sh,bash}]
+indent_size = 4
+shell_variant = bash
+
+# Nomad job files
+[*.{hcl,nomad}]
+indent_size = 2
+max_line_length = 120
+
+# Terraform/OpenTofu files
+[*.{tf,tfvars}]
+indent_size = 2
+max_line_length = 120
+
+# Makefile - tabs are required
+[{Makefile,makefile,GNUmakefile,*.mk}]
+indent_style = tab
+indent_size = 4
+
+# Git configuration files
+[{.gitignore,.gitattributes}]
+indent_size = 2
+
+# Configuration files
+[*.{toml,ini,cfg}]
+indent_size = 2
+
+# Infisical scan configuration - preserve specific structure
+[.infisical-scan.toml]
+indent_style = space
+indent_size = 2
+max_line_length = off  # Don't wrap regex patterns
+# Tell formatters to be gentle with this file
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Infisical example configuration
+[.infisical-scan.example.toml]
+indent_style = space
+indent_size = 2
+max_line_length = off
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# GitHub Actions workflows
+[.github/workflows/*.{yml,yaml}]
+indent_size = 2
+quote_type = single
+
+# Docker files
+[{Dockerfile,dockerfile,*.dockerfile}]
+indent_size = 4
+
+# Docker Compose files
+[{docker-compose.yml,docker-compose.yaml,compose.yml,compose.yaml}]
+indent_size = 2
+
+# Jinja2 templates
+[*.j2]
+indent_size = 2
+trim_trailing_whitespace = true
+
+# Requirements files
+[{requirements.txt,requirements.yml,requirements.yaml}]
+indent_size = 2
+
+# Python project files
+[{pyproject.toml,setup.py,setup.cfg}]
+indent_size = 4
+
+# Ansible vault files - don't modify
+[*.vault]
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+# Binary files - don't modify
+[*.{png,jpg,jpeg,gif,ico,pdf,tar,gz,zip,7z,exe,dll,so,dylib}]
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+# Certificate and key files - preserve exact format
+[*.{pem,crt,key,pub}]
+insert_final_newline = true
+trim_trailing_whitespace = false
+
+# Claude/AI assistant files
+[{CLAUDE.md,WARP.md,.claude/**/*}]
+indent_size = 2
+max_line_length = 120
+
+# Mise configuration
+[.mise.toml]
+indent_size = 2
+
+# Pre-commit configuration
+[.pre-commit-config.yaml]
+indent_size = 2
+
+# Renovate configuration
+[renovate.json]
+indent_size = 2
+insert_final_newline = false
+
+# CHANGELOG - preserve formatting
+[CHANGELOG.md]
+trim_trailing_whitespace = true
+max_line_length = off
+
+# Security files
+[{SECURITY.md,security.txt}]
+max_line_length = 80

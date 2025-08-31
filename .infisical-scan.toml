@@ -1,5 +1,10 @@
 # Infisical scan configuration
 # This file configures secret scanning for the repository
+title = "Andromeda Orchestration - Secret Scanning Configuration"
+
+# Extend the default Infisical configuration for comprehensive coverage
+[extend]
+useDefault = true
 
 # Paths to exclude from scanning
 exclude_paths = [
@@ -41,9 +46,24 @@ exclude_extensions = [
     ".dylib"
 ]
 
+# Global allowlist configuration
+[allowlist]
+description = "Andromeda Orchestration - Global allowlist for false positives"
+regexTarget = "match"
+
+# Paths to exclude from secret scanning
+paths = [
+    '''\.infisical-scan\.toml''',
+    '''\.infisical-scan\.example\.toml''',
+    '''(.*?)(jpg|gif|png|svg|doc|pdf)''',
+    '''ansible\.cfg''',
+    '''requirements\.yml''',
+    '''molecule/.*'''
+]
+
 # Additional patterns to allow (false positives)
 # These are patterns that might look like secrets but are safe
-allow_list = [
+regexes = [
     # RFC1918 private IPs
     "192\\.168\\.\\d{1,3}\\.\\d{1,3}",
     "10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
@@ -66,5 +86,47 @@ allow_list = [
     # Example domains
     "example\\.com",
     "localhost",
-    "127\\.0\\.0\\.1"
+    "127\\.0\\.0\\.1",
+    
+    # HashiCorp service ports
+    "4646",  # Nomad HTTP
+    "4647",  # Nomad RPC
+    "4648",  # Nomad Serf
+    "8200",  # Vault HTTP
+    "8201",  # Vault Cluster
+    "8300",  # Consul Server RPC
+    "8301",  # Consul Serf LAN
+    "8302",  # Consul Serf WAN
+    "8500",  # Consul HTTP
+    "8501",  # Consul HTTPS
+    "8600",  # Consul DNS
+    
+    # Test/example values
+    "test-.*",
+    "TEST-.*",
+    "example-.*",
+    "EXAMPLE-.*",
+    "dummy-.*",
+    "DUMMY-.*"
+]
+
+# Stopwords to reduce false positives
+stopwords = [
+    "client",
+    "server",
+    "endpoint",
+    "master",
+    "worker",
+    "agent",
+    "node",
+    "cluster",
+    "service",
+    "consul",
+    "nomad",
+    "vault",
+    "ansible",
+    "netbox",
+    "infisical",
+    "proxmox",
+    "tailscale"
 ]
