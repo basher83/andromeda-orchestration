@@ -2,6 +2,7 @@
 
 ---
 
+![GitHub last commit](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration?path=README.md&display_timestamp=author&style=plastic&logo=github)
 [![CI](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml/badge.svg)](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml)
 
 ![Ansible](https://img.shields.io/badge/Ansible-000000?style=plastic&logo=ansible&logoColor=)
@@ -207,4 +208,4 @@ For issues with Nomad job deployment and management:
 
 ## License
 
-[Your License Here]
+![GitHub License](https://img.shields.io/github/license/basher83/andromeda-orchestration?style=plastic)

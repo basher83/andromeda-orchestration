@@ -10,8 +10,10 @@ This directory contains comprehensive documentation for the NetBox-focused Ansib
 
 - Documentation organization and philosophy
 - Ansible development patterns and why we use them
+- **Testing standards with mandatory smoke tests** 🔥
 - Infrastructure architecture decisions
 - Nomad job development standards
+- Security and operational procedures
 - The "why" behind our technical choices
 
 ### 🚀 [getting-started/](getting-started/)

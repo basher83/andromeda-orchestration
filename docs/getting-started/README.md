@@ -11,6 +11,10 @@ This directory contains essential documentation for new users and developers wor
 - **[ci-testing-with-act.md](ci-testing-with-act.md)** - Test GitHub Actions workflows locally before pushing
 - **[uv-ansible-notes.md](uv-ansible-notes.md)** - Important notes about using `uv` with Ansible in this project
 
+### Testing and Validation
+
+- **[smoke-testing-quickstart.md](smoke-testing-quickstart.md)** 🔥 - **MANDATORY** - Learn how to run smoke tests before any production operations
+
 ### Help and Support
 
 - **[troubleshooting.md](troubleshooting.md)** - Common issues and their solutions, including macOS permissions and Infisical setup
@@ -20,7 +24,8 @@ This directory contains essential documentation for new users and developers wor
 1. **Understand the Structure** - Read `repository-structure.md` to understand project layout
 2. **Set Up Development Environment** - Follow `pre-commit-setup.md` for development tools
 3. **Configure uv** - Review `uv-ansible-notes.md` for Python environment management
-4. **Troubleshoot Issues** - Check `troubleshooting.md` when you encounter problems
+4. **Learn Smoke Testing** 🔥 - Read `smoke-testing-quickstart.md` to understand mandatory pre-deployment validation
+5. **Troubleshoot Issues** - Check `troubleshooting.md` when you encounter problems
 
 ## Next Steps
 

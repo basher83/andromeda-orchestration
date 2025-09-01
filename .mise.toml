@@ -463,6 +463,27 @@ echo "✅ All playbooks have valid syntax"
 '''
 
 # ============================================================================
+# 🔥 Smoke Tests
+# ============================================================================
+
+[tasks.smoke-vault]
+description = "Run smoke test for Vault"
+run = '''
+echo "🔥 Running smoke tests..."
+uv run ansible-playbook playbooks/infrastructure/vault/smoke-test.yml \
+      -i inventory/environments/vault-cluster/production.yaml
+'''
+
+[tasks.smoke-vault-recovery]
+description = "Vault smoke test including recovery key retrieval"
+run = '''
+  echo "🔥 Running smoke tests with recovery key verification..."
+  uv run ansible-playbook playbooks/infrastructure/vault/smoke-test.yml \
+        -i inventory/environments/vault-cluster/production.yaml \
+        --extra-vars "test_recovery_keys=true"
+  '''
+
+# ============================================================================
 # SECURITY - Security Scanning
 # ============================================================================
 

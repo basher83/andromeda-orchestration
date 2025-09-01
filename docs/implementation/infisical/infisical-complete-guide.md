@@ -1,3 +1,5 @@
+![GitHub last commit](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration?path=docs/implementation/infisical/infisical-complete-guide.md&display_timestamp=author&style=plastic&logo=github)
+
 # Infisical Complete Configuration Guide
 
 This document consolidates all Infisical documentation for the andromeda-orchestration project, providing a single comprehensive reference for setup, configuration, and usage.
@@ -24,16 +26,19 @@ Infisical serves as the primary secret management solution for the andromeda-orc
 ### Core Concepts
 
 1. **Projects**: Top-level container for all secrets
+
    - Must specify project type when creating
    - Each project has a unique ID
    - Cannot change type after creation
 
 2. **Environments**: Logical separation within a project
+
    - `prod` (production)
    - `staging`
    - `dev` (development)
 
 3. **Folders**: Real entities within environments that must be created
+
    - Have unique IDs
    - Created via API or UI
    - NOT just path prefixes in secret names
@@ -79,8 +84,17 @@ Project: andromeda-orchestration-homelab (7b832220-24c0-45bc-a5f1-ce9794a31259)
 │  │  ├─ NOMAD_TOKEN
 │  │  └─ NOMAD_ACL_TOKEN
 │  ├─ 📂 vault/
-│  │  ├─ VAULT_DEV_ROOT_TOKEN
-│  │  └─ VAULT_RECOVERY_KEYS
+│  │  ├─ CONSUL_TOKEN_VAULT_MASTER_LLOYD
+│  │  ├─ CONSUL_TOKEN_VAULT_PROD_1_HOLLY
+│  │  ├─ CONSUL_TOKEN_VAULT_PROD_2_MABLE
+│  │  ├─ CONSUL_TOKEN_VAULT_PROD_3_LLOYD
+│  │  ├─ VAULT_PROD_RECOVERY_KEY_1
+│  │  ├─ VAULT_PROD_RECOVERY_KEY_2
+│  │  ├─ VAULT_PROD_RECOVERY_KEY_3
+│  │  ├─ VAULT_PROD_RECOVERY_KEY_4
+│  │  ├─ VAULT_PROD_RECOVERY_KEY_5
+│  │  ├─ VAULT_PROD_ROOT_TOKEN
+│  │  ├─ VAULT_TRANSIT_TOKEN
 │  └─ 📂 proxmox/
 │     ├─ ANSIBLE_USERNAME
 │     ├─ ANSIBLE_TOKEN_ID
@@ -328,17 +342,20 @@ uv run ansible localhost -m debug -a "msg={{ lookup('infisical.vault.read_secret
 ### Common Issues
 
 1. **"Folder not found" errors**
+
    - Folders must be created before use
    - Check exact path spelling (case-sensitive)
    - Verify folder exists in the correct environment
    - Ensure path includes leading slash
 
 2. **Empty secret results**
+
    - Ensure `path` parameter includes leading slash
    - Verify secret exists with exact name (case-sensitive)
    - Check you're querying the correct environment
 
 3. **Authentication failures**
+
    - Verify environment variables are set
    - Check machine identity has access to the environment/folder
    - Ensure client ID/secret are valid
@@ -417,12 +434,14 @@ uv run ansible localhost -m debug -a "msg={{ lookup('infisical.vault.read_secret
 Consider creating specialized projects for:
 
 1. **Certificate Management (`cert-manager`)**
+
    - Project: `andromeda-orchestration-certificates`
    - Managing internal TLS certificates
    - ACME/Let's Encrypt integration
    - Certificate lifecycle management
 
 2. **SSH Management (`ssh`)**
+
    - Project: `andromeda-orchestration-ssh`
    - Ephemeral SSH certificates
    - Replace static SSH keys

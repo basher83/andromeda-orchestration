@@ -1,0 +1,260 @@
+---
+# Configure Transit Engine for Auto-Unseal
+# Part of Issue #99: Migrate vault-master-lloyd to Production Mode
+#
+# This playbook configures the transit engine on the production Vault instance
+# to provide auto-unseal services for the production cluster.
+
+- name: Configure Transit Engine for Auto-Unseal
+  hosts: vault-master-lloyd
+  gather_facts: yes
+  vars:
+    vault_addr: "https://{{ ansible_default_ipv4.address }}:8200"
+    transit_mount_path: "transit"
+    autounseal_key_name: "autounseal"
+
+    # Retrieve root token from Infisical (will be set after initialization)
+    # For new initialization, this will be empty and we'll generate it
+    # For existing setup, we can use the transit token
+    vault_root_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/vault',
+                 secret_name='VAULT_TRANSIT_TOKEN')).value | default('') }}
+
+  tasks:
+    - name: Check Vault service status
+      systemd:
+        name: vault
+      register: vault_service
+
+    - name: Verify Vault is running
+      assert:
+        that:
+          - vault_service.status.ActiveState == "active"
+        fail_msg: "Vault service is not running. Please start Vault first."
+        success_msg: "Vault service is active"
+
+    - name: Check Vault initialization status
+      uri:
+        url: "{{ vault_addr }}/v1/sys/init"
+        method: GET
+        validate_certs: no
+        status_code: [200, 501]
+      register: init_status
+      delegate_to: localhost
+
+    - name: Initialize Vault if needed
+      block:
+        - name: Initialize Vault cluster
+          uri:
+            url: "{{ vault_addr }}/v1/sys/init"
+            method: POST
+            body_format: json
+            body:
+              secret_shares: 5
+              secret_threshold: 3
+              stored_shares: 0
+              recovery_shares: 0
+            validate_certs: no
+            status_code: [200]
+          register: init_response
+          delegate_to: localhost
+
+        - name: Save initialization response
+          copy:
+            content: "{{ init_response.json | to_nice_json }}"
+            dest: "/opt/vault/init-keys-{{ ansible_date_time.epoch }}.json"
+            mode: '0600'
+            owner: vault
+            group: vault
+
+        - name: Store root token in Infisical
+          debug:
+            msg: |
+              IMPORTANT: Manually store the following in Infisical:
+
+              Project: andromeda-orchestration-homelab
+              Environment: prod
+              Path: /apollo-13/vault
+
+              Store the new root token:
+              Secret Name: VAULT_TRANSIT_TOKEN
+              Value: {{ init_response.json.root_token }}
+
+              Also store the recovery keys separately:
+              VAULT_PROD_RECOVERY_KEY_1: {{ init_response.json.keys[0] | default('') }}
+              VAULT_PROD_RECOVERY_KEY_2: {{ init_response.json.keys[1] | default('') }}
+              VAULT_PROD_RECOVERY_KEY_3: {{ init_response.json.keys[2] | default('') }}
+              VAULT_PROD_RECOVERY_KEY_4: {{ init_response.json.keys[3] | default('') }}
+              VAULT_PROD_RECOVERY_KEY_5: {{ init_response.json.keys[4] | default('') }}
+
+        - name: Set root token for immediate use
+          set_fact:
+            vault_root_token: "{{ init_response.json.root_token }}"
+      when: not init_status.json.initialized
+
+    - name: Check if Vault is sealed
+      uri:
+        url: "{{ vault_addr }}/v1/sys/seal-status"
+        method: GET
+        validate_certs: no
+        status_code: [200]
+      register: seal_status
+      delegate_to: localhost
+
+    - name: Unseal Vault if sealed
+      uri:
+        url: "{{ vault_addr }}/v1/sys/unseal"
+        method: POST
+        body_format: json
+        body:
+          key: "{{ item }}"
+        validate_certs: no
+        status_code: [200]
+      loop: "{{ vault_unseal_keys | default([]) }}"
+      when:
+        - seal_status.json.sealed
+        - vault_unseal_keys is defined
+      delegate_to: localhost
+
+    - name: Enable transit secrets engine
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_root_token }}"
+        path: "sys/mounts/{{ transit_mount_path }}"
+        data:
+          type: transit
+          description: "Transit engine for auto-unseal"
+          config:
+            default_lease_ttl: "0"
+            max_lease_ttl: "0"
+            force_no_cache: false
+      delegate_to: localhost
+      when: vault_root_token != ''
+
+    - name: Create auto-unseal key
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_root_token }}"
+        path: "{{ transit_mount_path }}/keys/{{ autounseal_key_name }}"
+        data:
+          type: "aes256-gcm96"
+          exportable: false
+          allow_plaintext_backup: false
+      delegate_to: localhost
+      when: vault_root_token != ''
+
+    - name: Create auto-unseal policy
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_root_token }}"
+        path: "sys/policies/acl/autounseal"
+        data:
+          policy: |
+            # Auto-unseal policy
+            path "{{ transit_mount_path }}/encrypt/{{ autounseal_key_name }}" {
+              capabilities = ["update"]
+            }
+
+            path "{{ transit_mount_path }}/decrypt/{{ autounseal_key_name }}" {
+              capabilities = ["update"]
+            }
+
+            # Allow reading key configuration
+            path "{{ transit_mount_path }}/keys/{{ autounseal_key_name }}" {
+              capabilities = ["read"]
+            }
+      delegate_to: localhost
+      when: vault_root_token != ''
+
+    - name: Create token for auto-unseal
+      community.hashi_vault.vault_token_create:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_root_token }}"
+        policies:
+          - autounseal
+        no_parent: true
+        renewable: true
+        ttl: "87600h"  # 10 years
+        display_name: "auto-unseal-token"
+        meta:
+          purpose: "auto-unseal"
+          created_by: "ansible"
+          created_date: "{{ ansible_date_time.iso8601 }}"
+      register: unseal_token
+      delegate_to: localhost
+      when: vault_root_token != ''
+
+    - name: Display auto-unseal token information
+      debug:
+        msg: |
+          Transit engine configured successfully!
+
+          Transit Mount: {{ transit_mount_path }}
+          Auto-unseal Key: {{ autounseal_key_name }}
+
+          IMPORTANT: Update this token in Infisical:
+          Project: andromeda-orchestration-homelab
+          Environment: prod
+          Path: /apollo-13/vault
+          Secret Name: VAULT_TRANSIT_TOKEN
+          Value: {{ unseal_token.login.auth.client_token | default('N/A') }}
+
+          Update production Vault nodes with:
+          seal "transit" {
+            address = "{{ vault_addr }}"
+            token = "<auto-unseal-token>"
+            disable_renewal = "false"
+            key_name = "{{ autounseal_key_name }}"
+            mount_path = "{{ transit_mount_path }}/"
+          }
+      when: unseal_token is defined
+
+    - name: Verify transit key exists
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_root_token }}"
+        path: "{{ transit_mount_path }}/keys/{{ autounseal_key_name }}"
+      register: key_verify
+      delegate_to: localhost
+      when: vault_root_token != ''
+
+    - name: Display transit key information
+      debug:
+        msg: |
+          Transit Key Status:
+          - Name: {{ key_verify.data.data.name | default('N/A') }}
+          - Type: {{ key_verify.data.data.type | default('N/A') }}
+          - Latest Version: {{ key_verify.data.data.latest_version | default('N/A') }}
+          - Min Decryption Version: {{ key_verify.data.data.min_decryption_version | default('N/A') }}
+      when: key_verify is defined
+
+    - name: Test transit encryption
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_root_token }}"
+        path: "{{ transit_mount_path }}/encrypt/{{ autounseal_key_name }}"
+        data:
+          plaintext: "{{ 'test-auto-unseal' | b64encode }}"
+      register: test_encrypt
+      delegate_to: localhost
+      when: vault_root_token != ''
+
+    - name: Verify encryption works
+      debug:
+        msg: |
+          Transit encryption test successful!
+          Ciphertext sample: {{ test_encrypt.data.data.ciphertext | default('N/A') | truncate(50) }}...
+
+          The transit engine is ready for auto-unseal operations.
+      when: test_encrypt is defined

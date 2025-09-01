@@ -23,6 +23,12 @@ This directory contains project tracking documentation using a streamlined three
 - Current sprint goals and blockers
 - Links to GitHub issues
 
+**[smoke-testing-implementation-tracker.md](./smoke-testing-implementation-tracker.md)** - Smoke test rollout status
+
+- Component implementation progress
+- Test coverage metrics
+- Timeline and milestones
+
 **[decisions/](./decisions/)** - Architecture Decision Records (ADRs)
 
 - Critical decisions and their rationale

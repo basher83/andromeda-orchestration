@@ -1,0 +1,215 @@
+---
+# Deploy TLS Certificates to Vault Master
+# Part of Issue #99: Migrate vault-master-lloyd to Production Mode
+#
+# This playbook generates and deploys TLS certificates from the Vault PKI
+# for the production vault-master-lloyd instance.
+
+- name: Deploy TLS Certificates for Production Vault Master
+  hosts: vault-master-lloyd
+  gather_facts: yes
+  become: yes
+  vars:
+    vault_tls_dir: /opt/vault/tls
+    vault_backup_dir: /opt/vault/tls/backup-{{ ansible_date_time.epoch }}
+
+    # Active Vault leader for PKI operations
+    vault_leader_addr: "https://192.168.10.33:8200"
+
+    # Retrieve Vault token from Infisical
+    vault_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/vault',
+                 secret_name='VAULT_PROD_ROOT_TOKEN')).value | default('') }}
+
+    # Certificate parameters
+    cert_common_name: "vault-master-lloyd.vault.spaceships.work"
+    cert_alt_names:
+      - "vault-master-lloyd"
+      - "vault.service.consul"
+      - "vault-transit.service.consul"
+      - "localhost"
+    cert_ip_sans:
+      - "{{ ansible_default_ipv4.address }}"
+      - "127.0.0.1"
+    cert_ttl: "8760h"  # 1 year for transit master
+
+  tasks:
+    - name: Create TLS directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: vault
+        group: vault
+        mode: '0750'
+      loop:
+        - "{{ vault_tls_dir }}"
+        - "{{ vault_backup_dir }}"
+
+    - name: Check for existing certificates
+      stat:
+        path: "{{ vault_tls_dir }}/tls.crt"
+      register: existing_cert
+
+    - name: Backup existing certificates
+      copy:
+        src: "{{ vault_tls_dir }}/{{ item }}"
+        dest: "{{ vault_backup_dir }}/{{ item }}"
+        remote_src: yes
+        owner: vault
+        group: vault
+        mode: '0600'
+      loop:
+        - tls.crt
+        - tls.key
+        - ca.crt
+      when: existing_cert.stat.exists
+      ignore_errors: yes
+
+    - name: Generate certificate from Vault PKI
+      community.hashi_vault.vault_pki_generate_certificate:
+        url: "{{ vault_leader_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        role_name: infrastructure
+        common_name: "{{ cert_common_name }}"
+        alt_names: "{{ cert_alt_names }}"
+        ip_sans: "{{ cert_ip_sans }}"
+        ttl: "{{ cert_ttl }}"
+        engine_mount_point: pki_int
+      register: vault_cert
+      delegate_to: localhost
+      when: vault_token != ''
+
+    - name: Save certificate
+      copy:
+        content: "{{ vault_cert.data.data.certificate }}"
+        dest: "{{ vault_tls_dir }}/tls.crt"
+        owner: vault
+        group: vault
+        mode: '0644'
+      when: vault_cert is succeeded
+
+    - name: Save private key
+      copy:
+        content: "{{ vault_cert.data.data.private_key }}"
+        dest: "{{ vault_tls_dir }}/tls.key"
+        owner: vault
+        group: vault
+        mode: '0600'
+      when: vault_cert is succeeded
+
+    - name: Save CA certificate chain
+      copy:
+        content: "{{ vault_cert.data.data.ca_chain | join('\n') }}"
+        dest: "{{ vault_tls_dir }}/ca.crt"
+        owner: vault
+        group: vault
+        mode: '0644'
+      when: vault_cert is succeeded
+
+    - name: Save issuing CA certificate
+      copy:
+        content: "{{ vault_cert.data.data.issuing_ca }}"
+        dest: "{{ vault_tls_dir }}/issuing_ca.crt"
+        owner: vault
+        group: vault
+        mode: '0644'
+      when: vault_cert is succeeded
+
+    - name: Create certificate bundle
+      shell: |
+        cat {{ vault_tls_dir }}/tls.crt {{ vault_tls_dir }}/ca.crt > {{ vault_tls_dir }}/cert-bundle.pem
+      args:
+        creates: "{{ vault_tls_dir }}/cert-bundle.pem"
+
+    - name: Set proper permissions on bundle
+      file:
+        path: "{{ vault_tls_dir }}/cert-bundle.pem"
+        owner: vault
+        group: vault
+        mode: '0644'
+
+    - name: Add CA to system trust store
+      copy:
+        src: "{{ vault_tls_dir }}/ca.crt"
+        dest: /usr/local/share/ca-certificates/vault-ca.crt
+        remote_src: yes
+        mode: '0644'
+      notify: update ca certificates
+
+    - name: Verify certificate
+      shell: |
+        openssl x509 -in {{ vault_tls_dir }}/tls.crt -text -noout | grep -E "Subject:|Not After|DNS:|IP Address:"
+      register: cert_info
+      changed_when: false
+
+    - name: Display certificate information
+      debug:
+        msg: |
+          Certificate deployed successfully!
+
+          Certificate Details:
+          {{ cert_info.stdout }}
+
+          Certificate locations:
+          - Certificate: {{ vault_tls_dir }}/tls.crt
+          - Private Key: {{ vault_tls_dir }}/tls.key
+          - CA Chain: {{ vault_tls_dir }}/ca.crt
+          - Bundle: {{ vault_tls_dir }}/cert-bundle.pem
+
+          {% if existing_cert.stat.exists %}
+          Previous certificates backed up to: {{ vault_backup_dir }}
+          {% endif %}
+
+          Certificate TTL: {{ cert_ttl }}
+          Serial Number: {{ vault_cert.data.data.serial_number | default('N/A') }}
+
+          Next steps:
+          1. Start Vault service with new certificates
+          2. Verify TLS connectivity
+          3. Update Consul health checks
+
+    - name: Create certificate renewal script
+      copy:
+        content: |
+          #!/bin/bash
+          # Vault Certificate Renewal Script
+          # Run this script to renew the certificate before expiry
+
+          set -e
+
+          VAULT_ADDR="{{ vault_leader_addr }}"
+          VAULT_TOKEN="${VAULT_TOKEN:-}"
+          CERT_DIR="{{ vault_tls_dir }}"
+          BACKUP_DIR="${CERT_DIR}/backup-$(date +%s)"
+
+          if [ -z "$VAULT_TOKEN" ]; then
+              echo "ERROR: VAULT_TOKEN environment variable not set"
+              exit 1
+          fi
+
+          echo "Creating backup directory..."
+          mkdir -p "$BACKUP_DIR"
+          cp -p ${CERT_DIR}/*.{crt,key,pem} "$BACKUP_DIR/" 2>/dev/null || true
+
+          echo "Requesting new certificate from Vault PKI..."
+          ansible-playbook /opt/vault/scripts/renew-certificate.yml
+
+          echo "Reloading Vault..."
+          systemctl reload vault
+
+          echo "Certificate renewal complete!"
+        dest: /opt/vault/scripts/renew-certificate.sh
+        mode: '0750'
+        owner: vault
+        group: vault
+
+  handlers:
+    - name: update ca certificates
+      command: update-ca-certificates
+      become: yes

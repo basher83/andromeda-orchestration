@@ -62,15 +62,25 @@ Comprehensive security practices and procedures.
 - Merge strategies
 - Protected branch policies
 
-### [testing-standards.md](testing-standards.md)
+### [testing-standards.md](testing-standards.md) 🔥
 
-[TODO]: Testing strategies and quality assurance.
+**MANDATORY** - Comprehensive smoke testing framework for infrastructure validation.
 
-- When to write tests
-- Test naming conventions
-- Coverage requirements
-- Pre-deployment testing
-- CI/CD testing
+- Smoke tests as mandatory first-line validation
+- Multi-layer testing (Infrastructure, Platform, Application)
+- Test categories and requirements
+- Industry best practices for IaC testing
+- Integration with CI/CD pipelines
+
+### [iac-smoke-testing-theory.md](iac-smoke-testing-theory.md)
+
+Theoretical foundation for Infrastructure as Code smoke testing.
+
+- IaC-specific testing challenges
+- Testing patterns and anti-patterns
+- Tool-specific implementations (Terraform, Ansible)
+- Metrics and continuous improvement
+- Industry references and research
 
 ### [testing/testing-qa-initiative.md](testing/testing-qa-initiative.md)
 
@@ -204,7 +214,7 @@ Related standards, external documentation, or decisions.
 | Infrastructure | Scalable architecture | Service discovery, dynamic configuration | ✅ Complete |
 | Security | Protect sensitive data | Multi-layer scanning, strict gitignore | ✅ Complete |
 | Git | Clean version control | Conventional commits, clear branches | 📝 TODO |
-| Testing | Quality assurance | Test early, fail fast | 📝 TODO |
+| Testing | Quality assurance | Mandatory smoke tests, fail fast | ✅ Complete |
 | Development | Efficient workflow | Automated checks, clear process | 📝 TODO |
 | Monitoring | System visibility | Metrics, logs, alerts | 📝 TODO |
 | Linting | Code consistency | Automated enforcement | 📝 TODO |

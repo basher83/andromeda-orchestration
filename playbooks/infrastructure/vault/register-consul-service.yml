@@ -1,0 +1,221 @@
+---
+# Register Vault Master in Consul
+# Part of Issue #99: Migrate vault-master-lloyd to Production Mode
+#
+# This playbook registers the production vault-master-lloyd instance
+# with Consul for service discovery and health monitoring.
+
+- name: Register Vault Master with Consul
+  hosts: vault-master-lloyd
+  gather_facts: yes
+  become: yes
+  vars:
+    consul_addr: "http://127.0.0.1:8500"
+    vault_addr: "https://{{ ansible_default_ipv4.address }}:8200"
+
+    # Retrieve Consul token from Infisical
+    consul_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/vault',
+                 secret_name='CONSUL_TOKEN_VAULT_MASTER_LLOYD')).value }}
+
+  tasks:
+    - name: Check if Consul agent is running
+      systemd:
+        name: consul
+      register: consul_service
+      ignore_errors: yes
+
+    - name: Install Consul agent if not present
+      block:
+        - name: Download Consul binary
+          get_url:
+            url: "https://releases.hashicorp.com/consul/1.21.4/consul_1.21.4_linux_amd64.zip"
+            dest: /tmp/consul.zip
+            mode: '0644'
+
+        - name: Unzip Consul
+          unarchive:
+            src: /tmp/consul.zip
+            dest: /usr/local/bin
+            remote_src: yes
+            mode: '0755'
+
+        - name: Create Consul user
+          user:
+            name: consul
+            system: yes
+            shell: /bin/false
+            home: /var/lib/consul
+            create_home: no
+
+        - name: Create Consul directories
+          file:
+            path: "{{ item }}"
+            state: directory
+            owner: consul
+            group: consul
+            mode: '0750'
+          loop:
+            - /etc/consul.d
+            - /var/lib/consul
+            - /var/log/consul
+
+        - name: Create Consul agent configuration
+          copy:
+            content: |
+              {
+                "datacenter": "dc1",
+                "data_dir": "/var/lib/consul",
+                "log_level": "INFO",
+                "node_name": "vault-master-lloyd",
+                "server": false,
+                "client_addr": "127.0.0.1",
+                "bind_addr": "{{ ansible_default_ipv4.address }}",
+                "retry_join": ["192.168.11.11", "192.168.11.12", "192.168.11.13"],
+                "services": []
+              }
+            dest: /etc/consul.d/consul.json
+            owner: consul
+            group: consul
+            mode: '0640'
+
+        - name: Create Consul systemd service
+          copy:
+            content: |
+              [Unit]
+              Description=Consul
+              Documentation=https://www.consul.io/
+              Requires=network-online.target
+              After=network-online.target
+              ConditionFileNotEmpty=/etc/consul.d/consul.json
+
+              [Service]
+              Type=notify
+              User=consul
+              Group=consul
+              ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d/
+              ExecReload=/bin/kill -HUP $MAINPID
+              KillMode=process
+              Restart=on-failure
+              LimitNOFILE=65536
+
+              [Install]
+              WantedBy=multi-user.target
+            dest: /etc/systemd/system/consul.service
+            mode: '0644'
+
+        - name: Start and enable Consul
+          systemd:
+            name: consul
+            state: started
+            enabled: yes
+            daemon_reload: yes
+      when: consul_service.status.ActiveState is not defined or consul_service.status.ActiveState != "active"
+
+    - name: Create Vault service definition
+      copy:
+        content: |
+          {
+            "service": {
+              "name": "vault",
+              "tags": ["master", "transit", "production"],
+              "port": 8200,
+              "address": "{{ ansible_default_ipv4.address }}",
+              "meta": {
+                "role": "transit-master",
+                "mode": "production",
+                "storage": "raft"
+              },
+              "check": {
+                "id": "vault-https",
+                "name": "Vault HTTPS Health",
+                "http": "{{ vault_addr }}/v1/sys/health",
+                "method": "GET",
+                "interval": "10s",
+                "timeout": "5s",
+                "tls_skip_verify": false,
+                "header": {
+                  "X-Vault-Request": ["health-check"]
+                },
+                "success_before_passing": 2,
+                "failures_before_critical": 3
+              }
+            }
+          }
+        dest: /etc/consul.d/vault-service.json
+        owner: consul
+        group: consul
+        mode: '0640'
+      notify: reload consul
+
+    - name: Register Vault service via API
+      uri:
+        url: "{{ consul_addr }}/v1/agent/service/register"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ consul_token }}"
+        body_format: json
+        body:
+          Name: "vault-master"
+          ID: "vault-master-lloyd"
+          Tags:
+            - "master"
+            - "transit"
+            - "production"
+            - "raft"
+          Port: 8200
+          Address: "{{ ansible_default_ipv4.address }}"
+          Meta:
+            role: "transit-master"
+            mode: "production"
+            storage: "raft"
+            version: "1.18.3"
+          Check:
+            Name: "Vault Health"
+            HTTP: "{{ vault_addr }}/v1/sys/health"
+            Method: "GET"
+            Interval: "10s"
+            Timeout: "5s"
+            TLSSkipVerify: false
+            SuccessBeforePassing: 2
+            FailuresBeforeCritical: 3
+        status_code: [200]
+      delegate_to: localhost
+
+    - name: Verify service registration
+      uri:
+        url: "{{ consul_addr }}/v1/catalog/service/vault"
+        method: GET
+        headers:
+          X-Consul-Token: "{{ consul_token }}"
+        status_code: [200]
+      register: vault_services
+      delegate_to: localhost
+
+    - name: Display registration status
+      debug:
+        msg: |
+          Vault Master registered with Consul successfully!
+
+          Service Name: vault-master
+          Service ID: vault-master-lloyd
+          Address: {{ ansible_default_ipv4.address }}:8200
+          Tags: {{ vault_services.json[0].ServiceTags | default([]) | join(', ') }}
+
+          Health check URL: {{ vault_addr }}/v1/sys/health
+
+          Verify with:
+          - consul catalog services
+          - consul catalog nodes -service=vault
+          - curl -H "X-Consul-Token: $CONSUL_TOKEN" {{ consul_addr }}/v1/health/service/vault
+
+  handlers:
+    - name: reload consul
+      systemd:
+        name: consul
+        state: reloaded

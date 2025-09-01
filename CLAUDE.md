@@ -24,8 +24,9 @@ uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.pro
 **CRITICAL**: When working with NetBox or any playbooks that need Infisical secrets:
 
 - ALWAYS use `uv run ansible-playbook` (not `ansible-playbook` directly)
-- The Infisical Ansible collection (`infisical.vault.read_secrets`) has issues with Python virtual environments
-- If you encounter "worker was found in a dead state" errors with Infisical lookups, use the CLI workaround:
+- If you encounter "worker was found in a dead state" errors with Infisical lookups this indicates an error authenticating with the infisical API. You must verify the environment variables are set correctly via .mise.local.toml. The variables needed are INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET.
+
+- As a last resort, you can get the token via the CLI and use the environment variable:
 
   ```bash
   # Get token via CLI and use environment variable
