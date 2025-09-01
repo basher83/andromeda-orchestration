@@ -19,7 +19,7 @@ yamllint = "1.35.1"
 # ansible-lint is installed via uv/pip, not mise
 
 # Optional tools (comment out if not needed)
-act = "0.2.80" # GitHub Actions local testing
+act = "0.2.81" # GitHub Actions local testing
 jq = "latest"  # JSON processing
 
 # HashiCorp CLIs for status checks only
