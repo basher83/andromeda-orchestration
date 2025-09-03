@@ -17,7 +17,7 @@
     "ghcr.io/skriptfabrik/devcontainer-features/infisical-cli:1": {},
     "ghcr.io/tailscale/codespace/tailscale": {}
   },
-  "image": "mcr.microsoft.com/devcontainers/universal:3",
+  "image": "mcr.microsoft.com/devcontainers/universal:4",
   "mounts": [
     "source=mise-data-volume,target=/mnt/mise-data,type=volume"
   ],
