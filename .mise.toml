@@ -507,7 +507,7 @@ description = "Run KICS infrastructure security scan"
 run = '''
 echo "🔍 Running KICS security scan..."
 mkdir -p kics-results
-docker run -t -v "$(pwd)":/path checkmarx/kics:latest scan \
+docker run --rm -t -v "$(pwd)":/path checkmarx/kics:latest scan \
   -p /path \
   --config /path/kics.config \
   -o /path/kics-results
