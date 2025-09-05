@@ -58,7 +58,10 @@ paths = [
     '''(.*?)(jpg|gif|png|svg|doc|pdf)''',
     '''ansible\.cfg''',
     '''requirements\.yml''',
-    '''molecule/.*'''
+    '''molecule/.*''',
+    '''\.mcp\.json''',  # MCP configuration with test UUIDs
+    '''playbooks/infrastructure/consul-nomad/apply-consul-tokens-to-nomad\.yml''',  # Example tokens
+    '''playbooks/infrastructure/configure-netdata-consul\.yml'''  # Example API keys
 ]
 
 # Additional patterns to allow (false positives)
@@ -107,7 +110,18 @@ regexes = [
     "example-.*",
     "EXAMPLE-.*",
     "dummy-.*",
-    "DUMMY-.*"
+    "DUMMY-.*",
+    
+    # Specific test UUIDs from old commits (not real secrets)
+    "d8d22964-c41e-43ab-bdba-11c063622051",  # .mcp.json test UUID
+    "00b57268-c5f9-edb4-bc90-639fb4ab3232",  # consul tokens test UUID
+    "aef3a19e-97f1-4b87-c4e2-8a5f4a97df7a",  # test UUID
+    "be83f2fe-feb4-4e51-9a7d-7f76fd2f5e6f",  # test UUID
+    "4a5b6c7d-8e9f-1a2b-3c4d-5e6f7a8b9c0d",  # test UUID
+    "1a2b3c4d-5e6f-7a8b-9c0d-1a2b3c4d5e6f",  # test UUID
+    "9f8e7d6c-5b4a-3c2d-1e0f-9a8b7c6d5e4f",  # test UUID
+    "7e6d5c4b-3a2b-1c0d-9e8f-7a6b5c4d3e2f",  # test UUID
+    "5c4b3a2b-1c0d-9e8f-7a6b-5c4d3e2f1a0b"   # test UUID
 ]
 
 
