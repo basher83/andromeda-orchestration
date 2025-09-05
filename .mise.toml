@@ -9,7 +9,7 @@
 [tools]
 # Core Python/Ansible tools
 python = "3.13.7"
-uv = "0.8.14"
+uv = "0.8.15"
 pre-commit = "4.3.0"
 
 # Linting tools
