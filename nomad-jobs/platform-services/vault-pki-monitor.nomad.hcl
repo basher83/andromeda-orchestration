@@ -22,11 +22,11 @@ job "vault-pki-monitor" {
           "/workspace/playbooks/infrastructure/vault/monitor-pki-certificates.yml",
           "-i", "/workspace/inventory/environments/vault-cluster/production.yaml"
         ]
-        
+
         volumes = [
           "/opt/netbox-ansible:/workspace:ro"
         ]
-        
+
         network_mode = "host"
       }
 
@@ -58,7 +58,7 @@ EOH
 
     task "alert-on-expiry" {
       driver = "docker"
-      
+
       lifecycle {
         hook    = "poststop"
         sidecar = false
@@ -75,13 +75,13 @@ EOH
         memory = 64
       }
     }
-  }
 
-  # Restart policy
-  restart {
-    attempts = 2
-    interval = "30m"
-    delay    = "15s"
-    mode     = "fail"
+    # Restart policy for the group
+    restart {
+      attempts = 2
+      interval = "30m"
+      delay    = "15s"
+      mode     = "fail"
+    }
   }
 }
