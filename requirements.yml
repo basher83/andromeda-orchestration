@@ -38,3 +38,7 @@ collections:
   # Requires Python package 'hvac' on the controller/Execution Environment
   - name: community.hashi_vault
     version: "==7.0.0"
+
+  # Cryptography modules (for TLS/SSL certificate generation)
+  - name: community.crypto
+    version: ">=2.22.0"

@@ -110,6 +110,7 @@ regexes = [
     "DUMMY-.*"
 ]
 
+
 # Stopwords to reduce false positives
 stopwords = [
     "client",

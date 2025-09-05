@@ -161,6 +161,7 @@ job "postgresql" {
         PDNS_PASSWORD     = "${PDNS_PASSWORD}"
         NETDATA_PASSWORD  = "${NETDATA_PASSWORD}"
         VAULT_DB_PASSWORD = "${VAULT_DB_PASSWORD}"
+        PGPASSWORD        = "${POSTGRES_PASSWORD}"
       }
 
       template {
@@ -346,9 +347,6 @@ job "postgresql" {
         EOT
       }
 
-      env {
-        PGPASSWORD = "${POSTGRES_PASSWORD}"
-      }
 
 
       resources {
