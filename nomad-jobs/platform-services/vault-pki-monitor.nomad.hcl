@@ -4,7 +4,7 @@ job "vault-pki-monitor" {
   type        = "batch"
 
   periodic {
-    cron             = "0 */6 * * *"  # Run every 6 hours
+    crons            = ["0 */6 * * *"]  # Run every 6 hours
     prohibit_overlap = true
     time_zone        = "UTC"
   }
@@ -20,30 +20,23 @@ job "vault-pki-monitor" {
         command = "ansible-playbook"
         args = [
           "/workspace/playbooks/infrastructure/vault/monitor-pki-certificates.yml",
-          "-i", "/workspace/inventory/environments/vault-cluster/production.yaml"
+          "-i", "/workspace/inventory/vault-cluster/production.yaml"
         ]
 
         volumes = [
-          "/opt/netbox-ansible:/workspace:ro"
+          "/opt/andromeda-orchestration:/workspace:ro"
         ]
-
-        network_mode = "host"
       }
 
       env {
         ANSIBLE_HOST_KEY_CHECKING = "False"
-        VAULT_ADDR                = "https://192.168.10.33:8200"
+        VAULT_ADDR                = "https://vault-prod-1-holly.service.consul:8200"
         VAULT_SKIP_VERIFY         = "false"
       }
 
-      template {
-        data = <<EOH
-INFISICAL_UNIVERSAL_AUTH_CLIENT_ID={{ with secret "kv/data/infisical/auth" }}{{ .Data.data.client_id }}{{ end }}
-INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET={{ with secret "kv/data/infisical/auth" }}{{ .Data.data.client_secret }}{{ end }}
-EOH
-        destination = "secrets/env.txt"
-        env         = true
-      }
+      # Infisical authentication is handled via environment variables
+      # set on the Nomad client hosts. The ansible playbook will use
+      # these to retrieve secrets from Infisical.
 
       resources {
         cpu    = 500
