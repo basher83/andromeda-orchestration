@@ -115,6 +115,8 @@ regexes = [
     "EXAMPLE-.*",
     "dummy-.*",
     "DUMMY-.*",
+    "child1-api-key",  # Netdata example API key
+    "child2-api-key",  # Netdata example API key
     
     # Specific test UUIDs from old commits (not real secrets)
     "d8d22964-c41e-43ab-bdba-11c063622051",  # .mcp.json test UUID
