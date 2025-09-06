@@ -54,7 +54,7 @@ A phased approach to move from ad-hoc DNS to a robust, service-aware infrastruct
    - Add a `service` stanza for PowerDNS in Consul.
 2. **Run and verify**
    - `nomad job run powerdns.nomad.hcl`
-   - Test DNS: `dig @<nomad-node> example.lab.local A`
+   - Test DNS: `dig @<nomad-node> example.lab.spaceships.workA`
    - Test API: `curl -H "X-API-Key: ChangeMe" http://<nomad-node>:8081/api/v1/servers`
 
 ---
@@ -62,7 +62,7 @@ A phased approach to move from ad-hoc DNS to a robust, service-aware infrastruct
 ## Phase 3: Hook up NetBox → PowerDNS
 
 **🛠️ Bootstrap Tip:** You don't need NetBox fully populated to start—seed it with just the key host records you'll
-initially manage (e.g., `proxmox01.lab.local`, `nomad-client.lab.local`). PowerDNS will sync these, and you can flesh
+initially manage (e.g., `proxmox01.lab.spaceships.work`, `nomad-client.lab.spaceships.work`). PowerDNS will sync these, and you can flesh
 out the rest of your IPAM in parallel.
 
 1. **NetBox IPAM**
@@ -78,7 +78,7 @@ out the rest of your IPAM in parallel.
 
 1. **Flip authoritative roles**
    - Keep Pi-hole+Unbound upstream for ad-blocking only.
-   - PowerDNS becomes authoritative for `*.lab.local`.
+   - PowerDNS becomes authoritative for `*.lab.spaceships.work`.
 2. **Migrate static entries**
    - Import any host entries from Pi-hole into NetBox.
 3. **Deprecate and monitor**
