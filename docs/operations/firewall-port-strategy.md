@@ -30,29 +30,29 @@ Our infrastructure uses a combination of static and dynamic port allocation to p
 
 ### Base Infrastructure Ports
 
-| Port | Protocol | Service | Purpose |
-|------|----------|---------|---------|
-| 22 | TCP | SSH | Remote administration |
-| 4646 | TCP | Nomad | HTTP API |
-| 4647-4648 | TCP/UDP | Nomad | RPC and Serf |
-| 8300-8302 | TCP/UDP | Consul | Server RPC, Serf LAN/WAN |
-| 8500 | TCP | Consul | HTTP API |
-| 8600 | TCP/UDP | Consul | DNS interface |
-| 19999 | TCP | Netdata | Monitoring dashboard |
-| 2375-2376 | TCP | Docker | API for Nomad |
+| Port      | Protocol | Service | Purpose                  |
+| --------- | -------- | ------- | ------------------------ |
+| 22        | TCP      | SSH     | Remote administration    |
+| 4646      | TCP      | Nomad   | HTTP API                 |
+| 4647-4648 | TCP/UDP  | Nomad   | RPC and Serf             |
+| 8300-8302 | TCP/UDP  | Consul  | Server RPC, Serf LAN/WAN |
+| 8500      | TCP      | Consul  | HTTP API                 |
+| 8600      | TCP/UDP  | Consul  | DNS interface            |
+| 19999     | TCP      | Netdata | Monitoring dashboard     |
+| 2375-2376 | TCP      | Docker  | API for Nomad            |
 
 ### Dynamic Service Ports
 
-| Port Range | Protocol | Purpose |
-|------------|----------|---------|
-| 20000-32000 | TCP/UDP | Nomad dynamic allocation |
+| Port Range  | Protocol | Purpose                  |
+| ----------- | -------- | ------------------------ |
+| 20000-32000 | TCP/UDP  | Nomad dynamic allocation |
 
 ### Static Service Ports
 
-| Port | Protocol | Service | Justification |
-|------|----------|---------|---------------|
-| 53 | TCP/UDP | DNS | Standard resolver port |
-| 8081 | TCP | PowerDNS API | Currently static (should migrate) |
+| Port | Protocol | Service      | Justification                     |
+| ---- | -------- | ------------ | --------------------------------- |
+| 53   | TCP/UDP  | DNS          | Standard resolver port            |
+| 8081 | TCP      | PowerDNS API | Currently static (should migrate) |
 
 ## Port Allocation Patterns
 
@@ -146,17 +146,20 @@ Admin → node-ip:dynamic-port → Service
 When deploying a new service:
 
 1. **Determine Port Requirements**
+
    - [ ] Can it use a dynamic port? (default: yes)
    - [ ] Does it require a well-known port? (rare)
    - [ ] Will users access it directly? (use load balancer instead)
 
 2. **Configure Nomad Job**
+
    - [ ] Use dynamic port allocation
    - [ ] Configure health checks
    - [ ] Add Consul service registration
    - [ ] Include routing tags for load balancer
 
 3. **Update Load Balancer**
+
    - [ ] Add routing rules (if needed)
    - [ ] Configure SSL certificates
    - [ ] Test service discovery
@@ -171,6 +174,7 @@ When deploying a new service:
 ### Adding New Static Ports
 
 1. **Justify the Need**
+
    - Why can't this use dynamic ports?
    - Is this a standard protocol requirement?
    - Are there alternatives?
@@ -216,7 +220,7 @@ job "windmill" {
       port = "http"
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.windmill.rule=Host(`windmill.lab.local`)"
+        "traefik.http.routers.windmill.rule=Host(`windmill.lab.spaceships.work`)"
       ]
     }
   }
@@ -239,7 +243,7 @@ job "grafana" {
       port = "http"
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.grafana.rule=Host(`grafana.lab.local`)"
+        "traefik.http.routers.grafana.rule=Host(`grafana.lab.spaceships.work`)"
       ]
     }
   }

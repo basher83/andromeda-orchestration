@@ -77,17 +77,17 @@ Implement Deltamir's PKI pattern:
 vault_pki_hierarchy:
   root_ca:
     path: "hashistack/pki"
-    ttl: "87600h"  # 10 years
+    ttl: "87600h" # 10 years
   intermediate_cas:
     consul:
       path: "hashistack/pki_int_consul"
-      ttl: "43800h"  # 5 years
+      ttl: "43800h" # 5 years
     nomad:
       path: "hashistack/pki_int_nomad"
-      ttl: "43800h"  # 5 years
+      ttl: "43800h" # 5 years
     vault:
       path: "hashistack/pki_int_vault"
-      ttl: "43800h"  # 5 years
+      ttl: "43800h" # 5 years
 ```
 
 ### 2.2 Certificate Auto-Renewal System
@@ -132,12 +132,12 @@ Deploy a master Vault instance for managing other Vaults:
 ```yaml
 # Master Vault configuration
 master_vault:
-  address: "https://vault-master.homelab.local:8200"
+  address: "https://vault-master.homelab.spaceships.work:8200"
   features:
-    - transit_auto_unseal  # For other Vaults
-    - pki_root_ca          # Certificate authority
-    - gossip_key_storage   # For Consul/Nomad
-    - policy_management    # Centralized policies
+    - transit_auto_unseal # For other Vaults
+    - pki_root_ca # Certificate authority
+    - gossip_key_storage # For Consul/Nomad
+    - policy_management # Centralized policies
 ```
 
 ### 3.2 Raft Cluster with Auto-Unseal
@@ -151,18 +151,18 @@ storage "raft" {
   node_id = "vault-{{ ansible_hostname }}"
 
   retry_join {
-    leader_api_addr = "https://vault-1.homelab.local:8200"
+    leader_api_addr = "https://vault-1.homelab.spaceships.work:8200"
   }
   retry_join {
-    leader_api_addr = "https://vault-2.homelab.local:8200"
+    leader_api_addr = "https://vault-2.homelab.spaceships.work:8200"
   }
   retry_join {
-    leader_api_addr = "https://vault-3.homelab.local:8200"
+    leader_api_addr = "https://vault-3.homelab.spaceships.work:8200"
   }
 }
 
 seal "transit" {
-  address = "https://vault-master.homelab.local:8200"
+  address = "https://vault-master.homelab.spaceships.work:8200"
   token = "{{ vault_transit_token }}"
   disable_renewal = "false"
   key_name = "autounseal"
@@ -179,7 +179,7 @@ Implement Deltamir's rotation patterns:
 ```hcl
 # /opt/vault/templates/consul_gossip_rotation.hcl
 vault {
-  address = "https://vault.service.consul:8200"
+  address = "https://vault.service.consul.spaceships.work:8200"
   token = "{{ consul_template_token }}"
   renew_token = true
 }
@@ -204,9 +204,9 @@ Configure rotation based on Deltamir's patterns:
 
 ```yaml
 # Rotation intervals
-consul_template_gossip_key_ttl: "1h"    # Gossip keys
-consul_template_cert_ttl: "24h"         # TLS certificates
-vault_token_ttl: "768h"                 # Service tokens (32 days)
+consul_template_gossip_key_ttl: "1h" # Gossip keys
+consul_template_cert_ttl: "24h" # TLS certificates
+vault_token_ttl: "768h" # Service tokens (32 days)
 ```
 
 ## Phase 5: Snapshot and Disaster Recovery (Enhanced)
@@ -219,8 +219,8 @@ Implement wescale's snapshot pattern:
 # Snapshot configuration
 vault_snapshot:
   enabled: true
-  schedule: "0 2 * * *"  # Daily at 2 AM
-  retention: 30          # Keep 30 days
+  schedule: "0 2 * * *" # Daily at 2 AM
+  retention: 30 # Keep 30 days
   storage:
     local: "/opt/vault-snapshots"
     remote: "s3://backup-bucket/vault/"
@@ -312,7 +312,7 @@ vault_telemetry:
       severity: "critical"
 
     - name: "vault_certificate_expiry"
-      expression: "vault_pki_cert_expiry_seconds < 604800"  # 7 days
+      expression: "vault_pki_cert_expiry_seconds < 604800" # 7 days
       severity: "warning"
 ```
 
@@ -324,7 +324,7 @@ vault_audit:
   file:
     path: "/var/log/vault/audit.log"
     format: "json"
-    rotate_bytes: 52428800  # 50MB
+    rotate_bytes: 52428800 # 50MB
     rotate_duration: "24h"
     rotate_max_files: 14
 
@@ -345,7 +345,7 @@ Enhanced JWT configuration:
 path "auth/nomad" {
   type = "jwt"
   config {
-    jwks_url = "https://nomad.service.consul:4646/.well-known/jwks.json"
+    jwks_url = "https://nomad.service.consul.spaceships.work:4646/.well-known/jwks.json"
     jwt_supported_algs = ["RS256"]
     default_role = "nomad-workload"
   }
@@ -384,28 +384,28 @@ path "database/creds/{{identity.entity.aliases.auth_jwt_xxxxx.metadata.nomad_job
 
 ## Implementation Timeline
 
-| Week | Phase | Key Activities |
-|------|-------|---------------|
-| 1 | Assessment & Dev | Infrastructure audit, dev deployment |
-| 2 | PKI Setup | Root CA, intermediate CAs, policies |
-| 3 | Production Deploy | Raft cluster, auto-unseal |
-| 4 | Automation | consul-template, rotation scripts |
-| 5 | DR & Backup | Snapshots, restore procedures |
-| 6 | Integration | Nomad, Consul, database engines |
-| 7 | Monitoring | Metrics, alerts, audit logs |
-| 8 | Documentation | Runbooks, troubleshooting guides |
+| Week | Phase             | Key Activities                       |
+| ---- | ----------------- | ------------------------------------ |
+| 1    | Assessment & Dev  | Infrastructure audit, dev deployment |
+| 2    | PKI Setup         | Root CA, intermediate CAs, policies  |
+| 3    | Production Deploy | Raft cluster, auto-unseal            |
+| 4    | Automation        | consul-template, rotation scripts    |
+| 5    | DR & Backup       | Snapshots, restore procedures        |
+| 6    | Integration       | Nomad, Consul, database engines      |
+| 7    | Monitoring        | Metrics, alerts, audit logs          |
+| 8    | Documentation     | Runbooks, troubleshooting guides     |
 
 ## Risk Mitigation
 
 ### Enhanced Risk Matrix
 
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| Seal/Unseal Issues | Medium | High | Auto-unseal + documented manual procedures |
-| Certificate Expiry | Low | High | Auto-renewal + monitoring alerts |
-| Snapshot Corruption | Low | Critical | Multiple backup locations + validation |
-| Token Leakage | Low | Critical | Short TTLs + audit logging |
-| Network Partition | Medium | Medium | Raft consensus handles split-brain |
+| Risk                | Probability | Impact   | Mitigation                                 |
+| ------------------- | ----------- | -------- | ------------------------------------------ |
+| Seal/Unseal Issues  | Medium      | High     | Auto-unseal + documented manual procedures |
+| Certificate Expiry  | Low         | High     | Auto-renewal + monitoring alerts           |
+| Snapshot Corruption | Low         | Critical | Multiple backup locations + validation     |
+| Token Leakage       | Low         | Critical | Short TTLs + audit logging                 |
+| Network Partition   | Medium      | Medium   | Raft consensus handles split-brain         |
 
 ## Success Criteria
 
