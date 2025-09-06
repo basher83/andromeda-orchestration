@@ -17,14 +17,10 @@ job "vault-pki-monitor" {
 
       config {
         image   = "cytopia/ansible:latest-tools"
-        command = "ansible-playbook"
+        command = "/bin/sh"
         args = [
-          "/workspace/playbooks/infrastructure/vault/monitor-pki-certificates.yml",
-          "-i", "/workspace/inventory/vault-cluster/production.yaml"
-        ]
-
-        volumes = [
-          "/opt/andromeda-orchestration:/workspace:ro"
+          "-c",
+          "git clone https://github.com/basher83/andromeda-orchestration.git /tmp/andromeda && cd /tmp/andromeda && ansible-playbook playbooks/infrastructure/vault/monitor-pki-certificates.yml -i inventory/environments/vault-cluster/production.yaml"
         ]
       }
 
