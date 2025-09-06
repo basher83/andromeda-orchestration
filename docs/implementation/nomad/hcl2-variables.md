@@ -17,7 +17,7 @@ The `community.general.nomad_job` Ansible module **does not support** the standa
     content: "{{ job_spec.content | b64decode }}"
     content_format: hcl
   environment:
-    NOMAD_VAR_homelab_domain: "{{ homelab_domain }}"  # IGNORED!
+    NOMAD_VAR_homelab_domain: "{{ homelab_domain }}" # IGNORED!
 ```
 
 ## The Solution
@@ -56,7 +56,7 @@ Use Nomad's `/v1/jobs/parse` API endpoint to parse the HCL with variables before
     use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
     namespace: "{{ namespace | default('default') }}"
     content: "{{ parsed_job.json | to_json }}"
-    content_format: json  # Note: JSON format, not HCL
+    content_format: json # Note: JSON format, not HCL
     state: present
   register: deploy_result
   when: >
@@ -120,12 +120,12 @@ job "my-service" {
 
 ## Testing
 
-### CLI Testing (Works with NOMAD_VAR_*)
+### CLI Testing (Works with NOMAD*VAR*\*)
 
 ```bash
 # The Nomad CLI does support environment variables
-NOMAD_VAR_homelab_domain=test.local nomad job validate my-job.nomad.hcl
-NOMAD_VAR_homelab_domain=test.local nomad job plan my-job.nomad.hcl
+NOMAD_VAR_homelab_domain=test.spaceships.work nomad job validate my-job.nomad.hcl
+NOMAD_VAR_homelab_domain=test.spaceships.work nomad job plan my-job.nomad.hcl
 ```
 
 ### Ansible Testing
@@ -134,13 +134,13 @@ NOMAD_VAR_homelab_domain=test.local nomad job plan my-job.nomad.hcl
 # Deploy with Ansible (uses API parsing)
 uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
   -e job=nomad-jobs/my-job.nomad.hcl \
-  -e homelab_domain=test.local
+  -e homelab_domain=test.spaceships.work
 ```
 
 ## Common Pitfalls
 
 1. **Don't use Jinja2 in HCL files**: The module loads HCL files raw, not through template processing
-2. **Don't rely on NOMAD_VAR_ with Ansible**: Only works with CLI, not the module
+2. **Don't rely on NOMAD*VAR* with Ansible**: Only works with CLI, not the module
 3. **Always provide defaults**: Include default values in your variable declarations
 4. **Check for variable usage**: The playbook checks if variables are used before parsing
 5. **Handle parse failures gracefully**: The parse API may fail; always include fallback logic

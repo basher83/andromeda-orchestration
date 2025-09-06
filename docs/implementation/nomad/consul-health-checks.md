@@ -102,11 +102,11 @@ service {
 
 Use standard intervals based on service criticality:
 
-| Service Type | Interval | Timeout | Examples |
-|-------------|----------|---------|----------|
-| Critical | 10s | 2s | DNS, Database |
-| API Services | 15s | 3s | REST APIs, Admin interfaces |
-| Non-critical | 30s | 5s | Metrics, Background workers |
+| Service Type | Interval | Timeout | Examples                    |
+| ------------ | -------- | ------- | --------------------------- |
+| Critical     | 10s      | 2s      | DNS, Database               |
+| API Services | 15s      | 3s      | REST APIs, Admin interfaces |
+| Non-critical | 30s      | 5s      | Metrics, Background workers |
 
 ```hcl
 # Critical service example
@@ -184,7 +184,7 @@ job "example-service" {
         tags = [
           "http",
           "traefik.enable=true",
-          "traefik.http.routers.myapp.rule=Host(`myapp.lab.local`)",
+          "traefik.http.routers.myapp.rule=Host(`myapp.lab.spaceships.work`)",
         ]
 
         # Required for Consul ACL integration
@@ -342,12 +342,12 @@ job "dns-server" {
 
 ## Quick Reference
 
-| Check Type | Use Case | Key Parameters |
-|------------|----------|----------------|
-| `http` | REST APIs, web services | `path`, `method`, `header` |
-| `tcp` | Databases, raw sockets | Port only |
-| `script` | Custom validation | `command`, `args` |
-| `grpc` | gRPC services | `grpc_service` |
+| Check Type | Use Case                | Key Parameters             |
+| ---------- | ----------------------- | -------------------------- |
+| `http`     | REST APIs, web services | `path`, `method`, `header` |
+| `tcp`      | Databases, raw sockets  | Port only                  |
+| `script`   | Custom validation       | `command`, `args`          |
+| `grpc`     | gRPC services           | `grpc_service`             |
 
 ## Common Pitfalls to Avoid
 

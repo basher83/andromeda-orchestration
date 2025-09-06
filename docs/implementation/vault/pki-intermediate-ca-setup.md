@@ -37,6 +37,7 @@ HomeLab Root CA (10 years)
 ### Certificate Roles
 
 #### Infrastructure Role
+
 - **Purpose**: HashiCorp services (Vault, Consul, Nomad)
 - **Allowed Domains**:
   - `consul.service.consul`
@@ -51,10 +52,11 @@ HomeLab Root CA (10 years)
 - **Key Size**: RSA 2048-bit
 
 #### Application Role
+
 - **Purpose**: Application services
 - **Allowed Domains**:
   - `*.spaceships.work`
-  - `*.app.local`
+  - `*.app.spaceships.work`
   - `*.service.consul`
 - **Max TTL**: 168h (7 days)
 - **Default TTL**: 24h (1 day)
@@ -62,9 +64,10 @@ HomeLab Root CA (10 years)
 - **Key Size**: RSA 2048-bit
 
 #### Database Role
+
 - **Purpose**: Database services
 - **Allowed Domains**:
-  - `*.db.local`
+  - `*.db.spaceships.work`
   - `*.database.consul`
   - `postgres.spaceships.work`
   - `mysql.spaceships.work`
@@ -129,7 +132,7 @@ vault write pki_int/issue/application \
 
 # Issue certificate for internal service
 vault write pki_int/issue/application \
-    common_name="dashboard.app.local" \
+    common_name="dashboard.app.spaceships.work" \
     ttl="24h"
 
 # Issue certificate for Consul service
@@ -153,8 +156,8 @@ vault write pki_int/issue/database \
 
 # Issue certificate for database cluster
 vault write pki_int/issue/database \
-    common_name="postgres-primary.db.local" \
-    alt_names="postgres-replica-1.db.local,postgres-replica-2.db.local" \
+    common_name="postgres-primary.db.spaceships.work" \
+    alt_names="postgres-replica-1.db.spaceships.work,postgres-replica-2.db.spaceships.work" \
     ttl="168h"
 ```
 
@@ -219,13 +222,13 @@ Using the `community.hashi_vault.vault_pki_generate_certificate` module:
   ansible.builtin.copy:
     content: "{{ cert_data.data.data.certificate }}"
     dest: "/etc/ssl/certs/service.pem"
-    mode: '0644'
+    mode: "0644"
 
 - name: Save private key
   ansible.builtin.copy:
     content: "{{ cert_data.data.data.private_key }}"
     dest: "/etc/ssl/private/service-key.pem"
-    mode: '0600'
+    mode: "0600"
 ```
 
 ### Required Environment Variables
@@ -240,12 +243,12 @@ Using the `community.hashi_vault.vault_pki_generate_certificate` module:
 ### Certificate Lifetimes
 
 | Certificate Type | Maximum TTL | Default TTL | Rotation Frequency |
-|-----------------|-------------|-------------|-------------------|
-| Root CA | 10 years | N/A | Every 8-9 years |
-| Intermediate CA | 5 years | N/A | Every 4 years |
-| Infrastructure | 30 days | 7 days | Weekly |
-| Application | 7 days | 1 day | Daily |
-| Database | 30 days | 7 days | Weekly |
+| ---------------- | ----------- | ----------- | ------------------ |
+| Root CA          | 10 years    | N/A         | Every 8-9 years    |
+| Intermediate CA  | 5 years     | N/A         | Every 4 years      |
+| Infrastructure   | 30 days     | 7 days      | Weekly             |
+| Application      | 7 days      | 1 day       | Daily              |
+| Database         | 30 days     | 7 days      | Weekly             |
 
 ### Access Control
 
@@ -275,6 +278,7 @@ path "pki_int/sign/*" {
 ### Certificate Validation
 
 All certificates include:
+
 - Proper Subject Alternative Names (SANs)
 - Key usage extensions appropriate to the role
 - Extended key usage for TLS server/client authentication
@@ -286,6 +290,7 @@ All certificates include:
 ### Key Metrics to Monitor
 
 1. **Certificate Expiration**
+
    ```bash
    # Check certificate expiration
    vault list -format=json pki_int/certs | \
@@ -296,6 +301,7 @@ All certificates include:
    ```
 
 2. **CRL Size and Growth**
+
    ```bash
    # Check CRL size
    curl -sk https://vault.spaceships.work:8200/v1/pki_int/crl | wc -c
@@ -338,6 +344,7 @@ vault write pki_int/tidy \
 ### Common Issues
 
 1. **Certificate Request Denied**
+
    ```bash
    # Check role configuration
    vault read pki_int/roles/infrastructure
@@ -349,6 +356,7 @@ vault write pki_int/tidy \
    ```
 
 2. **Certificate Chain Issues**
+
    ```bash
    # Verify chain
    curl -sk https://vault.spaceships.work:8200/v1/pki_int/ca-chain | \
@@ -357,6 +365,7 @@ vault write pki_int/tidy \
    ```
 
 3. **CRL Not Accessible**
+
    ```bash
    # Test CRL endpoint
    curl -vsk https://vault.spaceships.work:8200/v1/pki_int/crl

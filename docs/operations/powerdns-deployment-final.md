@@ -101,7 +101,7 @@ DNS queries work correctly:
 
 ```bash
 # Test DNS resolution
-dig @192.168.11.21 -p 53 test.local
+dig @192.168.11.21 -p 53 test.lab.spaceships.work
 
 # The DNS server responds (though no zones configured yet)
 ```
@@ -121,7 +121,7 @@ The API is running and accessible from within the container network:
 ## Next Steps for Full Integration
 
 1. **Configure firewall rules** to allow dynamic port range (20000-32000)
-2. **Use Traefik** for API access via `powerdns.lab.local`
+2. **Use Traefik** for API access via `powerdns.lab.spaceships.work`
 3. **Sync zones from NetBox** using the sync playbook
 4. **Configure PowerDNS** to use NetBox as remote backend (optional)
 5. **Add persistent storage** for SQLite database
@@ -155,7 +155,7 @@ nomad alloc logs -stderr <alloc-id> powerdns
 nomad alloc status -json <alloc-id> | jq '.AllocatedResources.Shared.Networks[0].DynamicPorts'
 
 # Test DNS
-dig @192.168.11.21 -p 53 test.local
+dig @192.168.11.21 -p 53 test.lab.spaceships.work
 
 # Test API (from inside network)
 curl -H "X-API-Key: changeme789xyz" http://192.168.11.21:21421/api/v1/servers

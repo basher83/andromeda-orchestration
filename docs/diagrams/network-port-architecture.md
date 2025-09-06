@@ -100,7 +100,7 @@ sequenceDiagram
     Nomad->>Service: Start container
     Service->>Consul: Register service with allocated port
     Consul->>LB: Service available at host:24563
-    User->>LB: HTTPS request to service.lab.local
+    User->>LB: HTTPS request to service.lab.spaceships.work
     LB->>Consul: Query service location
     Consul->>LB: Return host:24563
     LB->>Service: Proxy request to dynamic port

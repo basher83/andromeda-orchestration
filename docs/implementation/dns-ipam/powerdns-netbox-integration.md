@@ -38,9 +38,9 @@ Zones created in NetBox:
 
 **Forward Zones:**
 
-- `homelab.local` - Primary homelab domain
-- `doggos.local` - Doggos cluster domain
-- `og.local` - OG homelab cluster domain
+- `homelab.spaceships.work` - Primary homelab domain
+- `doggos.spaceships.work` - Doggos cluster domain
+- `og.spaceships.work` - OG homelab cluster domain
 
 **Reverse Zones:**
 
@@ -115,17 +115,17 @@ python3 scripts/netbox-powerdns-sync.py \
 
 ```bash
 # Forward lookup
-dig @192.168.11.20 lloyd.homelab.local
+dig @192.168.11.20 lloyd.homelab.spaceships.work
 
 # Reverse lookup
 dig @192.168.11.20 -x 192.168.11.11
 
 # Zone transfer
-dig @192.168.11.20 homelab.local AXFR
+dig @192.168.11.20 homelab.spaceships.work AXFR
 
 # Service discovery
-dig @192.168.11.20 netbox.homelab.local
-dig @192.168.11.20 powerdns.homelab.local
+dig @192.168.11.20 netbox.homelab.spaceships.work
+dig @192.168.11.20 powerdns.homelab.spaceships.work
 ```
 
 ### Expected Results

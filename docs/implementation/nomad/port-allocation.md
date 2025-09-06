@@ -67,7 +67,7 @@ job "my-service" {
       tags = [
         # Traefik routing
         "traefik.enable=true",
-        "traefik.http.routers.api.rule=Host(`api.lab.local`)",
+        "traefik.http.routers.api.rule=Host(`api.lab.spaceships.work`)",
       ]
 
       check {

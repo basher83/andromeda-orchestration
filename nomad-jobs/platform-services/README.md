@@ -48,7 +48,7 @@ This directory contains Nomad job specifications for infrastructure services tha
 # Deploy PowerDNS
 nomad job run nomad-jobs/platform-services/powerdns.nomad.hcl
 
-# Or via Ansible
+# Or via Ansible (Preferred)
 uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml \
   -e job=nomad-jobs/platform-services/powerdns.nomad.hcl
@@ -80,7 +80,7 @@ The job automatically creates the required PowerDNS tables:
 - API webserver MUST be enabled via command-line args, not just environment variables
 - All service blocks MUST include identity blocks with `aud = ["consul.io"]`
 - MySQL credentials are currently hardcoded (TODO: Move to secrets management)
-- Default SOA: `ns1.lab.local hostmaster.lab.local 1 10800 3600 604800 3600`
+- Default SOA: `ns1.lab.spaceships.work hostmaster.lab.spaceships.work 1 10800 3600 604800 3600`
 
 **Traefik Integration**:
 PowerDNS API service includes Traefik tags for routing:
@@ -88,7 +88,7 @@ PowerDNS API service includes Traefik tags for routing:
 ```hcl
 tags = [
   "traefik.enable=true",
-  "traefik.http.routers.powerdns.rule=Host(`powerdns.lab.local`)",
+  "traefik.http.routers.powerdns.rule=Host(`powerdns.lab.spaceships.work`)",
   "traefik.http.routers.powerdns.entrypoints=websecure",
   "traefik.http.routers.powerdns.tls=true",
   "traefik.http.services.powerdns.loadbalancer.server.port=${NOMAD_PORT_api}",
@@ -141,16 +141,19 @@ The `.archive/` directory contains previous iterations and test versions:
 ### Common Issues
 
 1. **PowerDNS API not accessible**:
+
    - Verify webserver is enabled: Check for `--webserver=yes` in args
    - Get dynamic port: `nomad alloc status <alloc_id>`
    - Test from host: `curl -H "X-API-Key: changeme789xyz" http://<node>:<port>/api/v1/servers`
 
 2. **DNS queries not working**:
+
    - Check port 53 is properly mapped
    - Verify MySQL is running and connected
    - Check PowerDNS logs: `nomad alloc logs <alloc_id> powerdns`
 
 3. **Service registration issues**:
+
    - Ensure all services have identity blocks with `aud = ["consul.io"]`
    - Verify services in Consul: `consul catalog services`
    - Check Nomad client has proper Consul integration
