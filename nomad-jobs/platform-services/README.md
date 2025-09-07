@@ -1,140 +1,112 @@
 # Platform Services
 
-This directory contains Nomad job specifications for infrastructure services that provide functionality to the platform.
+This directory contains Nomad job specifications for infrastructure services that provide functionality to the platform. Services are organized into dedicated directories for better maintainability.
 
-## Currently Deployed Services
+## Directory Structure
 
-### PowerDNS (PRODUCTION)
+```
+platform-services/
+├── postgresql/     # PostgreSQL database server
+├── powerdns/       # PowerDNS authoritative DNS server
+├── vault-pki/      # Vault PKI certificate management
+└── README.md       # This file
+```
 
-**File**: `powerdns.nomad.hcl`
-**Status**: ✅ Deployed and Running
-**Version**: pdns-auth-48:latest
-**Last Updated**: 2025-08-04
+## Service Overview
 
-**Purpose**: Authoritative DNS server for the homelab infrastructure.
+### PostgreSQL Database
 
-**Key Features**:
+**Location**: [`postgresql/`](postgresql/)
 
-- Runs on standard DNS port 53 (static allocation required)
-- API accessible on dynamic port with webserver on port 8081 internally
-- MySQL backend (MariaDB 10) for zone storage
-- Ready for NetBox integration (future phase)
-- Service discovery via Consul
+Multi-service database supporting PowerDNS, Netdata, and Vault. Features variable-based configuration for secure password management.
 
-**Current Configuration**:
+- **Status**: ✅ Production
+- **Key Features**: Multi-tenant database, variable configuration, persistent storage
+- **Documentation**: See [`postgresql/README.md`](postgresql/) and [`postgresql/POSTGRESQL-DEPLOYMENT.md`](postgresql/POSTGRESQL-DEPLOYMENT.md)
 
-- Static port: 53 (DNS)
-- Dynamic port for API (maps to container port 8081)
-- MySQL on dynamic port (maps to container port 3306)
-- All services registered in Consul with identity blocks
-- Persistent volume for MySQL data: `powerdns-mysql`
+### PowerDNS Authoritative Server
 
-**Services Registered**:
+**Location**: [`powerdns/`](powerdns/)
 
-- `powerdns-dns` - DNS service on port 53
-- `powerdns-api` - REST API for zone management
-- `powerdns-mysql` - MySQL database backend
+DNS server with multiple configuration options and MySQL backend for zone storage.
 
-**Access**:
+- **Status**: ✅ Production
+- **Key Features**: Static DNS port 53, REST API, MySQL backend, Consul integration
+- **Documentation**: See [`powerdns/README.md`](powerdns/)
 
-- DNS queries: `<node-ip>:53` or `dig @<node-ip> domain.com`
-- API: `http://<node-ip>:<dynamic-port>/api/v1/servers`
-- API Key: `changeme789xyz` (TODO: Move to Vault/Infisical)
-- Traefik route: [https://powerdns.lab.local](https://powerdns.lab.local)
+### Vault PKI Services
 
-**Deployment**:
+**Location**: [`vault-pki/`](vault-pki/)
+
+Certificate management and monitoring services for Vault PKI infrastructure.
+
+- **Status**: ✅ Production
+- **Key Features**: Certificate export, health monitoring, metrics collection
+- **Documentation**: See [`vault-pki/README.md`](vault-pki/)
+
+## Quick Deployment Reference
+
+### PostgreSQL
 
 ```bash
-# Deploy PowerDNS
-nomad job run nomad-jobs/platform-services/powerdns.nomad.hcl
+# With variables
+nomad job run -var-file="postgresql/postgresql.variables.hcl" postgresql/postgresql.nomad.hcl
 
-# Or via Ansible (Preferred)
+# Via Ansible
 uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
-  -i inventory/doggos-homelab/infisical.proxmox.yml \
-  -e job=nomad-jobs/platform-services/powerdns.nomad.hcl
+  -e job=nomad-jobs/platform-services/postgresql/postgresql.nomad.hcl
 ```
 
-**API Configuration**:
-The PowerDNS API requires explicit command-line arguments to enable:
+### PowerDNS
 
-```hcl
-args = [
-  "--webserver=yes",
-  "--webserver-address=0.0.0.0",
-  "--webserver-port=8081",
-  "--webserver-allow-from=0.0.0.0/0",
-  "--api=yes",
-  "--api-key=changeme789xyz"
-]
+```bash
+# Standard deployment
+nomad job run powerdns/powerdns-auth.nomad.hcl
+
+# Variable-based deployment
+nomad job run powerdns/powerdns-infisical.nomad.hcl
 ```
 
-**MySQL Schema**:
-The job automatically creates the required PowerDNS tables:
+### Vault PKI Services
 
-- `domains` - DNS zones
-- `records` - DNS records
-- Includes necessary indexes for performance
+```bash
+# Certificate exporter
+nomad job run vault-pki/vault-pki-exporter.nomad.hcl
 
-**Important Notes**:
-
-- API webserver MUST be enabled via command-line args, not just environment variables
-- All service blocks MUST include identity blocks with `aud = ["consul.io"]`
-- MySQL credentials are currently hardcoded (TODO: Move to secrets management)
-- Default SOA: `ns1.lab.spaceships.work hostmaster.lab.spaceships.work 1 10800 3600 604800 3600`
-
-**Traefik Integration**:
-PowerDNS API service includes Traefik tags for routing:
-
-```hcl
-tags = [
-  "traefik.enable=true",
-  "traefik.http.routers.powerdns.rule=Host(`powerdns.lab.spaceships.work`)",
-  "traefik.http.routers.powerdns.entrypoints=websecure",
-  "traefik.http.routers.powerdns.tls=true",
-  "traefik.http.services.powerdns.loadbalancer.server.port=${NOMAD_PORT_api}",
-]
+# Health monitor
+nomad job run vault-pki/vault-pki-monitor.nomad.hcl
 ```
 
-## Archived Files
+## Common Configuration
 
-The `.archive/` directory contains previous iterations and test versions:
+All services follow these patterns:
 
-- `powerdns.nomad.hcl` - Original version without service registration
-- `powerdns-minimal.nomad.hcl` - Basic test configuration
-- `powerdns-no-services.nomad.hcl` - Workaround version without service blocks
-- `powerdns-simple-services.nomad.hcl` - Initial service registration test
-- `powerdns-test-services.nomad.hcl` - Test with port 5353 to avoid conflicts
-- `powerdns-with-identity.nomad.hcl` - Identity blocks with Consul KV integration attempt
-- `powerdns-with-services.nomad.hcl` - Service registration without identity blocks
-- `powerdns-final.nomad.hcl` - Final working version (renamed to powerdns.nomad.hcl)
+- **Service Identity**: All services include identity blocks with `aud = ["consul.io"]`
+- **Consul Registration**: Automatic service discovery and health checks
+- **Traefik Integration**: HTTP services include routing tags for the load balancer
+- **Persistent Storage**: Database services use dedicated volumes
+- **Security**: Secrets managed through variables or Vault integration
 
-## Planned Services
+## Future Services
 
 ### NetBox (Phase 3)
 
-- IPAM and DCIM
-- Source of truth for infrastructure
+- IPAM and DCIM for infrastructure management
 - PowerDNS integration for automatic DNS updates
-- Dynamic inventory for Ansible
+- Dynamic inventory generation for Ansible
 
 ### Monitoring Stack
 
-- Prometheus for metrics collection (Traefik metrics ready)
-- Grafana for visualization
-- AlertManager for notifications
+- Prometheus for metrics collection
+- Grafana for visualization and dashboards
+- AlertManager for notification management
 - Integration with existing Netdata infrastructure
 
-### Logging Stack
+### Secrets Management Enhancement
 
-- Loki for log aggregation
-- Promtail for log shipping
-- Integration with Grafana
-
-### Secrets Management
-
-- Vault or enhanced Infisical integration
-- Dynamic database credentials for PowerDNS
-- API key rotation
+- Complete migration to Vault for all credentials
+- Dynamic database credential rotation
+- API key lifecycle management
 
 ## Troubleshooting
 

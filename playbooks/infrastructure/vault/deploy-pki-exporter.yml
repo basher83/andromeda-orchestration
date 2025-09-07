@@ -11,7 +11,7 @@
   become: false
   vars:
     nomad_api_endpoint: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646', true) }}"
-    job_path: "{{ playbook_dir }}/../../../nomad-jobs/platform-services/vault-pki-exporter.nomad.hcl"
+    job_path: "{{ playbook_dir }}/../../../nomad-jobs/platform-services/vault-pki/vault-pki-exporter.nomad.hcl"
     force_start: "{{ force | default(false) }}"
     wait_for_healthy: "{{ wait | default(true) }}"
     nomad_namespace: "default"
