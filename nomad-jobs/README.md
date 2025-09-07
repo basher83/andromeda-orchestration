@@ -7,17 +7,28 @@ This directory contains all Nomad job specifications for the homelab infrastruct
 ```text
 nomad-jobs/
 ├── core-infrastructure/    # Essential platform services (load balancers, service mesh)
-│   ├── traefik.nomad.hcl  # Production job file
-│   ├── README.md           # Service documentation
-│   ├── .testing/          # Work-in-progress iterations
-│   └── .archive/          # Previous versions for reference
+│   ├── traefik.nomad.hcl      # Production Traefik load balancer
+│   ├── vault-reference.nomad.hcl  # Vault integration reference
+│   └── README.md               # Service documentation
 ├── platform-services/      # Infrastructure services (DNS, IPAM, monitoring)
-│   ├── powerdns.nomad.hcl # Production job file
-│   ├── README.md          # Service documentation
-│   ├── .testing/          # Work-in-progress iterations
-│   └── .archive/          # Previous versions for reference
+│   ├── postgresql/
+│   │   ├── postgresql.nomad.hcl        # PostgreSQL database server
+│   │   ├── postgresql.variables.hcl    # PostgreSQL configuration variables
+│   │   ├── postgresql.variables.example.hcl  # Variable template
+│   │   ├── POSTGRESQL-DEPLOYMENT.md    # PostgreSQL deployment guide
+│   │   └── README.md                   # PostgreSQL service documentation
+│   ├── powerdns/
+│   │   ├── powerdns-auth.nomad.hcl     # Production PowerDNS authoritative server
+│   │   ├── powerdns-infisical.nomad.hcl # PowerDNS with variable configuration
+│   │   └── README.md                   # PowerDNS service documentation
+│   ├── vault-pki/
+│   │   ├── vault-pki-exporter.nomad.hcl     # Vault PKI certificate exporter
+│   │   ├── vault-pki-monitor.nomad.hcl      # Vault PKI health monitor
+│   │   └── README.md                        # Vault PKI service documentation
+│   └── README.md               # Main platform-services documentation
 └── applications/          # User-facing applications
-    └── (same structure)
+    ├── example-app.nomad.hcl   # Example application template
+    └── README.md               # Application documentation
 ```
 
 ## Organizational Policy
@@ -27,64 +38,75 @@ nomad-jobs/
 **ENFORCE THESE RULES:**
 
 1. **Production Files Only**: Each service directory should contain ONLY:
-   - One production `.nomad.hcl` file (named after the service)
+
+   - Production `.nomad.hcl` files (clearly named after the service)
+   - Configuration files (variables, examples)
    - One `README.md` documenting the current deployment
-   - Hidden directories for non-production files
+   - Documentation files specific to the service
 
 2. **Development Workflow**:
-   - `.testing/` - Active development and work-in-progress files
-   - Test files named: `{service}-{variant}.nomad.hcl`
-   - Example: `traefik-with-metrics.nomad.hcl`, `powerdns-minimal.nomad.hcl`
 
-3. **Archive Policy**:
-   - `.archive/` - Previous iterations and superseded versions
-   - Move files here after production deployment is confirmed
-   - Keep for reference and rollback purposes
+   - Use descriptive filenames for different configurations: `{service}-{variant}.nomad.hcl`
+   - Examples: `powerdns-auth.nomad.hcl`, `powerdns-infisical.nomad.hcl`
+   - Keep development versions in the main directory with clear naming
+
+3. **Version Management**:
+
+   - Use git for version control and rollback capabilities
+   - Tag important versions in git history
+   - Document version changes in commit messages
 
 4. **Documentation Requirements**:
 
 Each service README.md MUST include:
 
 - **Current Status**: Production/Testing/Planned
-- **File**: Name of production job file
+- **File**: Name of production job file(s)
 - **Version**: Container version or tag
 - **Last Updated**: Date of last production change
 - **Configuration**: Key settings and requirements
 - **Access**: How to reach the service
 - **Troubleshooting**: Common issues and solutions
-- **Archived Files**: Brief description of archived versions
-
-1. **Cleanup Process**:
-
-After successful production deployment:
-
-```bash
-# Move test files to archive
-mv .testing/*.nomad.hcl .archive/
-
-# Rename final version to service name
-mv {service}-final.nomad.hcl {service}.nomad.hcl
-
-# Update README.md with production details
-```
 
 ## Currently Deployed Services
 
 ### Core Infrastructure
 
 - **Traefik** (v3.0) - ✅ Production
+
   - Load balancer and reverse proxy
   - Owns ports 80/443
   - Prometheus metrics enabled
   - Consul service discovery active
 
+- **Vault Reference** - 📋 Reference Implementation
+  - Example Vault integration patterns
+  - Service identity configuration
+  - Secrets management templates
+
 ### Platform Services
 
-- **PowerDNS** (pdns-auth-48) - ✅ Production
-  - Authoritative DNS server
-  - API enabled with MySQL backend
+- **PowerDNS** (pdns-auth-46/48) - ✅ Production
+
+  - Authoritative DNS server with multiple configurations
+  - `powerdns-auth.nomad.hcl` - Standard MySQL backend deployment
+  - `powerdns-infisical.nomad.hcl` - Variable-based configuration
+  - API enabled with dynamic port allocation
   - Port 53 (static) + dynamic API port
   - Consul service registration active
+
+- **PostgreSQL** - ✅ Production
+
+  - Multi-service database server
+  - Configurable via variables (see `POSTGRESQL-DEPLOYMENT.md`)
+  - Supports PowerDNS, Netdata, Vault database users
+  - Persistent volume storage
+  - Service discovery with Consul
+
+- **Vault PKI Services** - 🔧 Infrastructure Tools
+  - `vault-pki-exporter.nomad.hcl` - Certificate export utility
+  - `vault-pki-monitor.nomad.hcl` - PKI health monitoring
+  - Integration with Vault certificate management
 
 ## Deployment
 
@@ -93,16 +115,20 @@ All jobs are deployed using Ansible playbooks with the `community.general.nomad_
 ### Quick Deploy
 
 ```bash
-# Deploy a specific job
+# Deploy Traefik
 uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml \
   -e job=nomad-jobs/core-infrastructure/traefik.nomad.hcl
 
-# Deploy with force restart
+# Deploy PowerDNS (choose configuration)
 uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml \
-  -e job=nomad-jobs/platform-services/powerdns.nomad.hcl \
+  -e job=nomad-jobs/platform-services/powerdns/powerdns-auth.nomad.hcl \
   -e force=true
+
+# Deploy PostgreSQL with variables
+nomad job run -var-file="nomad-jobs/platform-services/postgresql/postgresql.variables.hcl" \
+  nomad-jobs/platform-services/postgresql/postgresql.nomad.hcl
 
 # Direct Nomad deployment
 nomad job run nomad-jobs/core-infrastructure/traefik.nomad.hcl
@@ -171,18 +197,22 @@ Infrastructure services that provide functionality:
 
 End-user facing services:
 
+- **Example App**: Template for new application deployments
 - **windmill**: Workflow automation (future)
 - **gitea**: Git hosting (future)
+- **wiki.js**: Documentation platform (future)
 
 ## Best Practices
 
 1. **Secrets Management**:
+
    - Never hardcode secrets in job files
    - Use Consul KV via `template` stanzas
    - Reference: `{{ keyOrDefault "service/path/to/secret" "" }}`
    - TODO: Migrate to Vault/Infisical
 
 2. **Volume Management**:
+
    - Choose appropriate storage type (see [Storage Configuration Guide](../docs/implementation/nomad-storage-configuration.md))
    - Volume names: `{service}-{type}` (e.g., `powerdns-mysql`)
    - Provision volumes before deployment:
@@ -192,12 +222,14 @@ End-user facing services:
      ```
 
 3. **Service Discovery**:
+
    - Always register services with Consul
    - Include health checks
    - Add routing tags for Traefik
    - Include identity blocks (see requirements above)
 
 4. **Resource Allocation**:
+
    - Set appropriate CPU and memory limits
    - Consider cluster capacity
    - Monitor actual usage and adjust
@@ -252,10 +284,13 @@ End-user facing services:
 ## Migration Status
 
 - [x] Traefik - Deployed with Prometheus metrics and Consul integration
-- [x] PowerDNS - Deployed with API enabled and MySQL backend
+- [x] PowerDNS - Deployed with API enabled and MySQL/PostgreSQL backends
+- [x] PostgreSQL - Deployed with variable-based configuration
+- [x] Vault PKI Services - Deployed for certificate management
 - [ ] NetBox - Phase 3 of DNS/IPAM implementation
 - [ ] Monitoring Stack - Prometheus/Grafana (planned)
 - [ ] Logging Stack - Loki/Promtail (planned)
+- [ ] Application Services - Example app template available
 
 ## Related Documentation
 
@@ -265,6 +300,12 @@ End-user facing services:
 - [Nomad Storage Strategy](../docs/implementation/nomad-storage-strategy.md)
 - [Storage Implementation Patterns](../docs/implementation/nomad-storage-patterns.md)
 - [Nomad Port Allocation Best Practices](../docs/implementation/nomad-port-allocation.md)
+
+### Service-Specific Documentation
+
+- [PostgreSQL Deployment Guide](platform-services/POSTGRESQL-DEPLOYMENT.md)
+- [PowerDNS Configuration](../docs/implementation/dns-ipam/powerdns-setup.md)
+- [Vault Integration Patterns](../docs/implementation/vault/)
 
 ### Operations & Architecture
 

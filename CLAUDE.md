@@ -1,12 +1,3 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Project Overview
-
-This is an Ansible automation project that is working towards integrating NetBox as a source of truth for network
-infrastructure management. The project uses multiple dynamic inventory sources (Proxmox, NetBox, Tailscale), and secure credential management through Infisical.
-
 # CRITICAL: ARCHON-FIRST RULE - READ THIS FIRST
 
 BEFORE doing ANYTHING else, when you see ANY task management scenario:
@@ -58,7 +49,7 @@ archon:manage_project(
 # First, analyze existing codebase thoroughly
 # Read all major files, understand architecture, identify current state
 # Then create project container
-archon:manage_project(action="create", title="Existing Project Name")
+archon:manage_project(action="create", title="Andromeda Orchestration")
 
 # Research current tech stack and create tasks for remaining work
 # Focus on what needs to be built, not what already exists
@@ -79,11 +70,11 @@ archon:manage_task(action="list", filter_by="project", filter_value="[project_id
 **For all scenarios, research before task creation:**
 
 ```bash
-# High-level patterns and architecture
-archon:perform_rag_query(query="[technology] architecture patterns", match_count=5)
+# High-level infrastructure patterns and architecture
+archon:perform_rag_query(query="[infrastructure service] architecture patterns", match_count=5)
 
 # Specific implementation guidance
-archon:search_code_examples(query="[specific feature] implementation", match_count=3)
+archon:search_code_examples(query="[consul|nomad|vault|powerdns] implementation", match_count=3)
 ```
 
 **Create atomic, prioritized tasks:**
@@ -123,28 +114,28 @@ archon:manage_task(
 ```bash
 # High-level: Architecture, security, optimization patterns
 archon:perform_rag_query(
-  query="JWT authentication security best practices",
+  query="consul service mesh security best practices",
   match_count=5
 )
 
 # Low-level: Specific API usage, syntax, configuration
 archon:perform_rag_query(
-  query="Express.js middleware setup validation",
+  query="nomad job health checks configuration",
   match_count=3
 )
 
 # Implementation examples
 archon:search_code_examples(
-  query="Express JWT middleware implementation",
+  query="powerdns ansible role implementation",
   match_count=3
 )
 ```
 
 **Research Scope Examples:**
 
-- **High-level**: "microservices architecture patterns", "database security practices"
-- **Low-level**: "Zod schema validation syntax", "Cloudflare Workers KV usage", "PostgreSQL connection pooling"
-- **Debugging**: "TypeScript generic constraints error", "npm dependency resolution"
+**High-level**: "service mesh architecture patterns", "infrastructure as code security practices"
+**Low-level**: "ansible vault encryption syntax", "consul kv configuration", "nomad job resource allocation"
+**Debugging**: "ansible playbook execution errors", "terraform state drift issues"
 
 ### Task Execution Protocol
 
@@ -190,19 +181,19 @@ archon:manage_task(
 
 ```bash
 # Architecture & patterns
-archon:perform_rag_query(query="microservices vs monolith pros cons", match_count=5)
+archon:perform_rag_query(query="monolithic vs distributed dns architecture", match_count=5)
 
 # Security considerations
-archon:perform_rag_query(query="OAuth 2.0 PKCE flow implementation", match_count=3)
+archon:perform_rag_query(query="vault consul authentication integration", match_count=3)
 
 # Specific API usage
-archon:perform_rag_query(query="React useEffect cleanup function", match_count=2)
+archon:perform_rag_query(query="consul http api health checks", match_count=2)
 
 # Configuration & setup
-archon:perform_rag_query(query="Docker multi-stage build Node.js", match_count=3)
+archon:perform_rag_query(query="ansible molecule testing setup", match_count=3)
 
 # Debugging & troubleshooting
-archon:perform_rag_query(query="TypeScript generic type inference error", match_count=2)
+archon:perform_rag_query(query="nomad job placement failures", match_count=2)
 ```
 
 ### Code Example Integration
@@ -211,10 +202,10 @@ archon:perform_rag_query(query="TypeScript generic type inference error", match_
 
 ```bash
 # Before implementing any feature
-archon:search_code_examples(query="React custom hook data fetching", match_count=3)
+archon:search_code_examples(query="ansible consul role service discovery", match_count=3)
 
 # For specific technical challenges
-archon:search_code_examples(query="PostgreSQL connection pooling Node.js", match_count=2)
+archon:search_code_examples(query="nomad job consul connect integration", match_count=2)
 ```
 
 **Usage Guidelines:**
@@ -304,7 +295,7 @@ archon:manage_task(
   action="create",
   project_id="...",
   title="...",
-  feature="Authentication",  # Align with project features
+  feature="Consul Integration",
   task_order=8
 )
 ```
@@ -437,24 +428,14 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
 
 ### Inventory Management
 
-- **Directory**: `inventory/` contains all dynamic and static inventory configurations
-- **Current Implementation**:
-  - **Proxmox Dynamic Inventory**: Using `community.general.proxmox` plugin
-    - `og-homelab/infisical.proxmox.yml` - Original cluster
-    - `doggos-homelab/infisical.proxmox.yml` - 3-node Nomad cluster
-  - **Tailscale Dynamic Inventory**:
-    - `tailscale/ansible_tailscale_inventory.py` - Dynamic inventory script for Tailscale nodes
-    - `tailscale-static.yml` - Static Tailscale inventory for testing
-  - **Vault Cluster Inventory**:
-    - `vault-cluster/production.yaml` - Dedicated 4-VM Vault production cluster
-  - **NetBox Inventory**:
-    - `netbox.yml` - NetBox dynamic inventory (functional, pending post-DNS-migration adjustments)
-- **In Progress**: DNS & IPAM infrastructure deployment (see `docs/implementation/dns-ipam/implementation-plan.md`)
-- **Planned**: Full NetBox dynamic inventory integration (see `docs/implementation/dns-ipam/netbox-integration-patterns.md` for patterns)
-- **Authentication**:
-  - Infisical: Machine identity credentials via environment variables
-  - Tailscale: API key via environment variables
-  - NetBox: API token via Infisical
+**Directory**: `inventory/` contains all dynamic and static inventory configurations
+
+See [`inventory/README.md`](inventory/README.md) for comprehensive inventory documentation including:
+
+- Current implementation details for Proxmox, Tailscale, Vault, and NetBox inventories
+- Environment-specific configurations and host details
+- Authentication setup and usage examples
+- DNS & IPAM integration status and roadmap
 
 ### Nomad Job Management
 

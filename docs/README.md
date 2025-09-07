@@ -6,77 +6,99 @@ This directory contains comprehensive documentation for the NetBox-focused Ansib
 
 ### 📏 [standards/](standards/)
 
-**START HERE** - Standards and operating procedures that govern this repository:
-
-- Documentation organization and philosophy
-- Ansible development patterns and why we use them
-- **Testing standards with mandatory smoke tests** 🔥
-- Infrastructure architecture decisions
-- Nomad job development standards
-- Security and operational procedures
-- The "why" behind our technical choices
+**START HERE** - Standards and operating procedures that govern this repository: documentation organization, Ansible development patterns, mandatory smoke testing, infrastructure architecture decisions, Nomad job standards, security procedures, and technical rationale.
 
 ### 🚀 [getting-started/](getting-started/)
 
-Essential documentation for new users and developers:
-
-- Repository structure overview
-- Development environment setup (pre-commit, uv)
-- Troubleshooting common issues
-- Quick start guides
+Essential documentation for new users and developers: repository structure overview, development environment setup (pre-commit, uv), troubleshooting guides, and quick start procedures.
 
 ### 🛠️ [implementation/](implementation/)
 
-Detailed implementation guides organized by component:
-
-- **[dns-ipam/](implementation/dns-ipam/)** - DNS & IPAM overhaul documentation
-- **[powerdns/](implementation/powerdns/)** - PowerDNS deployment architecture and decisions
-- **[consul/](implementation/consul/)** - Consul configuration and integration
-- **[infisical/](implementation/infisical/)** - Infisical secrets management
-- **[nomad/](implementation/nomad/)** - Nomad configuration including health checks, storage, and port allocation
-- **[netbox-integration.md](implementation/netbox-integration.md)** - NetBox automation patterns
+Detailed implementation guides organized by component: DNS & IPAM overhaul, PowerDNS deployment architecture, Consul configuration, Infisical secrets management, Nomad configuration with health checks and storage, and NetBox automation patterns.
 
 ### 📋 [project-management/](project-management/)
 
-Project tracking and infrastructure inventory:
-
-- Task lists and progress tracking
-- Imported infrastructure documentation
-- Decision history and rationale
+Project tracking and infrastructure inventory: task lists, progress tracking, imported infrastructure documentation, and decision history with rationale.
 
 ### 🔧 [operations/](operations/)
 
-Operational guides for deployed services:
-
-- Netdata monitoring architecture
-- Troubleshooting procedures
-- Performance optimization
-- Service management
+Operational guides for deployed services: Netdata monitoring architecture, troubleshooting procedures, performance optimization, and service management.
 
 ### 📊 [diagrams/](diagrams/)
 
-Visual representations of architecture and workflows:
-
-- System architecture overview
-- DNS/IPAM migration flow
-- Secrets management patterns
-- Network topology diagrams
-
-### 🤖 [resources/ai-assistants/](resources/ai-assistants/)
-
-AI assistant integration documentation:
-
-- Sub-agent configurations
-- Tool documentation
-- Integration patterns
+Visual representations of architecture and workflows: system architecture overview, DNS/IPAM migration flow, secrets management patterns, and network topology diagrams.
 
 ### 📦 [archive/](archive/)
 
-Deprecated documentation preserved for reference:
+Deprecated documentation preserved for reference: legacy 1Password integration, historical setup procedures, and previous implementation attempts.
 
-- Legacy 1Password integration
-- Historical setup procedures
-- Previous implementation attempts
+### ⚙️ [playbooks/](playbooks/)
+
+Ansible playbooks for infrastructure automation: assessment procedures, infrastructure deployment, fix scripts for common issues, and testing validation procedures.
+
+### 🎭 [roles/](roles/)
+
+Ansible roles for service configuration: Consul service mesh setup, Netdata monitoring configuration, Nomad job scheduler, Vault secrets management, and system base configuration.
+
+### 🔌 [nomad-jobs/](nomad-jobs/)
+
+Nomad job specifications and configurations: core infrastructure job definitions, platform service deployments, and application workload specifications.
+
+### 📊 [reports/](reports/)
+
+Assessment and operational reports: security scanning results, infrastructure readiness assessments, and performance monitoring reports.
+
+### 📋 [inventory/](inventory/)
+
+Ansible inventory files for different environments: environment-specific host configurations, dynamic inventory scripts, and group variable definitions.
+
+### 🧩 [plugins/](plugins/)
+
+Custom Ansible plugins and modules: Consul integration modules, Nomad job management plugins, and utility functions with helpers.
+
+### 🔧 [scripts/](scripts/)
+
+Utility and setup scripts: repository maintenance tools, Nomad job management scripts, security scanning utilities, and development environment setup.
+
+### 🧪 [tests/](tests/)
+
+Test files and configurations: localhost testing procedures, integration test scenarios, and validation smoke tests.
+
+### 📦 [configs/](configs/)
+
+Service configuration files: Netdata collector configurations, health check definitions, and service-specific settings.
+
+### 🔍 [kics-results/](kics-results/)
+
+Security scanning results and reports: Infrastructure as Code security findings, compliance check results, and vulnerability assessment outputs.
+
+### 🤖 [resources/](resources/)
+
+Additional project resources: AI assistant configurations, community resources, tool utilities, and reference documentation.
+
+### 🏗️ Core Configuration Files
+
+Essential project configuration and tooling: Ansible configuration, Python project settings, role dependencies, automated updates, dependency locks, and security scanning configuration.
+
+### 🤖 AI Assistant Configuration
+
+AI-powered development assistance: Claude AI assistant configurations and commands, plus security scanning rules and patterns.
+
+### 🚀 Development Environment
+
+Containerized development setup: VS Code development container configuration and Ansible role testing framework.
+
+### 🔄 CI/CD Pipeline
+
+Automated workflows and quality assurance: GitHub Actions workflows, CI/CD configuration, and Ansible code quality linting rules.
+
+### 📚 Project Documentation
+
+Essential project files: change history and releases, AI assistant integration guide, licensing information, main project documentation, development roadmap, security policies, and project acceleration documentation.
+
+### 📦 Package Metadata
+
+Python package distribution files: main orchestration package metadata and NetBox Ansible package metadata.
 
 ## 🎯 Quick Start Path
 
