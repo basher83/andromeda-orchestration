@@ -439,13 +439,17 @@ See [`inventory/README.md`](inventory/README.md) for comprehensive inventory doc
 
 ### Nomad Job Management
 
-- **Directory**: `nomad-jobs/` contains all Nomad job specifications
-- **Structure**:
-  - `core-infrastructure/` - Essential services (Traefik load balancer)
-  - `platform-services/` - Infrastructure services (PowerDNS, future NetBox)
-  - `applications/` - User-facing applications
-- **Deployment**: Using `community.general.nomad_job` Galaxy module via playbooks
-- **Port Strategy**: Dynamic ports by default (20000-32000), static only for DNS (53) and load balancer (80/443)
+**Directory**: `nomad-jobs/` contains all Nomad job specifications
+
+See [`nomad-jobs/README.md`](nomad-jobs/README.md) for comprehensive Nomad job documentation including:
+
+- Directory structure and organizational policy for job specifications
+- Currently deployed services (Traefik, PowerDNS, PostgreSQL, Vault PKI services)
+- Deployment procedures using Ansible playbooks and direct Nomad commands
+- Job requirements including Consul service identity and port allocation strategy
+- Service categories (core infrastructure, platform services, applications)
+- Best practices for secrets management, volumes, and service discovery
+- Troubleshooting guides for common deployment issues
 
 ### Python Environment
 
