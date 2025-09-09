@@ -219,7 +219,7 @@ The issue appears as a "service registration failure" but is actually a **JWT to
 
 ### Solution Design
 
-**Comprehensive Service Identity Infrastructure Restoration**
+### Comprehensive Service Identity Infrastructure Restoration
 
 #### Solution Components
 
@@ -584,4 +584,4 @@ curl -I http://postgres.service.consul:20639
 
 ---
 
-_Investigation Version: 2.0 | Last Updated: 2025-01-09_
+Investigation Version: 2.0 | Last Updated: 2025-01-09

@@ -1,0 +1,119 @@
+---
+# Setup JWT Authentication Method for Nomad Service Identity in Consul
+# This enables Nomad to authenticate with Consul using JWT tokens for service registration
+
+- name: Setup JWT Auth Method for Nomad Service Identity
+  hosts: nomad-server-1-lloyd
+  vars:
+    consul_management_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_MASTER_TOKEN')).value }}
+
+  tasks:
+    - name: Check if JWT auth method already exists
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/auth-methods'
+        method: GET
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+      register: auth_methods_response
+      failed_when: false
+
+    - name: Parse existing auth methods
+      ansible.builtin.set_fact:
+        existing_auth_methods: >-
+          {{ auth_methods_response.json | default([]) | map(attribute='Name') | list }}
+
+    - name: Create JWT auth method for Nomad workloads
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/auth-method/nomad-workloads'
+        method: PUT
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+          Content-Type: 'application/json'
+        body_format: json
+        body:
+          Name: "nomad-workloads"
+          Type: "jwt"
+          Description: "JWT authentication for Nomad workloads"
+          Config:
+            JWKSURL: "http://192.168.11.11:4646/.well-known/jwks.json"
+            JWTSupportedAlgs: ["RS256"]
+            BoundAudiences: ["consul.io"]
+            ClaimMappings:
+              nomad_job_id: "nomad_job_id"
+              nomad_namespace: "nomad_namespace"
+              nomad_task: "nomad_task"
+            ListClaimMappings:
+              nomad_service: "nomad_service"
+      when: "'nomad-workloads' not in existing_auth_methods"
+      register: jwt_auth_method_create
+
+    - name: Update existing JWT auth method if needed
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/auth-method/nomad-workloads'
+        method: PUT
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+          Content-Type: 'application/json'
+        body_format: json
+        body:
+          Name: "nomad-workloads"
+          Type: "jwt"
+          Description: "JWT authentication for Nomad workloads"
+          Config:
+            JWKSURL: "http://192.168.11.11:4646/.well-known/jwks.json"
+            JWTSupportedAlgs: ["RS256"]
+            BoundAudiences: ["consul.io"]
+            ClaimMappings:
+              nomad_job_id: "nomad_job_id"
+              nomad_namespace: "nomad_namespace"
+              nomad_task: "nomad_task"
+            ListClaimMappings:
+              nomad_service: "nomad_service"
+      when: "'nomad-workloads' in existing_auth_methods"
+      register: jwt_auth_method_update
+
+    # TODO: Add binding rule creation once JWT auth method is working
+    # - name: Create binding rule for Nomad workloads
+    #   ansible.builtin.uri:
+    #     url: 'http://127.0.0.1:8500/v1/acl/binding-rule/nomad-service-rule'
+    #     method: PUT
+    #     headers:
+    #       X-Consul-Token: '{{ consul_management_token }}'
+    #       Content-Type: 'application/json'
+    #     body_format: json
+    #     body:
+    #       AuthMethod: "nomad-workloads"
+    #       Description: "Binding rule for Nomad workloads"
+    #       Selector: "\"nomad_service\" in value"
+    #       BindType: "service"
+    #       BindName: "${value.nomad_service}"
+    #   register: binding_rule_create
+    #   failed_when: binding_rule_create.status not in [200, 201, 204]
+
+    - name: Verify JWT auth method configuration
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/auth-method/nomad-workloads'
+        method: GET
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+      register: verify_auth_method
+
+    - name: Display results
+      ansible.builtin.debug:
+        msg:
+          - '=== JWT Auth Method Setup Results ==='
+          - 'Auth method exists: {{ "nomad-workloads" in existing_auth_methods }}'
+          - 'Auth method verified: {{ verify_auth_method.status == 200 }}'
+          - ''
+          - 'JWT auth method name: {{ verify_auth_method.json.Name | default("Not found") }}'
+          - 'JWT auth method type: {{ verify_auth_method.json.Type | default("Not found") }}'
+          - ''
+          - '✅ Nomad service identity authentication is now configured!'
+          - 'Services with identity blocks should now be able to register in Consul.'

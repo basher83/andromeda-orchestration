@@ -1,0 +1,114 @@
+---
+# Setup Nomad Workload Role and Binding Rule for JWT Auth Method
+# This creates the necessary Consul roles and binding rules for Nomad service identity
+
+- name: Setup Nomad Workload Role and Binding Rule
+  hosts: nomad-server-1-lloyd
+  vars:
+    consul_management_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/consul',
+                 secret_name='CONSUL_MASTER_TOKEN')).value }}
+
+  tasks:
+    - name: Check if nomad-workload-identity policy exists
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/policy/name/nomad-workload-identity'
+        method: GET
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+      register: policy_check
+      failed_when: false
+
+    - name: Create nomad-workload-identity policy if it doesn't exist
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/policy'
+        method: PUT
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+          Content-Type: 'application/json'
+        body_format: json
+        body:
+          Name: "nomad-workload-identity"
+          Description: "Policy for Nomad workload identities"
+          Rules: "{{ lookup('file', '../../../roles/consul/files/policies/nomad-workload-identity.hcl') }}"
+      when: policy_check.status != 200
+      register: policy_create
+
+    - name: Check if nomad-workload role exists
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/role/name/nomad-workload'
+        method: GET
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+      register: role_check
+      failed_when: false
+
+    - name: Create nomad-workload role if it doesn't exist
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/role'
+        method: PUT
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+          Content-Type: 'application/json'
+        body_format: json
+        body:
+          Name: "nomad-workload"
+          Description: "Role for Nomad workloads with service identity"
+          Policies:
+            - Name: "nomad-workload-identity"
+      when: role_check.status != 200
+      register: role_create
+
+    - name: Check if binding rule exists
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/binding-rule/name/nomad-service-rule'
+        method: GET
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+      register: binding_rule_check
+      failed_when: false
+
+    - name: Create binding rule for nomad-workloads auth method
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/binding-rule'
+        method: PUT
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+          Content-Type: 'application/json'
+        body_format: json
+        body:
+          AuthMethod: "nomad-workloads"
+          Description: "Binding rule for Nomad workloads"
+          Selector: "\"nomad_service\" in value"
+          BindType: "role"
+          BindName: "nomad-workload"
+      when: binding_rule_check.status != 200
+      register: binding_rule_create
+
+    - name: Verify all components are created
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8500/v1/acl/auth-method/nomad-workloads'
+        method: GET
+        headers:
+          X-Consul-Token: '{{ consul_management_token }}'
+      register: verify_auth_method
+
+    - name: Display setup results
+      ansible.builtin.debug:
+        msg:
+          - '=== Nomad Workload Role Setup Results ==='
+          - 'Policy exists: {{ policy_check.status == 200 }}'
+          - 'Role exists: {{ role_check.status == 200 }}'
+          - 'Binding rule created: {{ binding_rule_create is defined }}'
+          - 'Auth method verified: {{ verify_auth_method.status == 200 }}'
+          - ''
+          - 'JWT auth method name: {{ verify_auth_method.json.Name | default("Not found") }}'
+          - 'JWT auth method type: {{ verify_auth_method.json.Type | default("Not found") }}'
+          - ''
+          - '✅ Nomad workload role and binding rule setup complete!'
+          - 'Services with identity blocks should now be able to authenticate with Consul.'

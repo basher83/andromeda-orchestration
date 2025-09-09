@@ -111,6 +111,14 @@ mise tasks
 # Run all linters
 mise run lint
 
+# Ultra-fast MegaLinter testing (no Node.js required)
+mise run act-fast
+# Or: ./scripts/mega-linter-runner.sh
+
+# Streamlined local testing with GHCR registry (recommended)
+mise run megalinter-local
+# Or: ./scripts/run-megalinter-local.sh
+
 # Run tests
 mise run test
 
@@ -129,6 +137,10 @@ mise run setup
 ```
 
 See [docs/implementation/dns-ipam/testing-strategy.md](docs/implementation/dns-ipam/testing-strategy.md) for detailed testing information.
+
+**MegaLinter Status**: The badge above shows the status of our automated code quality checks. Green means all linters pass! For fast local testing without Node.js dependencies, use `mise run act-fast`.
+
+**Configuration Organization**: Linter configuration files (`.ansible-lint`, `.yamllint`, `.markdownlint.json`) in the repository root are symbolic links pointing to organized configurations in `.github/linters/` for better maintainability while maintaining backward compatibility.
 
 **Note on uv and Ansible**: This project uses `uv pip install` in a virtual environment rather than `uv tool install` to ensure all Ansible executables are available. See [docs/getting-started/uv-ansible-notes.md](docs/getting-started/uv-ansible-notes.md) for details.
 

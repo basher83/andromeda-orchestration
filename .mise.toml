@@ -697,5 +697,13 @@ run = "act push --env-file .env.act"
 description = "Test pull request event simulation"
 run = "act pull_request --env-file .env.act"
 
+[tasks.act-fast]
+description = "Ultra-fast MegaLinter validation (efrecon runner, no Node.js)"
+run = "./scripts/mega-linter-runner.sh"
+
+[tasks.megalinter-local]
+description = "Run MegaLinter locally with GHCR registry (recommended)"
+run = "./scripts/run-megalinter-local.sh"
+
 # Note: Git hooks are handled by pre-commit framework
 # Run 'mise run setup' to install pre-commit hooks
