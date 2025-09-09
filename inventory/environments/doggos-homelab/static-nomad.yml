@@ -1,0 +1,32 @@
+---
+all:
+  hosts:
+    nomad-server-1-lloyd:
+      ansible_host: 192.168.10.11
+      ansible_user: ansible
+    nomad-server-2-holly:
+      ansible_host: 192.168.10.12
+      ansible_user: ansible
+    nomad-server-3-mable:
+      ansible_host: 192.168.10.13
+      ansible_user: ansible
+    nomad-client-1-lloyd:
+      ansible_host: 192.168.11.20
+      ansible_user: root
+    nomad-client-2-holly:
+      ansible_host: 192.168.11.21
+      ansible_user: root
+    nomad-client-3-mable:
+      ansible_host: 192.168.11.22
+      ansible_user: root
+  children:
+    nomad_servers:
+      hosts:
+        nomad-server-1-lloyd:
+        nomad-server-2-holly:
+        nomad-server-3-mable:
+    nomad_clients:
+      hosts:
+        nomad-client-1-lloyd:
+        nomad-client-2-holly:
+        nomad-client-3-mable:

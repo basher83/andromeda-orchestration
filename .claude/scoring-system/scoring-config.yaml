@@ -1,0 +1,72 @@
+# Ansible Collection Scoring System Configuration
+# Version: 1.0.0
+# Purpose: Eliminate bias towards large projects while maintaining quality standards
+
+# Scoring system metadata
+metadata:
+  version: "1.0.0"
+  last_updated: "2025-01-06"
+  description: "Category-aware scoring system for evaluating Ansible collections"
+  total_points: 100
+
+# Score distribution
+score_distribution:
+  technical_quality:
+    max_points: 60
+    description: "Size-independent technical excellence metrics"
+
+  sustainability:
+    max_points: 25
+    description: "Category-adjusted maintenance and community health"
+
+  fitness_for_purpose:
+    max_points: 15
+    description: "Use-case specific evaluation"
+
+# Quality tier definitions
+quality_tiers:
+  tier_1:
+    min_score: 80
+    max_score: 100
+    label: "Production-Ready"
+    recommendation: "Use directly as dependency"
+    color: "green"
+
+  tier_2:
+    min_score: 60
+    max_score: 79
+    label: "Good Quality"
+    recommendation: "Use with testing and validation"
+    color: "yellow"
+
+  tier_3:
+    min_score: 40
+    max_score: 59
+    label: "Use with Caution"
+    recommendation: "Reference for patterns, consider forking"
+    color: "orange"
+
+  tier_4:
+    min_score: 0
+    max_score: 39
+    label: "Not Recommended"
+    recommendation: "Build custom solution"
+    color: "red"
+
+# Evaluation modes
+evaluation_modes:
+  binary:
+    description: "Feature exists or doesn't (0 or full points)"
+    example: "Has CI/CD pipeline"
+
+  threshold:
+    description: "Meets threshold for full points, partial below"
+    example: "Commits in last 90 days"
+
+  logarithmic:
+    description: "Diminishing returns on higher values"
+    example: "Number of contributors (capped benefit)"
+
+  category_relative:
+    description: "Evaluated against category-specific thresholds"
+    example: "Expected activity level for collection type"

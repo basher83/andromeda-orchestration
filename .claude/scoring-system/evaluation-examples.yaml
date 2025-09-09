@@ -1,0 +1,234 @@
+# Evaluation Examples
+# Demonstrates how collections are scored using the new system
+
+examples:
+  # ============================================
+  # Example 1: Large Community Collection
+  # ============================================
+  community_docker:
+    collection:
+      name: "community.docker"
+      repo: "ansible-collections/community.docker"
+      stars: 500
+      contributors: 50
+      last_commit_days_ago: 2
+      has_tests: true
+      has_ci: true
+      has_docs: true
+
+    category_detected: "community"
+
+    scoring_breakdown:
+      technical_quality:
+        testing: 15        # Has all testing infrastructure
+        code_quality: 14   # Good practices, minor issues
+        documentation: 13  # Complete docs, missing some examples
+        architecture: 14   # Well structured
+        subtotal: 56
+
+      sustainability:
+        maintenance_activity: 10  # Very active
+        bus_factor: 8            # Many maintainers but capped benefit
+        responsiveness: 4        # Good response times
+        subtotal: 22
+
+      fitness_for_purpose:
+        technology_match: 6      # Good Docker coverage
+        integration_ease: 4      # Some dependencies
+        unique_value: 0         # Many alternatives exist
+        subtotal: 10
+
+      modifiers:
+        bonuses: 0
+        penalties: 0
+
+    final_score: 88
+    tier: "Tier 1 - Production Ready"
+
+    comparison_with_old_system:
+      old_score: 95   # High due to popularity metrics
+      new_score: 88   # Good but not inflated by popularity
+      difference: -7
+
+  # ============================================
+  # Example 2: Specialized Niche Collection
+  # ============================================
+  netbox_netbox:
+    collection:
+      name: "netbox.netbox"
+      repo: "netbox-community/ansible_modules"
+      stars: 45
+      contributors: 8
+      last_commit_days_ago: 15
+      has_tests: true
+      has_ci: true
+      has_docs: true
+
+    category_detected: "specialized"
+
+    scoring_breakdown:
+      technical_quality:
+        testing: 15              # Full testing setup
+        code_quality: 15         # Excellent implementation
+        documentation: 14        # Comprehensive docs
+        architecture: 15         # Very clean design
+        subtotal: 59
+        adjusted: 70.8          # 1.2x multiplier for specialized
+
+      sustainability:
+        maintenance_activity: 9   # Active for specialized
+        bus_factor: 7            # Good for niche (2 maintainers)
+        responsiveness: 4        # Acceptable for specialized
+        subtotal: 20
+        adjusted: 16            # 0.8x multiplier for specialized
+
+      fitness_for_purpose:
+        technology_match: 7      # Perfect for NetBox
+        integration_ease: 5      # Very easy to integrate
+        unique_value: 3         # Only quality NetBox collection
+        subtotal: 15
+        adjusted: 18            # 1.2x multiplier for specialized
+
+      modifiers:
+        bonuses: 10             # Unique solution bonus
+        penalties: 0
+
+    final_score: 95   # 70.8 + 16 + 18 + 10 = 114.8, capped at 95
+    tier: "Tier 1 - Production Ready"
+
+    comparison_with_old_system:
+      old_score: 55   # Low due to few stars/contributors
+      new_score: 95   # Excellent due to quality and uniqueness
+      difference: +40  # Huge improvement!
+
+  # ============================================
+  # Example 3: Personal Project
+  # ============================================
+  personal_proxmox:
+    collection:
+      name: "johndoe.proxmox_utils"
+      repo: "johndoe/ansible-proxmox-utils"
+      stars: 3
+      contributors: 1
+      last_commit_days_ago: 60
+      has_tests: false
+      has_ci: false
+      has_docs: true  # Basic README only
+
+    category_detected: "personal"
+
+    scoring_breakdown:
+      technical_quality:
+        testing: 0               # No tests
+        code_quality: 8          # Decent code but no CI
+        documentation: 5         # Basic docs only
+        architecture: 7          # Reasonable structure
+        subtotal: 20
+        adjusted: 26            # 1.3x multiplier for personal
+
+      sustainability:
+        maintenance_activity: 5   # Maintained for personal project
+        bus_factor: 0            # Single maintainer risk
+        responsiveness: 2        # Slow but responds
+        subtotal: 7
+        adjusted: 3.5           # 0.5x multiplier for personal
+
+      fitness_for_purpose:
+        technology_match: 5      # Partially solves problem
+        integration_ease: 3      # Needs work to integrate
+        unique_value: 0         # Better alternatives exist
+        subtotal: 8
+        adjusted: 9.6           # 1.2x multiplier for personal
+
+      modifiers:
+        bonuses: 0
+        penalties: -5           # No CI/tests penalty
+
+    final_score: 34   # 26 + 3.5 + 9.6 - 5 = 34.1
+    tier: "Tier 4 - Not Recommended"
+
+    comparison_with_old_system:
+      old_score: 30   # Low across the board
+      new_score: 34   # Still low but fairer assessment
+      difference: +4
+
+  # ============================================
+  # Example 4: Vendor Collection
+  # ============================================
+  cisco_ios:
+    collection:
+      name: "cisco.ios"
+      repo: "ansible-collections/cisco.ios"
+      stars: 120
+      contributors: 25
+      last_commit_days_ago: 7
+      has_tests: true
+      has_ci: true
+      has_docs: true
+
+    category_detected: "vendor"
+
+    scoring_breakdown:
+      technical_quality:
+        testing: 15              # Full test coverage
+        code_quality: 13         # Good quality
+        documentation: 12        # Vendor-style docs
+        architecture: 13         # Good structure
+        subtotal: 53
+        adjusted: 58.3          # 1.1x multiplier for vendor
+
+      sustainability:
+        maintenance_activity: 10  # Very active
+        bus_factor: 9            # Good team
+        responsiveness: 4        # Corporate response time
+        subtotal: 23
+        adjusted: 20.7          # 0.9x multiplier for vendor
+
+      fitness_for_purpose:
+        technology_match: 7      # Perfect for Cisco IOS
+        integration_ease: 4      # Some complexity
+        unique_value: 1         # Official but alternatives exist
+        subtotal: 12
+        adjusted: 12            # 1.0x no adjustment
+
+      modifiers:
+        bonuses: 2              # Official vendor support
+        penalties: 0
+
+    final_score: 93   # 58.3 + 20.7 + 12 + 2 = 93
+    tier: "Tier 1 - Production Ready"
+
+    comparison_with_old_system:
+      old_score: 85   # Good but not exceptional
+      new_score: 93   # Better recognition of vendor quality
+      difference: +8
+
+# ============================================
+# Scoring Comparison Summary
+# ============================================
+impact_analysis:
+  bias_reduction:
+    description: "How the new system reduces bias"
+    examples:
+      specialized_collections:
+        old_system: "Penalized for low popularity"
+        new_system: "Rewarded for quality and uniqueness"
+        improvement: "40+ point increase possible"
+
+      personal_projects:
+        old_system: "Uniformly low scores"
+        new_system: "Can score well if high quality"
+        improvement: "Fairer assessment of actual quality"
+
+      large_collections:
+        old_system: "Inflated scores from popularity"
+        new_system: "Scored on actual technical merit"
+        improvement: "More accurate quality assessment"
+
+  key_improvements:
+    - "Specialized collections can achieve Tier 1 status"
+    - "Technical quality worth 60% vs 25% in old system"
+    - "Category-specific thresholds prevent unfair comparisons"
+    - "Logarithmic scaling prevents 'winner takes all'"
+    - "Unique value recognized with bonus points"
+    - "Single maintainer projects not automatically disqualified"

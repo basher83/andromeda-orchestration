@@ -1,12 +1,13 @@
 ---
 # Setup JWT Signing Keys for Nomad Service Identity
 # This configures Nomad servers with JWT signing keys required for service identity
+# IMPORTANT: For Nomad 1.10.x, jwt_signing_keys must be inside the server stanza
 
 - name: Setup JWT Signing Keys for Nomad Service Identity
   hosts: nomad-server-1-lloyd,nomad-server-2-holly,nomad-server-3-mable
   become: true
   vars:
-    jwt_key_dir: "/etc/nomad/jwt-keys"
+    jwt_key_dir: "/etc/nomad.d/jwt-keys"
     jwt_private_key_path: "{{ jwt_key_dir }}/jwt-signing-key.pem"
 
   tasks:
@@ -25,42 +26,50 @@
         mode: '0700'
       when: is_server.rc == 0
 
+    - name: Check if JWT signing key already exists
+      ansible.builtin.stat:
+        path: '{{ jwt_private_key_path }}'
+      register: key_exists
+
     - name: Generate JWT signing key pair
-      ansible.builtin.command: |
-        openssl genrsa -out {{ jwt_private_key_path }} 2048
-      when: is_server.rc == 0
+      ansible.builtin.shell: |
+        openssl genrsa -out {{ jwt_private_key_path }} 4096
+        chown nomad:nomad {{ jwt_private_key_path }}
+        chmod 600 {{ jwt_private_key_path }}
+      when:
+        - is_server.rc == 0
+        - not key_exists.stat.exists
       register: key_gen
-      changed_when: key_gen.rc == 0
 
-    - name: Read generated private key
-      ansible.builtin.slurp:
-        src: '{{ jwt_private_key_path }}'
-      register: private_key_content
-      when: is_server.rc == 0 and key_gen is changed
+    - name: Base64 encode the private key
+      ansible.builtin.shell: |
+        base64 -w0 {{ jwt_private_key_path }}
+      register: private_key_b64
+      when: is_server.rc == 0
+      changed_when: false
 
-    - name: Add JWT signing key configuration to Nomad servers
-      ansible.builtin.blockinfile:
+    - name: Check if jwt_signing_keys already configured
+      ansible.builtin.shell: |
+        grep -q "jwt_signing_keys" /etc/nomad.d/nomad.hcl
+      register: jwt_configured
+      failed_when: false
+      changed_when: false
+
+    - name: Add jwt_signing_keys to server stanza
+      ansible.builtin.lineinfile:
         path: /etc/nomad.d/nomad.hcl
-        marker: '# {mark} ANSIBLE MANAGED JWT SIGNING CONFIG'
-        block: |
-          # JWT signing keys for service identity
-          jwt {
-            key {
-              kid = "nomad-service-identity-key"
-              algorithm = "RS256"
-              private_key = <<EOF
-          {{ private_key_content.content | b64decode }}
-          EOF
-            }
-          }
-        insertafter: '^# Nomad agent configuration'
-        validate: 'nomad config validate %s'
+        regexp: '^\s*jwt_signing_keys\s*='
+        line: '  jwt_signing_keys = ["{{ private_key_b64.stdout }}"]'
+        insertafter: '^server\s*{'
+        state: present
         backup: true
-      when: is_server.rc == 0 and private_key_content is defined
+      when:
+        - is_server.rc == 0
+        - jwt_configured.rc != 0
       register: jwt_config
 
     - name: Validate Nomad configuration
-      ansible.builtin.command: nomad config validate /etc/nomad.d/nomad.hcl
+      ansible.builtin.command: nomad config validate /etc/nomad.d/
       changed_when: false
       when: jwt_config is changed
 
@@ -75,8 +84,8 @@
       ansible.builtin.wait_for:
         port: 4646
         host: '{{ ansible_default_ipv4.address }}'
-        delay: 5
-        timeout: 30
+        delay: 10
+        timeout: 60
       when: jwt_config is changed
 
     - name: Verify Nomad is running after restart
@@ -87,13 +96,28 @@
       failed_when: nomad_status.status.ActiveState != 'active'
       when: jwt_config is changed
 
+    - name: Check JWKS endpoint availability
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}:4646/.well-known/jwks.json"
+        method: GET
+        status_code: 200
+      register: jwks_check
+      when: jwt_config is changed
+      retries: 3
+      delay: 5
+
     - name: Display configuration status
       ansible.builtin.debug:
         msg:
           - '=== JWT Signing Key Configuration ==='
-          - 'Configuration added: {{ jwt_config is changed }}'
-          - 'Nomad restarted: {{ jwt_config is changed }}'
-          - 'Nomad status: Running'
+          - 'Key generated: {{ key_gen is changed | default(false) }}'
+          - 'Configuration added: {{ jwt_config is changed | default(false) }}'
+          - 'Nomad restarted: {{ jwt_config is changed | default(false) }}'
+          - 'JWKS endpoint available: {{ jwks_check.status | default("Not checked") == 200 }}'
           - ''
-          - '✅ JWT signing keys configured for service identity!'
+          - '✅ JWT signing keys configured inside server stanza!'
           - 'Nomad can now generate JWT tokens for workloads with identity blocks.'
+          - ''
+          - 'Next steps:'
+          - '1. Redeploy services with identity blocks'
+          - '2. Verify service registration in Consul'

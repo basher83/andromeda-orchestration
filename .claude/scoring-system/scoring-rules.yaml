@@ -1,0 +1,358 @@
+# Detailed Scoring Rules
+# Defines how each aspect is evaluated and scored
+
+scoring_dimensions:
+  # ============================================
+  # TECHNICAL QUALITY (60 points total)
+  # ============================================
+  technical_quality:
+    max_points: 60
+    description: "Size-independent technical excellence"
+
+    components:
+      # Testing Infrastructure (15 points)
+      testing:
+        max_points: 15
+        evaluation_mode: "binary"
+        criteria:
+          has_tests:
+            description: "Has test directory or molecule tests"
+            points: 5
+            check_paths:
+              - "tests/"
+              - "molecule/"
+              - "test/"
+            check_files:
+              - "test*.yml"
+              - "test*.yaml"
+
+          has_ci_cd:
+            description: "Has CI/CD configuration"
+            points: 5
+            check_paths:
+              - ".github/workflows/"
+              - ".gitlab-ci.yml"
+              - ".travis.yml"
+              - "Jenkinsfile"
+
+          test_coverage:
+            description: "Tests cover main functionality"
+            points: 5
+            manual_check: true
+            indicators:
+              - "Multiple test scenarios"
+              - "Integration tests present"
+              - "Unit tests for modules"
+
+      # Code Quality (15 points)
+      code_quality:
+        max_points: 15
+        evaluation_mode: "graduated"
+        criteria:
+          idempotency:
+            description: "Modules are idempotent"
+            points: 7
+            check_patterns:
+              - "changed_when:"
+              - "check_mode:"
+              - "diff:"
+            anti_patterns:
+              - '"command:" without "changed_when"'
+              - '"shell:" without "changed_when"'
+
+          error_handling:
+            description: "Comprehensive error handling"
+            points: 8
+            check_patterns:
+              - "failed_when:"
+              - "ignore_errors:"
+              - "block:/rescue:"
+              - "assert:"
+            quality_indicators:
+              - "Meaningful error messages"
+              - "Graceful degradation"
+              - "Rollback capability"
+
+      # Documentation (15 points)
+      documentation:
+        max_points: 15
+        evaluation_mode: "cumulative"
+        criteria:
+          readme_complete:
+            description: "Complete README with examples"
+            points: 5
+            required_sections:
+              - "Requirements"
+              - "Installation"
+              - "Usage"
+              - "Examples"
+
+          module_docs:
+            description: "DOCUMENTATION string in modules"
+            points: 5
+            check_patterns:
+              - "DOCUMENTATION = "
+              - "EXAMPLES = "
+              - "RETURN = "
+
+          changelog:
+            description: "Maintains changelog"
+            points: 3
+            check_files:
+              - "CHANGELOG"
+              - "CHANGELOG.md"
+              - "CHANGELOG.rst"
+              - "CHANGES"
+
+          contributing:
+            description: "Has contributing guidelines"
+            points: 2
+            check_files:
+              - "CONTRIBUTING"
+              - "CONTRIBUTING.md"
+              - ".github/CONTRIBUTING.md"
+
+      # Architecture & Design (15 points)
+      architecture:
+        max_points: 15
+        evaluation_mode: "qualitative"
+        criteria:
+          module_structure:
+            description: "Clean module organization"
+            points: 5
+            check_structure:
+              - "plugins/modules/"
+              - "plugins/module_utils/"
+              - "plugins/filter/"
+              - "plugins/lookup/"
+
+          best_practices:
+            description: "Follows Ansible best practices"
+            points: 5
+            indicators:
+              - "Uses module_utils for shared code"
+              - "Proper parameter validation"
+              - "Consistent naming conventions"
+              - "No deprecated features"
+
+          api_design:
+            description: "Well-designed module interfaces"
+            points: 5
+            indicators:
+              - "Intuitive parameter names"
+              - "Consistent parameter patterns"
+              - "Good defaults"
+              - "Clear return values"
+
+  # ============================================
+  # SUSTAINABILITY (25 points total)
+  # ============================================
+  sustainability:
+    max_points: 25
+    description: "Category-adjusted maintenance health"
+
+    components:
+      # Maintenance Activity (10 points)
+      maintenance_activity:
+        max_points: 10
+        evaluation_mode: "category_relative"
+        criteria:
+          recent_commits:
+            description: "Recent commit activity"
+            points: 5
+            thresholds_field: "active_months"  # Uses category thresholds
+            scoring:
+              within_threshold: 5
+              double_threshold: 3
+              triple_threshold: 1
+              beyond: 0
+
+          regular_releases:
+            description: "Regular release cycle"
+            points: 5
+            check_criteria:
+              - "Has releases/tags"
+              - "Semantic versioning"
+              - "Release notes"
+            scoring:
+              regular_releases: 5      # Monthly or quarterly
+              occasional_releases: 3   # Semi-annual
+              rare_releases: 1         # Annual
+              no_releases: 0
+
+      # Bus Factor (10 points)
+      bus_factor:
+        max_points: 10
+        evaluation_mode: "threshold"
+        criteria:
+          maintainer_count:
+            description: "Multiple maintainers reduce risk"
+            points: 5
+            thresholds_field: "min_maintainers"
+            scoring:
+              "1": 0
+              "2": 3
+              "3+": 5  # No additional benefit beyond 3
+
+          contributor_diversity:
+            description: "Diverse contributor base"
+            points: 5
+            thresholds_field: "min_contributors"
+            scoring_mode: "logarithmic"
+            cap_at: 10  # No benefit beyond 10 contributors
+
+      # Responsiveness (5 points)
+      responsiveness:
+        max_points: 5
+        evaluation_mode: "category_relative"
+        criteria:
+          issue_response:
+            description: "Median issue response time"
+            points: 5
+            thresholds_field: "good_response_days"
+            scoring:
+              excellent: 5   # < threshold
+              good: 3       # < 2x threshold
+              poor: 1       # < 4x threshold
+              none: 0       # > 4x threshold
+
+  # ============================================
+  # FITNESS FOR PURPOSE (15 points total)
+  # ============================================
+  fitness_for_purpose:
+    max_points: 15
+    description: "Use-case specific evaluation"
+
+    components:
+      # Technology Match (7 points)
+      technology_match:
+        max_points: 7
+        evaluation_mode: "manual"
+        criteria:
+          exact_match:
+            description: "Exactly solves the needed use case"
+            points: 7
+
+          partial_match:
+            description: "Partially solves with adaptation"
+            points: 4
+
+          related_match:
+            description: "Related but requires significant work"
+            points: 1
+
+      # Integration Ease (5 points)
+      integration_ease:
+        max_points: 5
+        evaluation_mode: "cumulative"
+        criteria:
+          minimal_dependencies:
+            description: "Few external dependencies"
+            points: 2
+            check:
+              - "requirements.txt"
+              - "requirements.yml"
+            scoring:
+              "0-2 deps": 2
+              "3-5 deps": 1
+              "6+ deps": 0
+
+          clear_examples:
+            description: "Clear integration examples"
+            points: 2
+            check_paths:
+              - "examples/"
+              - "playbooks/"
+              - "docs/examples/"
+
+          compatible_versions:
+            description: "Compatible with target Ansible version"
+            points: 1
+            check: "meta/runtime.yml"
+
+      # Unique Value (3 points)
+      unique_value:
+        max_points: 3
+        evaluation_mode: "bonus"
+        criteria:
+          only_solution:
+            description: "Only solution for this problem"
+            points: 3
+            manual_check: true
+
+          best_solution:
+            description: "Clearly best among alternatives"
+            points: 2
+            manual_check: true
+
+          innovative_approach:
+            description: "Innovative or elegant approach"
+            points: 1
+            manual_check: true
+
+# ============================================
+# BONUS MODIFIERS
+# ============================================
+bonus_modifiers:
+  security_excellence:
+    description: "Exceptional security practices"
+    max_points: 5
+    indicators:
+      - "Security documentation"
+      - "CVE handling process"
+      - "Security test suite"
+      - "Signed releases"
+
+  performance_optimization:
+    description: "Demonstrated performance focus"
+    max_points: 3
+    indicators:
+      - "Performance benchmarks"
+      - "Optimization documentation"
+      - "Efficient algorithms"
+
+  exceptional_docs:
+    description: "Documentation exceeds expectations"
+    max_points: 2
+    indicators:
+      - "Video tutorials"
+      - "Architecture diagrams"
+      - "Troubleshooting guides"
+      - "Migration guides"
+
+# ============================================
+# PENALTY MODIFIERS
+# ============================================
+penalty_modifiers:
+  abandoned:
+    description: "Shows signs of abandonment"
+    penalty: -20
+    indicators:
+      - "No commits > 1 year"
+      - "Unresponsive maintainer"
+      - "Critical issues unaddressed"
+
+  security_issues:
+    description: "Known security vulnerabilities"
+    penalty: -15
+    indicators:
+      - "Open CVEs"
+      - "Security warnings in README"
+      - "Unsafe practices in code"
+
+  broken_ci:
+    description: "CI/CD is failing"
+    penalty: -5
+    indicators:
+      - "Failed build badges"
+      - "Disabled tests"
+      - "Commented out CI config"
+
+  poor_practices:
+    description: "Uses poor coding practices"
+    penalty: -10
+    indicators:
+      - "Hardcoded credentials"
+      - "No input validation"
+      - "Deprecated Ansible features"
+      - "Python 2 only"

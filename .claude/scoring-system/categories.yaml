@@ -1,0 +1,146 @@
+# Collection Category Definitions
+# Defines different collection types with adjusted thresholds
+
+categories:
+  official:
+    name: "Official Ansible"
+    description: "Collections from ansible-collections organization"
+    namespace_patterns:
+      - "^ansible\\..*"
+      - "^ansible-collections/.*"
+    thresholds:
+      min_maintainers: 3
+      good_maintainers: 5
+      active_months: 3        # Must have commits within 3 months
+      maintained_months: 6    # Considered maintained if commits within 6 months
+      good_response_days: 7   # Good if median issue response <= 7 days
+      min_contributors: 5
+      min_stars: 50
+      min_users: 500
+    weight_adjustments:
+      technical_quality: 1.0   # No adjustment
+      sustainability: 1.0      # No adjustment
+      fitness: 1.0            # No adjustment
+
+  community:
+    name: "Community Collections"
+    description: "Large community-maintained collections"
+    namespace_patterns:
+      - "^community\\..*"
+      - "^containers\\..*"
+      - "^kubernetes\\..*"
+      - "^cloud\\..*"
+    thresholds:
+      min_maintainers: 2
+      good_maintainers: 4
+      active_months: 3
+      maintained_months: 6
+      good_response_days: 14
+      min_contributors: 3
+      min_stars: 20
+      min_users: 100
+    weight_adjustments:
+      technical_quality: 1.0
+      sustainability: 1.0
+      fitness: 1.0
+
+  specialized:
+    name: "Specialized/Niche"
+    description: "Focused collections for specific technologies"
+    namespace_patterns:
+      - "^netbox\\..*"
+      - "^proxmox\\..*"
+      - "^vyos\\..*"
+      - "^grafana\\..*"
+      - "^datadog\\..*"
+    detection_keywords:  # If namespace doesn't match, check repo name/description
+      - "netbox"
+      - "proxmox"
+      - "nomad"
+      - "consul"
+      - "vault"
+      - "ipam"
+      - "dns"
+    thresholds:
+      min_maintainers: 1      # Lower bar for specialized
+      good_maintainers: 2
+      active_months: 6        # Can be less active
+      maintained_months: 12   # Still maintained if commits within year
+      good_response_days: 30  # Longer response time acceptable
+      min_contributors: 1     # Single maintainer OK for niche
+      min_stars: 5           # Much lower star requirement
+      min_users: 10          # Small user base acceptable
+    weight_adjustments:
+      technical_quality: 1.2   # Boost technical score by 20%
+      sustainability: 0.8      # Reduce sustainability weight by 20%
+      fitness: 1.2            # Boost fitness score by 20%
+    bonus_points:
+      unique_solution: 10     # Extra points if only solution for problem
+
+  vendor:
+    name: "Vendor-Specific"
+    description: "Collections maintained by technology vendors"
+    namespace_patterns:
+      - "^cisco\\..*"
+      - "^dell\\..*"
+      - "^hpe\\..*"
+      - "^ibm\\..*"
+      - "^microsoft\\..*"
+      - "^oracle\\..*"
+      - "^vmware\\..*"
+      - "^amazon\\..*"
+      - "^google\\..*"
+      - "^azure\\..*"
+    thresholds:
+      min_maintainers: 2
+      good_maintainers: 3
+      active_months: 3
+      maintained_months: 6
+      good_response_days: 14
+      min_contributors: 2
+      min_stars: 10
+      min_users: 50
+    weight_adjustments:
+      technical_quality: 1.1   # Slight boost for vendor resources
+      sustainability: 0.9      # Slight reduction (vendor commitment varies)
+      fitness: 1.0
+    special_considerations:
+      - "Check for official vendor support channels"
+      - "Verify compatibility with vendor product versions"
+      - "Consider vendor lock-in implications"
+
+  personal:
+    name: "Personal/Individual"
+    description: "Collections maintained by individuals"
+    detection_rules:
+      - "Single maintainer"
+      - "Personal GitHub account (not org)"
+      - "No official backing"
+    thresholds:
+      min_maintainers: 1
+      good_maintainers: 1     # Don't penalize single maintainer
+      active_months: 12       # Very relaxed activity requirement
+      maintained_months: 24   # 2 years
+      good_response_days: 60  # Longer response time expected
+      min_contributors: 1
+      min_stars: 1           # Minimal star requirement
+      min_users: 5           # Very small user base OK
+    weight_adjustments:
+      technical_quality: 1.3   # Heavy emphasis on code quality
+      sustainability: 0.5      # De-emphasize sustainability
+      fitness: 1.2            # Boost fitness if it solves the problem
+    special_considerations:
+      - "Higher risk of abandonment"
+      - "Consider forking if critical dependency"
+      - "Evaluate maintainer's other projects for reliability"
+
+# Category detection rules (in order of precedence)
+detection_order:
+  1: "official"      # Check first
+  2: "vendor"        # Check second
+  3: "community"     # Check third
+  4: "specialized"   # Check fourth
+  5: "personal"      # Default if no other match
+
+# Default category if no match
+default_category: "personal"

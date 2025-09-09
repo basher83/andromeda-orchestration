@@ -1,0 +1,47 @@
+---
+# Remove incorrect jwt_signing_keys from Nomad server configuration
+# This was causing "unexpected keys" errors - JWT is configured via ACL auth methods, not server config
+
+- name: Remove incorrect jwt_signing_keys from Nomad servers
+  hosts: nomad-server-1-lloyd,nomad-server-2-holly,nomad-server-3-mable
+  become: true
+
+  tasks:
+    - name: Remove jwt_signing_keys line from Nomad config
+      ansible.builtin.lineinfile:
+        path: /etc/nomad.d/nomad.hcl
+        regexp: '^\s*jwt_signing_keys\s*='
+        state: absent
+        backup: true
+      register: config_cleaned
+
+    - name: Validate Nomad configuration after cleanup
+      ansible.builtin.command: nomad config validate /etc/nomad.d/
+      changed_when: false
+
+    - name: Restart Nomad if configuration was changed
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      when: config_cleaned is changed
+
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: '{{ ansible_default_ipv4.address }}'
+        delay: 10
+        timeout: 60
+      when: config_cleaned is changed
+
+    - name: Display cleanup status
+      ansible.builtin.debug:
+        msg:
+          - '=== JWT Configuration Cleanup ==='
+          - 'Configuration cleaned: {{ config_cleaned is changed }}'
+          - 'Nomad restarted: {{ config_cleaned is changed }}'
+          - ''
+          - '✅ Incorrect jwt_signing_keys removed from server configuration'
+          - ''
+          - 'Note: JWT authentication in Nomad is configured through ACL auth methods,'
+          - 'not through server configuration. Service identity works differently.'
