@@ -25,32 +25,32 @@
 
     - name: Update Vault service with HTTPS health check
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8500/v1/agent/service/register"
+        url: 'http://127.0.0.1:8500/v1/agent/service/register'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_token_result.stdout }}"
+          X-Consul-Token: '{{ consul_token_result.stdout }}'
         body_format: json
         body:
-          ID: "vault-{{ inventory_hostname }}"
-          Name: "vault"
+          ID: 'vault-{{ inventory_hostname }}'
+          Name: 'vault'
           Tags:
-            - "vault-cluster"
-            - "{{ vault_role }}"
+            - 'vault-cluster'
+            - '{{ vault_role }}'
             - "{{ 'transit' if vault_role == 'master' else 'raft' }}"
-            - "https"
+            - 'https'
           Port: 8200
-          Address: "{{ ansible_default_ipv4.address }}"
+          Address: '{{ ansible_default_ipv4.address }}'
           Check:
-            CheckID: "vault-health"
-            Name: "Vault Health Check"
-            HTTP: "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
+            CheckID: 'vault-health'
+            Name: 'Vault Health Check'
+            HTTP: 'https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true'
             TLSSkipVerify: true
-            Interval: "10s"
-            Timeout: "5s"
+            Interval: '10s'
+            Timeout: '5s'
         status_code: 200
       become: true
 
     - name: Display update result
       ansible.builtin.debug:
         msg:
-          - "✅ Health check updated to HTTPS for {{ inventory_hostname }}"
+          - '✅ Health check updated to HTTPS for {{ inventory_hostname }}'

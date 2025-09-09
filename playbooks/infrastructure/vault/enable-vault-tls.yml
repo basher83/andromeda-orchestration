@@ -14,13 +14,13 @@
   gather_facts: true
 
   vars:
-    vault_tls_dir: "/opt/vault/tls"
-    cert_country: "US"
-    cert_state: "HomeLabState"
-    cert_locality: "HomeLab"
-    cert_org: "HomeLab"
-    cert_ou: "Infrastructure"
-    cert_common_name: "{{ inventory_hostname }}.vault.spaceships.work"
+    vault_tls_dir: '/opt/vault/tls'
+    cert_country: 'US'
+    cert_state: 'HomeLabState'
+    cert_locality: 'HomeLab'
+    cert_org: 'HomeLab'
+    cert_ou: 'Infrastructure'
+    cert_common_name: '{{ inventory_hostname }}.vault.spaceships.work'
     cert_san: >-
       DNS:{{ inventory_hostname }},
       DNS:{{ inventory_hostname }}.vault.spaceships.work,
@@ -33,7 +33,7 @@
   tasks:
     - name: Create TLS directory
       ansible.builtin.file:
-        path: "{{ vault_tls_dir }}"
+        path: '{{ vault_tls_dir }}'
         state: directory
         owner: vault
         group: vault
@@ -42,13 +42,13 @@
 
     - name: Check if certificates already exist
       ansible.builtin.stat:
-        path: "{{ vault_tls_dir }}/tls.crt"
+        path: '{{ vault_tls_dir }}/tls.crt'
       register: cert_exists
       become: true
 
     - name: Generate private key
       ansible.builtin.openssl_privatekey:
-        path: "{{ vault_tls_dir }}/tls.key"
+        path: '{{ vault_tls_dir }}/tls.key'
         size: 4096
         type: RSA
         owner: vault
@@ -59,15 +59,15 @@
 
     - name: Generate CSR
       ansible.builtin.openssl_csr:
-        path: "{{ vault_tls_dir }}/tls.csr"
-        privatekey_path: "{{ vault_tls_dir }}/tls.key"
-        country_name: "{{ cert_country }}"
-        state_or_province_name: "{{ cert_state }}"
-        locality_name: "{{ cert_locality }}"
-        organization_name: "{{ cert_org }}"
-        organizational_unit_name: "{{ cert_ou }}"
-        common_name: "{{ cert_common_name }}"
-        subject_alt_name: "{{ cert_san }}"
+        path: '{{ vault_tls_dir }}/tls.csr'
+        privatekey_path: '{{ vault_tls_dir }}/tls.key'
+        country_name: '{{ cert_country }}'
+        state_or_province_name: '{{ cert_state }}'
+        locality_name: '{{ cert_locality }}'
+        organization_name: '{{ cert_org }}'
+        organizational_unit_name: '{{ cert_ou }}'
+        common_name: '{{ cert_common_name }}'
+        subject_alt_name: '{{ cert_san }}'
         owner: vault
         group: vault
         mode: '0644'
@@ -76,12 +76,12 @@
 
     - name: Generate self-signed certificate (temporary)
       ansible.builtin.openssl_certificate:
-        path: "{{ vault_tls_dir }}/tls.crt"
-        csr_path: "{{ vault_tls_dir }}/tls.csr"
-        privatekey_path: "{{ vault_tls_dir }}/tls.key"
+        path: '{{ vault_tls_dir }}/tls.crt'
+        csr_path: '{{ vault_tls_dir }}/tls.csr'
+        privatekey_path: '{{ vault_tls_dir }}/tls.key'
         provider: selfsigned
         selfsigned_digest: sha256
-        selfsigned_not_after: "+365d"
+        selfsigned_not_after: '+365d'
         owner: vault
         group: vault
         mode: '0644'
@@ -90,8 +90,8 @@
 
     - name: Copy certificate as CA for self-signed setup
       ansible.builtin.copy:
-        src: "{{ vault_tls_dir }}/tls.crt"
-        dest: "{{ vault_tls_dir }}/ca.crt"
+        src: '{{ vault_tls_dir }}/tls.crt'
+        dest: '{{ vault_tls_dir }}/ca.crt'
         remote_src: true
         owner: vault
         group: vault
@@ -139,10 +139,10 @@
     - name: Note about master node
       ansible.builtin.debug:
         msg:
-          - "⚠️ {{ inventory_hostname }} is running in DEV mode"
+          - '⚠️ {{ inventory_hostname }} is running in DEV mode'
           - "DEV mode doesn't support TLS configuration"
-          - "This node will continue to run on HTTP for transit unseal"
-          - "Consider migrating to production mode with TLS in future"
+          - 'This node will continue to run on HTTP for transit unseal'
+          - 'Consider migrating to production mode with TLS in future'
       when: vault_role == "master"
 
   handlers:
@@ -157,7 +157,7 @@
     - name: wait for vault to start
       ansible.builtin.wait_for:
         port: 8200
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
       when: vault_restart.changed
@@ -169,7 +169,7 @@
   tasks:
     - name: Test HTTPS connectivity (production nodes)
       ansible.builtin.uri:
-        url: "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health"
+        url: 'https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health'
         method: GET
         validate_certs: false
         status_code: [200, 429, 473, 501, 503]
@@ -206,41 +206,41 @@
 
     - name: Update Consul service with HTTPS health check
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8500/v1/agent/service/register"
+        url: 'http://127.0.0.1:8500/v1/agent/service/register'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_token_result.stdout }}"
+          X-Consul-Token: '{{ consul_token_result.stdout }}'
         body_format: json
         body:
-          ID: "vault-{{ inventory_hostname }}"
-          Name: "vault"
+          ID: 'vault-{{ inventory_hostname }}'
+          Name: 'vault'
           Tags:
-            - "vault-cluster"
-            - "{{ vault_role }}"
+            - 'vault-cluster'
+            - '{{ vault_role }}'
             - "{{ 'transit' if vault_role == 'master' else 'raft' }}"
             - "{{ 'https' if vault_role == 'production' else 'http' }}"
           Port: 8200
-          Address: "{{ ansible_default_ipv4.address }}"
+          Address: '{{ ansible_default_ipv4.address }}'
           Check:
-            CheckID: "vault-health"
-            Name: "Vault Health Check"
+            CheckID: 'vault-health'
+            Name: 'Vault Health Check'
             HTTP: "{{ 'https' if vault_role == 'production' else 'http' }}://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
             TLSSkipVerify: true
-            Interval: "10s"
-            Timeout: "5s"
+            Interval: '10s'
+            Timeout: '5s'
         status_code: 200
       when: vault_role == "production"
 
     - name: Display final status
       ansible.builtin.debug:
         msg:
-          - "✅ TLS has been enabled for {{ inventory_hostname }}"
-          - "   - Self-signed certificates generated (temporary)"
-          - "   - Vault configuration updated"
-          - "   - Consul health checks updated"
-          - ""
-          - "Next steps:"
-          - "   1. Verify Vault is unsealed and operational"
-          - "   2. Set up Vault PKI engine for proper CA"
-          - "   3. Replace self-signed certificates with PKI-issued ones"
+          - '✅ TLS has been enabled for {{ inventory_hostname }}'
+          - '   - Self-signed certificates generated (temporary)'
+          - '   - Vault configuration updated'
+          - '   - Consul health checks updated'
+          - ''
+          - 'Next steps:'
+          - '   1. Verify Vault is unsealed and operational'
+          - '   2. Set up Vault PKI engine for proper CA'
+          - '   3. Replace self-signed certificates with PKI-issued ones'
       when: vault_role == "production"

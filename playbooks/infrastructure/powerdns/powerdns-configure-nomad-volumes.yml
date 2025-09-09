@@ -9,14 +9,14 @@
     - name: Add host volume configuration to Nomad
       blockinfile:
         path: /etc/nomad.d/nomad.hcl
-        marker: "# {mark} ANSIBLE MANAGED BLOCK - PowerDNS host volume"
-        insertafter: "^client {"
+        marker: '# {mark} ANSIBLE MANAGED BLOCK - PowerDNS host volume'
+        insertafter: '^client {'
         block: |
 
-            host_volume "powerdns-mysql" {
-              path      = "/opt/nomad/volumes/powerdns-mysql"
-              read_only = false
-            }
+          host_volume "powerdns-mysql" {
+            path      = "/opt/nomad/volumes/powerdns-mysql"
+            read_only = false
+          }
 
     - name: Restart Nomad service
       systemd:

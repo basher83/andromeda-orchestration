@@ -11,7 +11,7 @@
     - name: Check if telemetry is already configured
       lineinfile:
         path: /etc/consul.d/consul.hcl
-        line: "telemetry {"
+        line: 'telemetry {'
         state: absent
       check_mode: true
       register: telemetry_check
@@ -20,7 +20,7 @@
     - name: Add telemetry configuration to Consul
       blockinfile:
         path: /etc/consul.d/consul.hcl
-        marker: "# {mark} ANSIBLE MANAGED TELEMETRY BLOCK"
+        marker: '# {mark} ANSIBLE MANAGED TELEMETRY BLOCK'
         block: |
 
           # Expose Prometheus endpoint for monitoring
@@ -47,7 +47,7 @@
 
     - name: Test telemetry endpoint
       uri:
-        url: "http://127.0.0.1:8500/v1/agent/metrics?format=prometheus"
+        url: 'http://127.0.0.1:8500/v1/agent/metrics?format=prometheus'
         validate_certs: false
       register: metrics_test
       failed_when: false

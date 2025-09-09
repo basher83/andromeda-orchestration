@@ -65,10 +65,10 @@
     - name: Display chrony status
       ansible.builtin.debug:
         msg:
-          - "Host: {{ inventory_hostname }}"
-          - "Config updated: {{ chrony_config_updated.changed }}"
+          - 'Host: {{ inventory_hostname }}'
+          - 'Config updated: {{ chrony_config_updated.changed }}'
           - "Service: {{ 'chronyd' if not chronyd_service.failed | default(false) else 'chrony' }}"
-          - "Sources:"
+          - 'Sources:'
           - "{{ chrony_sources.stdout_lines | default(['Unable to get sources']) }}"
-          - "Tracking:"
+          - 'Tracking:'
           - "{{ chrony_tracking.stdout_lines | default(['Unable to get tracking']) | first }}"

@@ -4,7 +4,6 @@
   hosts: all
   become: yes
   tasks:
-
     # --- Check if Checkmk is installed ---
     - name: Detect existing Checkmk packages
       shell: dpkg -l | grep check-mk || true
@@ -35,7 +34,7 @@
     # --- Remove repo files (if any) ---
     - name: Remove Checkmk apt repository files
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: absent
       loop:
         - /etc/apt/sources.list.d/checkmk.list
@@ -52,7 +51,7 @@
     # --- Remove leftover Checkmk directories ---
     - name: Delete Checkmk config, logs, and data dirs
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: absent
       loop:
         - /etc/check_mk

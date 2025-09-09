@@ -26,7 +26,7 @@
 
     - name: Check for existing configuration files
       ansible.builtin.stat:
-        path: "{{ item }}"
+        path: '{{ item }}'
       register: config_files
       loop:
         - /etc/netdata/netdata.conf
@@ -37,7 +37,7 @@
     - name: Display Netdata status
       ansible.builtin.debug:
         msg:
-          - "Netdata installed: {{ netdata_binary.stat.exists }}"
+          - 'Netdata installed: {{ netdata_binary.stat.exists }}'
           - "Version: {{ netdata_version.stdout | default('Not installed') }}"
           - "Service state: {{ netdata_service.status.ActiveState | default('Unknown') }}"
           - "Config files present: {{ config_files.results | selectattr('stat.exists') | map(attribute='item') | list }}"

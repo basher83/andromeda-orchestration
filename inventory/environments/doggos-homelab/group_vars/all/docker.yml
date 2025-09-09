@@ -3,21 +3,21 @@
 # This configures Docker to use Consul DNS for service discovery
 
 system_base_docker_options:
-  bip: "172.17.0.1/16"
+  bip: '172.17.0.1/16'
   default-address-pools:
-    - base: "172.17.0.0/16"
+    - base: '172.17.0.0/16'
       size: 24
   dns:
     - "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
   dns-opts:
-    - "ndots:0"
+    - 'ndots:0'
   dns-search:
-    - "service.consul"
-    - "node.consul"
-  log-driver: "json-file"
+    - 'service.consul'
+    - 'node.consul'
+  log-driver: 'json-file'
   log-opts:
-    max-size: "10m"
-    max-file: "3"
-  storage-driver: "overlay2"
+    max-size: '10m'
+    max-file: '3'
+  storage-driver: 'overlay2'
   exec-opts:
-    - "native.cgroupdriver=systemd"
+    - 'native.cgroupdriver=systemd'

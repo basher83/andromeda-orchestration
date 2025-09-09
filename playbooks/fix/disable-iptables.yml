@@ -11,12 +11,12 @@
   gather_facts: true
 
   vars:
-    backup_dir: "/var/backups/firewall-migration-{{ ansible_date_time.date }}"
+    backup_dir: '/var/backups/firewall-migration-{{ ansible_date_time.date }}'
 
   tasks:
     - name: Create backup directory
       ansible.builtin.file:
-        path: "{{ backup_dir }}"
+        path: '{{ backup_dir }}'
         state: directory
         mode: '0755'
         owner: root
@@ -27,17 +27,17 @@
         iptables-save > {{ backup_dir }}/iptables-backup.txt
         ip6tables-save > {{ backup_dir }}/ip6tables-backup.txt
       args:
-        creates: "{{ backup_dir }}/iptables-backup.txt"
+        creates: '{{ backup_dir }}/iptables-backup.txt'
 
     - name: Backup current nftables rules
       ansible.builtin.shell: |
         nft list ruleset > {{ backup_dir }}/nftables-backup.txt
       args:
-        creates: "{{ backup_dir }}/nftables-backup.txt"
+        creates: '{{ backup_dir }}/nftables-backup.txt'
 
     - name: Stop and disable iptables-related services
       ansible.builtin.systemd:
-        name: "{{ item }}"
+        name: '{{ item }}'
         state: stopped
         enabled: false
       loop:
@@ -107,13 +107,13 @@
     - name: Display nftables status
       ansible.builtin.debug:
         msg:
-          - "🔥 Firewall migration completed!"
-          - "✅ iptables flushed and services disabled"
-          - "✅ nftables active and managing rules"
-          - ""
-          - "Backup location: {{ backup_dir }}"
-          - ""
-          - "Current nftables rules preview:"
+          - '🔥 Firewall migration completed!'
+          - '✅ iptables flushed and services disabled'
+          - '✅ nftables active and managing rules'
+          - ''
+          - 'Backup location: {{ backup_dir }}'
+          - ''
+          - 'Current nftables rules preview:'
           - "{{ nftables_status.stdout_lines[:5] | default(['No rules found']) }}"
 
     - name: Restart Docker to clear iptables rules it may have added
@@ -132,7 +132,7 @@
 
     - name: Create post-migration verification script
       ansible.builtin.copy:
-        dest: "{{ backup_dir }}/verify-migration.sh"
+        dest: '{{ backup_dir }}/verify-migration.sh'
         mode: '0755'
         content: |
           #!/bin/bash
@@ -156,15 +156,15 @@
     - name: Final instructions
       ansible.builtin.debug:
         msg:
-          - "🎯 Migration Complete! Next steps:"
-          - ""
-          - "1. Verify Traefik connectivity:"
-          - "   curl -f http://{{ ansible_default_ipv4.address }}:8080/ping"
-          - ""
-          - "2. If issues persist, run the verification script:"
-          - "   {{ backup_dir }}/verify-migration.sh"
-          - ""
-          - "3. To rollback (if needed):"
-          - "   iptables-restore < {{ backup_dir }}/iptables-backup.txt"
-          - ""
-          - "4. Docker has been restarted to clear old iptables rules"
+          - '🎯 Migration Complete! Next steps:'
+          - ''
+          - '1. Verify Traefik connectivity:'
+          - '   curl -f http://{{ ansible_default_ipv4.address }}:8080/ping'
+          - ''
+          - '2. If issues persist, run the verification script:'
+          - '   {{ backup_dir }}/verify-migration.sh'
+          - ''
+          - '3. To rollback (if needed):'
+          - '   iptables-restore < {{ backup_dir }}/iptables-backup.txt'
+          - ''
+          - '4. Docker has been restarted to clear old iptables rules'

@@ -3,7 +3,7 @@
 
 - name: Ensure base packages are installed
   ansible.builtin.package:
-    name: "{{ system_base_packages }}"
+    name: '{{ system_base_packages }}'
     state: present
 
 - name: Include chrony setup

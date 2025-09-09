@@ -13,7 +13,34 @@
 #                 -var="VAULT_DB_PASSWORD=changeme" \
 #                 postgresql.nomad.hcl
 #
+# Or with variables file:
+#   nomad job run -var-file="postgresql.variables.hcl" postgresql.nomad.hcl
+#
 # Future: These will be managed via Vault dynamic database credentials
+
+variable "postgres_password" {
+  type        = string
+  description = "PostgreSQL superuser password"
+  default     = ""  # Must be overridden at deployment
+}
+
+variable "pdns_password" {
+  type        = string
+  description = "PowerDNS database user password"
+  default     = ""  # Must be overridden at deployment
+}
+
+variable "netdata_password" {
+  type        = string
+  description = "Netdata monitoring user password"
+  default     = ""  # Must be overridden at deployment
+}
+
+variable "vault_db_password" {
+  type        = string
+  description = "Vault database management user password"
+  default     = ""  # Must be overridden at deployment
+}
 
 job "postgresql" {
   datacenters = ["dc1"]
@@ -138,7 +165,7 @@ job "postgresql" {
 
       resources {
         cpu    = 500
-        memory = 2048
+        memory = 1024
       }
     }
 

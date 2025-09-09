@@ -1,0 +1,43 @@
+# Act configuration for Andromeda IaC repository
+
+# Optimized for MegaLinter and HashiCorp tool testing
+
+# Platform images - use latest for best tool compatibility
+
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+-P ubuntu-22.04=catthehacker/ubuntu:act-22.04
+-P ubuntu-20.04=catthehacker/ubuntu:act-20.04
+
+# Use Docker host network for better connectivity (may need to be disabled on some systems)
+
+# --network host
+
+# Reuse containers for faster subsequent runs
+
+--reuse
+
+# Container architecture (for Apple Silicon compatibility)
+
+--container-architecture linux/amd64
+
+# Bind working directory for proper file access
+
+--bind
+
+# Use local .env file if it exists
+
+--env-file .env.act
+
+# Default workflow event for testing
+
+--eventpath .github/workflows/event.json
+
+# Privileged mode for Docker-in-Docker operations
+
+--container-options --privileged
+
+# Use GitHub token from environment (optional)
+
+# --secret GITHUB_TOKEN=${GITHUB_TOKEN}
+
+# Using standard latest container for reliable compatibility

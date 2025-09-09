@@ -8,7 +8,7 @@
       - vault_auto_unseal_type in ['transit', 'awskms', 'azurekeyvault', 'gcpckms']
       - vault_auto_unseal_config is defined
       - vault_auto_unseal_config | length > 0
-    fail_msg: "Auto-unseal requires valid type and configuration"
+    fail_msg: 'Auto-unseal requires valid type and configuration'
 
 - name: Install AWS CLI for KMS unseal
   ansible.builtin.package:
@@ -50,11 +50,11 @@
     dest: /usr/local/bin/vault-test-unseal
     owner: root
     group: root
-    mode: "0755"
+    mode: '0755'
 
 - name: Display auto-unseal configuration
   ansible.builtin.debug:
     msg:
-      - "Auto-unseal configured with {{ vault_auto_unseal_type }}"
-      - "Configuration will be applied on next Vault restart"
-      - "Test with: /usr/local/bin/vault-test-unseal"
+      - 'Auto-unseal configured with {{ vault_auto_unseal_type }}'
+      - 'Configuration will be applied on next Vault restart'
+      - 'Test with: /usr/local/bin/vault-test-unseal'

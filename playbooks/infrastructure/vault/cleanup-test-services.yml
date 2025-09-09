@@ -25,10 +25,10 @@
 
     - name: List local services to find test services
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8500/v1/agent/services"
+        url: 'http://127.0.0.1:8500/v1/agent/services'
         method: GET
         headers:
-          X-Consul-Token: "{{ consul_token_result.stdout }}"
+          X-Consul-Token: '{{ consul_token_result.stdout }}'
         status_code: 200
       register: local_services
       become: true
@@ -39,24 +39,24 @@
 
     - name: Display test services found
       ansible.builtin.debug:
-        msg: "Found test services on {{ inventory_hostname }}: {{ test_services }}"
+        msg: 'Found test services on {{ inventory_hostname }}: {{ test_services }}'
       when: test_services | length > 0
 
     - name: Deregister test services
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8500/v1/agent/service/deregister/{{ item }}"
+        url: 'http://127.0.0.1:8500/v1/agent/service/deregister/{{ item }}'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_token_result.stdout }}"
+          X-Consul-Token: '{{ consul_token_result.stdout }}'
         status_code: 200
-      loop: "{{ test_services }}"
+      loop: '{{ test_services }}'
       become: true
       when: test_services | length > 0
 
     - name: Summary
       ansible.builtin.debug:
         msg:
-          - "{{ inventory_hostname }}: Removed {{ test_services | length }} test service(s)"
+          - '{{ inventory_hostname }}: Removed {{ test_services | length }} test service(s)'
 
 - name: Verify Cleanup from Consul Server
   hosts: nomad-server-1-lloyd
@@ -75,7 +75,7 @@
   tasks:
     - name: Set master token from Infisical lookup
       set_fact:
-        master_token: "{{ consul_token }}"
+        master_token: '{{ consul_token }}'
       delegate_to: localhost
       become: false
 
@@ -92,7 +92,7 @@
 
     - name: Set token from retrieval
       set_fact:
-        consul_token: "{{ consul_token_result.stdout }}"
+        consul_token: '{{ consul_token_result.stdout }}'
       when: consul_token_result.stdout is defined
 
     - name: Check remaining services
@@ -105,6 +105,6 @@
     - name: Display final status
       ansible.builtin.debug:
         msg:
-          - "✅ Test Service Cleanup Complete"
-          - "Remaining relevant services:"
-          - "{{ remaining_services.stdout }}"
+          - '✅ Test Service Cleanup Complete'
+          - 'Remaining relevant services:'
+          - '{{ remaining_services.stdout }}'

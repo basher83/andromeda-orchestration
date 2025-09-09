@@ -24,7 +24,7 @@
         shell: /bin/bash
         create_home: true
         state: present
-        comment: "Ansible automation user"
+        comment: 'Ansible automation user'
 
     - name: Create SSH directory for ansible user
       ansible.builtin.file:
@@ -37,7 +37,7 @@
     - name: Deploy SSH key to ansible user
       ansible.posix.authorized_key:
         user: ansible
-        key: "{{ staging_key.stdout }}"
+        key: '{{ staging_key.stdout }}'
         state: present
         exclusive: true
 
@@ -57,7 +57,7 @@
           Match User ansible
               PasswordAuthentication no
               PubkeyAuthentication yes
-        marker: "# {mark} ANSIBLE USER SSH CONFIG"
+        marker: '# {mark} ANSIBLE USER SSH CONFIG'
       notify: restart sshd
 
     - name: Set Python interpreter for better Ansible performance
@@ -87,5 +87,5 @@
 
     - name: Report connectivity status
       ansible.builtin.debug:
-        msg: "Ansible user setup successful on {{ inventory_hostname }}"
+        msg: 'Ansible user setup successful on {{ inventory_hostname }}'
       when: ping_result is succeeded

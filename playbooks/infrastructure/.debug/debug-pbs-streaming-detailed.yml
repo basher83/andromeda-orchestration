@@ -11,7 +11,7 @@
         name: pbs
         ansible_host: 192.168.30.200
         ansible_user: root
-        ansible_password: "{{ vault_pbs_password }}"
+        ansible_password: '{{ vault_pbs_password }}'
 
 - name: Debug PBS Netdata configuration
   hosts: pbs
@@ -34,7 +34,7 @@
 
     - name: Display debug output
       ansible.builtin.debug:
-        msg: "{{ debug_output.stdout_lines }}"
+        msg: '{{ debug_output.stdout_lines }}'
 
     - name: Check actual stream.conf content
       ansible.builtin.shell: |
@@ -45,7 +45,7 @@
 
     - name: Display stream config
       ansible.builtin.debug:
-        msg: "{{ stream_conf.stdout_lines }}"
+        msg: '{{ stream_conf.stdout_lines }}'
 
     - name: Start Netdata normally
       ansible.builtin.systemd:

@@ -6,7 +6,7 @@
   gather_facts: false
   become: false
   vars:
-    netbox_url: "https://192.168.30.213"
+    netbox_url: 'https://192.168.30.213'
     netbox_token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
     netbox_validate_certs: false
 
@@ -17,77 +17,77 @@
 
     # DNS configuration
     nameservers:
-      - name: "ns1.{{ homelab_domain }}"
-        description: "Primary nameserver for homelab"
+      - name: 'ns1.{{ homelab_domain }}'
+        description: 'Primary nameserver for homelab'
 
     dns_zones:
       forward:
-        - name: "{{ homelab_domain }}"
-          description: "Primary homelab domain"
-        - name: "doggos.{{ homelab_domain }}"
-          description: "Doggos cluster domain"
-        - name: "og.{{ homelab_domain }}"
-          description: "OG homelab cluster domain"
+        - name: '{{ homelab_domain }}'
+          description: 'Primary homelab domain'
+        - name: 'doggos.{{ homelab_domain }}'
+          description: 'Doggos cluster domain'
+        - name: 'og.{{ homelab_domain }}'
+          description: 'OG homelab cluster domain'
       reverse:
-        - name: "10.168.192.in-addr.arpa"
-          description: "Reverse zone for 192.168.10.0/24"
-          network: "192.168.10.0/24"
-        - name: "11.168.192.in-addr.arpa"
-          description: "Reverse zone for 192.168.11.0/24"
-          network: "192.168.11.0/24"
-        - name: "30.168.192.in-addr.arpa"
-          description: "Reverse zone for 192.168.30.0/24"
-          network: "192.168.30.0/24"
+        - name: '10.168.192.in-addr.arpa'
+          description: 'Reverse zone for 192.168.10.0/24'
+          network: '192.168.10.0/24'
+        - name: '11.168.192.in-addr.arpa'
+          description: 'Reverse zone for 192.168.11.0/24'
+          network: '192.168.11.0/24'
+        - name: '30.168.192.in-addr.arpa'
+          description: 'Reverse zone for 192.168.30.0/24'
+          network: '192.168.30.0/24'
 
   tasks:
     - name: Check token is set
       fail:
-        msg: "NETBOX_TOKEN environment variable not set"
+        msg: 'NETBOX_TOKEN environment variable not set'
       when: netbox_token == ""
 
     - name: Create nameservers in NetBox
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/nameservers/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/nameservers/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          name: "{{ item.name }}"
-          description: "{{ item.description }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+          name: '{{ item.name }}'
+          description: '{{ item.description }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
-      loop: "{{ nameservers }}"
+      loop: '{{ nameservers }}'
       register: nameserver_results
       failed_when: nameserver_results.status not in [200, 201] and 'already exists' not in (nameserver_results.json | default({}) | string)
 
     - name: Get nameserver ID
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/nameservers/?name=ns1.{{ homelab_domain }}"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/nameservers/?name=ns1.{{ homelab_domain }}'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+          Authorization: 'Token {{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
       register: ns_lookup
 
     - name: Set nameserver ID
       set_fact:
-        ns_id: "{{ ns_lookup.json.results[0].id | default(1) }}"
+        ns_id: '{{ ns_lookup.json.results[0].id | default(1) }}'
 
     - name: Create forward DNS zones in NetBox
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/zones/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          name: "{{ item.name }}"
-          description: "{{ item.description }}"
-          soa_mname: "{{ ns_id }}"
-          soa_rname: "admin.{{ item.name }}"
+          name: '{{ item.name }}'
+          description: '{{ item.description }}'
+          soa_mname: '{{ ns_id }}'
+          soa_rname: 'admin.{{ item.name }}'
           soa_serial: 2025080801
           soa_ttl: 3600
           soa_refresh: 10800
@@ -95,25 +95,25 @@
           soa_expire: 604800
           soa_minimum: 3600
           default_ttl: 3600
-        validate_certs: "{{ netbox_validate_certs }}"
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
-      loop: "{{ dns_zones.forward }}"
+      loop: '{{ dns_zones.forward }}'
       register: forward_zone_results
       failed_when: forward_zone_results.status not in [200, 201] and 'already exists' not in (forward_zone_results.json | default({}) | string)
 
     - name: Create reverse DNS zones in NetBox
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/zones/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          name: "{{ item.name }}"
-          description: "{{ item.description }}"
-          soa_mname: "{{ ns_id }}"
-          soa_rname: "admin.{{ homelab_domain }}"
+          name: '{{ item.name }}'
+          description: '{{ item.description }}'
+          soa_mname: '{{ ns_id }}'
+          soa_rname: 'admin.{{ homelab_domain }}'
           soa_serial: 2025080801
           soa_ttl: 3600
           soa_refresh: 10800
@@ -121,60 +121,60 @@
           soa_expire: 604800
           soa_minimum: 3600
           default_ttl: 3600
-          arpa_network: "{{ item.network }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+          arpa_network: '{{ item.network }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
-      loop: "{{ dns_zones.reverse }}"
+      loop: '{{ dns_zones.reverse }}'
       register: reverse_zone_results
       failed_when: reverse_zone_results.status not in [200, 201] and 'already exists' not in (reverse_zone_results.json | default({}) | string)
 
     - name: Get zone IDs for record creation
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/?name={{ item.name }}"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/zones/?name={{ item.name }}'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
-      loop: "{{ dns_zones.forward }}"
+          Authorization: 'Token {{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
+      loop: '{{ dns_zones.forward }}'
       register: zone_lookups
 
     - name: Create NS records for zones
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/records/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/records/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          zone: "{{ item.json.results[0].id }}"
-          name: "@"
-          type: "NS"
-          value: "ns1.{{ homelab_domain }}"
+          zone: '{{ item.json.results[0].id }}'
+          name: '@'
+          type: 'NS'
+          value: 'ns1.{{ homelab_domain }}'
           ttl: 3600
-        validate_certs: "{{ netbox_validate_certs }}"
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
-      loop: "{{ zone_lookups.results }}"
+      loop: '{{ zone_lookups.results }}'
       when: item.json.results | length > 0
       register: ns_records
       failed_when: ns_records.status not in [200, 201] and 'already exists' not in (ns_records.json | default({}) | string)
 
     - name: Create A record for nameserver
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/records/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/records/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          zone: "{{ zone_lookups.results[0].json.results[0].id }}"
-          name: "ns1"
-          type: "A"
-          value: "192.168.11.20"
+          zone: '{{ zone_lookups.results[0].json.results[0].id }}'
+          name: 'ns1'
+          type: 'A'
+          value: '192.168.11.20'
           ttl: 3600
-          description: "PowerDNS server on nomad-client-1"
-        validate_certs: "{{ netbox_validate_certs }}"
+          description: 'PowerDNS server on nomad-client-1'
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
       when: zone_lookups.results[0].json.results | length > 0
       register: ns_a_record
@@ -183,12 +183,12 @@
     - name: Display zone creation summary
       debug:
         msg:
-          - "DNS Zone Configuration Complete!"
+          - 'DNS Zone Configuration Complete!'
           - "Forward zones: {{ dns_zones.forward | map(attribute='name') | list }}"
           - "Reverse zones: {{ dns_zones.reverse | map(attribute='name') | list }}"
-          - "Nameserver: ns1.{{ homelab_domain }} (192.168.11.20)"
-          - ""
-          - "Next steps:"
-          - "1. Add more DNS records to zones"
-          - "2. Configure PowerDNS to sync with NetBox"
-          - "3. Test DNS resolution through PowerDNS"
+          - 'Nameserver: ns1.{{ homelab_domain }} (192.168.11.20)'
+          - ''
+          - 'Next steps:'
+          - '1. Add more DNS records to zones'
+          - '2. Configure PowerDNS to sync with NetBox'
+          - '3. Test DNS resolution through PowerDNS'

@@ -11,11 +11,11 @@
       include_role:
         name: system_base
         tasks_from: configure-firewall
-      when: false  # Skip if the task doesn't exist
+      when: false # Skip if the task doesn't exist
 
     - name: Apply nftables configuration template directly
       ansible.builtin.template:
-        src: "../../../roles/system_base/templates/nftables.conf.j2"
+        src: '../../../roles/system_base/templates/nftables.conf.j2'
         dest: /etc/nftables.conf
         mode: '0644'
         owner: root
@@ -53,7 +53,7 @@
 
     - name: Check Vault connectivity
       ansible.builtin.uri:
-        url: "http://{{ ansible_default_ipv4.address }}:8200/v1/sys/health"
+        url: 'http://{{ ansible_default_ipv4.address }}:8200/v1/sys/health'
         method: GET
         status_code: [200, 429, 472, 473, 501, 503]
       register: vault_health

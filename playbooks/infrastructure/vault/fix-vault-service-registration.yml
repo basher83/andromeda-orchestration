@@ -9,12 +9,12 @@
   gather_facts: false
 
   vars:
-    consul_config_dir: "/etc/consul.d"
+    consul_config_dir: '/etc/consul.d'
 
   tasks:
     - name: Remove old service configuration
       ansible.builtin.file:
-        path: "{{ consul_config_dir }}/vault-service.hcl"
+        path: '{{ consul_config_dir }}/vault-service.hcl'
         state: absent
       notify: reload consul
 
@@ -43,11 +43,11 @@
               timeout = "5s"
             }
           }
-        dest: "{{ consul_config_dir }}/vault-service.hcl"
+        dest: '{{ consul_config_dir }}/vault-service.hcl'
         owner: consul
         group: consul
         mode: '0640'
-      notify: restart consul  # Changed to restart to ensure token is picked up
+      notify: restart consul # Changed to restart to ensure token is picked up
 
     - name: Validate Consul configuration
       ansible.builtin.command: consul validate {{ consul_config_dir }}
@@ -56,7 +56,7 @@
 
     - name: Display validation result
       ansible.builtin.debug:
-        msg: "{{ validate_result.stdout }}"
+        msg: '{{ validate_result.stdout }}'
 
     - name: Force handlers to run now
       meta: flush_handlers
@@ -83,9 +83,9 @@
     - name: Display service registration status
       ansible.builtin.debug:
         msg:
-          - "✅ Node: {{ inventory_hostname }}"
-          - "Registered Services: {{ consul_services.stdout }}"
-          - "Vault Service Details: {{ vault_service_details.stdout }}"
+          - '✅ Node: {{ inventory_hostname }}'
+          - 'Registered Services: {{ consul_services.stdout }}'
+          - 'Vault Service Details: {{ vault_service_details.stdout }}'
 
   handlers:
     - name: reload consul

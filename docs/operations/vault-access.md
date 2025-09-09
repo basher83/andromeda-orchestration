@@ -153,12 +153,14 @@ sudo journalctl -u vault -f
 ### PKI Certificate Management
 
 **Implemented (Issue #97)**:
+
 - All production nodes using CA-issued certificates
 - Certificates stored in `/opt/vault/tls/`
 - Backup certificates in `/opt/vault/tls/backup-*`
 - Consul health checks validate certificates
 
 **Next Steps**:
+
 1. Implement automated certificate renewal (Issue #99)
 2. Enable mTLS for service communication (Issue #98)
 3. Set up monitoring for certificate expiry (Issue #100)

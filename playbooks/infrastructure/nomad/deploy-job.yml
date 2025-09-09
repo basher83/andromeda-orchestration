@@ -6,10 +6,10 @@
   become: false
   vars:
     nomad_api_endpoint: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646', true) }}"
-    job_path: "{{ job | mandatory }}"
-    force_start: "{{ force | default(false) }}"
-    wait_for_healthy: "{{ wait | default(true) }}"
-    nomad_namespace: "default"  # namespace is a reserved word in Jinja2
+    job_path: '{{ job | mandatory }}'
+    force_start: '{{ force | default(false) }}'
+    wait_for_healthy: '{{ wait | default(true) }}'
+    nomad_namespace: 'default' # namespace is a reserved word in Jinja2
     # Domain variables will be provided by inventory or can be overridden
     homelab_domain: "{{ hostvars[inventory_hostname]['homelab_domain'] | default('spaceships.work', true) }}"
     cluster_subdomain: "{{ hostvars[inventory_hostname]['cluster_subdomain'] | default('', true) }}"
@@ -19,14 +19,14 @@
     - name: Validate job file exists
       become: false
       ansible.builtin.stat:
-        path: "{{ job_path }}"
+        path: '{{ job_path }}'
       register: job_file
       failed_when: not job_file.stat.exists
 
     - name: Read job specification
       become: false
       ansible.builtin.slurp:
-        src: "{{ job_path }}"
+        src: '{{ job_path }}'
       register: job_spec
 
     - name: Extract job name from HCL
@@ -36,29 +36,29 @@
     - name: Display deployment info
       ansible.builtin.debug:
         msg:
-          - "Deploying job: {{ job_name }}"
-          - "From file: {{ job_path }}"
-          - "To Nomad: {{ nomad_api_endpoint }}"
-          - "Force start: {{ force_start }}"
+          - 'Deploying job: {{ job_name }}'
+          - 'From file: {{ job_path }}'
+          - 'To Nomad: {{ nomad_api_endpoint }}'
+          - 'Force start: {{ force_start }}'
 
     - name: Parse HCL job with variables
       ansible.builtin.uri:
-        url: "{{ nomad_api_endpoint }}/v1/jobs/parse?namespace={{ nomad_namespace }}"
+        url: '{{ nomad_api_endpoint }}/v1/jobs/parse?namespace={{ nomad_namespace }}'
         method: POST
         body_format: json
         body:
-          JobHCL: "{{ job_spec.content | b64decode }}"
+          JobHCL: '{{ job_spec.content | b64decode }}'
           Variables:
-            homelab_domain: "{{ homelab_domain }}"
+            homelab_domain: '{{ homelab_domain }}'
             cluster_subdomain: "{{ cluster_subdomain | default('', true) }}"
             fqdn_suffix: "{{ fqdn_suffix | default('', true) }}"
             pdns_db_password: "{{ pdns_db_password | default('', true) }}"
             pdns_api_key: "{{ pdns_api_key | default('', true) }}"
           Canonicalize: true
         headers:
-          Content-Type: "application/json"
+          Content-Type: 'application/json'
         status_code: [200, 400, 500]
-        validate_certs: "{{ validate_certs | default(true) }}"
+        validate_certs: '{{ validate_certs | default(true) }}'
       register: parsed_job
       when: job_spec.content | b64decode is search('variable\\s')
       failed_when: false
@@ -75,11 +75,11 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ nomad_namespace }}"
-        content: "{{ parsed_job.json | to_json }}"
+        namespace: '{{ nomad_namespace }}'
+        content: '{{ parsed_job.json | to_json }}'
         content_format: json
         state: present
-        force_start: "{{ force_start }}"
+        force_start: '{{ force_start }}'
       register: deploy_result
       when: >
         parsed_job is defined and
@@ -92,11 +92,11 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ nomad_namespace }}"
-        content: "{{ job_spec.content | b64decode }}"
+        namespace: '{{ nomad_namespace }}'
+        content: '{{ job_spec.content | b64decode }}'
         content_format: hcl
         state: present
-        force_start: "{{ force_start }}"
+        force_start: '{{ force_start }}'
       register: deploy_result
       when: >
         parsed_job is skipped or
@@ -114,16 +114,16 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ nomad_namespace }}"
-        name: "{{ job_name }}"
+        namespace: '{{ nomad_namespace }}'
+        name: '{{ job_name }}'
       register: job_info
 
     - name: Wait for healthy deployment
       ansible.builtin.uri:
-        url: "{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}"
+        url: '{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}'
         method: GET
         headers:
-          Content-Type: "application/json"
+          Content-Type: 'application/json'
       register: job_summary_status
       until: >
         job_summary_status.json.Summary is defined and
@@ -134,22 +134,21 @@
 
     - name: Get job summary for final status
       ansible.builtin.uri:
-        url: "{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}"
+        url: '{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}'
         method: GET
         headers:
-          Content-Type: "application/json"
+          Content-Type: 'application/json'
       register: job_summary
       when: wait_for_healthy | bool
 
     - name: Display final job status
       ansible.builtin.debug:
         msg:
-          - "Job deployed successfully!"
-          - "Name: {{ job_name }}"
-          - "Status: running"
+          - 'Job deployed successfully!'
+          - 'Name: {{ job_name }}'
+          - 'Status: running'
           - "Running allocations: {{ job_summary.json.Summary | json_query('*.Running') | sum }}"
       when: wait_for_healthy | bool
-
 # Usage examples:
 # ansible-playbook deploy-job.yml -e job=nomad-jobs/core-infrastructure/traefik.nomad.hcl
 # ansible-playbook deploy-job.yml -e job=nomad-jobs/platform-services/powerdns.nomad.hcl -e force=true

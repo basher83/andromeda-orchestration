@@ -4,32 +4,32 @@
 
 # Enable parent mode
 netdata_parent_enabled: true
-netdata_parent_api_key: "{{ vault_netdata_parent_api_key_og }}"
+netdata_parent_api_key: '{{ vault_netdata_parent_api_key_og }}'
 
 # Web interface should be enabled on parents
 netdata_web_enabled: true
 
 # Memory mode - use dbengine for long-term storage
-netdata_memory_mode: "dbengine"
-netdata_dbengine_disk_space: 2048  # 2GB for metrics storage (more containers)
-netdata_history: 86400  # 24 hours of detailed metrics
+netdata_memory_mode: 'dbengine'
+netdata_dbengine_disk_space: 2048 # 2GB for metrics storage (more containers)
+netdata_history: 86400 # 24 hours of detailed metrics
 
 # Enable ML anomaly detection on parent
 netdata_ml_enabled: true
 
 # Bind to the single network interface
-netdata_bind_to: "{{ ansible_default_ipv4.address }}"
+netdata_bind_to: '{{ ansible_default_ipv4.address }}'
 
 # Consul service registration
 netdata_consul_enabled: true
-netdata_consul_service_name: "netdata-parent"
+netdata_consul_service_name: 'netdata-parent'
 netdata_consul_service_tags:
-  - "monitoring"
-  - "metrics"
-  - "parent"
-  - "api"
-  - "web-ui"
-  - "og-homelab"
+  - 'monitoring'
+  - 'metrics'
+  - 'parent'
+  - 'api'
+  - 'web-ui'
+  - 'og-homelab'
 
 # Enable telemetry export
 netdata_telemetry_enabled: true
@@ -39,4 +39,4 @@ netdata_telemetry_prometheus_enabled: true
 netdata_alarms_enabled: true
 
 # Parent allows connections from the og-homelab network
-netdata_parent_allow_from: "192.168.30.0/24"
+netdata_parent_allow_from: '192.168.30.0/24'

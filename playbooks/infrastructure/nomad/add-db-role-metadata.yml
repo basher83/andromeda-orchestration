@@ -3,7 +3,7 @@
 # This playbook adds the role = db metadata to enable PostgreSQL placement constraints
 
 - name: Add Database Role Metadata to Nomad Client
-  hosts: nomad-client-1-lloyd  # Target the specific node with postgres-data volume
+  hosts: nomad-client-1-lloyd # Target the specific node with postgres-data volume
   become: true
 
   tasks:
@@ -20,7 +20,7 @@
 
     - name: Check if metadata is already configured
       set_fact:
-        metadata_exists: "{{ 'role = \"db\"' in (current_config.content | b64decode) }}"
+        metadata_exists: '{{ ''role = "db"'' in (current_config.content | b64decode) }}'
       when: nomad_config.stat.exists
 
     - name: Create client metadata configuration
@@ -72,7 +72,7 @@
 
     - name: Wait for Nomad to be ready
       uri:
-        url: "http://{{ ansible_default_ipv4.address }}:4646/v1/agent/health"
+        url: 'http://{{ ansible_default_ipv4.address }}:4646/v1/agent/health'
         method: GET
         status_code: 200
       register: nomad_health
@@ -83,7 +83,7 @@
 
     - name: Get node information
       uri:
-        url: "http://{{ ansible_default_ipv4.address }}:4646/v1/agent/self"
+        url: 'http://{{ ansible_default_ipv4.address }}:4646/v1/agent/self'
         method: GET
       register: node_self
       when: nomad_restart is changed or (metadata_exists | default(false))

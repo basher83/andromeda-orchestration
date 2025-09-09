@@ -16,20 +16,23 @@ permissions:
   security-events: write
 
 jobs:
-  ansible-lint:
-    name: Ansible Lint & Syntax
+  # Combined linting job using MegaLinter (replaces separate ansible-lint, yaml-lint, python-quality, markdown-lint jobs)
+  lint-and-quality:
+    name: Lint & Quality (MegaLinter) - ${{ contains(github.ref, 'main') && 'Full' || 'Fast' }} Mode
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: ${{ contains(github.ref, 'main') && 20 || 15 }}
     env:
       ANSIBLE_CONFIG: ${{ github.workspace }}/ansible.cfg
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # Full history for git-related linters
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: '3.13'
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v6
@@ -49,10 +52,43 @@ jobs:
       - name: Install Ansible Galaxy collections
         run: uv run ansible-galaxy collection install -r requirements.yml
 
-      - name: Run ansible-lint
-        run: |
-          uv run ansible-lint --version
-          uv run ansible-lint .
+      - name: Run MegaLinter
+        uses: oxsecurity/megalinter@v8
+        env:
+          # Conditional linter set based on branch
+          ENABLE_LINTERS: ${{ contains(github.ref, 'main') && 'ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,YAML_V8R,PYTHON_RUFF,MARKDOWN_MARKDOWNLINT,REPOSITORY_SECRETLINT,REPOSITORY_TRIVY,REPOSITORY_GITLEAKS,ACTION_ACTIONLINT' || 'ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,PYTHON_RUFF,MARKDOWN_MARKDOWNLINT,REPOSITORY_SECRETLINT,ACTION_ACTIONLINT' }}
+          APPLY_FIXES: YAML_PRETTIER,MARKDOWN_MARKDOWNLINT
+          DISABLE_ERRORS_LINTERS: YAML_YAMLLINT
+          FILTER_REGEX_EXCLUDE: '(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/)'
+          FILTER_REGEX_INCLUDE: '(^|/)(ansible/|roles/|playbooks/|jobs/|nomad/|environments/|inventory/|plugins/|scripts/|tests/|docs/)'
+          PYTHON_RUFF_CONFIG_FILE: pyproject.toml
+          YAML_YAMLLINT_CONFIG_FILE: .yamllint
+          ANSIBLE_ANSIBLE_LINT_CONFIG_FILE: .ansible-lint
+          MARKDOWN_MARKDOWNLINT_CONFIG_FILE: .markdownlint.json
+          PARALLEL: true
+          PARALLEL_PROCESS_COUNT: 4
+          FAIL_ON_ERROR: ${{ contains(github.ref, 'main') && 'true' || 'false' }}
+          OUTPUT_FORMAT: github-annotation-native
+          SARIF_REPORTER: true
+          SARIF_REPORT_FILE: megalinter-report.sarif
+          # Performance optimizations
+          LOG_LEVEL: INFO
+          PRINT_ALL_FILES: false
+
+      - name: Upload SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: megalinter-report.sarif
+          category: code-quality
+
+      - name: Upload MegaLinter results as artifact
+        if: always()
+        uses: github/upload-artifact@v4
+        with:
+          name: megalinter-results
+          path: megalinter-reports/
+          retention-days: 30
 
       - name: Syntax-check playbooks
         run: |
@@ -71,78 +107,6 @@ jobs:
       - name: Run localhost test playbook
         run: uv run ansible-playbook -i inventory/localhost.yml tests/test_localhost.yml
 
-  yaml-lint:
-    name: YAML Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v6
-
-      - name: Sync dependencies
-        run: uv sync --extra dev
-
-      - name: Run yamllint
-        run: |
-          echo "### YAMLLint Results" >> $GITHUB_STEP_SUMMARY
-          if uv run yamllint . 2>&1 | tee yamllint.log; then
-            echo "✅ YAMLLint passed" >> $GITHUB_STEP_SUMMARY
-          else
-            cat yamllint.log >> $GITHUB_STEP_SUMMARY
-            if grep -q "error" yamllint.log; then
-              echo "❌ YAMLLint found errors" >> $GITHUB_STEP_SUMMARY
-              exit 1
-            else
-              echo "⚠️ YAMLLint found warnings" >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
-
-  python-quality:
-    name: Python Quality
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v6
-
-      - name: Sync dependencies
-        run: uv sync --extra dev
-
-      - name: Run ruff
-        run: |
-          uv run ruff check plugins scripts tests
-          uv run ruff format plugins scripts tests --check
-
-      - name: Run mypy
-        run: uv run mypy plugins scripts || true
-
-  markdown-lint:
-    name: Markdown Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Run markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@v20
-        with:
-          globs: '**/*.md'
-        continue-on-error: true  # Don't fail CI on markdown issues
-
   secret-scan:
     name: Secret Scanning (Infisical)
     runs-on: ubuntu-latest
@@ -150,7 +114,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0  # Full history for scanning
+          fetch-depth: 0 # Full history for scanning
 
       - name: Install Infisical CLI
         run: |
@@ -180,53 +144,7 @@ jobs:
           path: infisical-results.sarif
           retention-days: 30
 
-  nomad-fmt:
-    name: Nomad Format & Validate
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Install Nomad CLI
-        run: |
-          set -euo pipefail
-          NOMAD_VERSION="1.8.2"
-          curl -fsSL -o nomad.zip "https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip"
-          sudo apt-get update && sudo apt-get install -y unzip
-          unzip -o nomad.zip
-          sudo install -m 0755 nomad /usr/local/bin/nomad
-          nomad version
-
-      - name: Format and check Nomad files
-        run: |
-          if [ -d "nomad-jobs" ]; then
-            echo "Running nomad fmt to auto-fix formatting issues..."
-            nomad fmt -recursive nomad-jobs
-            echo "Checking if all files are properly formatted..."
-            nomad fmt -check -recursive nomad-jobs
-          else
-            echo "No nomad-jobs directory found."
-          fi
-
-      - name: Validate Nomad job files
-        run: |
-          set -euo pipefail
-          if [ -d "nomad-jobs" ]; then
-            mapfile -t files < <(find nomad-jobs -type f -name '*.nomad.hcl' -print)
-            if [ ${#files[@]} -eq 0 ]; then
-              echo "No Nomad job files found."
-              exit 0
-            fi
-            for f in "${files[@]}"; do
-              echo "::group::Validating $f"
-              nomad job validate "$f"
-              echo "::endgroup::"
-            done
-          else
-            echo "No nomad-jobs directory found."
-          fi
-
+  # Nomad jobs are now handled by the mega-linter.yml workflow for better integration
 
   kics-scan:
     name: Infrastructure Security (KICS)
@@ -265,7 +183,7 @@ jobs:
     name: Test Summary
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
-    needs: [ansible-lint, yaml-lint, python-quality, markdown-lint, nomad-fmt]
+    needs: [lint-and-quality, secret-scan, kics-scan]
     steps:
       - name: Summary
         run: |
@@ -274,8 +192,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Ansible Lint | ✅ |" >> $GITHUB_STEP_SUMMARY
-          echo "| YAML Lint | ✅ |" >> $GITHUB_STEP_SUMMARY
-          echo "| Python Quality | ✅ |" >> $GITHUB_STEP_SUMMARY
-          echo "| Markdown Lint | ✅ |" >> $GITHUB_STEP_SUMMARY
-          echo "| Nomad Format & Validate | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint & Quality (MegaLinter) | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scanning | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Infrastructure Security | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Note: MegaLinter consolidates ansible-lint, yamllint, ruff, markdownlint, and secretlint into a single, efficient workflow._" >> $GITHUB_STEP_SUMMARY

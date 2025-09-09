@@ -11,31 +11,31 @@
 # 2. Download all required artifacts
 - name: Download CNI plugins
   ansible.builtin.get_url:
-    url: "https://github.com/containernetworking/plugins/releases/download/v{{ cni_version }}/cni-plugins-linux-{{ cni_arch_detected | default(cni_arch) }}-v{{ cni_version }}.tgz"
-    dest: "/tmp/cni-plugins.tgz"
-    mode: "0644"
+    url: 'https://github.com/containernetworking/plugins/releases/download/v{{ cni_version }}/cni-plugins-linux-{{ cni_arch_detected | default(cni_arch) }}-v{{ cni_version }}.tgz'
+    dest: '/tmp/cni-plugins.tgz'
+    mode: '0644'
   become: true
 
 - name: Download Consul CNI plugin v1.6.3
   ansible.builtin.get_url:
-    url: "https://releases.hashicorp.com/consul-cni/1.6.3/consul-cni_1.6.3_linux_{{ arch_cni }}.zip"
-    dest: "/tmp/consul-cni.zip"
-    mode: "0644"
+    url: 'https://releases.hashicorp.com/consul-cni/1.6.3/consul-cni_1.6.3_linux_{{ arch_cni }}.zip'
+    dest: '/tmp/consul-cni.zip'
+    mode: '0644'
   become: true
 
 # 3. Extract/unarchive plugins
 - name: Extract CNI plugins to correct location
   ansible.builtin.unarchive:
-    src: "/tmp/cni-plugins.tgz"
-    dest: "/opt/cni/bin"
+    src: '/tmp/cni-plugins.tgz'
+    dest: '/opt/cni/bin'
     remote_src: yes
-    creates: "/opt/cni/bin/bridge"
+    creates: '/opt/cni/bin/bridge'
   become: true
 
 - name: Unzip Consul CNI plugin to /opt/cni/bin (excluding LICENSE.txt)
   ansible.builtin.unarchive:
-    src: "/tmp/consul-cni.zip"
-    dest: "/opt/cni/bin"
+    src: '/tmp/consul-cni.zip'
+    dest: '/opt/cni/bin'
     remote_src: yes
     exclude:
       - LICENSE.txt
@@ -63,29 +63,29 @@
 
 - name: Ensure bridge sysctl parameters are set for iptables processing
   ansible.builtin.sysctl:
-    name: "{{ item.name }}"
-    value: "1"
+    name: '{{ item.name }}'
+    value: '1'
     state: present
     sysctl_set: yes
   loop:
-    - { name: 'net.bridge.bridge-nf-call-arptables', value: "1" }
-    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: "1" }
-    - { name: 'net.bridge.bridge-nf-call-iptables', value: "1" }
+    - { name: 'net.bridge.bridge-nf-call-arptables', value: '1' }
+    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+    - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
   become: true
 
 # 4. Configure system networking
 - name: Enable IP forwarding for bridge networking
   ansible.builtin.sysctl:
     name: net.bridge.bridge-nf-call-arptables
-    value: "1"
+    value: '1'
     state: present
     sysctl_set: yes
   become: true
 
 - name: Configure bridge netfilter settings
   ansible.builtin.sysctl:
-    name: "{{ item }}"
-    value: "1"
+    name: '{{ item }}'
+    value: '1'
     state: present
     sysctl_set: yes
   loop:

@@ -12,11 +12,11 @@
   hosts: localhost
   gather_facts: no
   vars:
-    component_name: "Proxmox"
+    component_name: 'Proxmox'
     # TODO: Add component-specific variables
 
   tasks:
-    - name: "PLACEHOLDER: Display implementation status"
+    - name: 'PLACEHOLDER: Display implementation status'
       debug:
         msg: |
           ⚠️  {{ component_name }} SMOKE TEST NOT YET IMPLEMENTED
@@ -48,11 +48,11 @@
           5. Test in development environment
           6. Document in component README
 
-    - name: "PLACEHOLDER: Minimal connectivity check"
+    - name: 'PLACEHOLDER: Minimal connectivity check'
       debug:
-        msg: "TODO: Add actual {{ component_name }} connectivity tests here"
+        msg: 'TODO: Add actual {{ component_name }} connectivity tests here'
 
-    - name: "PLACEHOLDER: Summary"
+    - name: 'PLACEHOLDER: Summary'
       debug:
         msg: |
           🚧 {{ component_name }} smoke tests pending implementation

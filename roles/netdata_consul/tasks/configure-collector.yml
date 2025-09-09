@@ -1,33 +1,33 @@
 ---
 - name: Ensure go.d plugin configuration directory exists
   ansible.builtin.file:
-    path: "{{ netdata_config_dir }}/go.d"
+    path: '{{ netdata_config_dir }}/go.d'
     state: directory
-    owner: "{{ netdata_user }}"
-    group: "{{ netdata_group }}"
+    owner: '{{ netdata_user }}'
+    group: '{{ netdata_group }}'
     mode: '0755'
 
 - name: Configure Consul collector for go.d plugin
   ansible.builtin.template:
     src: consul.conf.j2
-    dest: "{{ netdata_config_dir }}/go.d/consul.conf"
-    owner: "{{ netdata_user }}"
-    group: "{{ netdata_group }}"
+    dest: '{{ netdata_config_dir }}/go.d/consul.conf'
+    owner: '{{ netdata_user }}'
+    group: '{{ netdata_group }}'
     mode: '0640'
     backup: true
   notify: restart netdata
 
 - name: Enable go.d plugin in netdata.conf
   ansible.builtin.lineinfile:
-    path: "{{ netdata_config_dir }}/netdata.conf"
+    path: '{{ netdata_config_dir }}/netdata.conf'
     regexp: '^\s*# go.d = '
-    line: "    go.d = yes"
+    line: '    go.d = yes'
     insertafter: '^\[plugins\]'
   notify: restart netdata
 
 - name: Verify Consul collector configuration
   ansible.builtin.command:
-    cmd: "netdata -W set go.d consul"
+    cmd: 'netdata -W set go.d consul'
   register: consul_collector_check
   changed_when: false
   failed_when: false

@@ -1,27 +1,27 @@
 ---
 - name: Install dependencies
   ansible.builtin.package:
-    name: "{{ nomad_package_dependencies }}"
+    name: '{{ nomad_package_dependencies }}'
     state: present
   when: nomad_install_package
 
 - name: Create Nomad directories
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: directory
-    mode: "0755"
+    mode: '0755'
   loop:
-    - "{{ nomad_config_dir }}"
-    - "{{ nomad_data_dir | dirname }}"
-    - "{{ nomad_data_dir }}"
-    - "/opt/cni/bin"
+    - '{{ nomad_config_dir }}'
+    - '{{ nomad_data_dir | dirname }}'
+    - '{{ nomad_data_dir }}'
+    - '/opt/cni/bin'
   become: true
 
 - name: Add HashiCorp official GPG key
   ansible.builtin.get_url:
     url: https://apt.releases.hashicorp.com/gpg
     dest: /tmp/hashicorp-gpg.key
-    mode: "0644"
+    mode: '0644'
   when: ansible_os_family == "Debian" and nomad_install_package
 
 - name: Import HashiCorp GPG key
@@ -33,7 +33,7 @@
 
 - name: Add HashiCorp repository
   ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+    repo: 'deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main'
     state: present
     filename: hashicorp
   when: ansible_os_family == "Debian" and nomad_install_package
@@ -47,13 +47,13 @@
 
 - name: Set Nomad directory ownership
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: directory
-    owner: "{{ nomad_user }}"
-    group: "{{ nomad_group }}"
+    owner: '{{ nomad_user }}'
+    group: '{{ nomad_group }}'
     recurse: true
   loop:
-    - "{{ nomad_config_dir }}"
-    - "{{ nomad_data_dir | dirname }}"
+    - '{{ nomad_config_dir }}'
+    - '{{ nomad_data_dir | dirname }}'
   when: nomad_install_package
   become: true

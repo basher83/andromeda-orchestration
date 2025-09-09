@@ -22,14 +22,14 @@
 
 - name: Create Nomad server ACL policy
   ansible.builtin.uri:
-    url: "http://{{ nomad_consul_address }}/v1/acl/policy"
+    url: 'http://{{ nomad_consul_address }}/v1/acl/policy'
     method: PUT
     headers:
-      X-Consul-Token: "{{ nomad_consul_management_token }}"
+      X-Consul-Token: '{{ nomad_consul_management_token }}'
     body_format: json
     body:
-      Name: "nomad-server"
-      Description: "Policy for Nomad servers with KV access"
+      Name: 'nomad-server'
+      Description: 'Policy for Nomad servers with KV access'
       Rules: "{{ lookup('file', 'consul-policies/nomad-server.hcl') }}"
   register: nomad_server_policy_result
   failed_when: false
@@ -41,14 +41,14 @@
 
 - name: Create Nomad client ACL policy
   ansible.builtin.uri:
-    url: "http://{{ nomad_consul_address }}/v1/acl/policy"
+    url: 'http://{{ nomad_consul_address }}/v1/acl/policy'
     method: PUT
     headers:
-      X-Consul-Token: "{{ nomad_consul_management_token }}"
+      X-Consul-Token: '{{ nomad_consul_management_token }}'
     body_format: json
     body:
-      Name: "nomad-client"
-      Description: "Policy for Nomad clients with KV access"
+      Name: 'nomad-client'
+      Description: 'Policy for Nomad clients with KV access'
       Rules: "{{ lookup('file', 'consul-policies/nomad-client.hcl') }}"
   register: nomad_client_policy_result
   failed_when: false
@@ -58,17 +58,17 @@
 
 - name: Create token for Nomad servers
   ansible.builtin.uri:
-    url: "http://{{ nomad_consul_address }}/v1/acl/token"
+    url: 'http://{{ nomad_consul_address }}/v1/acl/token'
     method: PUT
     headers:
-      X-Consul-Token: "{{ nomad_consul_management_token }}"
+      X-Consul-Token: '{{ nomad_consul_management_token }}'
     body_format: json
     body:
-      Description: "Token for Nomad server integration with KV access"
+      Description: 'Token for Nomad server integration with KV access'
       Policies:
-        - Name: "nomad-server"
+        - Name: 'nomad-server'
       ServiceIdentities:
-        - ServiceName: "{{ nomad_consul_server_service_name }}"
+        - ServiceName: '{{ nomad_consul_server_service_name }}'
   register: nomad_server_token_result
   when:
     - nomad_consul_manage_acls | bool
@@ -78,17 +78,17 @@
 
 - name: Create token for Nomad clients
   ansible.builtin.uri:
-    url: "http://{{ nomad_consul_address }}/v1/acl/token"
+    url: 'http://{{ nomad_consul_address }}/v1/acl/token'
     method: PUT
     headers:
-      X-Consul-Token: "{{ nomad_consul_management_token }}"
+      X-Consul-Token: '{{ nomad_consul_management_token }}'
     body_format: json
     body:
-      Description: "Token for Nomad client integration with KV access"
+      Description: 'Token for Nomad client integration with KV access'
       Policies:
-        - Name: "nomad-client"
+        - Name: 'nomad-client'
       ServiceIdentities:
-        - ServiceName: "{{ nomad_consul_client_service_name }}"
+        - ServiceName: '{{ nomad_consul_client_service_name }}'
   register: nomad_client_token_result
   when:
     - nomad_consul_manage_acls | bool
@@ -97,7 +97,7 @@
 
 - name: Set server token fact
   ansible.builtin.set_fact:
-    consul_acl_nomad_server_token: "{{ nomad_server_token_result.json.SecretID }}"
+    consul_acl_nomad_server_token: '{{ nomad_server_token_result.json.SecretID }}'
   when:
     - nomad_consul_manage_acls | bool
     - nomad_server_enabled | bool
@@ -106,7 +106,7 @@
 
 - name: Set client token fact
   ansible.builtin.set_fact:
-    consul_acl_nomad_client_token: "{{ nomad_client_token_result.json.SecretID }}"
+    consul_acl_nomad_client_token: '{{ nomad_client_token_result.json.SecretID }}'
   when:
     - nomad_consul_manage_acls | bool
     - nomad_client_enabled | bool
@@ -116,9 +116,9 @@
 - name: Display token information for servers
   ansible.builtin.debug:
     msg:
-      - "=== CONSUL ACL TOKEN CREATED ==="
-      - "Nomad Server Token: {{ consul_acl_nomad_server_token }}"
-      - "Store this token securely!"
+      - '=== CONSUL ACL TOKEN CREATED ==='
+      - 'Nomad Server Token: {{ consul_acl_nomad_server_token }}'
+      - 'Store this token securely!'
   when:
     - nomad_consul_manage_acls | bool
     - nomad_server_enabled | bool
@@ -127,9 +127,9 @@
 - name: Display token information for clients
   ansible.builtin.debug:
     msg:
-      - "=== CONSUL ACL TOKEN CREATED ==="
-      - "Nomad Client Token: {{ consul_acl_nomad_client_token }}"
-      - "Store this token securely!"
+      - '=== CONSUL ACL TOKEN CREATED ==='
+      - 'Nomad Client Token: {{ consul_acl_nomad_client_token }}'
+      - 'Store this token securely!'
   when:
     - nomad_consul_manage_acls | bool
     - nomad_client_enabled | bool

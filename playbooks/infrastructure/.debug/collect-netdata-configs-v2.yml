@@ -106,13 +106,13 @@
     - name: Store configuration data
       set_fact:
         node_config:
-          hostname: "{{ inventory_hostname }}"
-          role: "{{ node_role }}"
-          ip: "{{ node_ip }}"
+          hostname: '{{ inventory_hostname }}'
+          role: '{{ node_role }}'
+          ip: '{{ node_ip }}'
           version: "{{ netdata_version.stdout | default('Not installed') }}"
           service_state: "{{ netdata_service.status.ActiveState | default('Unknown') }}"
           service_enabled: "{{ netdata_service.status.UnitFileState | default('Unknown') }}"
-          listening_ports: "{{ listening_ports.stdout }}"
+          listening_ports: '{{ listening_ports.stdout }}'
           netdata_conf: "{{ netdata_conf.content | default('') | b64decode | default('Not found') }}"
           stream_conf: "{{ stream_conf.content | default('') | b64decode | default('Not found') }}"
           consul_conf: "{{ consul_conf.content | default('') | b64decode | default('Not found') }}"
@@ -128,12 +128,12 @@
 
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
-    report_dir: "reports/netdata/configs/{{ timestamp }}"
+    report_dir: 'reports/netdata/configs/{{ timestamp }}'
 
   tasks:
     - name: Create report directory
       file:
-        path: "{{ report_dir }}"
+        path: '{{ report_dir }}'
         state: directory
         mode: '0755'
 
@@ -187,7 +187,7 @@
           {{ hostvars[item].node_config.connectivity_test }}
           ```
           {% endif %}
-        dest: "{{ report_dir }}/{{ item }}_config.md"
+        dest: '{{ report_dir }}/{{ item }}_config.md'
         mode: '0644'
       loop: "{{ groups['all'] | difference(['localhost']) }}"
       when: hostvars[item].node_config is defined
@@ -220,12 +220,12 @@
           - [{{ host }}_config.md]({{ host }}_config.md)
           {% endif %}
           {% endfor %}
-        dest: "{{ report_dir }}/00_summary.md"
+        dest: '{{ report_dir }}/00_summary.md'
         mode: '0644'
 
     - name: Display completion message
       debug:
         msg:
-          - "Configuration collection complete!"
-          - "Reports saved to: {{ report_dir }}"
-          - "Summary: {{ report_dir }}/00_summary.md"
+          - 'Configuration collection complete!'
+          - 'Reports saved to: {{ report_dir }}'
+          - 'Summary: {{ report_dir }}/00_summary.md'

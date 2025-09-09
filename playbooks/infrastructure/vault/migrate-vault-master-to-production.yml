@@ -9,10 +9,10 @@
   hosts: localhost
   gather_facts: no
   vars:
-    migration_timestamp: "{{ ansible_date_time.epoch }}"
-    vault_master_host: "vault-master-lloyd"
-    vault_master_ip: "192.168.10.30"
-    production_vault_addr: "https://{{ vault_master_ip }}:8200"
+    migration_timestamp: '{{ ansible_date_time.epoch }}'
+    vault_master_host: 'vault-master-lloyd'
+    vault_master_ip: '192.168.10.30'
+    production_vault_addr: 'https://{{ vault_master_ip }}:8200'
 
     # Production cluster nodes that depend on transit unseal
     production_nodes:
@@ -57,7 +57,7 @@
 
     - name: Abort if not confirmed
       fail:
-        msg: "Migration aborted by user"
+        msg: 'Migration aborted by user'
       when: confirmation.user_input != 'yes'
 
     - name: Phase 1 - Export Transit Keys from Dev Instance
@@ -82,12 +82,12 @@
             name: vault
             state: started
             enabled: yes
-          delegate_to: "{{ vault_master_host }}"
+          delegate_to: '{{ vault_master_host }}'
           become: yes
 
         - name: Wait for Vault to be ready
           uri:
-            url: "{{ production_vault_addr }}/v1/sys/health"
+            url: '{{ production_vault_addr }}/v1/sys/health'
             method: GET
             validate_certs: no
             status_code: [200, 429, 501, 503]
@@ -124,7 +124,7 @@
               }
             dest: /tmp/vault-autounseal-{{ item }}.hcl
             mode: '0600'
-          loop: "{{ production_nodes }}"
+          loop: '{{ production_nodes }}'
           delegate_to: localhost
 
         - name: Display node update instructions
@@ -143,10 +143,10 @@
       block:
         - name: Test transit encryption
           uri:
-            url: "{{ production_vault_addr }}/v1/transit/encrypt/autounseal"
+            url: '{{ production_vault_addr }}/v1/transit/encrypt/autounseal'
             method: POST
             headers:
-              X-Vault-Token: "{{ vault_autounseal_token }}"
+              X-Vault-Token: '{{ vault_autounseal_token }}'
             body_format: json
             body:
               plaintext: "{{ 'migration-test' | b64encode }}"
@@ -160,8 +160,8 @@
             that:
               - encrypt_test.json.data.ciphertext is defined
               - encrypt_test.json.data.ciphertext | length > 0
-            fail_msg: "Transit encryption test failed"
-            success_msg: "Transit encryption verified successfully"
+            fail_msg: 'Transit encryption test failed'
+            success_msg: 'Transit encryption verified successfully'
 
     - name: Phase 8 - Cutover and Cleanup
       block:
@@ -170,7 +170,7 @@
             name: vault-dev
             state: stopped
             enabled: no
-          delegate_to: "{{ vault_master_host }}"
+          delegate_to: '{{ vault_master_host }}'
           become: yes
           ignore_errors: yes
 
@@ -209,8 +209,8 @@
               - Status: systemctl status vault
               - Logs: journalctl -u vault -f
               - Seal status: vault status
-            dest: "/opt/vault/migration-report-{{ migration_timestamp }}.txt"
-          delegate_to: "{{ vault_master_host }}"
+            dest: '/opt/vault/migration-report-{{ migration_timestamp }}.txt'
+          delegate_to: '{{ vault_master_host }}'
           become: yes
 
     - name: Migration Complete

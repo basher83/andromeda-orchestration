@@ -6,9 +6,9 @@
   gather_facts: false
   become: false
   vars:
-    ansible_python_interpreter: "{{ ansible_playbook_python }}"
-    netbox_url: "https://192.168.30.213"
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+    netbox_url: 'https://192.168.30.213'
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
     netbox_validate_certs: false
 
@@ -20,84 +20,84 @@
     # DNS records to create
     dns_records:
       # Proxmox hosts
-      - zone: "{{ homelab_domain }}"
-        name: "lloyd"
-        type: "A"
-        value: "192.168.11.11"
-        description: "Proxmox host 1"
-      - zone: "{{ homelab_domain }}"
-        name: "holly"
-        type: "A"
-        value: "192.168.11.12"
-        description: "Proxmox host 2"
-      - zone: "{{ homelab_domain }}"
-        name: "mable"
-        type: "A"
-        value: "192.168.11.13"
-        description: "Proxmox host 3"
+      - zone: '{{ homelab_domain }}'
+        name: 'lloyd'
+        type: 'A'
+        value: '192.168.11.11'
+        description: 'Proxmox host 1'
+      - zone: '{{ homelab_domain }}'
+        name: 'holly'
+        type: 'A'
+        value: '192.168.11.12'
+        description: 'Proxmox host 2'
+      - zone: '{{ homelab_domain }}'
+        name: 'mable'
+        type: 'A'
+        value: '192.168.11.13'
+        description: 'Proxmox host 3'
 
       # Nomad servers
-      - zone: "{{ homelab_domain }}"
-        name: "nomad-server-1"
-        type: "A"
-        value: "192.168.10.11"
-        description: "Nomad server 1 on lloyd"
-      - zone: "{{ homelab_domain }}"
-        name: "nomad-server-2"
-        type: "A"
-        value: "192.168.10.12"
-        description: "Nomad server 2 on holly"
-      - zone: "{{ homelab_domain }}"
-        name: "nomad-server-3"
-        type: "A"
-        value: "192.168.10.13"
-        description: "Nomad server 3 on mable"
+      - zone: '{{ homelab_domain }}'
+        name: 'nomad-server-1'
+        type: 'A'
+        value: '192.168.10.11'
+        description: 'Nomad server 1 on lloyd'
+      - zone: '{{ homelab_domain }}'
+        name: 'nomad-server-2'
+        type: 'A'
+        value: '192.168.10.12'
+        description: 'Nomad server 2 on holly'
+      - zone: '{{ homelab_domain }}'
+        name: 'nomad-server-3'
+        type: 'A'
+        value: '192.168.10.13'
+        description: 'Nomad server 3 on mable'
 
       # Nomad clients
-      - zone: "{{ homelab_domain }}"
-        name: "nomad-client-1"
-        type: "A"
-        value: "192.168.11.20"
-        description: "Nomad client 1 on lloyd"
-      - zone: "{{ homelab_domain }}"
-        name: "nomad-client-2"
-        type: "A"
-        value: "192.168.11.21"
-        description: "Nomad client 2 on holly"
-      - zone: "{{ homelab_domain }}"
-        name: "nomad-client-3"
-        type: "A"
-        value: "192.168.11.22"
-        description: "Nomad client 3 on mable"
+      - zone: '{{ homelab_domain }}'
+        name: 'nomad-client-1'
+        type: 'A'
+        value: '192.168.11.20'
+        description: 'Nomad client 1 on lloyd'
+      - zone: '{{ homelab_domain }}'
+        name: 'nomad-client-2'
+        type: 'A'
+        value: '192.168.11.21'
+        description: 'Nomad client 2 on holly'
+      - zone: '{{ homelab_domain }}'
+        name: 'nomad-client-3'
+        type: 'A'
+        value: '192.168.11.22'
+        description: 'Nomad client 3 on mable'
 
       # Services
-      - zone: "{{ homelab_domain }}"
-        name: "netbox"
-        type: "A"
-        value: "192.168.30.213"
-        description: "NetBox IPAM"
-      - zone: "{{ homelab_domain }}"
-        name: "powerdns"
-        type: "A"
-        value: "192.168.11.20"
-        description: "PowerDNS authoritative server"
-      - zone: "{{ homelab_domain }}"
-        name: "vault"
-        type: "A"
-        value: "192.168.10.11"
-        description: "HashiCorp Vault"
+      - zone: '{{ homelab_domain }}'
+        name: 'netbox'
+        type: 'A'
+        value: '192.168.30.213'
+        description: 'NetBox IPAM'
+      - zone: '{{ homelab_domain }}'
+        name: 'powerdns'
+        type: 'A'
+        value: '192.168.11.20'
+        description: 'PowerDNS authoritative server'
+      - zone: '{{ homelab_domain }}'
+        name: 'vault'
+        type: 'A'
+        value: '192.168.10.11'
+        description: 'HashiCorp Vault'
 
       # CNAME aliases
-      - zone: "{{ homelab_domain }}"
-        name: "dns"
-        type: "CNAME"
-        value: "powerdns.{{ homelab_domain }}"
-        description: "DNS service alias"
-      - zone: "{{ homelab_domain }}"
-        name: "ipam"
-        type: "CNAME"
-        value: "netbox.{{ homelab_domain }}"
-        description: "IPAM service alias"
+      - zone: '{{ homelab_domain }}'
+        name: 'dns'
+        type: 'CNAME'
+        value: 'powerdns.{{ homelab_domain }}'
+        description: 'DNS service alias'
+      - zone: '{{ homelab_domain }}'
+        name: 'ipam'
+        type: 'CNAME'
+        value: 'netbox.{{ homelab_domain }}'
+        description: 'IPAM service alias'
 
   tasks:
     - name: Retrieve NetBox API token from Infisical
@@ -114,59 +114,59 @@
 
     - name: Get zone IDs from NetBox
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/zones/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+          Authorization: 'Token {{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
       register: zones_result
 
     - name: Create zone ID mapping
       set_fact:
-        zone_ids: "{{ zone_ids | default({}) | combine({item.name: item.id}) }}"
-      loop: "{{ zones_result.json.results }}"
+        zone_ids: '{{ zone_ids | default({}) | combine({item.name: item.id}) }}'
+      loop: '{{ zones_result.json.results }}'
       when: zones_result.json.results is defined
 
     - name: Create DNS records in NetBox
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/records/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/records/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          zone: "{{ zone_ids[item.zone] }}"
-          name: "{{ item.name }}"
-          type: "{{ item.type }}"
-          value: "{{ item.value }}"
-          ttl: "{{ item.ttl | default(3600) }}"
+          zone: '{{ zone_ids[item.zone] }}'
+          name: '{{ item.name }}'
+          type: '{{ item.type }}'
+          value: '{{ item.value }}'
+          ttl: '{{ item.ttl | default(3600) }}'
           description: "{{ item.description | default('') }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
-      loop: "{{ dns_records }}"
+      loop: '{{ dns_records }}'
       when: item.zone in zone_ids
       register: record_results
       failed_when: record_results.status not in [200, 201] and 'already exists' not in (record_results.json | default({}) | string)
 
     - name: Create automatic PTR records for A records
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/records/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/records/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
           zone: "{{ zone_ids[item.value.split('.')[2] + '.' + item.value.split('.')[1] + '.' + item.value.split('.')[0] + '.in-addr.arpa'] }}"
           name: "{{ item.value.split('.')[3] }}"
-          type: "PTR"
-          value: "{{ item.name }}.{{ item.zone }}"
-          ttl: "{{ item.ttl | default(3600) }}"
-          description: "PTR for {{ item.name }}.{{ item.zone }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+          type: 'PTR'
+          value: '{{ item.name }}.{{ item.zone }}'
+          ttl: '{{ item.ttl | default(3600) }}'
+          description: 'PTR for {{ item.name }}.{{ item.zone }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
-      loop: "{{ dns_records }}"
+      loop: '{{ dns_records }}'
       when:
         - item.type == 'A'
         - item.value.split('.')[2] + '.' + item.value.split('.')[1] + '.' + item.value.split('.')[0] + '.in-addr.arpa' in zone_ids
@@ -176,10 +176,10 @@
     - name: Display record creation summary
       debug:
         msg:
-          - "DNS Record Population Complete!"
-          - "Records created: {{ dns_records | length }}"
-          - "PTR records auto-generated for A records"
-          - ""
-          - "Test DNS resolution with:"
-          - "  dig @192.168.11.20 lloyd.{{ homelab_domain }}"
-          - "  dig @192.168.11.20 -x 192.168.11.11"
+          - 'DNS Record Population Complete!'
+          - 'Records created: {{ dns_records | length }}'
+          - 'PTR records auto-generated for A records'
+          - ''
+          - 'Test DNS resolution with:'
+          - '  dig @192.168.11.20 lloyd.{{ homelab_domain }}'
+          - '  dig @192.168.11.20 -x 192.168.11.11'

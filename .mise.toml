@@ -661,5 +661,41 @@ echo ""
 echo "Current setting: $ANSIBLE_INVENTORY"
 '''
 
+# ============================================================================
+# ACT (GitHub Actions Local Testing)
+# ============================================================================
+
+[tasks.act]
+description = "List available act workflows and jobs"
+run = "act --list"
+
+[tasks.act-ci]
+description = "Test CI workflow locally"
+run = "act -W .github/workflows/ci.yml"
+
+[tasks.act-megalinter]
+description = "Test MegaLinter job specifically"
+run = "act -j lint-and-quality"
+
+[tasks.act-quick]
+description = "Quick MegaLinter test (fast mode)"
+run = "act -j lint-and-quality --env-file .env.act"
+
+[tasks.act-full]
+description = "Full MegaLinter test (comprehensive)"
+run = "act -j lint-and-quality --env-file .env.act -s GITHUB_TOKEN=${GITHUB_TOKEN:-}"
+
+[tasks.act-test]
+description = "Validate act setup and configuration"
+run = "./scripts/test-act-setup.sh"
+
+[tasks.act-push]
+description = "Test push event simulation"
+run = "act push --env-file .env.act"
+
+[tasks.act-pr]
+description = "Test pull request event simulation"
+run = "act pull_request --env-file .env.act"
+
 # Note: Git hooks are handled by pre-commit framework
 # Run 'mise run setup' to install pre-commit hooks

@@ -32,11 +32,11 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-    target_consul_version: "{{ consul_version | mandatory }}"
-    consul_force_upgrade: "{{ force_upgrade | default(false) }}"
-    consul_binary_path: "/usr/bin/consul"
-    consul_download_url: "https://releases.hashicorp.com/consul/{{ target_consul_version }}/consul_{{ target_consul_version }}_linux_amd64.zip"
-    consul_checksum_url: "https://releases.hashicorp.com/consul/{{ target_consul_version }}/consul_{{ target_consul_version }}_SHA256SUMS"
+    target_consul_version: '{{ consul_version | mandatory }}'
+    consul_force_upgrade: '{{ force_upgrade | default(false) }}'
+    consul_binary_path: '/usr/bin/consul'
+    consul_download_url: 'https://releases.hashicorp.com/consul/{{ target_consul_version }}/consul_{{ target_consul_version }}_linux_amd64.zip'
+    consul_checksum_url: 'https://releases.hashicorp.com/consul/{{ target_consul_version }}/consul_{{ target_consul_version }}_SHA256SUMS'
     minimum_servers: 3
 
   tasks:
@@ -44,7 +44,7 @@
       assert:
         that:
           - target_consul_version | regex_search('^[0-9]+\.[0-9]+\.[0-9]+$') is not none
-        fail_msg: "Invalid version format. Please use semantic versioning (e.g., 1.21.4)"
+        fail_msg: 'Invalid version format. Please use semantic versioning (e.g., 1.21.4)'
       run_once: true
 
     - name: Retrieve Consul ACL token from Infisical
@@ -62,7 +62,7 @@
       no_log: true
 
     - name: Get current Consul version
-      command: "{{ consul_binary_path }} version"
+      command: '{{ consul_binary_path }} version'
       register: current_version_raw
       changed_when: false
       check_mode: no
@@ -74,19 +74,19 @@
     - name: Display version information
       debug:
         msg:
-          - "Current version: {{ current_consul_version }}"
-          - "Target version: {{ target_consul_version }}"
-          - "Force upgrade: {{ consul_force_upgrade }}"
+          - 'Current version: {{ current_consul_version }}'
+          - 'Target version: {{ target_consul_version }}'
+          - 'Force upgrade: {{ consul_force_upgrade }}'
 
     - name: Determine if upgrade is needed
       set_fact:
-        needs_upgrade: "{{ consul_force_upgrade | bool or current_consul_version != target_consul_version }}"
+        needs_upgrade: '{{ consul_force_upgrade | bool or current_consul_version != target_consul_version }}'
 
     - name: Check cluster health before starting
       uri:
-        url: "http://{{ ansible_default_ipv4.address }}:8500/v1/operator/autopilot/health"
+        url: 'http://{{ ansible_default_ipv4.address }}:8500/v1/operator/autopilot/health'
         headers:
-          X-Consul-Token: "{{ consul_http_token }}"
+          X-Consul-Token: '{{ consul_http_token }}'
       register: initial_health
       check_mode: no
 
@@ -94,14 +94,14 @@
       assert:
         that:
           - initial_health.json.Healthy
-        fail_msg: "Cluster is not healthy. Please resolve issues before upgrading."
+        fail_msg: 'Cluster is not healthy. Please resolve issues before upgrading.'
       run_once: true
 
     - name: Get raft configuration
       uri:
-        url: "http://{{ ansible_default_ipv4.address }}:8500/v1/operator/raft/configuration"
+        url: 'http://{{ ansible_default_ipv4.address }}:8500/v1/operator/raft/configuration'
         headers:
-          X-Consul-Token: "{{ consul_http_token }}"
+          X-Consul-Token: '{{ consul_http_token }}'
       register: raft_config
       run_once: true
       check_mode: no
@@ -109,26 +109,26 @@
     - name: Identify current leader
       set_fact:
         consul_leader_address: "{{ item.Address.split(':')[0] }}"
-        consul_leader_node: "{{ item.Node }}"
+        consul_leader_node: '{{ item.Node }}'
       when: item.Leader | default(false)
-      loop: "{{ raft_config.json.Servers }}"
+      loop: '{{ raft_config.json.Servers }}'
       run_once: true
 
     - name: Verify minimum server count
       assert:
         that:
           - raft_config.json.Servers | length >= minimum_servers
-        fail_msg: "Insufficient servers for safe upgrade. Found {{ raft_config.json.Servers | length }}, need at least {{ minimum_servers }}"
+        fail_msg: 'Insufficient servers for safe upgrade. Found {{ raft_config.json.Servers | length }}, need at least {{ minimum_servers }}'
       run_once: true
 
     - name: Build upgrade information for all hosts
       set_fact:
         node_upgrade_info:
-          hostname: "{{ inventory_hostname }}"
-          address: "{{ ansible_default_ipv4.address }}"
-          current_version: "{{ current_consul_version }}"
-          needs_upgrade: "{{ needs_upgrade }}"
-          is_leader: "{{ ansible_default_ipv4.address == consul_leader_address }}"
+          hostname: '{{ inventory_hostname }}'
+          address: '{{ ansible_default_ipv4.address }}'
+          current_version: '{{ current_consul_version }}'
+          needs_upgrade: '{{ needs_upgrade }}'
+          is_leader: '{{ ansible_default_ipv4.address == consul_leader_address }}'
 
     - name: Collect all node information
       set_fact:
@@ -147,8 +147,8 @@
     - name: Display upgrade plan
       debug:
         msg:
-          - "Upgrade order:"
-          - "{% for node in upgrade_order %}{{ loop.index }}. {{ node.hostname }} ({{ node.address }}){% if node.is_leader %} [LEADER - LAST]{% endif %}{% if not node.needs_upgrade %} [SKIP - Already at target version]{% endif %}{% endfor %}"
+          - 'Upgrade order:'
+          - '{% for node in upgrade_order %}{{ loop.index }}. {{ node.hostname }} ({{ node.address }}){% if node.is_leader %} [LEADER - LAST]{% endif %}{% if not node.needs_upgrade %} [SKIP - Already at target version]{% endif %}{% endfor %}'
       run_once: true
 
     - name: Create upgrade state file
@@ -163,16 +163,16 @@
 
 - name: Consul Rolling Upgrade - Execute Upgrade
   hosts: consul_servers
-  serial: 1  # Process one server at a time
-  max_fail_percentage: 0  # Stop on any failure
+  serial: 1 # Process one server at a time
+  max_fail_percentage: 0 # Stop on any failure
   gather_facts: yes
   any_errors_fatal: true
 
   vars:
-    target_consul_version: "{{ consul_version | mandatory }}"
-    consul_binary_path: "/usr/bin/consul"
-    consul_download_url: "https://releases.hashicorp.com/consul/{{ target_consul_version }}/consul_{{ target_consul_version }}_linux_amd64.zip"
-    consul_checksum_url: "https://releases.hashicorp.com/consul/{{ target_consul_version }}/consul_{{ target_consul_version }}_SHA256SUMS"
+    target_consul_version: '{{ consul_version | mandatory }}'
+    consul_binary_path: '/usr/bin/consul'
+    consul_download_url: 'https://releases.hashicorp.com/consul/{{ target_consul_version }}/consul_{{ target_consul_version }}_linux_amd64.zip'
+    consul_checksum_url: 'https://releases.hashicorp.com/consul/{{ target_consul_version }}/consul_{{ target_consul_version }}_SHA256SUMS'
 
   pre_tasks:
     - name: Load upgrade state
@@ -183,7 +183,7 @@
 
     - name: Parse upgrade state
       set_fact:
-        upgrade_state: "{{ upgrade_state_raw.content | b64decode | from_json }}"
+        upgrade_state: '{{ upgrade_state_raw.content | b64decode | from_json }}'
 
     - name: Retrieve Consul token
       set_fact:
@@ -200,16 +200,16 @@
 
     - name: Find current node in upgrade order
       set_fact:
-        current_node_info: "{{ item }}"
+        current_node_info: '{{ item }}'
       when: item.hostname == inventory_hostname
-      loop: "{{ upgrade_state.upgrade_order }}"
+      loop: '{{ upgrade_state.upgrade_order }}'
 
     - name: Skip if already at target version
       meta: end_host
       when: not current_node_info.needs_upgrade
 
   tasks:
-    - name: "Upgrading {{ inventory_hostname }}"
+    - name: 'Upgrading {{ inventory_hostname }}'
       debug:
         msg: "Starting upgrade of {{ inventory_hostname }} ({{ 'LEADER' if current_node_info.is_leader else 'FOLLOWER' }})"
 
@@ -224,8 +224,8 @@
         # Download and verify new version
         - name: Download Consul checksum file
           get_url:
-            url: "{{ consul_checksum_url }}"
-            dest: "{{ consul_temp_dir.path }}/consul_SHA256SUMS"
+            url: '{{ consul_checksum_url }}'
+            dest: '{{ consul_temp_dir.path }}/consul_SHA256SUMS'
             timeout: 30
 
         - name: Read checksum for our package
@@ -235,22 +235,22 @@
 
         - name: Download Consul binary package
           get_url:
-            url: "{{ consul_download_url }}"
-            dest: "{{ consul_temp_dir.path }}/consul.zip"
+            url: '{{ consul_download_url }}'
+            dest: '{{ consul_temp_dir.path }}/consul.zip'
             checksum: "sha256:{{ consul_checksum.stdout.split(' ')[0] }}"
             timeout: 60
 
         - name: Extract Consul binary
           unarchive:
-            src: "{{ consul_temp_dir.path }}/consul.zip"
-            dest: "{{ consul_temp_dir.path }}"
+            src: '{{ consul_temp_dir.path }}/consul.zip'
+            dest: '{{ consul_temp_dir.path }}'
             remote_src: yes
 
         # Pre-upgrade health check
         - name: Check node health before upgrade
           command: consul members
           environment:
-            CONSUL_HTTP_TOKEN: "{{ consul_http_token }}"
+            CONSUL_HTTP_TOKEN: '{{ consul_http_token }}'
           register: members_before
           changed_when: false
 
@@ -258,15 +258,15 @@
           assert:
             that:
               - "'alive' in item"
-          loop: "{{ members_before.stdout_lines }}"
+          loop: '{{ members_before.stdout_lines }}'
           when: "'server' in item"
 
         # Graceful leave (following ansible-consul pattern)
         - name: Gracefully leave the cluster
           command: consul leave
           environment:
-            CONSUL_HTTP_TOKEN: "{{ consul_http_token }}"
-          ignore_errors: yes  # Continue even if leave fails
+            CONSUL_HTTP_TOKEN: '{{ consul_http_token }}'
+          ignore_errors: yes # Continue even if leave fails
 
         - name: Wait for graceful departure
           pause:
@@ -281,8 +281,8 @@
 
         - name: Create backup of current binary
           copy:
-            src: "{{ consul_binary_path }}"
-            dest: "{{ consul_binary_path }}.backup.{{ ansible_date_time.epoch }}"
+            src: '{{ consul_binary_path }}'
+            dest: '{{ consul_binary_path }}.backup.{{ ansible_date_time.epoch }}'
             remote_src: yes
             mode: preserve
           become: yes
@@ -290,8 +290,8 @@
         # Install new binary
         - name: Install new Consul binary
           copy:
-            src: "{{ consul_temp_dir.path }}/consul"
-            dest: "{{ consul_binary_path }}"
+            src: '{{ consul_temp_dir.path }}/consul'
+            dest: '{{ consul_binary_path }}'
             mode: '0755'
             owner: root
             group: root
@@ -317,14 +317,14 @@
         - name: Wait for Consul API to be ready
           wait_for:
             port: 8500
-            host: "{{ ansible_default_ipv4.address }}"
+            host: '{{ ansible_default_ipv4.address }}'
             delay: 2
             timeout: 60
 
         - name: Wait for node to rejoin cluster
           command: consul members
           environment:
-            CONSUL_HTTP_TOKEN: "{{ consul_http_token }}"
+            CONSUL_HTTP_TOKEN: '{{ consul_http_token }}'
           register: members_after
           until: inventory_hostname in members_after.stdout
           retries: 30
@@ -335,11 +335,11 @@
           assert:
             that:
               - "'alive' in item"
-          loop: "{{ members_after.stdout_lines }}"
+          loop: '{{ members_after.stdout_lines }}'
           when: inventory_hostname in item
 
         - name: Verify upgraded version
-          command: "{{ consul_binary_path }} version"
+          command: '{{ consul_binary_path }} version'
           register: new_version
           changed_when: false
 
@@ -347,33 +347,33 @@
           assert:
             that:
               - "'Consul v' + target_consul_version in new_version.stdout"
-            fail_msg: "Version mismatch after upgrade. Expected v{{ target_consul_version }}, got {{ new_version.stdout }}"
+            fail_msg: 'Version mismatch after upgrade. Expected v{{ target_consul_version }}, got {{ new_version.stdout }}'
 
         # Wait for cluster stabilization
         - name: Wait for cluster to stabilize
           pause:
             seconds: 10
-            prompt: "Waiting for cluster to stabilize before proceeding..."
+            prompt: 'Waiting for cluster to stabilize before proceeding...'
           when: not current_node_info.is_leader
 
         # Extra wait if this was the leader
         - name: Wait for leader election if needed
           pause:
             seconds: 20
-            prompt: "Waiting for leader election to complete..."
+            prompt: 'Waiting for leader election to complete...'
           when: current_node_info.is_leader
 
       always:
         - name: Cleanup temporary files
           file:
-            path: "{{ consul_temp_dir.path }}"
+            path: '{{ consul_temp_dir.path }}'
             state: absent
           when: consul_temp_dir is defined
 
       rescue:
         - name: Upgrade failed - attempting rollback
           debug:
-            msg: "Upgrade failed on {{ inventory_hostname }}. Attempting rollback..."
+            msg: 'Upgrade failed on {{ inventory_hostname }}. Attempting rollback...'
 
         - name: Stop Consul service for rollback
           systemd:
@@ -384,8 +384,8 @@
 
         - name: Restore backup binary
           copy:
-            src: "{{ consul_binary_path }}.backup.{{ ansible_date_time.epoch }}"
-            dest: "{{ consul_binary_path }}"
+            src: '{{ consul_binary_path }}.backup.{{ ansible_date_time.epoch }}'
+            dest: '{{ consul_binary_path }}'
             remote_src: yes
             mode: '0755'
           become: yes
@@ -399,21 +399,21 @@
 
         - name: Fail with clear message
           fail:
-            msg: "Upgrade failed on {{ inventory_hostname }} and was rolled back. Please investigate before retrying."
+            msg: 'Upgrade failed on {{ inventory_hostname }} and was rolled back. Please investigate before retrying.'
 
   handlers:
     - name: reload systemd daemon
       systemd:
         daemon_reload: yes
       become: yes
-      listen: "reload systemd daemon"
+      listen: 'reload systemd daemon'
 
     - name: restart consul
       systemd:
         name: consul
         state: restarted
       become: yes
-      listen: "restart consul"
+      listen: 'restart consul'
 
 - name: Consul Rolling Upgrade - Post-Upgrade Validation
   hosts: consul_servers
@@ -421,8 +421,8 @@
   run_once: true
 
   vars:
-    target_consul_version: "{{ consul_version | mandatory }}"
-    consul_binary_path: "/usr/bin/consul"
+    target_consul_version: '{{ consul_version | mandatory }}'
+    consul_binary_path: '/usr/bin/consul'
 
   tasks:
     - name: Retrieve Consul token
@@ -442,7 +442,7 @@
       uri:
         url: "http://{{ hostvars[groups['consul_servers'][0]]['ansible_default_ipv4']['address'] }}:8500/v1/operator/autopilot/health"
         headers:
-          X-Consul-Token: "{{ consul_http_token }}"
+          X-Consul-Token: '{{ consul_http_token }}'
       register: final_health
       delegate_to: "{{ groups['consul_servers'][0] }}"
 
@@ -450,7 +450,7 @@
       uri:
         url: "http://{{ hostvars[groups['consul_servers'][0]]['ansible_default_ipv4']['address'] }}:8500/v1/operator/raft/configuration"
         headers:
-          X-Consul-Token: "{{ consul_http_token }}"
+          X-Consul-Token: '{{ consul_http_token }}'
       register: final_raft
       delegate_to: "{{ groups['consul_servers'][0] }}"
 
@@ -458,38 +458,38 @@
       assert:
         that:
           - item.Voter
-        fail_msg: "Server {{ item.Node }} is not a voter"
-      loop: "{{ final_raft.json.Servers }}"
+        fail_msg: 'Server {{ item.Node }} is not a voter'
+      loop: '{{ final_raft.json.Servers }}'
 
     - name: Collect final versions from all nodes
-      command: "{{ consul_binary_path }} version"
+      command: '{{ consul_binary_path }} version'
       register: final_versions
-      delegate_to: "{{ item }}"
+      delegate_to: '{{ item }}'
       loop: "{{ groups['consul_servers'] }}"
       changed_when: false
 
     - name: Generate upgrade summary
       set_fact:
         upgrade_summary:
-          timestamp: "{{ ansible_date_time.iso8601 }}"
-          target_version: "{{ target_consul_version }}"
-          cluster_healthy: "{{ final_health.json.Healthy }}"
-          failure_tolerance: "{{ final_health.json.FailureTolerance }}"
+          timestamp: '{{ ansible_date_time.iso8601 }}'
+          target_version: '{{ target_consul_version }}'
+          cluster_healthy: '{{ final_health.json.Healthy }}'
+          failure_tolerance: '{{ final_health.json.FailureTolerance }}'
           leader: "{{ final_raft.json.Servers | selectattr('Leader', 'equalto', true) | map(attribute='Node') | first }}"
           servers: "{{ final_raft.json.Servers | map(attribute='Node') | list }}"
 
     - name: Display upgrade summary
       debug:
         msg:
-          - "========================================="
-          - "Consul Upgrade Completed Successfully!"
-          - "========================================="
-          - "Target Version: {{ target_consul_version }}"
-          - "Cluster Healthy: {{ final_health.json.Healthy }}"
-          - "Failure Tolerance: {{ final_health.json.FailureTolerance }}"
-          - "Current Leader: {{ upgrade_summary.leader }}"
+          - '========================================='
+          - 'Consul Upgrade Completed Successfully!'
+          - '========================================='
+          - 'Target Version: {{ target_consul_version }}'
+          - 'Cluster Healthy: {{ final_health.json.Healthy }}'
+          - 'Failure Tolerance: {{ final_health.json.FailureTolerance }}'
+          - 'Current Leader: {{ upgrade_summary.leader }}'
           - "All Servers: {{ upgrade_summary.servers | join(', ') }}"
-          - "========================================="
+          - '========================================='
 
     - name: Cleanup state file
       file:

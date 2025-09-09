@@ -6,9 +6,9 @@
   gather_facts: false
   become: false
   vars:
-    ansible_python_interpreter: "{{ ansible_playbook_python }}"
-    netbox_url: "https://192.168.30.213"
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+    netbox_url: 'https://192.168.30.213'
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
     netbox_validate_certs: false
 
@@ -27,10 +27,10 @@
 
     - name: Check installed plugins
       uri:
-        url: "{{ netbox_url }}/api/plugins/"
+        url: '{{ netbox_url }}/api/plugins/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: plugins_response
       failed_when: false
@@ -43,10 +43,10 @@
 
     - name: Check NetBox version and capabilities
       uri:
-        url: "{{ netbox_url }}/api/"
+        url: '{{ netbox_url }}/api/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: api_response
 
@@ -54,5 +54,5 @@
       debug:
         msg:
           - "NetBox Version: {{ api_response.headers['API-Version'] | default('Unknown') }}"
-          - "Available endpoints:"
-          - "{{ api_response.json.keys() | list }}"
+          - 'Available endpoints:'
+          - '{{ api_response.json.keys() | list }}'

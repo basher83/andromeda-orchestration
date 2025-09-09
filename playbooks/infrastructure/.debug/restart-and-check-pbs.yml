@@ -11,7 +11,7 @@
         name: pbs
         ansible_host: 192.168.30.200
         ansible_user: root
-        ansible_password: "{{ vault_pbs_password }}"
+        ansible_password: '{{ vault_pbs_password }}'
 
 - name: Restart PBS Netdata
   hosts: pbs
@@ -40,7 +40,7 @@
 
     - name: Display PBS status
       ansible.builtin.debug:
-        msg: "{{ pbs_status.stdout_lines }}"
+        msg: '{{ pbs_status.stdout_lines }}'
 
 - name: Check pve1 logs
   hosts: pve1
@@ -57,4 +57,4 @@
 
     - name: Display pve1 logs
       ansible.builtin.debug:
-        msg: "{{ pve1_logs.stdout_lines }}"
+        msg: '{{ pve1_logs.stdout_lines }}'

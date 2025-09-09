@@ -18,10 +18,10 @@
                  secret_name='CONSUL_MANAGEMENT_TOKEN')).value }}
 
     # PostgreSQL connection details
-    postgres_service_name: "postgres.service.consul"
-    postgres_port: "5432"  # Will resolve to actual dynamic port via Consul
-    postgres_database: "powerdns"
-    postgres_user: "pdns"
+    postgres_service_name: 'postgres.service.consul'
+    postgres_port: '5432' # Will resolve to actual dynamic port via Consul
+    postgres_database: 'powerdns'
+    postgres_user: 'pdns'
 
   tasks:
     - name: Check if PowerDNS Consul KV entries already exist
@@ -33,21 +33,21 @@
 
     - name: Display warning if configuration exists
       debug:
-        msg: "WARNING: PowerDNS Consul KV configuration already exists. It will NOT be overwritten."
+        msg: 'WARNING: PowerDNS Consul KV configuration already exists. It will NOT be overwritten.'
       when: existing_config.rc == 0
 
     - name: Create PowerDNS database configuration in Consul KV
-      command: "consul kv put -token={{ consul_mgmt_token }} {{ item.key }} {{ item.value }}"
+      command: 'consul kv put -token={{ consul_mgmt_token }} {{ item.key }} {{ item.value }}'
       loop:
-        - { key: "pdns/db/host", value: "{{ postgres_service_name }}" }
-        - { key: "pdns/db/port", value: "{{ postgres_port }}" }
-        - { key: "pdns/db/name", value: "{{ postgres_database }}" }
-        - { key: "pdns/db/user", value: "{{ postgres_user }}" }
+        - { key: 'pdns/db/host', value: '{{ postgres_service_name }}' }
+        - { key: 'pdns/db/port', value: '{{ postgres_port }}' }
+        - { key: 'pdns/db/name', value: '{{ postgres_database }}' }
+        - { key: 'pdns/db/user', value: '{{ postgres_user }}' }
       when: existing_config.rc != 0
       no_log: true
 
     - name: Verify Consul KV entries were created
-      command: "consul kv get -token={{ consul_mgmt_token }} {{ item }}"
+      command: 'consul kv get -token={{ consul_mgmt_token }} {{ item }}'
       loop:
         - pdns/db/host
         - pdns/db/port

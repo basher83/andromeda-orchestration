@@ -7,14 +7,14 @@
 
 - name: restart vault
   ansible.builtin.systemd:
-    name: "{{ vault_service_name }}"
+    name: '{{ vault_service_name }}'
     state: restarted
     daemon_reload: true
   when: vault_service_state == "started"
 
 - name: reload vault
   ansible.builtin.systemd:
-    name: "{{ vault_service_name }}"
+    name: '{{ vault_service_name }}'
     state: reloaded
   when: vault_service_state == "started"
 
@@ -25,7 +25,7 @@
       exit 0
     fi
   environment:
-    VAULT_ADDR: "{{ vault_api_addr }}"
+    VAULT_ADDR: '{{ vault_api_addr }}'
   when:
     - vault_mode == "production"
     - not vault_auto_unseal_enabled | bool

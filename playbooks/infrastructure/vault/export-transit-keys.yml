@@ -9,8 +9,8 @@
   hosts: vault-master-lloyd
   gather_facts: yes
   vars:
-    vault_addr: "http://{{ ansible_default_ipv4.address }}:8200"
-    backup_dir: "/opt/vault/backup/transit-export-{{ ansible_date_time.epoch }}"
+    vault_addr: 'http://{{ ansible_default_ipv4.address }}:8200'
+    backup_dir: '/opt/vault/backup/transit-export-{{ ansible_date_time.epoch }}'
 
     # Retrieve Vault token from Infisical
     vault_token: >-
@@ -25,7 +25,7 @@
   tasks:
     - name: Create backup directory
       file:
-        path: "{{ backup_dir }}"
+        path: '{{ backup_dir }}'
         state: directory
         mode: '0700'
         owner: vault
@@ -33,10 +33,10 @@
 
     - name: Check if transit engine is enabled
       uri:
-        url: "{{ vault_addr }}/v1/sys/mounts"
+        url: '{{ vault_addr }}/v1/sys/mounts'
         method: GET
         headers:
-          X-Vault-Token: "{{ vault_token }}"
+          X-Vault-Token: '{{ vault_token }}'
         status_code: [200]
       register: mounts_response
 
@@ -44,21 +44,21 @@
       assert:
         that:
           - "'transit/' in mounts_response.json"
-        fail_msg: "Transit engine not found on development instance"
-        success_msg: "Transit engine found, proceeding with export"
+        fail_msg: 'Transit engine not found on development instance'
+        success_msg: 'Transit engine found, proceeding with export'
 
     - name: List all transit keys
       uri:
-        url: "{{ vault_addr }}/v1/transit/keys?list=true"
+        url: '{{ vault_addr }}/v1/transit/keys?list=true'
         method: GET
         headers:
-          X-Vault-Token: "{{ vault_token }}"
+          X-Vault-Token: '{{ vault_token }}'
         status_code: [200, 404]
       register: transit_keys_list
 
     - name: Set transit keys fact
       set_fact:
-        transit_keys: "{{ transit_keys_list.json.data.keys | default([]) }}"
+        transit_keys: '{{ transit_keys_list.json.data.keys | default([]) }}'
       when: transit_keys_list.status == 200
 
     - name: Display found transit keys
@@ -68,53 +68,53 @@
 
     - name: Export each transit key
       uri:
-        url: "{{ vault_addr }}/v1/transit/export/encryption-key/{{ item }}"
+        url: '{{ vault_addr }}/v1/transit/export/encryption-key/{{ item }}'
         method: GET
         headers:
-          X-Vault-Token: "{{ vault_token }}"
+          X-Vault-Token: '{{ vault_token }}'
         status_code: [200, 400, 404]
       register: key_export
-      loop: "{{ transit_keys | default([]) }}"
+      loop: '{{ transit_keys | default([]) }}'
       when: transit_keys is defined
 
     - name: Save exported keys to files
       copy:
-        content: "{{ item.json | to_nice_json }}"
-        dest: "{{ backup_dir }}/transit-key-{{ item.item }}.json"
+        content: '{{ item.json | to_nice_json }}'
+        dest: '{{ backup_dir }}/transit-key-{{ item.item }}.json'
         mode: '0600'
         owner: vault
         group: vault
-      loop: "{{ key_export.results }}"
+      loop: '{{ key_export.results }}'
       when:
         - key_export is defined
         - item.status == 200
       loop_control:
-        label: "{{ item.item }}"
+        label: '{{ item.item }}'
 
     - name: Export transit policies
       uri:
-        url: "{{ vault_addr }}/v1/transit/keys/{{ item }}"
+        url: '{{ vault_addr }}/v1/transit/keys/{{ item }}'
         method: GET
         headers:
-          X-Vault-Token: "{{ vault_token }}"
+          X-Vault-Token: '{{ vault_token }}'
         status_code: [200]
       register: key_policies
-      loop: "{{ transit_keys | default([]) }}"
+      loop: '{{ transit_keys | default([]) }}'
       when: transit_keys is defined
 
     - name: Save key policies
       copy:
-        content: "{{ item.json | to_nice_json }}"
-        dest: "{{ backup_dir }}/transit-policy-{{ item.item }}.json"
+        content: '{{ item.json | to_nice_json }}'
+        dest: '{{ backup_dir }}/transit-policy-{{ item.item }}.json'
         mode: '0600'
         owner: vault
         group: vault
-      loop: "{{ key_policies.results }}"
+      loop: '{{ key_policies.results }}'
       when:
         - key_policies is defined
         - item.status == 200
       loop_control:
-        label: "{{ item.item }}"
+        label: '{{ item.item }}'
 
     - name: Create backup manifest
       copy:
@@ -140,15 +140,15 @@
 
           IMPORTANT: These files contain sensitive key material.
           Store securely and delete after successful migration.
-        dest: "{{ backup_dir }}/MANIFEST.txt"
+        dest: '{{ backup_dir }}/MANIFEST.txt'
         mode: '0600'
         owner: vault
         group: vault
 
     - name: Create tarball of exported keys
       archive:
-        path: "{{ backup_dir }}"
-        dest: "/opt/vault/backup/transit-export-{{ ansible_date_time.epoch }}.tar.gz"
+        path: '{{ backup_dir }}'
+        dest: '/opt/vault/backup/transit-export-{{ ansible_date_time.epoch }}.tar.gz'
         mode: '0600'
         owner: vault
         group: vault

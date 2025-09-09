@@ -22,8 +22,8 @@
       ansible.builtin.assert:
         that:
           - consul_token != ""
-        fail_msg: "Failed to retrieve CONSUL_MASTER_TOKEN from Infisical"
-        success_msg: "Master token verified"
+        fail_msg: 'Failed to retrieve CONSUL_MASTER_TOKEN from Infisical'
+        success_msg: 'Master token verified'
 
     - name: Check all services in catalog
       ansible.builtin.shell: |
@@ -41,10 +41,10 @@
 
     - name: Check Vault service health via API
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8500/v1/health/service/vault"
+        url: 'http://127.0.0.1:8500/v1/health/service/vault'
         method: GET
         headers:
-          X-Consul-Token: "{{ consul_token }}"
+          X-Consul-Token: '{{ consul_token }}'
         status_code: 200
       register: vault_health
       become: true
@@ -69,19 +69,19 @@
     - name: Display comprehensive results
       ansible.builtin.debug:
         msg:
-          - "✅ ==================== VAULT CONSUL INTEGRATION COMPLETE ===================="
-          - ""
-          - "📋 All Services in Catalog:"
-          - "{{ all_services.stdout_lines }}"
-          - ""
-          - "🔐 Vault Service Nodes ({{ vault_nodes.stdout_lines | length }} total):"
-          - "{{ vault_nodes.stdout }}"
-          - ""
-          - "❤️ Health Check Status:"
-          - "{{ health_summary }}"
-          - ""
-          - "============================================================================="
-          - ""
-          - "🎉 SUCCESS: All 4 Vault nodes are registered in Consul!"
-          - "Note: Health checks may show as critical if Vault services are not running."
-          - "This is expected in a development/testing environment."
+          - '✅ ==================== VAULT CONSUL INTEGRATION COMPLETE ===================='
+          - ''
+          - '📋 All Services in Catalog:'
+          - '{{ all_services.stdout_lines }}'
+          - ''
+          - '🔐 Vault Service Nodes ({{ vault_nodes.stdout_lines | length }} total):'
+          - '{{ vault_nodes.stdout }}'
+          - ''
+          - '❤️ Health Check Status:'
+          - '{{ health_summary }}'
+          - ''
+          - '============================================================================='
+          - ''
+          - '🎉 SUCCESS: All 4 Vault nodes are registered in Consul!'
+          - 'Note: Health checks may show as critical if Vault services are not running.'
+          - 'This is expected in a development/testing environment.'

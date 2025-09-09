@@ -19,11 +19,11 @@
 
     - name: Display connections
       ansible.builtin.debug:
-        msg: "{{ connections.stdout_lines }}"
+        msg: '{{ connections.stdout_lines }}'
 
     - name: Check Netdata internal status
       ansible.builtin.uri:
-        url: "http://{{ ansible_host }}:19999/api/v1/allmetrics?format=json"
+        url: 'http://{{ ansible_host }}:19999/api/v1/allmetrics?format=json'
         method: GET
       register: metrics
       failed_when: false

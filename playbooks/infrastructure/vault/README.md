@@ -42,6 +42,7 @@ uv run ansible-playbook playbooks/infrastructure/vault/smoke-test.yml \
 The enhanced smoke test performs 12 categories of checks:
 
 **Core Infrastructure (Tests 1-6):**
+
 1. **Infisical Environment Variables**: Verifies mise has loaded credentials
 2. **Secret Retrieval**: Tests fetching Vault tokens from Infisical
 3. **Network Connectivity**: Checks HTTPS/HTTP API accessibility to all Vault nodes
@@ -60,9 +61,11 @@ The enhanced smoke test performs 12 categories of checks:
 12. **Disk Space**: Checks available disk space for Raft storage on production nodes
 
 **SSH Connectivity:**
+
 - Additional test for Ansible SSH access to all Vault nodes
 
 The playbook provides a comprehensive summary showing:
+
 - Pass/fail status for each test category
 - Node-by-node connectivity results
 - Raft cluster membership and leader status
@@ -381,6 +384,7 @@ All Vault-related secrets are stored in Infisical at path `/apollo-13/vault/` in
    - `INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET`
 
 3. **Python Dependencies**
+
    ```bash
    # Install with secrets support
    uv sync --extra secrets

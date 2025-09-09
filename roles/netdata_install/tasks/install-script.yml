@@ -9,7 +9,7 @@
   block:
     - name: Download Netdata installation script
       ansible.builtin.get_url:
-        url: "{{ netdata_install_script_url }}"
+        url: '{{ netdata_install_script_url }}'
         dest: /tmp/netdata-kickstart.sh
         mode: '0755'
         timeout: 30
@@ -19,9 +19,9 @@
         cmd: "/tmp/netdata-kickstart.sh {{ netdata_install_flags }} {{ '--nightly-channel' if netdata_version == 'nightly' else '' }} {{ '--stable-channel' if netdata_version == 'stable' else '' }}"
         creates: /usr/sbin/netdata
       environment:
-        NETDATA_CLAIM_TOKEN: ""
-        NETDATA_CLAIM_ROOMS: ""
-        NETDATA_CLAIM_URL: ""
+        NETDATA_CLAIM_TOKEN: ''
+        NETDATA_CLAIM_ROOMS: ''
+        NETDATA_CLAIM_URL: ''
 
     - name: Clean up installation script
       ansible.builtin.file:
@@ -37,5 +37,5 @@
 
 - name: Display Netdata version
   ansible.builtin.debug:
-    msg: "Netdata version: {{ netdata_version_output.stdout }}"
+    msg: 'Netdata version: {{ netdata_version_output.stdout }}'
   when: netdata_version_output.rc == 0

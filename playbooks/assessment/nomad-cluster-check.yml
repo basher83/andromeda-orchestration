@@ -18,13 +18,13 @@
         ip: 192.168.10.12
       - name: nomad-client-3
         ip: 192.168.10.22
-    report_dir: "{{ playbook_dir }}/../../reports/nomad"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    report_dir: '{{ playbook_dir }}/../../reports/nomad'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
 
   tasks:
     - name: Create report directory
       ansible.builtin.file:
-        path: "{{ report_dir }}"
+        path: '{{ report_dir }}'
         state: directory
         mode: '0755'
 
@@ -59,7 +59,7 @@
       args:
         executable: /bin/bash
       register: server_results
-      loop: "{{ nomad_servers }}"
+      loop: '{{ nomad_servers }}'
       failed_when: false
       changed_when: false
 
@@ -90,7 +90,7 @@
       args:
         executable: /bin/bash
       register: client_results
-      loop: "{{ nomad_clients }}"
+      loop: '{{ nomad_clients }}'
       failed_when: false
       changed_when: false
 
@@ -152,7 +152,7 @@
           3. Set up Nomad-Consul integration for service discovery
           4. Implement job templates for common workloads
           5. Configure Nomad autoscaler for dynamic scaling
-        dest: "{{ report_dir }}/nomad_assessment_{{ timestamp }}.md"
+        dest: '{{ report_dir }}/nomad_assessment_{{ timestamp }}.md'
         mode: '0644'
 
     - name: Save structured data
@@ -176,12 +176,12 @@
                 ip: "{{ result.item.ip }}"
                 reachable: {{ result.rc == 0 }}
           {% endfor %}
-        dest: "{{ report_dir }}/nomad_assessment_{{ timestamp }}.yml"
+        dest: '{{ report_dir }}/nomad_assessment_{{ timestamp }}.yml'
         mode: '0644'
 
     - name: Display summary
       ansible.builtin.debug:
         msg:
-          - "Nomad assessment complete!"
-          - "Report saved to: {{ report_dir }}/nomad_assessment_{{ timestamp }}.md"
-          - "Data saved to: {{ report_dir }}/nomad_assessment_{{ timestamp }}.yml"
+          - 'Nomad assessment complete!'
+          - 'Report saved to: {{ report_dir }}/nomad_assessment_{{ timestamp }}.md'
+          - 'Data saved to: {{ report_dir }}/nomad_assessment_{{ timestamp }}.yml'

@@ -12,7 +12,7 @@
   tasks:
     - name: Update reserved ports to only include SSH (22)
       ansible.builtin.replace:
-        path: "{{ nomad_config_file }}"
+        path: '{{ nomad_config_file }}'
         regexp: 'reserved_ports = "22,80,443"'
         replace: 'reserved_ports = "22"'
       register: config_updated
@@ -27,7 +27,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
       when: config_updated.changed
@@ -44,9 +44,9 @@
     - name: Display status
       ansible.builtin.debug:
         msg:
-          - "Ports 80 and 443 are now available for Traefik!"
-          - ""
-          - "Node status:"
-          - "{{ node_status.stdout_lines }}"
-          - ""
-          - "You can now deploy Traefik successfully."
+          - 'Ports 80 and 443 are now available for Traefik!'
+          - ''
+          - 'Node status:'
+          - '{{ node_status.stdout_lines }}'
+          - ''
+          - 'You can now deploy Traefik successfully.'

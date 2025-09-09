@@ -18,14 +18,14 @@
 
 - name: Create Consul agent token with default agent policy
   ansible.builtin.uri:
-    url: "http://localhost:8500/v1/acl/token"
+    url: 'http://localhost:8500/v1/acl/token'
     method: POST
     body_format: json
     body:
-      Description: "Agent Token"
-      Policies: [ "agent" ]
+      Description: 'Agent Token'
+      Policies: ['agent']
     headers:
-      X-Consul-Token: "{{ consul_management_token }}"
+      X-Consul-Token: '{{ consul_management_token }}'
     status_code: [200, 201]
     return_content: yes
   register: agent_token_create

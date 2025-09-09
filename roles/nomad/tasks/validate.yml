@@ -1,21 +1,21 @@
 ---
 - name: Validate TLS files
   ansible.builtin.stat:
-    path: "{{ item }}"
+    path: '{{ item }}'
   loop:
-    - "{{ nomad_tls_ca_file }}"
-    - "{{ nomad_tls_cert_file }}"
-    - "{{ nomad_tls_key_file }}"
+    - '{{ nomad_tls_ca_file }}'
+    - '{{ nomad_tls_cert_file }}'
+    - '{{ nomad_tls_key_file }}'
   register: tls_files
   when: nomad_tls_enabled | default(false)
 
 - name: Fail if TLS files are missing
   ansible.builtin.fail:
-    msg: "Required TLS file {{ item.item }} is missing"
+    msg: 'Required TLS file {{ item.item }} is missing'
   when:
     - nomad_tls_enabled | default(false)
     - not item.stat.exists
-  loop: "{{ tls_files.results }}"
+  loop: '{{ tls_files.results }}'
 
 - name: Wait for Consul to be fully bootstrapped
   ansible.builtin.uri:
@@ -41,7 +41,7 @@
 
     - name: Fail if Nomad LXC driver is missing or not executable
       ansible.builtin.fail:
-        msg: "Nomad LXC driver is missing or not executable!"
+        msg: 'Nomad LXC driver is missing or not executable!'
       when: not lxc_driver.stat.exists or lxc_driver.stat.mode|int is not search('7')
 
     - name: Validate CNI bridge plugin is present
@@ -51,7 +51,7 @@
 
     - name: Fail if CNI bridge plugin is missing
       ansible.builtin.fail:
-        msg: "CNI bridge plugin is missing!"
+        msg: 'CNI bridge plugin is missing!'
       when: not cni_bridge.stat.exists
 
     - name: Validate sysctl bridge settings

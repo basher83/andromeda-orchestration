@@ -5,26 +5,26 @@
 # Enable streaming to parent
 netdata_streaming_enabled: true
 netdata_streaming_destination: "{{ groups['netdata_parents'][0] }}:19999"
-netdata_streaming_api_key: "{{ vault_netdata_parent_api_key }}"
+netdata_streaming_api_key: '{{ vault_netdata_parent_api_key }}'
 
 # Disable web interface on children to save resources
 netdata_web_enabled: false
 
 # Memory mode - use RAM for temporary storage
-netdata_memory_mode: "ram"
-netdata_history: 3600  # Only 1 hour of local retention
+netdata_memory_mode: 'ram'
+netdata_history: 3600 # Only 1 hour of local retention
 
 # Disable ML on children (done on parent)
 netdata_ml_enabled: false
 
 # Consul service registration
 netdata_consul_enabled: true
-netdata_consul_service_name: "netdata-child"
+netdata_consul_service_name: 'netdata-child'
 netdata_consul_service_tags:
-  - "monitoring"
-  - "metrics"
-  - "child"
-  - "streaming"
+  - 'monitoring'
+  - 'metrics'
+  - 'child'
+  - 'streaming'
 
 # Disable alarms on children (handled by parent)
 netdata_alarms_enabled: false

@@ -21,7 +21,7 @@
     - name: Ensure Consul DNS ports are in addresses block
       ansible.builtin.blockinfile:
         path: /etc/consul.d/consul.hcl
-        marker: "# {mark} ANSIBLE MANAGED - DNS CONFIG"
+        marker: '# {mark} ANSIBLE MANAGED - DNS CONFIG'
         block: |
           addresses {
             dns = "0.0.0.0"
@@ -33,7 +33,7 @@
           }
 
           recursors = ["8.8.8.8", "1.1.1.1"]
-        insertafter: "^datacenter"
+        insertafter: '^datacenter'
       register: consul_dns_config
 
     - name: Reload Consul if configuration changed
@@ -57,7 +57,7 @@
             "dns-opts": ["ndots:0"],
             "dns-search": ["service.consul", "node.consul"]
           }
-        dest: "{{ docker_daemon_config }}"
+        dest: '{{ docker_daemon_config }}'
         backup: true
         mode: '0644'
       register: docker_config_changed
@@ -81,7 +81,7 @@
         dest: /etc/dnsmasq.d/consul
         mode: '0644'
       register: dnsmasq_config
-      when: false  # Disable for now - not all systems have dnsmasq
+      when: false # Disable for now - not all systems have dnsmasq
 
     - name: Restart Docker if configuration changed
       ansible.builtin.systemd:
@@ -106,9 +106,9 @@
     - name: Display DNS test results
       ansible.builtin.debug:
         msg:
-          - "Host: {{ inventory_hostname }}"
-          - "Consul DNS test:"
-          - "{{ dns_test.stdout_lines }}"
+          - 'Host: {{ inventory_hostname }}'
+          - 'Consul DNS test:'
+          - '{{ dns_test.stdout_lines }}'
 
 - name: Update Traefik job to use explicit Consul endpoint
   hosts: nomad-server-1-lloyd
@@ -117,7 +117,6 @@
       ansible.builtin.shell: |
         nomad job inspect traefik | jq -r '.Job.TaskGroups[0].Tasks[0].Config.args' 2>/dev/null || echo "No args found"
       register: traefik_config
-
 
     - name: Create Traefik job configuration
       ansible.builtin.copy:
@@ -207,6 +206,6 @@
     - name: Display Traefik status
       ansible.builtin.debug:
         msg:
-          - "Traefik updated: {{ traefik_update.changed | default(false) }}"
-          - "Recent logs:"
+          - 'Traefik updated: {{ traefik_update.changed | default(false) }}'
+          - 'Recent logs:'
           - "{{ traefik_logs.stdout_lines | default(['Check logs manually']) }}"

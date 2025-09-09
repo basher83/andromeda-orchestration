@@ -11,22 +11,22 @@
     netdata_user: netdata
     netdata_group: netdata
     netdata_port: 19999
-    netdata_bind_to: "*"
-    netdata_web_enabled: true  # Force enable web server
+    netdata_bind_to: '*'
+    netdata_web_enabled: true # Force enable web server
 
     # Consul service configuration
     netdata_consul_service_name: "{{ 'netdata-parent' if inventory_hostname in groups.get('netdata_parents', []) else 'netdata-child' }}"
     netdata_consul_service_port: 19999
-    netdata_consul_health_check_interval: "30s"
-    netdata_consul_health_check_timeout: "5s"
+    netdata_consul_health_check_interval: '30s'
+    netdata_consul_health_check_timeout: '5s'
     netdata_consul_enable_tag_override: false
     netdata_consul_service_tags:
-      - "monitoring"
-      - "metrics"
+      - 'monitoring'
+      - 'metrics'
       - "{{ 'parent' if inventory_hostname in groups.get('netdata_parents', []) else 'child' }}"
     netdata_consul_service_meta:
-      version: "latest"
-      environment: "production"
+      version: 'latest'
+      environment: 'production'
 
   tasks:
     - name: Ensure correct network interface IP is used
@@ -36,9 +36,9 @@
     - name: Display IP address being used
       ansible.builtin.debug:
         msg:
-          - "Host: {{ inventory_hostname }}"
-          - "Correct IP: {{ correct_ip }}"
-          - "Default IPv4: {{ ansible_default_ipv4.address }}"
+          - 'Host: {{ inventory_hostname }}'
+          - 'Correct IP: {{ correct_ip }}'
+          - 'Default IPv4: {{ ansible_default_ipv4.address }}'
 
     - name: Check if Consul is installed
       ansible.builtin.stat:
@@ -90,8 +90,8 @@
 
     - name: Update Netdata main configuration to enable web server
       ansible.builtin.blockinfile:
-        path: "{{ netdata_config_dir }}/netdata.conf"
-        marker: "# {mark} ANSIBLE MANAGED - WEB SERVER CONFIG"
+        path: '{{ netdata_config_dir }}/netdata.conf'
+        marker: '# {mark} ANSIBLE MANAGED - WEB SERVER CONFIG'
         block: |
           [global]
               bind to = *:{{ netdata_port }}
@@ -128,14 +128,14 @@
     - name: Wait for Netdata to be ready
       ansible.builtin.wait_for:
         port: 19999
-        host: "{{ correct_ip }}"
+        host: '{{ correct_ip }}'
         delay: 5
         timeout: 30
       when: netdata_config_updated.changed
 
     - name: Verify Netdata web interface is accessible
       ansible.builtin.uri:
-        url: "http://{{ correct_ip }}:19999/api/v1/info"
+        url: 'http://{{ correct_ip }}:19999/api/v1/info'
         method: GET
         status_code: 200
       register: netdata_api_check
@@ -144,10 +144,10 @@
     - name: Display verification results
       ansible.builtin.debug:
         msg:
-          - "Host: {{ inventory_hostname }}"
-          - "IP Address: {{ correct_ip }}"
-          - "Consul service updated: {{ consul_service_fixed.changed | default(false) }}"
-          - "Netdata config updated: {{ netdata_config_updated.changed }}"
+          - 'Host: {{ inventory_hostname }}'
+          - 'IP Address: {{ correct_ip }}'
+          - 'Consul service updated: {{ consul_service_fixed.changed | default(false) }}'
+          - 'Netdata config updated: {{ netdata_config_updated.changed }}'
           - "Web interface status: {{ 'ACCESSIBLE' if netdata_api_check.status == 200 else 'NOT ACCESSIBLE' }}"
 
 - name: Verify all changes from monitoring perspective
@@ -166,7 +166,7 @@
 
     - name: Check Netdata streaming status
       ansible.builtin.uri:
-        url: "http://localhost:19999/api/v1/info"
+        url: 'http://localhost:19999/api/v1/info'
         method: GET
       register: parent_info
       failed_when: false
@@ -174,13 +174,13 @@
     - name: Final summary
       ansible.builtin.debug:
         msg:
-          - "=========================================="
-          - "NETDATA CONFIGURATION UPDATE COMPLETED"
-          - "=========================================="
-          - "✅ IP addresses corrected (10.xx → 11.xx)"
-          - "✅ Web server enabled on all nodes"
-          - "✅ Consul service registrations updated"
-          - "=========================================="
-          - "Netdata services in Consul:"
+          - '=========================================='
+          - 'NETDATA CONFIGURATION UPDATE COMPLETED'
+          - '=========================================='
+          - '✅ IP addresses corrected (10.xx → 11.xx)'
+          - '✅ Web server enabled on all nodes'
+          - '✅ Consul service registrations updated'
+          - '=========================================='
+          - 'Netdata services in Consul:'
           - "{{ netdata_services.stdout_lines | default(['Check Consul manually']) }}"
-          - "=========================================="
+          - '=========================================='

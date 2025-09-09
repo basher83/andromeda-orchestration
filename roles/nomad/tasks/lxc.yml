@@ -21,14 +21,14 @@
   ansible.builtin.file:
     path: /opt/nomad/data/plugins
     state: directory
-    mode: "0755"
+    mode: '0755'
   become: true
 
 - name: Download Nomad LXC driver binary
   ansible.builtin.get_url:
-    url: "https://releases.hashicorp.com/nomad-driver-lxc/0.1.0/nomad-driver-lxc_0.1.0_linux_amd64.zip"
+    url: 'https://releases.hashicorp.com/nomad-driver-lxc/0.1.0/nomad-driver-lxc_0.1.0_linux_amd64.zip'
     dest: /tmp/nomad-driver-lxc.zip
-    mode: "0644"
+    mode: '0644'
   become: true
 
 - name: Unarchive Nomad LXC driver binary
@@ -42,7 +42,7 @@
 - name: Ensure Nomad LXC driver binary is executable
   ansible.builtin.file:
     path: /opt/nomad/data/plugins/nomad-driver-lxc
-    mode: "0755"
+    mode: '0755'
     state: file
   become: true
 

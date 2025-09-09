@@ -19,19 +19,23 @@ graph TD
 ## 📚 Active Repositories
 
 ### 1. [andromeda-orchestration](https://github.com/basher83/andromeda-orchestration) (This Repo)
+
 **Purpose**: Ansible automation and configuration management
+
 - **Scope**: Service deployment, configuration, orchestration
 - **Technologies**: Ansible, Python, Nomad jobs
 - **Secrets**: Infisical for all credentials
 - **Inventory**: Proxmox, NetBox, Tailscale dynamic inventories
 
 ### 2. [Hercules-Vault-Infra](https://github.com/basher83/Hercules-Vault-Infra)
+
 **Purpose**: Terraform infrastructure for dedicated Vault cluster
+
 - **Scope**: VM provisioning, networking, storage
 - **Backend**: Scalr remote state management
 - **Workspace**: `production-vault`
 - **Provider**: Proxmox (bpg/proxmox v0.78+)
-- **Architecture**: 
+- **Architecture**:
   - 1 Transit Master VM (auto-unseal)
   - 3 Production Raft VMs (HA cluster)
   - Total: 14 vCPUs, 28GB RAM, 340GB storage
@@ -39,9 +43,11 @@ graph TD
 - **Template**: Ubuntu 22.04 (ID: 8000)
 
 ### 3. [terraform-homelab](https://github.com/basher83/terraform-homelab) (Active - Nomad/Consul Infrastructure)
+
 **Purpose**: Terraform management of Nomad/Consul cluster infrastructure on Proxmox
+
 - **Status**: Active - Managing production Nomad/Consul cluster VMs
-- **Backend**: Scalr remote state management  
+- **Backend**: Scalr remote state management
 - **Workspace**: `nomad-prod-infrastructure`
 - **VCS Workflow**: PR-based through Scalr (auto-plan on PR, manual apply on merge)
 - **Provider**: Proxmox (bpg/proxmox v0.73.2+)
@@ -58,6 +64,7 @@ graph TD
 ## 🔄 Deployment Workflows
 
 ### Vault Cluster Deployment
+
 ```bash
 # Step 1: Provision infrastructure (Hercules-Vault-Infra)
 cd Hercules-Vault-Infra
@@ -69,6 +76,7 @@ uv run ansible-playbook playbooks/infrastructure/vault/deploy-vault-prod.yml
 ```
 
 ### Nomad/Consul Cluster Deployment
+
 ```bash
 # Step 1: Provision infrastructure (terraform-homelab)
 cd terraform-homelab
@@ -84,6 +92,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-nomad.yml
 ```
 
 ### Service Deployment (Nomad)
+
 ```bash
 # All in andromeda-orchestration
 uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
@@ -93,6 +102,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
 ## 🔗 Integration Points
 
 ### Infrastructure Layer (Terraform)
+
 - **Hercules-Vault-Infra**: Vault cluster VMs (4 VMs)
 - **terraform-homelab**: Nomad/Consul cluster VMs (6 VMs)
 - **Future**: Consider separate repos for:
@@ -101,6 +111,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
   - Additional service clusters
 
 ### Configuration Layer (Ansible)
+
 - **andromeda-orchestration**: All service configuration
 - **Inventory Sources**:
   - Proxmox VMs (via plugin)
@@ -108,6 +119,7 @@ uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
   - Tailscale nodes (via script)
 
 ### Orchestration Layer (Nomad)
+
 - **Jobs Directory**: `nomad-jobs/` in andromeda-orchestration
 - **Categories**:
   - `core-infrastructure/` - Essential services
@@ -128,6 +140,7 @@ graph LR
 ## 📊 Resource Distribution
 
 ### By Repository
+
 | Repository | Purpose | Resources | Management |
 |------------|---------|-----------|------------|
 | Hercules-Vault-Infra | Vault VMs | 14 vCPUs, 28GB RAM, 340GB storage | Terraform/Scalr |
@@ -135,6 +148,7 @@ graph LR
 | andromeda-orchestration | Service Config | N/A (config only) | Ansible |
 
 ### By Service
+
 | Service | Repository | Deployment Method |
 |---------|------------|-------------------|
 | Vault | Hercules-Vault-Infra + andromeda | Terraform (VMs) + Ansible (config) |
@@ -147,10 +161,11 @@ graph LR
 ## 🚀 Future Repository Structure
 
 ### Proposed Separation
+
 ```
 infrastructure/
 ├── Hercules-Vault-Infra/       # ✅ Exists - Vault cluster
-├── terraform-homelab/           # ✅ Exists - Nomad/Consul cluster  
+├── terraform-homelab/           # ✅ Exists - Nomad/Consul cluster
 ├── NetBox-Infra/               # TODO: Dedicated NetBox VMs
 └── Monitoring-Infra/           # TODO: Observability stack
 
@@ -165,6 +180,7 @@ orchestration/
 ## 📝 Migration Notes
 
 ### From Monolithic to Modular
+
 1. **Phase 1**: ✅ Vault infrastructure separated (Hercules-Vault-Infra)
 2. **Phase 2**: ✅ Nomad/Consul infrastructure managed (terraform-homelab)
 3. **Phase 3**: ✅ Configuration management consolidated (andromeda-orchestration)
@@ -172,6 +188,7 @@ orchestration/
 5. **Phase 5**: TODO - Separate monitoring infrastructure
 
 ### Benefits of Separation
+
 - **Clear boundaries**: Infrastructure vs Configuration
 - **Independent scaling**: Each layer can evolve separately
 - **Team collaboration**: Different teams can own different layers
@@ -180,11 +197,13 @@ orchestration/
 ## 🔍 Related Documentation
 
 ### In This Repository
+
 - [Vault Production Deployment](docs/implementation/vault/production-deployment.md)
 - [Vault ADR](docs/project-management/decisions/ADR-2025-08-23-vault-production-deployment.md)
 - [Infrastructure Standards](docs/standards/infrastructure-standards.md)
 
 ### External Repositories
+
 - [Hercules-Vault-Infra README](https://github.com/basher83/Hercules-Vault-Infra)
 - [Hercules Requirements Doc](https://github.com/basher83/Hercules-Vault-Infra/blob/main/docs/dedicated-infrastructure-requirements.md)
 - [terraform-homelab README](https://github.com/basher83/terraform-homelab)

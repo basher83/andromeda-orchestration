@@ -4,7 +4,7 @@
   hosts: localhost
   gather_facts: false
   vars:
-    nomad_addr: "http://192.168.11.11:4646"
+    nomad_addr: 'http://192.168.11.11:4646'
     nomad_cluster_action: "{{ nomad_action | default('status') }}"
 
   tasks:
@@ -14,24 +14,24 @@
       block:
         - name: Get leader
           ansible.builtin.uri:
-            url: "{{ nomad_addr }}/v1/status/leader"
+            url: '{{ nomad_addr }}/v1/status/leader'
           register: leader
 
         - name: Get peers
           ansible.builtin.uri:
-            url: "{{ nomad_addr }}/v1/status/peers"
+            url: '{{ nomad_addr }}/v1/status/peers'
           register: peers
 
         - name: Get nodes
           ansible.builtin.uri:
-            url: "{{ nomad_addr }}/v1/nodes"
+            url: '{{ nomad_addr }}/v1/nodes'
           register: nodes
 
         - name: Display status
           ansible.builtin.debug:
             msg:
-              - "Leader: {{ leader.json }}"
-              - "Peers: {{ peers.json }}"
+              - 'Leader: {{ leader.json }}'
+              - 'Peers: {{ peers.json }}'
               - "Nodes: {{ nodes.json | map(attribute='Name') | list }}"
 
     # Drain node
@@ -42,13 +42,13 @@
           ansible.builtin.command: |
             nomad node drain -enable {{ '-force' if force_drain | default(false) else '' }} {{ node_name | mandatory }}
           environment:
-            NOMAD_ADDR: "{{ nomad_addr }}"
+            NOMAD_ADDR: '{{ nomad_addr }}'
           changed_when: true
           register: drain_result
 
         - name: Show drain status
           ansible.builtin.debug:
-            msg: "Node {{ node_name }} set to drain"
+            msg: 'Node {{ node_name }} set to drain'
 
     # Enable node
     - name: Enable node
@@ -58,13 +58,13 @@
           ansible.builtin.command: |
             nomad node drain -disable {{ node_name | mandatory }}
           environment:
-            NOMAD_ADDR: "{{ nomad_addr }}"
+            NOMAD_ADDR: '{{ nomad_addr }}'
           changed_when: true
           register: enable_result
 
         - name: Show enable status
           ansible.builtin.debug:
-            msg: "Node {{ node_name }} enabled"
+            msg: 'Node {{ node_name }} enabled'
 
     # List jobs
     - name: List jobs
@@ -72,13 +72,13 @@
       block:
         - name: Get all jobs
           ansible.builtin.uri:
-            url: "{{ nomad_addr }}/v1/jobs"
+            url: '{{ nomad_addr }}/v1/jobs'
           register: jobs
 
         - name: Display jobs
           ansible.builtin.debug:
             msg:
-              - "Total jobs: {{ jobs.json | length }}"
+              - 'Total jobs: {{ jobs.json | length }}'
               - "Jobs: {{ jobs.json | map(attribute='Name') | list }}"
 
     # Resource usage
@@ -87,7 +87,7 @@
       block:
         - name: Get allocations
           ansible.builtin.uri:
-            url: "{{ nomad_addr }}/v1/allocations"
+            url: '{{ nomad_addr }}/v1/allocations'
           register: allocations
 
         - name: Calculate resource usage
@@ -106,9 +106,8 @@
                 Running allocations:
                 {{ allocations.json | selectattr('ClientStatus', 'eq', 'running') |
                    list | length }}
-              - "Used CPU: {{ used_cpu }} MHz"
-              - "Used Memory: {{ used_memory }} MB"
-
+              - 'Used CPU: {{ used_cpu }} MHz'
+              - 'Used Memory: {{ used_memory }} MB'
 # Usage examples:
 # ansible-playbook playbooks/nomad/cluster-manage.yml
 # ansible-playbook playbooks/nomad/cluster-manage.yml -e nomad_action=drain -e node_name=nomad-client-1

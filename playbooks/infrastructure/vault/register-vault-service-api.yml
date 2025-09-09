@@ -9,7 +9,7 @@
   gather_facts: true
 
   vars:
-    consul_config_dir: "/etc/consul.d"
+    consul_config_dir: '/etc/consul.d'
 
   tasks:
     - name: Get node-specific token from Infisical
@@ -29,7 +29,7 @@
 
     - name: Remove file-based service configuration
       ansible.builtin.file:
-        path: "{{ consul_config_dir }}/vault-service.hcl"
+        path: '{{ consul_config_dir }}/vault-service.hcl'
         state: absent
       notify: reload consul
 
@@ -45,36 +45,36 @@
 
     - name: Register Vault service via API with token
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8500/v1/agent/service/register"
+        url: 'http://127.0.0.1:8500/v1/agent/service/register'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_token_result.stdout }}"
+          X-Consul-Token: '{{ consul_token_result.stdout }}'
         body_format: json
         body:
-          ID: "vault-{{ inventory_hostname }}"
-          Name: "vault"
+          ID: 'vault-{{ inventory_hostname }}'
+          Name: 'vault'
           Tags:
-            - "vault-cluster"
-            - "{{ vault_role }}"
+            - 'vault-cluster'
+            - '{{ vault_role }}'
             - "{{ 'transit' if vault_role == 'master' else 'raft' }}"
           Port: 8200
-          Address: "{{ ansible_default_ipv4.address }}"
+          Address: '{{ ansible_default_ipv4.address }}'
           Check:
-            CheckID: "vault-health"
-            Name: "Vault Health Check"
-            HTTP: "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
+            CheckID: 'vault-health'
+            Name: 'Vault Health Check'
+            HTTP: 'https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true'
             TLSSkipVerify: true
-            Interval: "10s"
-            Timeout: "5s"
-            DeregisterCriticalServiceAfter: "90m"
+            Interval: '10s'
+            Timeout: '5s'
+            DeregisterCriticalServiceAfter: '90m'
         status_code: 200
       register: service_registration
 
     - name: Display service registration result
       ansible.builtin.debug:
         msg:
-          - "✅ Service registered for {{ inventory_hostname }}"
-          - "Status: {{ service_registration.status }}"
+          - '✅ Service registered for {{ inventory_hostname }}'
+          - 'Status: {{ service_registration.status }}'
 
     - name: Verify service is registered
       ansible.builtin.shell: |
@@ -92,10 +92,10 @@
     - name: Display verification
       ansible.builtin.debug:
         msg:
-          - "================== {{ inventory_hostname }} =================="
-          - "Vault services found: {{ vault_service_count.stdout }}"
-          - "Service nodes: {{ vault_nodes.stdout_lines }}"
-          - "=========================================="
+          - '================== {{ inventory_hostname }} =================='
+          - 'Vault services found: {{ vault_service_count.stdout }}'
+          - 'Service nodes: {{ vault_nodes.stdout_lines }}'
+          - '=========================================='
 
   handlers:
     - name: reload consul
@@ -126,13 +126,13 @@
     - name: Display final summary
       ansible.builtin.debug:
         msg:
-          - "✅ ======== VAULT SERVICE REGISTRATION COMPLETE ========"
-          - "Total Vault nodes registered: {{ all_vault_nodes.stdout_lines | length }}"
-          - "Healthy Vault nodes: {{ healthy_vault_nodes.stdout_lines | length }}"
-          - ""
-          - "All Vault nodes:"
-          - "{{ all_vault_nodes.stdout }}"
-          - ""
-          - "Healthy nodes:"
+          - '✅ ======== VAULT SERVICE REGISTRATION COMPLETE ========'
+          - 'Total Vault nodes registered: {{ all_vault_nodes.stdout_lines | length }}'
+          - 'Healthy Vault nodes: {{ healthy_vault_nodes.stdout_lines | length }}'
+          - ''
+          - 'All Vault nodes:'
+          - '{{ all_vault_nodes.stdout }}'
+          - ''
+          - 'Healthy nodes:'
           - "{{ healthy_vault_nodes.stdout if healthy_vault_nodes.stdout else 'Health checks pending...' }}"
-          - "======================================================"
+          - '======================================================'

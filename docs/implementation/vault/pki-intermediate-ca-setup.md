@@ -233,7 +233,7 @@ Using the `community.hashi_vault.vault_pki_generate_certificate` module:
 
 ### Required Environment Variables
 
-- `VAULT_ADDR`: Vault server address (https://192.168.10.31:8200)
+- `VAULT_ADDR`: Vault server address (<https://192.168.10.31:8200>)
 - `VAULT_TOKEN`: Vault token with PKI permissions
 - `INFISICAL_UNIVERSAL_AUTH_CLIENT_ID`: For backup operations
 - `INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET`: For backup operations
@@ -308,6 +308,7 @@ All certificates include:
    ```
 
 3. **Certificate Issuance Rate**
+
    ```bash
    # Monitor via Vault metrics
    curl -H "X-Vault-Token: $VAULT_TOKEN" \

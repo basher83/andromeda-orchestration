@@ -4,5 +4,5 @@ nomad_package_dependencies:
   - yum-utils
   - ca-certificates
   - curl
-  - dmidecode  # Required for host metrics
-  - iproute    # Required for network configuration
+  - dmidecode # Required for host metrics
+  - iproute # Required for network configuration

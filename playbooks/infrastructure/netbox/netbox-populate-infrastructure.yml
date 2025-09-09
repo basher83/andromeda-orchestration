@@ -6,23 +6,23 @@
   gather_facts: false
   become: false
   vars:
-    ansible_python_interpreter: "{{ ansible_playbook_python }}"
-    netbox_url: "https://192.168.30.213"
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+    netbox_url: 'https://192.168.30.213'
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
     netbox_validate_certs: false
 
     # Proxmox physical hosts
     proxmox_hosts:
-      - name: "lloyd"
-        ip: "192.168.11.11"
-        description: "Proxmox host 1"
-      - name: "holly"
-        ip: "192.168.11.12"
-        description: "Proxmox host 2"
-      - name: "mable"
-        ip: "192.168.11.13"
-        description: "Proxmox host 3"
+      - name: 'lloyd'
+        ip: '192.168.11.11'
+        description: 'Proxmox host 1'
+      - name: 'holly'
+        ip: '192.168.11.12'
+        description: 'Proxmox host 2'
+      - name: 'mable'
+        ip: '192.168.11.13'
+        description: 'Proxmox host 3'
 
   tasks:
     - name: Retrieve NetBox API token from Infisical
@@ -40,86 +40,86 @@
     # Create Proxmox physical hosts
     - name: Create Proxmox physical hosts
       netbox.netbox.netbox_device:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item.name }}"
-          device_type: "physical-server"
-          device_role: "proxmox-host"
-          site: "doggos-homelab"
-          status: "active"
-          comments: "{{ item.description }}"
+          name: '{{ item.name }}'
+          device_type: 'physical-server'
+          device_role: 'proxmox-host'
+          site: 'doggos-homelab'
+          status: 'active'
+          comments: '{{ item.description }}'
         state: present
-      loop: "{{ proxmox_hosts }}"
+      loop: '{{ proxmox_hosts }}'
       tags: [devices]
 
     # Create interfaces for Proxmox hosts
     - name: Create interfaces for Proxmox hosts
       netbox.netbox.netbox_device_interface:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          device: "{{ item.name }}"
-          name: "eth0"
-          type: "1000BASE-T"
-          description: "10G Network Interface"
+          device: '{{ item.name }}'
+          name: 'eth0'
+          type: '1000BASE-T'
+          description: '10G Network Interface'
         state: present
-      loop: "{{ proxmox_hosts }}"
+      loop: '{{ proxmox_hosts }}'
       register: created_interfaces
       tags: [interfaces]
 
     # Create dictionary of interface IDs
     - name: Create interface ID mapping
       set_fact:
-        interface_ids: "{{ interface_ids | default({}) | combine({item.item.name: item.interface.id}) }}"
-      loop: "{{ created_interfaces.results }}"
+        interface_ids: '{{ interface_ids | default({}) | combine({item.item.name: item.interface.id}) }}'
+      loop: '{{ created_interfaces.results }}'
       when: created_interfaces is defined
       tags: [interfaces]
 
     # Create IP addresses for Proxmox hosts
     - name: Create IP addresses for Proxmox hosts
       netbox.netbox.netbox_ip_address:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          address: "{{ item.ip }}/24"
-          status: "active"
-          description: "{{ item.name }} - 10G Network"
-          dns_name: "{{ item.name }}.{{ homelab_domain }}"
+          address: '{{ item.ip }}/24'
+          status: 'active'
+          description: '{{ item.name }} - 10G Network'
+          dns_name: '{{ item.name }}.{{ homelab_domain }}'
         state: present
-      loop: "{{ proxmox_hosts }}"
+      loop: '{{ proxmox_hosts }}'
       register: proxmox_ips
       tags: [ips]
 
     # Get existing IP addresses
     - name: Get existing IP addresses
       uri:
-        url: "{{ netbox_url }}/api/ipam/ip-addresses/?address={{ item.ip }}"
+        url: '{{ netbox_url }}/api/ipam/ip-addresses/?address={{ item.ip }}'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
-      loop: "{{ proxmox_hosts }}"
+      loop: '{{ proxmox_hosts }}'
       register: existing_ips
       tags: [ips]
 
     # Update existing IPs to assign to interfaces
     - name: Update existing IPs to assign to interfaces
       uri:
-        url: "{{ netbox_url }}/api/ipam/ip-addresses/{{ item.1.json.results[0].id }}/"
+        url: '{{ netbox_url }}/api/ipam/ip-addresses/{{ item.1.json.results[0].id }}/'
         method: PATCH
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          assigned_object_type: "dcim.interface"
-          assigned_object_id: "{{ interface_ids[item.0.name] }}"
+          assigned_object_type: 'dcim.interface'
+          assigned_object_id: '{{ interface_ids[item.0.name] }}'
         validate_certs: false
-      loop: "{{ proxmox_hosts | zip(existing_ips.results) | list }}"
+      loop: '{{ proxmox_hosts | zip(existing_ips.results) | list }}'
       when: item.1.json.results | length > 0
       tags: [ips]
       register: assigned_ips
@@ -127,14 +127,14 @@
     # Assign primary IPs to Proxmox hosts
     - name: Assign primary IPs to Proxmox hosts
       netbox.netbox.netbox_device:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item.0.name }}"
-          primary_ip4: "{{ item.1.ip_address.id }}"
+          name: '{{ item.0.name }}'
+          primary_ip4: '{{ item.1.ip_address.id }}'
         state: present
-      loop: "{{ proxmox_hosts | zip(assigned_ips.results) | list }}"
+      loop: '{{ proxmox_hosts | zip(assigned_ips.results) | list }}'
       when: assigned_ips is defined
       tags: [devices]
 
@@ -156,119 +156,119 @@
     # Create Virtual Machines
     - name: Create Virtual Machines in NetBox
       netbox.netbox.netbox_virtual_machine:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item.name }}"
-          cluster: "doggos-cluster"  # We'll create this cluster first
-          status: "active"
+          name: '{{ item.name }}'
+          cluster: 'doggos-cluster' # We'll create this cluster first
+          status: 'active'
           vcpus: 8
           memory: 16384
           disk: 68
           comments: "Nomad {{ 'Server' if 'server' in item.role else 'Client' }} on {{ item.host }}"
-          role: "{{ item.role }}"
-          platform: "linux"
+          role: '{{ item.role }}'
+          platform: 'linux'
         state: present
-      loop: "{{ vm_list }}"
-      ignore_errors: true  # Cluster might not exist yet
+      loop: '{{ vm_list }}'
+      ignore_errors: true # Cluster might not exist yet
       tags: [vms]
 
     # Create cluster if needed
     - name: Create virtualization cluster
       netbox.netbox.netbox_cluster:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "doggos-cluster"
-          type: "proxmox"
-          site: "doggos-homelab"
+          name: 'doggos-cluster'
+          type: 'proxmox'
+          site: 'doggos-homelab'
         state: present
       tags: [cluster]
 
     # Create cluster type first
     - name: Create Proxmox cluster type
       netbox.netbox.netbox_cluster_type:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "Proxmox"
-          slug: "proxmox"
-          description: "Proxmox VE Cluster"
+          name: 'Proxmox'
+          slug: 'proxmox'
+          description: 'Proxmox VE Cluster'
         state: present
       tags: [cluster]
 
     # Retry creating VMs after cluster is created
     - name: Create Virtual Machines in NetBox (retry)
       netbox.netbox.netbox_virtual_machine:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item.name }}"
-          cluster: "doggos-cluster"
-          status: "active"
+          name: '{{ item.name }}'
+          cluster: 'doggos-cluster'
+          status: 'active'
           vcpus: 8
           memory: 16384
           disk: 68
           comments: "Nomad {{ 'Server' if 'server' in item.role else 'Client' }} on {{ item.host }}"
-          role: "{{ item.role }}"
-          platform: "linux"
+          role: '{{ item.role }}'
+          platform: 'linux'
         state: present
-      loop: "{{ vm_list }}"
+      loop: '{{ vm_list }}'
       tags: [vms]
 
     # Create IP addresses for VMs
     - name: Create IP addresses for VMs (10.x network)
       netbox.netbox.netbox_ip_address:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          address: "{{ item.ip }}/24"
-          status: "active"
-          description: "{{ item.name }} - 2.5G Network"
-          dns_name: "{{ item.name }}.{{ homelab_domain }}"
+          address: '{{ item.ip }}/24'
+          status: 'active'
+          description: '{{ item.name }} - 2.5G Network'
+          dns_name: '{{ item.name }}.{{ homelab_domain }}'
         state: present
-      loop: "{{ vm_list }}"
+      loop: '{{ vm_list }}'
       register: vm_ips
       tags: [ips]
 
     # Also create 11.x IPs for VMs
     - name: Create secondary IP addresses for VMs (11.x network)
       netbox.netbox.netbox_ip_address:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
           address: "{{ item.ip | regex_replace('192.168.10', '192.168.11') }}/24"
-          status: "active"
-          description: "{{ item.name }} - 10G Network"
-          dns_name: "{{ item.name }}-10g.{{ homelab_domain }}"
+          status: 'active'
+          description: '{{ item.name }} - 10G Network'
+          dns_name: '{{ item.name }}-10g.{{ homelab_domain }}'
         state: present
-      loop: "{{ vm_list }}"
+      loop: '{{ vm_list }}'
       tags: [ips]
 
     # Assign primary IPs to VMs
     - name: Assign primary IPs to VMs
       netbox.netbox.netbox_virtual_machine:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item.0.name }}"
-          primary_ip4: "{{ item.1.ip_address.id }}"
+          name: '{{ item.0.name }}'
+          primary_ip4: '{{ item.1.ip_address.id }}'
         state: present
-      loop: "{{ vm_list | zip(vm_ips.results) | list }}"
+      loop: '{{ vm_list | zip(vm_ips.results) | list }}'
       when: vm_ips is defined
       tags: [vms]
 
     - name: Summary
       debug:
         msg:
-          - "Infrastructure population completed!"
-          - "Added {{ proxmox_hosts | length }} Proxmox hosts"
-          - "Added {{ vm_list | length }} Virtual Machines"
-          - "NetBox URL: {{ netbox_url }}"
+          - 'Infrastructure population completed!'
+          - 'Added {{ proxmox_hosts | length }} Proxmox hosts'
+          - 'Added {{ vm_list | length }} Virtual Machines'
+          - 'NetBox URL: {{ netbox_url }}'

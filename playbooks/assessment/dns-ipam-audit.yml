@@ -13,18 +13,18 @@
   hosts: all
   gather_facts: true
   vars:
-    report_dir: "{{ playbook_dir }}/../../reports/dns-ipam"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    report_dir: '{{ playbook_dir }}/../../reports/dns-ipam'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
     common_dns_ports:
-      - 53    # Standard DNS
-      - 8600  # Consul DNS
-      - 5353  # mDNS
+      - 53 # Standard DNS
+      - 8600 # Consul DNS
+      - 5353 # mDNS
 
   tasks:
     - name: Create report directory
       local_action:
         module: ansible.builtin.file
-        path: "{{ report_dir }}"
+        path: '{{ report_dir }}'
         state: directory
         mode: '0755'
       run_once: true
@@ -38,7 +38,7 @@
 
     - name: Parse resolv.conf
       ansible.builtin.set_fact:
-        resolv_data: "{{ resolv_conf.content | b64decode }}"
+        resolv_data: '{{ resolv_conf.content | b64decode }}'
         nameservers: "{{ resolv_conf.content | b64decode | regex_findall('nameserver\\s+(.*)') }}"
         search_domains: >-
           {% set search_line = resolv_conf.content | b64decode | regex_findall('search\s+(.*)') %}
@@ -107,7 +107,7 @@
     - name: Check for DHCP client configuration
       tags: [dhcp, config]
       ansible.builtin.stat:
-        path: "{{ item }}"
+        path: '{{ item }}'
       loop:
         - /etc/dhcp/dhclient.conf
         - /etc/dhcpcd.conf
@@ -116,7 +116,7 @@
 
     - name: Check for DHCP server
       ansible.builtin.stat:
-        path: "{{ item }}"
+        path: '{{ item }}'
       loop:
         - /etc/dhcp/dhcpd.conf
         - /etc/dnsmasq.conf
@@ -127,10 +127,10 @@
     - name: Check DNS ports
       tags: [dns, ports]
       ansible.builtin.wait_for:
-        port: "{{ item }}"
+        port: '{{ item }}'
         host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         timeout: 3
-      loop: "{{ common_dns_ports }}"
+      loop: '{{ common_dns_ports }}'
       register: dns_port_check
       failed_when: false
       when: ansible_default_ipv4 is defined
@@ -146,7 +146,7 @@
 
     - name: Test DNS resolution
       ansible.builtin.command:
-        cmd: "nslookup {{ ansible_hostname }}"
+        cmd: 'nslookup {{ ansible_hostname }}'
       register: local_dns_test
       changed_when: false
       failed_when: false
@@ -160,9 +160,9 @@
           - /etc/dnsmasq.d
           - /etc/powerdns
         patterns:
-          - "*.zone"
-          - "*.db"
-          - "*.conf"
+          - '*.zone'
+          - '*.db'
+          - '*.conf'
         file_type: file
       register: zone_files
       failed_when: false
@@ -225,14 +225,14 @@
     - name: Compile node DNS/IPAM report
       ansible.builtin.set_fact:
         dns_ipam_report:
-          hostname: "{{ ansible_hostname }}"
-          fqdn: "{{ ansible_fqdn }}"
-          domain: "{{ domain | default(ansible_domain) }}"
+          hostname: '{{ ansible_hostname }}'
+          fqdn: '{{ ansible_fqdn }}'
+          domain: '{{ domain | default(ansible_domain) }}'
           # DNS Configuration
           dns:
-            nameservers: "{{ nameservers }}"
-            search_domains: "{{ search_domains }}"
-            services_running: "{{ dns_services }}"
+            nameservers: '{{ nameservers }}'
+            search_domains: '{{ search_domains }}'
+            services_running: '{{ dns_services }}'
             ports_open: |
               {% set open_ports = [] %}
               {% for port_check in dns_port_check.results %}
@@ -241,14 +241,14 @@
               {% endif %}
               {% endfor %}
               {{ open_ports }}
-            zone_files_found: "{{ zone_files.files | default([]) | length }}"
-            custom_hosts_entries: "{{ custom_hosts_count }}"
+            zone_files_found: '{{ zone_files.files | default([]) | length }}'
+            custom_hosts_entries: '{{ custom_hosts_count }}'
             pihole:
-              installed: "{{ pihole_dir.stat.exists }}"
-              custom_entries: "{{ pihole_custom_entries.stdout | default(0) }}"
+              installed: '{{ pihole_dir.stat.exists }}'
+              custom_entries: '{{ pihole_custom_entries.stdout | default(0) }}'
           # Network Configuration
           network:
-            interfaces: "{{ interface_details }}"
+            interfaces: '{{ interface_details }}'
             default_gateway: >-
               {{ ansible_default_ipv4.gateway | default('N/A')
               if ansible_default_ipv4 is defined else 'N/A' }}
@@ -263,10 +263,10 @@
               {% endif %}
               {% endfor %}
               {{ subnets | unique }}
-            arp_entries: "{{ arp_table.stdout_lines | default([]) | length - 1 }}"
+            arp_entries: '{{ arp_table.stdout_lines | default([]) | length - 1 }}'
           # Raw data for analysis
           raw_data:
-            resolv_conf: "{{ resolv_data }}"
+            resolv_conf: '{{ resolv_data }}'
             hosts_file_sample: >-
               {% set hosts_entries = hosts_file.content | b64decode |
               regex_findall('^(?!#).*', multiline=True) | select | list %}
@@ -277,43 +277,43 @@
               {% else %}
               []
               {% endif %}
-            routing_table: "{{ routing_table.stdout_lines[:20] }}"
+            routing_table: '{{ routing_table.stdout_lines[:20] }}'
 
     - name: Save individual node DNS/IPAM report
       local_action:
         module: ansible.builtin.copy
-        content: "{{ dns_ipam_report | to_nice_yaml }}"
-        dest: "{{ report_dir }}/dns_ipam_node_{{ ansible_hostname }}_{{ timestamp }}.yml"
+        content: '{{ dns_ipam_report | to_nice_yaml }}'
+        dest: '{{ report_dir }}/dns_ipam_node_{{ ansible_hostname }}_{{ timestamp }}.yml'
         mode: '0644'
 
 - name: Generate DNS/IPAM infrastructure summary report
   hosts: localhost
   gather_facts: true
   vars:
-    report_dir: "{{ playbook_dir }}/../../reports/dns-ipam"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    report_dir: '{{ playbook_dir }}/../../reports/dns-ipam'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
 
   tasks:
     - name: Read all node reports
       ansible.builtin.find:
-        paths: "{{ report_dir }}"
-        patterns: "dns_ipam_node_*_{{ timestamp }}.yml"
+        paths: '{{ report_dir }}'
+        patterns: 'dns_ipam_node_*_{{ timestamp }}.yml'
       register: node_reports
 
     - name: Load node data
       ansible.builtin.include_vars:
-        file: "{{ item.path }}"
+        file: '{{ item.path }}'
         name: "dns_node_{{ item.path | basename | regex_replace('dns_ipam_node_(.+)_.*\\.yml', '\\1') }}"
-      loop: "{{ node_reports.files }}"
+      loop: '{{ node_reports.files }}'
       when: node_reports.files | length > 0
 
     - name: Generate summary report
       ansible.builtin.template:
         src: dns_ipam_summary.j2
-        dest: "{{ report_dir }}/dns_ipam_summary_{{ timestamp }}.md"
+        dest: '{{ report_dir }}/dns_ipam_summary_{{ timestamp }}.md'
         mode: '0644'
       vars:
-        all_nodes: "{{ hostvars }}"
+        all_nodes: '{{ hostvars }}'
       when: node_reports.files | length > 0
 
     - name: Display completion message

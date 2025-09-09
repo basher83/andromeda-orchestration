@@ -11,14 +11,17 @@
 ## Sprint Schedule
 
 ### Day 1 (Jan 19) - Foundation
+
 **Target**: PRs #1 & #2
 
 #### PR #1: homelab_domain Variable
+
 - **Status**: Not Started
 - **Assignee**: TBD
 - **Time**: 30 minutes
 
 **Checklist**:
+
 - [ ] Fork and create branch `feat/homelab-domain-variable`
 - [ ] Create `inventory/doggos-homelab/group_vars/all/main.yml`
 - [ ] Create `inventory/og-homelab/group_vars/all/main.yml`
@@ -28,12 +31,14 @@
 - [ ] Merge after review
 
 #### PR #2: Nomad HCL2 Variables
+
 - **Status**: Not Started
 - **Assignee**: TBD
 - **Time**: 2 hours
 - **Dependencies**: PR #1 merged
 
 **Checklist**:
+
 - [ ] Create branch `feat/nomad-hcl2-domain-vars`
 - [ ] Update `traefik.nomad.hcl` with HCL2 variable
 - [ ] Update `example-app.nomad.hcl` with HCL2 variable
@@ -44,20 +49,24 @@
 - [ ] Deploy to staging after merge
 
 ### Day 2 (Jan 20) - NetBox DNS
+
 **Target**: PR #3
 
 #### PR #3: NetBox Zone Migration
+
 - **Status**: Not Started
 - **Assignee**: TBD
 - **Time**: 3 hours
 - **Dependencies**: PR #1 merged
 
 **Pre-flight**:
+
 - [ ] Backup existing NetBox DNS configuration
 - [ ] Lower TTLs to 60 seconds on existing zones
 - [ ] Document current zone structure
 
 **Implementation**:
+
 - [ ] Create branch `feat/netbox-dns-zones-migration`
 - [ ] Update `setup-zones.yml` with parameterized domain
 - [ ] Update `populate-records.yml` with variable references
@@ -68,14 +77,17 @@
 - [ ] Create PR with migration evidence
 
 ### Day 3 (Jan 21) - PowerDNS Integration
+
 **Target**: PR #4
 
 #### PR #4: PowerDNS Sync Updates
+
 - **Status**: Not Started
 - **Time**: 2 hours
 - **Dependencies**: PR #3 merged
 
 **Checklist**:
+
 - [ ] Create branch `feat/powerdns-domain-updates`
 - [ ] Update `sync-to-powerdns.yml`
 - [ ] Update `powerdns-netbox-integration.yml`
@@ -85,14 +97,17 @@
 - [ ] Create PR with test results
 
 ### Day 4 (Jan 22) - Ansible Playbooks
+
 **Target**: PR #5
 
 #### PR #5: Complete Ansible Updates
+
 - **Status**: Not Started
 - **Time**: 3 hours
 - **Dependencies**: PRs #1-4 merged
 
 **Checklist**:
+
 - [ ] Create branch `feat/ansible-playbook-domains`
 - [ ] Find all .local references: `rg '\.local' --type yaml`
 - [ ] Update all playbooks to use variable
@@ -103,14 +118,17 @@
 - [ ] Create PR with comprehensive change list
 
 ### Day 5 (Jan 23) - Documentation & CI
+
 **Target**: PR #6
 
 #### PR #6: Documentation and Linting
+
 - **Status**: Not Started
 - **Time**: 2 hours
 - **Dependencies**: All previous PRs merged
 
 **Checklist**:
+
 - [ ] Create branch `feat/docs-and-linting`
 - [ ] Update all documentation files
 - [ ] Create `.github/workflows/lint-domains.yml`
@@ -121,9 +139,11 @@
 - [ ] Create final PR
 
 ### Day 6 (Jan 24) - Validation & Cutover
+
 **Target**: Complete migration
 
 **Final Validation**:
+
 - [ ] All services accessible via spaceships.work
 - [ ] macOS clients fully functional
 - [ ] No .local references in code

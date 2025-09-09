@@ -9,27 +9,27 @@ netdata_group: netdata
 netdata_port: 19999
 
 # Consul service registration
-netdata_consul_service_name: "netdata"
-netdata_consul_service_port: "{{ netdata_port }}"
+netdata_consul_service_name: 'netdata'
+netdata_consul_service_port: '{{ netdata_port }}'
 netdata_consul_service_tags:
-  - "monitoring"
-  - "metrics"
+  - 'monitoring'
+  - 'metrics'
 netdata_consul_service_meta:
-  version: "latest"
-  type: "monitoring"
+  version: 'latest'
+  type: 'monitoring'
 
 # Consul health check
 netdata_consul_health_check_enabled: true
-netdata_consul_health_check_interval: "10s"
-netdata_consul_health_check_timeout: "5s"
-netdata_consul_health_check_http: "http://{{ ansible_default_ipv4.address }}:{{ netdata_port }}/api/v1/info"
+netdata_consul_health_check_interval: '10s'
+netdata_consul_health_check_timeout: '5s'
+netdata_consul_health_check_http: 'http://{{ ansible_default_ipv4.address }}:{{ netdata_port }}/api/v1/info'
 netdata_consul_enable_tag_override: false
 
 # Consul collector configuration (go.d plugin)
 netdata_consul_collector_enabled: true
-netdata_consul_url: "http://127.0.0.1:8500"
-netdata_consul_acl_token: ""
-netdata_consul_datacenter: ""
+netdata_consul_url: 'http://127.0.0.1:8500'
+netdata_consul_acl_token: ''
+netdata_consul_datacenter: ''
 netdata_consul_update_every: 1
 netdata_consul_timeout: 2
 netdata_consul_autodetection_retry: 0
@@ -42,6 +42,6 @@ netdata_consul_collect_checks: true
 # TLS configuration for Consul
 netdata_consul_tls_enabled: false
 netdata_consul_tls_skip_verify: false
-netdata_consul_tls_ca: ""
-netdata_consul_tls_cert: ""
-netdata_consul_tls_key: ""
+netdata_consul_tls_ca: ''
+netdata_consul_tls_cert: ''
+netdata_consul_tls_key: ''

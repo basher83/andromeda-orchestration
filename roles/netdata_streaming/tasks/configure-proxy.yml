@@ -5,7 +5,7 @@
       - netdata_streaming_destination | length > 0
       - netdata_streaming_api_key | length > 0
       - netdata_parent_api_key | length > 0 or netdata_parent_children | length > 0
-    fail_msg: "Proxy node requires both child and parent configurations"
+    fail_msg: 'Proxy node requires both child and parent configurations'
 
 - name: Set proxy configuration
   ansible.builtin.set_fact:

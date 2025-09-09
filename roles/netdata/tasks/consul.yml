@@ -21,7 +21,7 @@
 
 - name: Configure Netdata Consul health check endpoint
   ansible.builtin.lineinfile:
-    path: "{{ netdata_config_dir }}/netdata.conf"
+    path: '{{ netdata_config_dir }}/netdata.conf'
     regexp: '^(\s*)# bind to = '
     line: '\1bind to = {{ netdata_bind_to }}:{{ netdata_port }}'
     backrefs: true
@@ -30,9 +30,9 @@
 - name: Configure Consul collector for Netdata
   ansible.builtin.template:
     src: consul.conf.j2
-    dest: "{{ netdata_config_dir }}/go.d/consul.conf"
-    owner: "{{ netdata_user }}"
-    group: "{{ netdata_group }}"
+    dest: '{{ netdata_config_dir }}/go.d/consul.conf'
+    owner: '{{ netdata_user }}'
+    group: '{{ netdata_group }}'
     mode: '0640'
   when: netdata_consul_collector_enabled | default(true)
   notify: restart netdata

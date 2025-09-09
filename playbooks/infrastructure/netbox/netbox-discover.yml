@@ -5,8 +5,8 @@
   connection: local
   gather_facts: false
   vars:
-    netbox_url: "https://192.168.30.213"
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    netbox_url: 'https://192.168.30.213'
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
 
   tasks:
@@ -24,99 +24,99 @@
 
     - name: Get all sites
       uri:
-        url: "{{ netbox_url }}/api/dcim/sites/"
+        url: '{{ netbox_url }}/api/dcim/sites/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: sites
 
     - name: Get all device roles
       uri:
-        url: "{{ netbox_url }}/api/dcim/device-roles/"
+        url: '{{ netbox_url }}/api/dcim/device-roles/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: device_roles
 
     - name: Get all devices
       uri:
-        url: "{{ netbox_url }}/api/dcim/devices/"
+        url: '{{ netbox_url }}/api/dcim/devices/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: devices
 
     - name: Get all virtual machines
       uri:
-        url: "{{ netbox_url }}/api/virtualization/virtual-machines/"
+        url: '{{ netbox_url }}/api/virtualization/virtual-machines/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: vms
 
     - name: Get all IP prefixes
       uri:
-        url: "{{ netbox_url }}/api/ipam/prefixes/"
+        url: '{{ netbox_url }}/api/ipam/prefixes/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: prefixes
 
     - name: Get all IP addresses
       uri:
-        url: "{{ netbox_url }}/api/ipam/ip-addresses/"
+        url: '{{ netbox_url }}/api/ipam/ip-addresses/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: ip_addresses
 
     - name: Get all VLANs
       uri:
-        url: "{{ netbox_url }}/api/ipam/vlans/"
+        url: '{{ netbox_url }}/api/ipam/vlans/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: vlans
 
     - name: Display summary
       debug:
         msg:
-          - "=== NetBox Current Configuration ==="
-          - "Sites: {{ sites.json.count }}"
-          - "Device Roles: {{ device_roles.json.count }}"
-          - "Devices: {{ devices.json.count }}"
-          - "Virtual Machines: {{ vms.json.count }}"
-          - "IP Prefixes: {{ prefixes.json.count }}"
-          - "IP Addresses: {{ ip_addresses.json.count }}"
-          - "VLANs: {{ vlans.json.count }}"
+          - '=== NetBox Current Configuration ==='
+          - 'Sites: {{ sites.json.count }}'
+          - 'Device Roles: {{ device_roles.json.count }}'
+          - 'Devices: {{ devices.json.count }}'
+          - 'Virtual Machines: {{ vms.json.count }}'
+          - 'IP Prefixes: {{ prefixes.json.count }}'
+          - 'IP Addresses: {{ ip_addresses.json.count }}'
+          - 'VLANs: {{ vlans.json.count }}'
 
     - name: List sites (if any)
       debug:
-        msg: "Site: {{ item.name }} ({{ item.slug }})"
-      loop: "{{ sites.json.results }}"
+        msg: 'Site: {{ item.name }} ({{ item.slug }})'
+      loop: '{{ sites.json.results }}'
       when: sites.json.count > 0
 
     - name: List devices (if any)
       debug:
         msg: "Device: {{ item.name }} - Type: {{ item.device_type.display if item.device_type else 'Unknown' }}"
-      loop: "{{ devices.json.results }}"
+      loop: '{{ devices.json.results }}'
       when: devices.json.count > 0
 
     - name: List VMs (if any)
       debug:
         msg: "VM: {{ item.name }} - Status: {{ item.status.label if item.status else 'Unknown' }}"
-      loop: "{{ vms.json.results }}"
+      loop: '{{ vms.json.results }}'
       when: vms.json.count > 0
 
     - name: List IP Prefixes (if any)
       debug:
         msg: "Prefix: {{ item.prefix }} - Status: {{ item.status.label if item.status else 'Unknown' }}"
-      loop: "{{ prefixes.json.results }}"
+      loop: '{{ prefixes.json.results }}'
       when: prefixes.json.count > 0

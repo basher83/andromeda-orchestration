@@ -15,13 +15,14 @@ Research Ansible collections based on the user's needs: $ARGUMENTS
 
 ## Primary Sources
 
-1. **Official Collections**: https://github.com/ansible-collections (141+ official collections)
+1. **Official Collections**: <https://github.com/ansible-collections> (141+ official collections)
 2. **Community Collections**: Search all of GitHub for galaxy.yml files
 3. **Technology-Specific Collections**: Focus on NetBox, Proxmox, Nomad, Consul, Vault, DNS/IPAM
 
 ## Research Workflow
 
 ### Phase 1: Discovery
+
 When searching for collections:
 
 1. **Search Official Collections First**:
@@ -55,6 +56,7 @@ When searching for collections:
    - Mine real-world usage patterns from repositories
 
 ### Phase 2: Quality Assessment
+
 For each relevant collection found:
 
 1. **Repository Health Metrics**:
@@ -82,6 +84,7 @@ For each relevant collection found:
    - Review discussion quality in issues/PRs
 
 ### Phase 3: Deep Analysis
+
 For high-value collections:
 
 1. **Code Examples**:
@@ -148,32 +151,39 @@ Provide findings in this structure:
   ```
 
 ### Tier 2: Promising (Score 60-79)
+
 [Similar structure]
 
 ### Tier 3: Experimental (Score <60)
+
 [Similar structure]
 
 ## Integration Recommendations
 
 ### For Your Infrastructure
+
 1. Specific collection for NetBox operations
 2. Best Proxmox automation collection
 3. Recommended DNS/IPAM tools
 
 ### Implementation Patterns
+
 - Authentication strategies
 - Error handling approaches
 - Idempotency patterns
 
 ## Risk Analysis
+
 - Maintenance concerns
 - Security considerations
 - Upgrade paths
 
 ## Next Steps
+
 1. Priority implementation order
 2. Testing recommendations
 3. Documentation needs
+
 ```
 
 ## Best Practices

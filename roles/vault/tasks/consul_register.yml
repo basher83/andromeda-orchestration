@@ -11,26 +11,26 @@
 
 - name: Register Vault service with Consul
   ansible.builtin.uri:
-    url: "http://127.0.0.1:8500/v1/agent/service/register"
+    url: 'http://127.0.0.1:8500/v1/agent/service/register'
     method: PUT
     body_format: json
     body:
-      ID: "vault-{{ ansible_hostname }}"
-      Name: "vault"
+      ID: 'vault-{{ ansible_hostname }}'
+      Name: 'vault'
       Tags:
-        - "vault"
-        - "{{ vault_mode }}"
+        - 'vault'
+        - '{{ vault_mode }}'
         - "{{ 'active' if vault_mode == 'dev' else 'standby' }}"
-      Address: "{{ ansible_default_ipv4.address }}"
-      Port: "{{ vault_port | int }}"
+      Address: '{{ ansible_default_ipv4.address }}'
+      Port: '{{ vault_port | int }}'
       EnableTagOverride: false
       Check:
-        Name: "Vault Health"
+        Name: 'Vault Health'
         HTTP: "{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health"
-        Interval: "10s"
-        Timeout: "5s"
-        TLSSkipVerify: "{{ vault_tls_disable | bool }}"
-        Status: "passing"
+        Interval: '10s'
+        Timeout: '5s'
+        TLSSkipVerify: '{{ vault_tls_disable | bool }}'
+        Status: 'passing'
         SuccessBeforePassing: 2
         FailuresBeforeCritical: 3
     status_code: [200]
@@ -38,21 +38,21 @@
 
 - name: Register Vault UI service with Consul (if UI enabled)
   ansible.builtin.uri:
-    url: "http://127.0.0.1:8500/v1/agent/service/register"
+    url: 'http://127.0.0.1:8500/v1/agent/service/register'
     method: PUT
     body_format: json
     body:
-      ID: "vault-ui-{{ ansible_hostname }}"
-      Name: "vault-ui"
+      ID: 'vault-ui-{{ ansible_hostname }}'
+      Name: 'vault-ui'
       Tags:
-        - "vault"
-        - "ui"
-        - "{{ vault_mode }}"
-        - "traefik.enable=true"
-        - "traefik.http.routers.vault.rule=Host(`vault.service.consul`)"
-        - "traefik.http.services.vault.loadbalancer.server.port={{ vault_port }}"
-      Address: "{{ ansible_default_ipv4.address }}"
-      Port: "{{ vault_port | int }}"
+        - 'vault'
+        - 'ui'
+        - '{{ vault_mode }}'
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.vault.rule=Host(`vault.service.consul`)'
+        - 'traefik.http.services.vault.loadbalancer.server.port={{ vault_port }}'
+      Address: '{{ ansible_default_ipv4.address }}'
+      Port: '{{ vault_port | int }}'
       EnableTagOverride: false
     status_code: [200]
   when:
@@ -62,7 +62,7 @@
 - name: Display Consul registration status
   ansible.builtin.debug:
     msg:
-      - "Vault registered with Consul"
-      - "Service name: vault.service.consul"
+      - 'Vault registered with Consul'
+      - 'Service name: vault.service.consul'
       - "Health check: {{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health"
   when: consul_available is succeeded

@@ -17,6 +17,7 @@ The following ports must be open between Vault VMs and the existing Consul clust
 ### Firewall Configuration
 
 #### nftables Rules (for Vault VMs)
+
 ```nft
 # Consul agent gossip
 tcp dport 8301 accept comment "Consul LAN Serf"
@@ -45,10 +46,12 @@ tcp dport 8500 ip saddr 127.0.0.1 accept comment "Consul HTTP API"
 ### Network Segments
 
 The Vault cluster operates on the following network segments:
+
 - **Management Network**: Tailscale overlay (*.tailfb3ea.ts.net)
 - **Operations Network**: 192.168.11.0/24 (10G network for Consul/Nomad)
 
 Consul agents on Vault VMs will:
+
 1. Bind to the Tailscale interface for cluster communication
 2. Join the Consul cluster via the operations network (192.168.11.x)
 3. Provide local DNS resolution on port 8600

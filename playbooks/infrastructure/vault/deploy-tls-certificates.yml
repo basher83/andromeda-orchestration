@@ -14,7 +14,7 @@
     vault_backup_dir: /opt/vault/tls/backup-{{ ansible_date_time.epoch }}
 
     # Active Vault leader for PKI operations
-    vault_leader_addr: "https://192.168.10.33:8200"
+    vault_leader_addr: 'https://192.168.10.33:8200'
 
     # Retrieve Vault token from Infisical
     vault_token: >-
@@ -27,38 +27,38 @@
                  secret_name='VAULT_PROD_ROOT_TOKEN')).value | default('') }}
 
     # Certificate parameters
-    cert_common_name: "vault-master-lloyd.vault.spaceships.work"
+    cert_common_name: 'vault-master-lloyd.vault.spaceships.work'
     cert_alt_names:
-      - "vault-master-lloyd"
-      - "vault.service.consul"
-      - "vault-transit.service.consul"
-      - "localhost"
+      - 'vault-master-lloyd'
+      - 'vault.service.consul'
+      - 'vault-transit.service.consul'
+      - 'localhost'
     cert_ip_sans:
-      - "{{ ansible_default_ipv4.address }}"
-      - "127.0.0.1"
-    cert_ttl: "8760h"  # 1 year for transit master
+      - '{{ ansible_default_ipv4.address }}'
+      - '127.0.0.1'
+    cert_ttl: '8760h' # 1 year for transit master
 
   tasks:
     - name: Create TLS directories
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: directory
         owner: vault
         group: vault
         mode: '0750'
       loop:
-        - "{{ vault_tls_dir }}"
-        - "{{ vault_backup_dir }}"
+        - '{{ vault_tls_dir }}'
+        - '{{ vault_backup_dir }}'
 
     - name: Check for existing certificates
       stat:
-        path: "{{ vault_tls_dir }}/tls.crt"
+        path: '{{ vault_tls_dir }}/tls.crt'
       register: existing_cert
 
     - name: Backup existing certificates
       copy:
-        src: "{{ vault_tls_dir }}/{{ item }}"
-        dest: "{{ vault_backup_dir }}/{{ item }}"
+        src: '{{ vault_tls_dir }}/{{ item }}'
+        dest: '{{ vault_backup_dir }}/{{ item }}'
         remote_src: yes
         owner: vault
         group: vault
@@ -72,14 +72,14 @@
 
     - name: Generate certificate from Vault PKI
       community.hashi_vault.vault_pki_generate_certificate:
-        url: "{{ vault_leader_addr }}"
+        url: '{{ vault_leader_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
+        token: '{{ vault_token }}'
         role_name: infrastructure
-        common_name: "{{ cert_common_name }}"
-        alt_names: "{{ cert_alt_names }}"
-        ip_sans: "{{ cert_ip_sans }}"
-        ttl: "{{ cert_ttl }}"
+        common_name: '{{ cert_common_name }}'
+        alt_names: '{{ cert_alt_names }}'
+        ip_sans: '{{ cert_ip_sans }}'
+        ttl: '{{ cert_ttl }}'
         engine_mount_point: pki_int
       register: vault_cert
       delegate_to: localhost
@@ -87,8 +87,8 @@
 
     - name: Save certificate
       copy:
-        content: "{{ vault_cert.data.data.certificate }}"
-        dest: "{{ vault_tls_dir }}/tls.crt"
+        content: '{{ vault_cert.data.data.certificate }}'
+        dest: '{{ vault_tls_dir }}/tls.crt'
         owner: vault
         group: vault
         mode: '0644'
@@ -96,8 +96,8 @@
 
     - name: Save private key
       copy:
-        content: "{{ vault_cert.data.data.private_key }}"
-        dest: "{{ vault_tls_dir }}/tls.key"
+        content: '{{ vault_cert.data.data.private_key }}'
+        dest: '{{ vault_tls_dir }}/tls.key'
         owner: vault
         group: vault
         mode: '0600'
@@ -106,7 +106,7 @@
     - name: Save CA certificate chain
       copy:
         content: "{{ vault_cert.data.data.ca_chain | join('\n') }}"
-        dest: "{{ vault_tls_dir }}/ca.crt"
+        dest: '{{ vault_tls_dir }}/ca.crt'
         owner: vault
         group: vault
         mode: '0644'
@@ -114,8 +114,8 @@
 
     - name: Save issuing CA certificate
       copy:
-        content: "{{ vault_cert.data.data.issuing_ca }}"
-        dest: "{{ vault_tls_dir }}/issuing_ca.crt"
+        content: '{{ vault_cert.data.data.issuing_ca }}'
+        dest: '{{ vault_tls_dir }}/issuing_ca.crt'
         owner: vault
         group: vault
         mode: '0644'
@@ -125,18 +125,18 @@
       shell: |
         cat {{ vault_tls_dir }}/tls.crt {{ vault_tls_dir }}/ca.crt > {{ vault_tls_dir }}/cert-bundle.pem
       args:
-        creates: "{{ vault_tls_dir }}/cert-bundle.pem"
+        creates: '{{ vault_tls_dir }}/cert-bundle.pem'
 
     - name: Set proper permissions on bundle
       file:
-        path: "{{ vault_tls_dir }}/cert-bundle.pem"
+        path: '{{ vault_tls_dir }}/cert-bundle.pem'
         owner: vault
         group: vault
         mode: '0644'
 
     - name: Add CA to system trust store
       copy:
-        src: "{{ vault_tls_dir }}/ca.crt"
+        src: '{{ vault_tls_dir }}/ca.crt'
         dest: /usr/local/share/ca-certificates/vault-ca.crt
         remote_src: yes
         mode: '0644'

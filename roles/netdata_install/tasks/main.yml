@@ -1,11 +1,11 @@
 ---
 - name: Include distribution-specific variables
-  ansible.builtin.include_vars: "{{ item }}"
+  ansible.builtin.include_vars: '{{ item }}'
   with_first_found:
     - files:
-        - "{{ ansible_distribution | lower }}{{ ansible_distribution_major_version }}.yml"
-        - "{{ ansible_distribution | lower }}.yml"
-        - "{{ ansible_os_family | lower }}.yml"
+        - '{{ ansible_distribution | lower }}{{ ansible_distribution_major_version }}.yml'
+        - '{{ ansible_distribution | lower }}.yml'
+        - '{{ ansible_os_family | lower }}.yml'
       paths:
         - ../vars
       skip: true
@@ -14,7 +14,7 @@
     - netdata-install
 
 - name: Include architecture-specific variables
-  ansible.builtin.include_vars: "{{ ansible_architecture | lower }}.yml"
+  ansible.builtin.include_vars: '{{ ansible_architecture | lower }}.yml'
   failed_when: false
   tags:
     - netdata

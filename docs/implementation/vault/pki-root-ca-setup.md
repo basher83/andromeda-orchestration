@@ -26,6 +26,7 @@ This document covers the setup and configuration of HashiCorp Vault's PKI secret
 ### Certificate Roles
 
 #### Infrastructure Role
+
 - **Purpose**: HashiCorp services (Vault, Consul, Nomad)
 - **Allowed Domains**:
   - spaceships.work (with subdomains)
@@ -37,6 +38,7 @@ This document covers the setup and configuration of HashiCorp Vault's PKI secret
 - **Flags**: Server and Client certificates
 
 #### Service Role
+
 - **Purpose**: Application services
 - **Allowed Domains**:
   - service.consul (with subdomains)
@@ -46,6 +48,7 @@ This document covers the setup and configuration of HashiCorp Vault's PKI secret
 - **Flags**: Server certificates only
 
 #### Client Role
+
 - **Purpose**: mTLS client certificates
 - **Allowed Domains**:
   - client.spaceships.work (with subdomains)
@@ -153,7 +156,7 @@ The playbook is idempotent and can be safely re-run to verify configuration.
 
 ### Required Environment Variables
 
-- `VAULT_ADDR`: Vault server address (https://192.168.10.31:8200)
+- `VAULT_ADDR`: Vault server address (<https://192.168.10.31:8200>)
 - `VAULT_TOKEN`: Vault root token or admin token
 - `INFISICAL_UNIVERSAL_AUTH_CLIENT_ID`: For Infisical authentication
 - `INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET`: For Infisical authentication

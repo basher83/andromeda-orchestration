@@ -6,7 +6,6 @@
   hosts: all
   become: yes
   tasks:
-
     # --- Check if Zabbix is installed ---
     - name: Detect existing Zabbix packages
       command: dpkg -l | grep zabbix || true
@@ -28,7 +27,7 @@
     # --- Remove repo files ---
     - name: Remove Zabbix apt repository files
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: absent
       loop:
         - /etc/apt/sources.list.d/zabbix.list
@@ -45,7 +44,7 @@
     # --- Remove leftover Zabbix directories ---
     - name: Delete Zabbix config, logs, and data dirs
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: absent
       loop:
         - /etc/zabbix

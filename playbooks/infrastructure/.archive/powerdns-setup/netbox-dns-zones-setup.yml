@@ -6,56 +6,56 @@
   gather_facts: false
   become: false
   vars:
-    ansible_python_interpreter: "{{ ansible_playbook_python }}"
-    netbox_url: "https://192.168.30.213"
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+    netbox_url: 'https://192.168.30.213'
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
     netbox_validate_certs: false
 
     # DNS configuration
     dns_zones:
       forward:
-        - name: "homelab.local"
-          description: "Primary homelab domain"
-          soa_mname: "ns1.homelab.local"
-          soa_rname: "admin.homelab.local"
+        - name: 'homelab.local'
+          description: 'Primary homelab domain'
+          soa_mname: 'ns1.homelab.local'
+          soa_rname: 'admin.homelab.local'
           soa_serial: 2025080801
           soa_ttl: 3600
           nameservers:
-            - "ns1.homelab.local"
-        - name: "doggos.local"
-          description: "Doggos cluster domain"
-          soa_mname: "ns1.doggos.local"
-          soa_rname: "admin.doggos.local"
+            - 'ns1.homelab.local'
+        - name: 'doggos.local'
+          description: 'Doggos cluster domain'
+          soa_mname: 'ns1.doggos.local'
+          soa_rname: 'admin.doggos.local'
           soa_serial: 2025080801
           soa_ttl: 3600
           nameservers:
-            - "ns1.doggos.local"
-        - name: "og.local"
-          description: "OG homelab cluster domain"
-          soa_mname: "ns1.og.local"
-          soa_rname: "admin.og.local"
+            - 'ns1.doggos.local'
+        - name: 'og.local'
+          description: 'OG homelab cluster domain'
+          soa_mname: 'ns1.og.local'
+          soa_rname: 'admin.og.local'
           soa_serial: 2025080801
           soa_ttl: 3600
           nameservers:
-            - "ns1.og.local"
+            - 'ns1.og.local'
       reverse:
-        - name: "10.168.192.in-addr.arpa"
-          description: "Reverse zone for 192.168.10.0/24"
-          soa_mname: "ns1.homelab.local"
-          soa_rname: "admin.homelab.local"
+        - name: '10.168.192.in-addr.arpa'
+          description: 'Reverse zone for 192.168.10.0/24'
+          soa_mname: 'ns1.homelab.local'
+          soa_rname: 'admin.homelab.local'
           soa_serial: 2025080801
           soa_ttl: 3600
-        - name: "11.168.192.in-addr.arpa"
-          description: "Reverse zone for 192.168.11.0/24"
-          soa_mname: "ns1.homelab.local"
-          soa_rname: "admin.homelab.local"
+        - name: '11.168.192.in-addr.arpa'
+          description: 'Reverse zone for 192.168.11.0/24'
+          soa_mname: 'ns1.homelab.local'
+          soa_rname: 'admin.homelab.local'
           soa_serial: 2025080801
           soa_ttl: 3600
-        - name: "30.168.192.in-addr.arpa"
-          description: "Reverse zone for 192.168.30.0/24"
-          soa_mname: "ns1.homelab.local"
-          soa_rname: "admin.homelab.local"
+        - name: '30.168.192.in-addr.arpa'
+          description: 'Reverse zone for 192.168.30.0/24'
+          soa_mname: 'ns1.homelab.local'
+          soa_rname: 'admin.homelab.local'
           soa_serial: 2025080801
           soa_ttl: 3600
 
@@ -74,95 +74,95 @@
 
     - name: Create forward DNS zones in NetBox
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/zones/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          name: "{{ item.name }}"
-          description: "{{ item.description }}"
-          soa_mname: "{{ item.soa_mname }}"
-          soa_rname: "{{ item.soa_rname }}"
-          soa_serial: "{{ item.soa_serial }}"
-          soa_ttl: "{{ item.soa_ttl }}"
+          name: '{{ item.name }}'
+          description: '{{ item.description }}'
+          soa_mname: '{{ item.soa_mname }}'
+          soa_rname: '{{ item.soa_rname }}'
+          soa_serial: '{{ item.soa_serial }}'
+          soa_ttl: '{{ item.soa_ttl }}'
           soa_refresh: 10800
           soa_retry: 3600
           soa_expire: 604800
           soa_minimum: 3600
           default_ttl: 3600
           arpa_network: null
-        validate_certs: "{{ netbox_validate_certs }}"
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
-      loop: "{{ dns_zones.forward }}"
+      loop: '{{ dns_zones.forward }}'
       register: forward_zone_results
       failed_when: forward_zone_results.status not in [200, 201] and 'already exists' not in (forward_zone_results.json.name | default([]))
 
     - name: Create reverse DNS zones in NetBox
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/zones/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          name: "{{ item.name }}"
-          description: "{{ item.description }}"
-          soa_mname: "{{ item.soa_mname }}"
-          soa_rname: "{{ item.soa_rname }}"
-          soa_serial: "{{ item.soa_serial }}"
-          soa_ttl: "{{ item.soa_ttl }}"
+          name: '{{ item.name }}'
+          description: '{{ item.description }}'
+          soa_mname: '{{ item.soa_mname }}'
+          soa_rname: '{{ item.soa_rname }}'
+          soa_serial: '{{ item.soa_serial }}'
+          soa_ttl: '{{ item.soa_ttl }}'
           soa_refresh: 10800
           soa_retry: 3600
           soa_expire: 604800
           soa_minimum: 3600
           default_ttl: 3600
           arpa_network: "{{ item.name | regex_replace('(\\d+)\\.(\\d+)\\.(\\d+)\\.in-addr\\.arpa', '192.\\3.\\2.\\1/24') }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
-      loop: "{{ dns_zones.reverse }}"
+      loop: '{{ dns_zones.reverse }}'
       register: reverse_zone_results
       failed_when: reverse_zone_results.status not in [200, 201] and 'already exists' not in (reverse_zone_results.json.name | default([]))
 
     - name: Create NS records for forward zones
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/records/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/records/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          zone: "{{ item.0.name }}"
-          name: "@"
-          type: "NS"
-          value: "{{ item.1 }}"
+          zone: '{{ item.0.name }}'
+          name: '@'
+          type: 'NS'
+          value: '{{ item.1 }}'
           ttl: 3600
-        validate_certs: "{{ netbox_validate_certs }}"
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
       with_subelements:
-        - "{{ dns_zones.forward }}"
+        - '{{ dns_zones.forward }}'
         - nameservers
       register: ns_record_results
       failed_when: ns_record_results.status not in [200, 201] and 'already exists' not in (ns_record_results.json | default({}) | string)
 
     - name: Create A record for PowerDNS nameserver
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/records/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/records/'
         method: POST
         headers:
-          Authorization: "Token {{ netbox_token }}"
-          Content-Type: "application/json"
+          Authorization: 'Token {{ netbox_token }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          zone: "homelab.local"
-          name: "ns1"
-          type: "A"
-          value: "192.168.11.20"  # PowerDNS IP on nomad-client-1
+          zone: 'homelab.local'
+          name: 'ns1'
+          type: 'A'
+          value: '192.168.11.20' # PowerDNS IP on nomad-client-1
           ttl: 3600
-        validate_certs: "{{ netbox_validate_certs }}"
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 201, 400]
       register: ns_a_record
       failed_when: ns_a_record.status not in [200, 201] and 'already exists' not in (ns_a_record.json | default({}) | string)
@@ -170,7 +170,7 @@
     - name: Display zone creation summary
       debug:
         msg:
-          - "DNS Zone Configuration Complete!"
+          - 'DNS Zone Configuration Complete!'
           - "Forward zones created: {{ dns_zones.forward | map(attribute='name') | list }}"
           - "Reverse zones created: {{ dns_zones.reverse | map(attribute='name') | list }}"
-          - "Next step: Configure PowerDNS backend to query NetBox API"
+          - 'Next step: Configure PowerDNS backend to query NetBox API'

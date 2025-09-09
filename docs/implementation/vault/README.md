@@ -5,6 +5,7 @@ HashiCorp Vault deployment and integration documentation for secrets management,
 ## 🏗️ Infrastructure Provisioning
 
 The Vault cluster VMs are provisioned via Terraform in a separate repository:
+
 - **Repository**: [Hercules-Vault-Infra](https://github.com/basher83/Hercules-Vault-Infra)
 - **Purpose**: Terraform code for 4-VM dedicated Vault cluster
 - **Architecture**: 1 Transit Master + 3 Raft nodes (192.168.10.30-33)

@@ -11,17 +11,17 @@
   become: false
   vars:
     nomad_api_endpoint: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646', true) }}"
-    job_path: "{{ playbook_dir }}/../../../nomad-jobs/platform-services/vault-pki/vault-pki-exporter.nomad.hcl"
-    force_start: "{{ force | default(false) }}"
-    wait_for_healthy: "{{ wait | default(true) }}"
-    nomad_namespace: "default"
+    job_path: '{{ playbook_dir }}/../../../nomad-jobs/platform-services/vault-pki/vault-pki-exporter.nomad.hcl'
+    force_start: '{{ force | default(false) }}'
+    wait_for_healthy: '{{ wait | default(true) }}'
+    nomad_namespace: 'default'
     # Expect token from Infisical environment
     vault_pki_monitor_token: "{{ lookup('env', 'VAULT_PKI_MONITOR_TOKEN') }}"
 
   tasks:
     - name: Validate job file exists
       ansible.builtin.stat:
-        path: "{{ job_path }}"
+        path: '{{ job_path }}'
       register: job_file
       failed_when: not job_file.stat.exists
 
@@ -41,7 +41,7 @@
 
     - name: Read job specification
       ansible.builtin.slurp:
-        src: "{{ job_path }}"
+        src: '{{ job_path }}'
       register: job_spec
 
     - name: Extract job name from HCL
@@ -51,27 +51,27 @@
     - name: Display deployment info
       ansible.builtin.debug:
         msg:
-          - "Deploying job: {{ job_name }}"
-          - "From file: {{ job_path }}"
-          - "To Nomad: {{ nomad_api_endpoint }}"
-          - "Force start: {{ force_start }}"
+          - 'Deploying job: {{ job_name }}'
+          - 'From file: {{ job_path }}'
+          - 'To Nomad: {{ nomad_api_endpoint }}'
+          - 'Force start: {{ force_start }}'
 
     - name: Parse HCL job with token variable
       ansible.builtin.uri:
-        url: "{{ nomad_api_endpoint }}/v1/jobs/parse?namespace={{ nomad_namespace }}"
+        url: '{{ nomad_api_endpoint }}/v1/jobs/parse?namespace={{ nomad_namespace }}'
         method: POST
         body_format: json
         body:
-          JobHCL: "{{ job_spec.content | b64decode }}"
+          JobHCL: '{{ job_spec.content | b64decode }}'
           Variables:
-            VAULT_PKI_MONITOR_TOKEN: "{{ vault_pki_monitor_token }}"
+            VAULT_PKI_MONITOR_TOKEN: '{{ vault_pki_monitor_token }}'
           Canonicalize: true
         headers:
-          Content-Type: "application/json"
+          Content-Type: 'application/json'
         status_code: [200, 400, 500]
-        validate_certs: "{{ validate_certs | default(true) }}"
+        validate_certs: '{{ validate_certs | default(true) }}'
       register: parsed_job
-      no_log: true  # Prevent token from appearing in logs
+      no_log: true # Prevent token from appearing in logs
       failed_when: false
 
     - name: Warn if parse failed
@@ -86,11 +86,11 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ nomad_namespace }}"
-        content: "{{ parsed_job.json | to_json }}"
+        namespace: '{{ nomad_namespace }}'
+        content: '{{ parsed_job.json | to_json }}'
         content_format: json
         state: present
-        force_start: "{{ force_start }}"
+        force_start: '{{ force_start }}'
       register: deploy_result
       when: >
         parsed_job is defined and
@@ -103,11 +103,11 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ nomad_namespace }}"
-        content: "{{ job_spec.content | b64decode }}"
+        namespace: '{{ nomad_namespace }}'
+        content: '{{ job_spec.content | b64decode }}'
         content_format: hcl
         state: present
-        force_start: "{{ force_start }}"
+        force_start: '{{ force_start }}'
       register: deploy_result
       when: >
         parsed_job is skipped or
@@ -120,16 +120,16 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ nomad_namespace }}"
-        name: "{{ job_name }}"
+        namespace: '{{ nomad_namespace }}'
+        name: '{{ job_name }}'
       register: job_info
 
     - name: Wait for healthy deployment
       ansible.builtin.uri:
-        url: "{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}"
+        url: '{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}'
         method: GET
         headers:
-          Content-Type: "application/json"
+          Content-Type: 'application/json'
       register: job_summary_status
       until: >
         job_summary_status.json.Summary is defined and
@@ -140,31 +140,30 @@
 
     - name: Get job summary for final status
       ansible.builtin.uri:
-        url: "{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}"
+        url: '{{ nomad_api_endpoint }}/v1/job/{{ job_name }}/summary?namespace={{ nomad_namespace }}'
         method: GET
         headers:
-          Content-Type: "application/json"
+          Content-Type: 'application/json'
       register: job_summary
       when: wait_for_healthy | bool
 
     - name: Display final job status
       ansible.builtin.debug:
         msg:
-          - "Job deployed successfully!"
-          - "Name: {{ job_name }}"
-          - "Status: running"
+          - 'Job deployed successfully!'
+          - 'Name: {{ job_name }}'
+          - 'Status: running'
           - "Running allocations: {{ job_summary.json.Summary | json_query('*.Running') | sum }}"
-          - ""
-          - "Verify metrics are available at:"
-          - "  http://192.168.11.20:9333/metrics  # nomad-client-1-lloyd"
-          - "  http://192.168.11.21:9333/metrics  # nomad-client-2-holly"
-          - "  http://192.168.11.22:9333/metrics  # nomad-client-3-mable"
-          - ""
-          - "Netdata configuration files have been created at:"
-          - "  configs/netdata/go.d/vault-pki-exporter.conf"
-          - "  configs/netdata/health.d/vault-pki.conf"
+          - ''
+          - 'Verify metrics are available at:'
+          - '  http://192.168.11.20:9333/metrics  # nomad-client-1-lloyd'
+          - '  http://192.168.11.21:9333/metrics  # nomad-client-2-holly'
+          - '  http://192.168.11.22:9333/metrics  # nomad-client-3-mable'
+          - ''
+          - 'Netdata configuration files have been created at:'
+          - '  configs/netdata/go.d/vault-pki-exporter.conf'
+          - '  configs/netdata/health.d/vault-pki.conf'
       when: wait_for_healthy | bool
-
 # Usage:
 # infisical run --env=prod --path="/apollo-13/vault" -- \
 #   uv run ansible-playbook playbooks/infrastructure/vault/deploy-pki-exporter.yml \

@@ -17,8 +17,8 @@
 
     - name: Update Consul configuration for servers
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIG'
         block: |
           consul {
             address = "127.0.0.1:8500"
@@ -46,13 +46,13 @@
             }
           }
         state: present
-        validate: "nomad config validate %s"
+        validate: 'nomad config validate %s'
       when: node_type.stdout == "server"
 
     - name: Update Consul configuration for clients
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIG'
         block: |
           consul {
             address = "127.0.0.1:8500"
@@ -80,7 +80,7 @@
             }
           }
         state: present
-        validate: "nomad config validate %s"
+        validate: 'nomad config validate %s'
       when: node_type.stdout == "client"
 
     - name: Restart Nomad service
@@ -92,7 +92,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
 
@@ -110,7 +110,7 @@
 
     - name: Show registered services
       ansible.builtin.debug:
-        msg: "{{ consul_services.stdout_lines }}"
+        msg: '{{ consul_services.stdout_lines }}'
 
     - name: Check if Nomad is registered
       ansible.builtin.debug:

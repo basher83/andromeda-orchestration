@@ -4,11 +4,10 @@
   hosts: all
   become: yes
   tasks:
-
     # --- Stop and disable services ---
     - name: Stop Check_MK services
       systemd:
-        name: "{{ item }}"
+        name: '{{ item }}'
         state: stopped
         enabled: no
       loop:
@@ -38,7 +37,7 @@
     # --- Remove directories ---
     - name: Remove Checkmk directories
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: absent
       loop:
         - /etc/check_mk
@@ -53,7 +52,7 @@
     # --- Remove systemd unit files ---
     - name: Remove systemd unit files
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: absent
       loop:
         - /usr/lib/systemd/system/check-mk-agent-async.service
@@ -67,7 +66,7 @@
     # --- Remove binaries ---
     - name: Remove Check_MK binaries
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: absent
       loop:
         - /usr/bin/check_mk_agent
@@ -88,4 +87,4 @@
 
     - name: Show process check results
       debug:
-        msg: "{{ process_check.stdout }}"
+        msg: '{{ process_check.stdout }}'

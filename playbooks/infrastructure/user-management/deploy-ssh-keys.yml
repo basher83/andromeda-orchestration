@@ -3,7 +3,7 @@
   hosts: all
   vars:
     ansible_user: root
-    ansible_password: "{{ vault_pbs_password }}"
+    ansible_password: '{{ vault_pbs_password }}'
     ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
   tasks:
     - name: Get staging SSH public key from doggos-homelab host
@@ -33,7 +33,7 @@
     - name: Deploy SSH key to ansible user
       ansible.posix.authorized_key:
         user: ansible
-        key: "{{ staging_key.stdout }}"
+        key: '{{ staging_key.stdout }}'
         state: present
 
     - name: Add ansible user to sudoers

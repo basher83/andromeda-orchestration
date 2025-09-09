@@ -6,19 +6,19 @@
   become: false
   vars:
     nomad_api_endpoint: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646', true) }}"
-    traefik_job: "nomad-jobs/core-infrastructure/traefik.nomad.hcl"
+    traefik_job: 'nomad-jobs/core-infrastructure/traefik.nomad.hcl'
     consul_api_endpoint: "{{ lookup('env', 'CONSUL_HTTP_ADDR') | default('http://192.168.11.10:8500', true) }}"
 
   pre_tasks:
     - name: Check Consul connectivity
       ansible.builtin.uri:
-        url: "{{ consul_api_endpoint }}/v1/status/leader"
+        url: '{{ consul_api_endpoint }}/v1/status/leader'
       register: consul_check
       failed_when: consul_check.status != 200
 
     - name: Check for port 80/443 conflicts in running allocations
       ansible.builtin.uri:
-        url: "{{ nomad_api_endpoint }}/v1/allocations"
+        url: '{{ nomad_api_endpoint }}/v1/allocations'
       register: allocations
 
     - name: Parse allocations for static port conflicts
@@ -38,7 +38,7 @@
 
     - name: Fail if ports 80/443 are already allocated
       ansible.builtin.fail:
-        msg: "Ports 80 or 443 are already allocated by another Nomad job: {{ port_conflicts }}"
+        msg: 'Ports 80 or 443 are already allocated by another Nomad job: {{ port_conflicts }}'
       when: port_conflicts | length > 0
 
     - name: Check for port conflicts on Nomad clients
@@ -62,14 +62,14 @@
     - name: Deploy Traefik using common job deployment
       ansible.builtin.include_tasks: deploy-job.yml
       vars:
-        job: "{{ traefik_job }}"
+        job: '{{ traefik_job }}'
         force: false
         wait: true
 
   post_tasks:
     - name: Wait for Traefik to register in Consul
       ansible.builtin.uri:
-        url: "{{ consul_api_endpoint }}/v1/catalog/service/traefik"
+        url: '{{ consul_api_endpoint }}/v1/catalog/service/traefik'
       register: traefik_service
       until: traefik_service.json | length > 0
       retries: 30
@@ -77,20 +77,19 @@
 
     - name: Test Traefik health endpoint
       ansible.builtin.uri:
-        url: "http://{{ traefik_service.json[0].ServiceAddress }}:{{ traefik_service.json[0].ServicePort }}/ping"
+        url: 'http://{{ traefik_service.json[0].ServiceAddress }}:{{ traefik_service.json[0].ServicePort }}/ping'
       register: health_check
       failed_when: health_check.status != 200
 
     - name: Display Traefik access information
       ansible.builtin.debug:
         msg:
-          - "Traefik deployed successfully!"
-          - "Dashboard: https://traefik.{{ homelab_domain }} (configure DNS to point to Nomad client)"
-          - "HTTP: Port 80 (redirects to HTTPS)"
-          - "HTTPS: Port 443"
-          - "Health: http://{{ traefik_service.json[0].ServiceAddress }}:{{ traefik_service.json[0].ServicePort }}/ping"
-          - ""
-          - "Configure DNS to point *.{{ homelab_domain }} to one of your Nomad client IPs"
-
+          - 'Traefik deployed successfully!'
+          - 'Dashboard: https://traefik.{{ homelab_domain }} (configure DNS to point to Nomad client)'
+          - 'HTTP: Port 80 (redirects to HTTPS)'
+          - 'HTTPS: Port 443'
+          - 'Health: http://{{ traefik_service.json[0].ServiceAddress }}:{{ traefik_service.json[0].ServicePort }}/ping'
+          - ''
+          - 'Configure DNS to point *.{{ homelab_domain }} to one of your Nomad client IPs'
 # Usage:
 # ansible-playbook deploy-traefik.yml -i inventory/doggos-homelab/infisical.proxmox.yml

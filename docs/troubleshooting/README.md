@@ -62,7 +62,42 @@ Common issues and solutions for infrastructure components.
 7. **Domain Migration** - Services not in Consul after migration → Check job service blocks
 8. **Netdata Streaming** - Child nodes not connecting → Verify API keys and firewalls
 
-### Getting Help
+## Issue Investigation Framework
+
+### Active Investigations Directory
+
+For **new issues requiring research**, use the standardized investigation template:
+
+```
+docs/troubleshooting/investigations/YYYY-MM-DD-issue-name.md
+```
+
+**Template**: [template.md](investigations/template.md)
+**Example**: [2025-01-09-postgresql-service-registration.md](investigations/2025-01-09-postgresql-service-registration.md)
+**Workflow Guide**: [workflow.md](investigations/workflow.md)
+
+#### Current Active Investigations
+
+- 🔍 **[PostgreSQL Service Registration](investigations/2025-01-09-postgresql-service-registration.md)** - Service identity regression investigation
+
+### Investigation → Resolution Workflow
+
+1. **Create Investigation Document** - Use template for new complex issues
+2. **Document Research & Diagnosis** - Track findings, tests, and hypotheses
+3. **Record Resolution Steps** - Document exact commands and configurations
+4. **Create Permanent Guide** - Move to appropriate section when resolved
+5. **Update Cross-References** - Link related issues and solutions
+
+### Investigation Status Categories
+
+- 🆕 **NEW** - Just discovered, investigation starting
+- 🔍 **INVESTIGATING** - Research and diagnosis in progress
+- 🎯 **DIAGNOSED** - Root cause identified, solution proposed
+- ✅ **RESOLVED** - Issue fixed, permanent guide created
+- 📚 **DOCUMENTED** - Moved to permanent troubleshooting guide
+- 🔄 **RECURRING** - Issue reappeared, investigation reopened
+
+### Quick Reference Commands
 
 - Check logs: `journalctl -u <service> -f`
 - Verify service status: `systemctl status <service>`

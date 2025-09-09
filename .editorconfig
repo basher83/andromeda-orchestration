@@ -18,16 +18,17 @@ indent_size = 2
 indent_size = 4
 max_line_length = 120
 
-# YAML files - Ansible and configuration
+# YAML files - Ansible and configuration (matches yamllint configuration)
 [*.{yml,yaml}]
 indent_size = 2
+max_line_length = 120  # Matches yamllint warning threshold
 quote_type = single
 
 # Ansible-specific YAML files
 [{playbooks,roles,inventory,group_vars,host_vars}/**/*.{yml,yaml}]
 indent_size = 2
-# Preserve Ansible's preferred formatting
-max_line_length = 160
+# Match yamllint configuration (warning at 120)
+max_line_length = 120
 
 # JSON files
 [*.json]
@@ -36,7 +37,7 @@ insert_final_newline = false
 
 # Markdown files
 [*.md]
-max_line_length = 120
+max_line_length = off  # Match markdownlint configuration (line-length: false)
 trim_trailing_whitespace = false  # Preserve intentional trailing spaces for line breaks
 
 # Shell scripts
@@ -44,8 +45,13 @@ trim_trailing_whitespace = false  # Preserve intentional trailing spaces for lin
 indent_size = 4
 shell_variant = bash
 
-# Nomad job files
-[*.{hcl,nomad}]
+# HCL files (Terraform, Nomad, etc.)
+[*.hcl]
+indent_size = 2
+max_line_length = 120
+
+# Nomad job files (specific pattern)
+[*.nomad]
 indent_size = 2
 max_line_length = 120
 
@@ -134,6 +140,10 @@ max_line_length = 120
 [.mise.toml]
 indent_size = 2
 
+# Mise local configuration (new with MegaLinter integration)
+[.mise.local.toml]
+indent_size = 2
+
 # Pre-commit configuration
 [.pre-commit-config.yaml]
 indent_size = 2
@@ -143,6 +153,14 @@ indent_size = 2
 indent_size = 2
 insert_final_newline = false
 
+# MegaLinter configuration
+[.mega-linter.yml]
+indent_size = 2
+
+# GitHub Actions workflow configurations
+[.github/actionlint.yml]
+indent_size = 2
+
 # CHANGELOG - preserve formatting
 [CHANGELOG.md]
 trim_trailing_whitespace = true
@@ -151,3 +169,8 @@ max_line_length = off
 # Security files
 [{SECURITY.md,security.txt}]
 max_line_length = 80
+
+# MegaLinter reports (generated files)
+[megalinter-reports/**/*]
+insert_final_newline = false
+trim_trailing_whitespace = false

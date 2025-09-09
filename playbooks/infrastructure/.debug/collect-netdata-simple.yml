@@ -87,14 +87,14 @@
           {% for line in netdata_logs.stdout_lines | default(['No logs']) %}
           {{ line }}
           {% endfor %}
-        dest: "/tmp/netdata_{{ inventory_hostname }}_{{ timestamp }}.txt"
+        dest: '/tmp/netdata_{{ inventory_hostname }}_{{ timestamp }}.txt'
       delegate_to: localhost
 
     - name: Display summary
       ansible.builtin.debug:
         msg:
-          - "Host: {{ inventory_hostname }}"
+          - 'Host: {{ inventory_hostname }}'
           - "Netdata: {{ netdata_version.stdout | default('Not installed') }}"
           - "Service: {{ netdata_service.status.ActiveState | default('Unknown') }}"
           - "Role: {{ 'parent' if inventory_hostname in groups.get('netdata_parents', []) else 'child' if inventory_hostname in groups.get('netdata_children', []) else 'standalone' }}"
-          - "Report saved to: /tmp/netdata_{{ inventory_hostname }}_{{ timestamp }}.txt"
+          - 'Report saved to: /tmp/netdata_{{ inventory_hostname }}_{{ timestamp }}.txt'

@@ -4,27 +4,27 @@
   hosts: localhost
   gather_facts: false
   vars:
-    nomad_addr: "http://192.168.11.11:4646"
-    job_file: "{{ job_path | mandatory }}"
+    nomad_addr: 'http://192.168.11.11:4646'
+    job_file: '{{ job_path | mandatory }}'
 
   tasks:
     - name: Read job specification
       ansible.builtin.slurp:
-        src: "{{ job_file }}"
+        src: '{{ job_file }}'
       register: job_spec
 
     - name: Deploy job using Nomad module
       community.general.nomad_job:
-        host: "{{ nomad_addr }}"
+        host: '{{ nomad_addr }}'
         state: present
-        content: "{{ job_spec.content | b64decode }}"
+        content: '{{ job_spec.content | b64decode }}'
         force_start: true
       register: deploy_result
 
     - name: Wait for job to be running
       community.general.nomad_job_info:
-        host: "{{ nomad_addr }}"
-        name: "{{ (job_file | basename | splitext)[0] }}"
+        host: '{{ nomad_addr }}'
+        name: '{{ (job_file | basename | splitext)[0] }}'
       register: job_info
       until: job_info.jobs[0].Status == "running"
       retries: 30
@@ -33,11 +33,10 @@
     - name: Display job status
       ansible.builtin.debug:
         msg:
-          - "Job deployed successfully!"
-          - "Name: {{ job_info.jobs[0].Name }}"
-          - "Status: {{ job_info.jobs[0].Status }}"
-          - "Type: {{ job_info.jobs[0].Type }}"
-          - "Datacenters: {{ job_info.jobs[0].Datacenters }}"
-
+          - 'Job deployed successfully!'
+          - 'Name: {{ job_info.jobs[0].Name }}'
+          - 'Status: {{ job_info.jobs[0].Status }}'
+          - 'Type: {{ job_info.jobs[0].Type }}'
+          - 'Datacenters: {{ job_info.jobs[0].Datacenters }}'
 # Usage:
 # ansible-playbook playbooks/nomad/job-deploy-v2.yml -e job_path=jobs/powerdns.nomad

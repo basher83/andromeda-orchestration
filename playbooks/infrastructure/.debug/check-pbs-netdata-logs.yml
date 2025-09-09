@@ -11,7 +11,7 @@
         name: pbs
         ansible_host: 192.168.30.200
         ansible_user: root
-        ansible_password: "{{ vault_pbs_password }}"
+        ansible_password: '{{ vault_pbs_password }}'
 
 - name: Find and check Netdata logs
   hosts: pbs
@@ -34,7 +34,7 @@
 
     - name: Display Netdata files
       ansible.builtin.debug:
-        msg: "{{ netdata_files.stdout_lines }}"
+        msg: '{{ netdata_files.stdout_lines }}'
 
     - name: Check if Netdata has error output
       ansible.builtin.shell: |
@@ -50,7 +50,7 @@
 
     - name: Display error logs
       ansible.builtin.debug:
-        msg: "{{ error_logs.stdout_lines }}"
+        msg: '{{ error_logs.stdout_lines }}'
 
     - name: Test streaming manually
       ansible.builtin.shell: |
@@ -63,11 +63,11 @@
 
     - name: Display manual test
       ansible.builtin.debug:
-        msg: "{{ manual_test.stdout_lines }}"
+        msg: '{{ manual_test.stdout_lines }}'
 
     - name: Check Netdata internal API
       ansible.builtin.uri:
-        url: "http://127.0.0.1:19999/api/v1/info"
+        url: 'http://127.0.0.1:19999/api/v1/info'
         method: GET
       register: netdata_info
       failed_when: false

@@ -3,34 +3,34 @@
 
 - name: Check if Consul is accessible
   uri:
-    url: "http://127.0.0.1:8500/v1/status/leader"
+    url: 'http://127.0.0.1:8500/v1/status/leader'
     headers:
-      X-Consul-Token: "{{ consul_service_token }}"
+      X-Consul-Token: '{{ consul_service_token }}'
   register: consul_leader_check
   failed_when: false
   changed_when: false
 
 - name: Register infrastructure services
   uri:
-    url: "http://127.0.0.1:8500/v1/agent/service/register"
+    url: 'http://127.0.0.1:8500/v1/agent/service/register'
     method: PUT
     headers:
-      X-Consul-Token: "{{ consul_service_token }}"
+      X-Consul-Token: '{{ consul_service_token }}'
     body_format: json
     body:
-      ID: "{{ instance.id }}"
-      Name: "{{ service.name }}"
-      Tags: "{{ instance.tags | default([]) }}"
-      Address: "{{ instance.address }}"
-      Port: "{{ service.port }}"
+      ID: '{{ instance.id }}'
+      Name: '{{ service.name }}'
+      Tags: '{{ instance.tags | default([]) }}'
+      Address: '{{ instance.address }}'
+      Port: '{{ service.port }}'
       Check:
-        TCP: "{{ instance.address }}:{{ service.port }}"
+        TCP: '{{ instance.address }}:{{ service.port }}'
         Interval: "{{ service.check_interval | default('10s') }}"
   loop: "{{ consul_infrastructure_services | subelements('instances') }}"
   loop_control:
     loop_var: service_instance
   vars:
-    service: "{{ service_instance.0 }}"
-    instance: "{{ service_instance.1 }}"
+    service: '{{ service_instance.0 }}'
+    instance: '{{ service_instance.1 }}'
   when: consul_leader_check.status == 200
   delegate_to: localhost

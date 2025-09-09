@@ -17,15 +17,15 @@
   become: false
   vars:
     nomad_api_endpoint: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646', true) }}"
-    nomad_namespace: "default"
-    job_name: "{{ hostvars[inventory_hostname]['job_name'] | default('', true) }}"  # Optional: specify a job name
-    report_dir: "{{ playbook_dir }}/../../reports/nomad"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    nomad_namespace: 'default'
+    job_name: "{{ hostvars[inventory_hostname]['job_name'] | default('', true) }}" # Optional: specify a job name
+    report_dir: '{{ playbook_dir }}/../../reports/nomad'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
 
   tasks:
     - name: Create report directory
       ansible.builtin.file:
-        path: "{{ report_dir }}"
+        path: '{{ report_dir }}'
         state: directory
         mode: '0755'
       delegate_to: localhost
@@ -33,10 +33,10 @@
 
     - name: Get specific job info
       ansible.builtin.uri:
-        url: "{{ nomad_api_endpoint }}/v1/job/{{ job_name }}?namespace={{ nomad_namespace }}"
+        url: '{{ nomad_api_endpoint }}/v1/job/{{ job_name }}?namespace={{ nomad_namespace }}'
         method: GET
         headers:
-          Content-Type: "application/json"
+          Content-Type: 'application/json'
       register: specific_job_result
       when: job_name != ""
 
@@ -45,14 +45,14 @@
         host: "{{ nomad_api_endpoint | urlsplit('hostname') }}"
         port: "{{ nomad_api_endpoint | urlsplit('port') | default(4646, true) }}"
         use_ssl: "{{ nomad_api_endpoint.startswith('https') }}"
-        namespace: "{{ nomad_namespace }}"
+        namespace: '{{ nomad_namespace }}'
       register: all_jobs_result
       when: job_name == ""
 
     - name: Display specific job status
       ansible.builtin.debug:
         msg:
-          - "📊 Job: {{ job_name }}"
+          - '📊 Job: {{ job_name }}'
           - "Status: {{ specific_job_result.json.Status | default('Unknown') }}"
           - "Type: {{ specific_job_result.json.Type | default('Unknown') }}"
           - "Priority: {{ specific_job_result.json.Priority | default('Unknown') }}"
@@ -64,11 +64,11 @@
     - name: Display all jobs summary
       ansible.builtin.debug:
         msg:
-          - "📊 All Nomad Jobs Summary:"
-          - "========================="
-          - "Total Jobs: {{ all_jobs_result.result | length | default(0) }}"
-          - ""
-          - "Job List:"
+          - '📊 All Nomad Jobs Summary:'
+          - '========================='
+          - 'Total Jobs: {{ all_jobs_result.result | length | default(0) }}'
+          - ''
+          - 'Job List:'
           - "{{ all_jobs_result.result | default([]) | map(attribute='Name') | list | join(', ') }}"
       when: job_name == "" and all_jobs_result.result is defined
 
@@ -158,19 +158,19 @@
     - name: Warn about unhealthy jobs
       ansible.builtin.debug:
         msg:
-          - "⚠️  WARNING: Unhealthy jobs detected!"
+          - '⚠️  WARNING: Unhealthy jobs detected!'
           - "Jobs with issues: {{ unhealthy_jobs | join(', ') }}"
-          - "These jobs are either not running or have failed allocations."
+          - 'These jobs are either not running or have failed allocations.'
           - "Use 'nomad job status <job-name>' for detailed troubleshooting."
       when: unhealthy_jobs is defined and unhealthy_jobs | length > 0
 
     - name: Display completion message
       ansible.builtin.debug:
         msg:
-          - "✅ Nomad job status check complete!"
+          - '✅ Nomad job status check complete!'
           - "Report saved to: {{ report_dir }}/job_status_{{ job_name | default('all', true) }}_{{ timestamp }}.md"
-          - ""
-          - "Next steps:"
-          - "- Check unhealthy jobs if any were reported"
-          - "- Review allocation details for failed jobs"
-          - "- Monitor resource usage and constraints"
+          - ''
+          - 'Next steps:'
+          - '- Check unhealthy jobs if any were reported'
+          - '- Review allocation details for failed jobs'
+          - '- Monitor resource usage and constraints'

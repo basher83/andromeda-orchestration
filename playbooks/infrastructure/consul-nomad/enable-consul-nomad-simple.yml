@@ -11,8 +11,8 @@
   tasks:
     - name: Backup Nomad configuration
       ansible.builtin.copy:
-        src: "{{ nomad_config_file }}"
-        dest: "{{ nomad_config_file }}.backup.{{ ansible_date_time.epoch }}"
+        src: '{{ nomad_config_file }}'
+        dest: '{{ nomad_config_file }}.backup.{{ ansible_date_time.epoch }}'
         remote_src: true
 
     - name: Check if Consul stanza exists
@@ -24,8 +24,8 @@
 
     - name: Update Consul configuration in Nomad
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIG'
         block: |
           # Updated Consul integration
           consul {
@@ -55,10 +55,10 @@
 
     - name: Add missing Consul parameters if stanza exists
       ansible.builtin.lineinfile:
-        path: "{{ nomad_config_file }}"
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        insertafter: "^consul {"
+        path: '{{ nomad_config_file }}'
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+        insertafter: '^consul {'
         state: present
       loop:
         - { regexp: '^\s*server_service_name\s*=', line: '  server_service_name = "nomad"' }
@@ -78,7 +78,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
 
@@ -104,7 +104,7 @@
 
     - name: Display registered services
       ansible.builtin.debug:
-        msg: "Consul services: {{ consul_services.stdout_lines }}"
+        msg: 'Consul services: {{ consul_services.stdout_lines }}'
 
     - name: Check for Nomad service
       ansible.builtin.debug:

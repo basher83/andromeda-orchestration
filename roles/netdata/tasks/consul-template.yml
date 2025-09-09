@@ -1,7 +1,7 @@
 ---
 - name: Install consul-template
   ansible.builtin.unarchive:
-    src: "https://releases.hashicorp.com/consul-template/{{ consul_template_version }}/consul-template_{{ consul_template_version }}_linux_amd64.zip"
+    src: 'https://releases.hashicorp.com/consul-template/{{ consul_template_version }}/consul-template_{{ consul_template_version }}_linux_amd64.zip'
     dest: /usr/local/bin
     remote_src: true
     owner: root
@@ -30,10 +30,10 @@
 
 - name: Deploy health alarm templates
   ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "/etc/consul-template.d/templates/{{ item.name }}"
+    src: '{{ item.src }}'
+    dest: '/etc/consul-template.d/templates/{{ item.name }}'
     mode: '0644'
-  loop: "{{ netdata_consul_template_configs }}"
+  loop: '{{ netdata_consul_template_configs }}'
   when: netdata_consul_template_configs is defined
   notify: restart consul-template
 
@@ -55,12 +55,12 @@
 
 - name: Populate initial KV values in Consul
   ansible.builtin.uri:
-    url: "{{ netdata_consul_url }}/v1/kv/{{ item.key }}"
+    url: '{{ netdata_consul_url }}/v1/kv/{{ item.key }}'
     method: PUT
-    body: "{{ item.value }}"
+    body: '{{ item.value }}'
     headers:
-      X-Consul-Token: "{{ netdata_consul_acl_token | default(omit) }}"
-  loop: "{{ netdata_consul_kv_defaults }}"
+      X-Consul-Token: '{{ netdata_consul_acl_token | default(omit) }}'
+  loop: '{{ netdata_consul_kv_defaults }}'
   when:
     - netdata_consul_kv_defaults is defined
     - netdata_consul_template_populate_kv | default(false)

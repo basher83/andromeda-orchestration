@@ -3,7 +3,7 @@
   ansible.builtin.assert:
     that:
       - netdata_node_type in ['standalone', 'child', 'parent', 'proxy']
-    fail_msg: "Invalid netdata_node_type: {{ netdata_node_type }}. Must be one of: standalone, child, parent, proxy"
+    fail_msg: 'Invalid netdata_node_type: {{ netdata_node_type }}. Must be one of: standalone, child, parent, proxy'
   tags:
     - netdata
     - netdata-streaming
@@ -13,14 +13,14 @@
   block:
     - name: Get Infisical secrets
       infisical.vault.read_secrets:
-        path: "{{ netdata_infisical_path }}"
+        path: '{{ netdata_infisical_path }}'
         env_slug: "{{ infisical_environment | default('prod') }}"
       register: netdata_secrets
       no_log: true
 
     - name: Set API key from Infisical for child node
       ansible.builtin.set_fact:
-        netdata_streaming_api_key: "{{ netdata_secrets.secrets.NETDATA_STREAMING_API_KEY }}"
+        netdata_streaming_api_key: '{{ netdata_secrets.secrets.NETDATA_STREAMING_API_KEY }}'
       when:
         - netdata_node_type == 'child'
         - netdata_secrets.secrets.NETDATA_STREAMING_API_KEY is defined
@@ -28,7 +28,7 @@
 
     - name: Set API key from Infisical for parent node
       ansible.builtin.set_fact:
-        netdata_parent_api_key: "{{ netdata_secrets.secrets.NETDATA_PARENT_API_KEY }}"
+        netdata_parent_api_key: '{{ netdata_secrets.secrets.NETDATA_PARENT_API_KEY }}'
       when:
         - netdata_node_type == 'parent'
         - netdata_secrets.secrets.NETDATA_PARENT_API_KEY is defined
@@ -65,9 +65,9 @@
 - name: Deploy streaming configuration
   ansible.builtin.template:
     src: stream.conf.j2
-    dest: "{{ netdata_config_dir }}/stream.conf"
-    owner: "{{ netdata_user }}"
-    group: "{{ netdata_group }}"
+    dest: '{{ netdata_config_dir }}/stream.conf'
+    owner: '{{ netdata_user }}'
+    group: '{{ netdata_group }}'
     mode: '0640'
     backup: true
   when: netdata_node_type != 'standalone'

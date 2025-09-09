@@ -32,7 +32,7 @@
 
     - name: Display warning if secrets exist
       debug:
-        msg: "WARNING: PowerDNS secrets already exist in Consul KV. They will NOT be overwritten."
+        msg: 'WARNING: PowerDNS secrets already exist in Consul KV. They will NOT be overwritten.'
       when: existing_secret.rc == 0
 
     - name: Create PowerDNS KV folder structure
@@ -43,16 +43,16 @@
       no_log: true
 
     - name: Create PowerDNS secrets in Consul KV
-      command: "consul kv put -token={{ consul_mgmt_token }} {{ item.key }} {{ item.value }}"
+      command: 'consul kv put -token={{ consul_mgmt_token }} {{ item.key }} {{ item.value }}'
       loop:
-        - { key: "powerdns/mysql/root_password", value: "{{ mysql_root_password }}" }
-        - { key: "powerdns/mysql/password", value: "{{ mysql_user_password }}" }
-        - { key: "powerdns/api/key", value: "{{ powerdns_api_key }}" }
+        - { key: 'powerdns/mysql/root_password', value: '{{ mysql_root_password }}' }
+        - { key: 'powerdns/mysql/password', value: '{{ mysql_user_password }}' }
+        - { key: 'powerdns/api/key', value: '{{ powerdns_api_key }}' }
       when: existing_secret.rc != 0
       no_log: true
 
     - name: Verify secrets were created
-      command: "consul kv get -token={{ consul_mgmt_token }} {{ item }}"
+      command: 'consul kv get -token={{ consul_mgmt_token }} {{ item }}'
       loop:
         - powerdns/mysql/root_password
         - powerdns/mysql/password

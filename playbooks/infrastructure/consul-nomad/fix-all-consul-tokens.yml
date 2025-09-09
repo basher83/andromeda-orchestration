@@ -6,82 +6,82 @@
 - name: Fix Consul agent tokens on Nomad servers
   hosts: nomad-server-1-lloyd,nomad-server-2-holly
   become: true
-  serial: 1  # Process one at a time
+  serial: 1 # Process one at a time
   vars:
-    consul_agent_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"  # Server token
+    consul_agent_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}" # Server token
 
   tasks:
-    - name: "[SERVER] Update agent token in Consul config"
+    - name: '[SERVER] Update agent token in Consul config'
       ansible.builtin.shell: |
         sed -i 's/agent = ""/agent = "{{ consul_agent_token }}"/' /etc/consul.d/consul.hcl
       register: config_update
 
-    - name: "[SERVER] Restart Consul to apply the token"
+    - name: '[SERVER] Restart Consul to apply the token'
       ansible.builtin.systemd:
         name: consul
         state: restarted
 
-    - name: "[SERVER] Wait for Consul to be ready"
+    - name: '[SERVER] Wait for Consul to be ready'
       ansible.builtin.wait_for:
         port: 8500
         host: 127.0.0.1
         delay: 5
         timeout: 30
 
-    - name: "[SERVER] Verify fix worked"
+    - name: '[SERVER] Verify fix worked'
       ansible.builtin.shell: |
         journalctl -u consul --since "30 seconds ago" --no-pager | grep -E "Synced node info|Synced service|blocked by ACLs"
       register: verification
       changed_when: false
       failed_when: false
 
-    - name: "[SERVER] Display results"
+    - name: '[SERVER] Display results'
       ansible.builtin.debug:
         msg:
-          - "Server: {{ inventory_hostname }}"
-          - "Token applied: {{ consul_agent_token }}"
+          - 'Server: {{ inventory_hostname }}'
+          - 'Token applied: {{ consul_agent_token }}'
           - "Status: {{ 'No ACL errors - SUCCESS' if verification.stdout == '' else 'Check output below' }}"
-          - "{{ verification.stdout_lines | default([]) }}"
+          - '{{ verification.stdout_lines | default([]) }}'
 
 - name: Fix Consul agent tokens on Nomad clients
   hosts: nomad-client-1-lloyd,nomad-client-2-holly,nomad-client-3-mable
   become: true
-  serial: 1  # Process one at a time
+  serial: 1 # Process one at a time
   vars:
-    consul_agent_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"  # Client token
+    consul_agent_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}" # Client token
 
   tasks:
-    - name: "[CLIENT] Update agent token in Consul config"
+    - name: '[CLIENT] Update agent token in Consul config'
       ansible.builtin.shell: |
         sed -i 's/agent = ""/agent = "{{ consul_agent_token }}"/' /etc/consul.d/consul.hcl
       register: config_update
 
-    - name: "[CLIENT] Restart Consul to apply the token"
+    - name: '[CLIENT] Restart Consul to apply the token'
       ansible.builtin.systemd:
         name: consul
         state: restarted
 
-    - name: "[CLIENT] Wait for Consul to be ready"
+    - name: '[CLIENT] Wait for Consul to be ready'
       ansible.builtin.wait_for:
         port: 8500
         host: 127.0.0.1
         delay: 5
         timeout: 30
 
-    - name: "[CLIENT] Verify fix worked"
+    - name: '[CLIENT] Verify fix worked'
       ansible.builtin.shell: |
         journalctl -u consul --since "30 seconds ago" --no-pager | grep -E "Synced node info|Synced service|blocked by ACLs"
       register: verification
       changed_when: false
       failed_when: false
 
-    - name: "[CLIENT] Display results"
+    - name: '[CLIENT] Display results'
       ansible.builtin.debug:
         msg:
-          - "Client: {{ inventory_hostname }}"
-          - "Token applied: {{ consul_agent_token }}"
+          - 'Client: {{ inventory_hostname }}'
+          - 'Token applied: {{ consul_agent_token }}'
           - "Status: {{ 'No ACL errors - SUCCESS' if verification.stdout == '' else 'Check output below' }}"
-          - "{{ verification.stdout_lines | default([]) }}"
+          - '{{ verification.stdout_lines | default([]) }}'
 
 - name: Final verification from leader
   hosts: nomad-server-3-mable
@@ -116,16 +116,16 @@
     - name: Final summary
       ansible.builtin.debug:
         msg:
-          - "=========================================="
-          - "CONSUL ACL TOKEN FIX COMPLETED"
-          - "=========================================="
-          - "Servers fixed: nomad-server-1, nomad-server-2"
-          - "  Token: "
-          - "Clients fixed: nomad-client-1, nomad-client-2, nomad-client-3"
-          - "  Token: "
-          - "=========================================="
-          - "All Consul nodes:"
-          - "{{ all_nodes.stdout_lines }}"
-          - "Nomad services registered:"
-          - "{{ nomad_services.stdout_lines }}"
-          - "=========================================="
+          - '=========================================='
+          - 'CONSUL ACL TOKEN FIX COMPLETED'
+          - '=========================================='
+          - 'Servers fixed: nomad-server-1, nomad-server-2'
+          - '  Token: '
+          - 'Clients fixed: nomad-client-1, nomad-client-2, nomad-client-3'
+          - '  Token: '
+          - '=========================================='
+          - 'All Consul nodes:'
+          - '{{ all_nodes.stdout_lines }}'
+          - 'Nomad services registered:'
+          - '{{ nomad_services.stdout_lines }}'
+          - '=========================================='

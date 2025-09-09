@@ -20,7 +20,7 @@ netdata_streaming_destination: |
   {{ parents | join(' ') }}
 
 # Use a mesh-specific API key for parent-to-parent streaming
-netdata_streaming_api_key: "{{ vault_netdata_mesh_api_key }}"
+netdata_streaming_api_key: '{{ vault_netdata_mesh_api_key }}'
 
 # Parent nodes also accept streams from other parents
 netdata_parent_children: |

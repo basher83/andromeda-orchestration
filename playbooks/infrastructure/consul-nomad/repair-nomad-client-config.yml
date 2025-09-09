@@ -19,8 +19,8 @@
 
     - name: Restore from backup if available
       ansible.builtin.copy:
-        src: "{{ backup_file.stdout }}"
-        dest: "{{ nomad_config_file }}"
+        src: '{{ backup_file.stdout }}'
+        dest: '{{ nomad_config_file }}'
         remote_src: true
         backup: true
       when: backup_file.stdout != ""
@@ -36,8 +36,8 @@
 
     - name: Add consul configuration at the end of file
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION'
         block: |
           consul {
             address = "127.0.0.1:8500"
@@ -81,7 +81,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
 
@@ -97,9 +97,9 @@
     - name: Display node status
       ansible.builtin.debug:
         msg:
-          - "Nomad client configuration repaired!"
-          - ""
-          - "All Nomad nodes:"
-          - "{{ node_status.stdout_lines }}"
-          - ""
-          - "Ready to deploy services!"
+          - 'Nomad client configuration repaired!'
+          - ''
+          - 'All Nomad nodes:'
+          - '{{ node_status.stdout_lines }}'
+          - ''
+          - 'Ready to deploy services!'

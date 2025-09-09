@@ -6,15 +6,15 @@
   gather_facts: false
   become: false
   vars:
-    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
 
     # Configuration
-    powerdns_ip: "{{ powerdns_ip | default('192.168.11.20', true) }}"  # PowerDNS on nomad-client-1
-    powerdns_api_url: "http://{{ powerdns_ip }}:8081"
-    netbox_url: "https://192.168.30.213"
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    powerdns_ip: "{{ powerdns_ip | default('192.168.11.20', true) }}" # PowerDNS on nomad-client-1
+    powerdns_api_url: 'http://{{ powerdns_ip }}:8081'
+    netbox_url: 'https://192.168.30.213'
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
-    consul_url: "http://{{ powerdns_ip }}:8500"  # Consul on nomad-client-1
+    consul_url: 'http://{{ powerdns_ip }}:8500' # Consul on nomad-client-1
 
     # Domain variables (provided by inventory)
     homelab_domain: "{{ homelab_domain | default('spaceships.work', true) }}"
@@ -24,13 +24,13 @@
   tasks:
     - name: Retrieve PowerDNS API key from Consul KV
       uri:
-        url: "{{ consul_url }}/v1/kv/powerdns/api/key?raw"
+        url: '{{ consul_url }}/v1/kv/powerdns/api/key?raw'
         method: GET
       register: powerdns_api_key_result
 
     - name: Set PowerDNS API key
       set_fact:
-        powerdns_api_key: "{{ powerdns_api_key_result.content }}"
+        powerdns_api_key: '{{ powerdns_api_key_result.content }}'
 
     - name: Retrieve NetBox API token from Infisical
       set_fact:
@@ -46,16 +46,16 @@
 
     - name: Test PowerDNS API connectivity
       uri:
-        url: "{{ powerdns_api_url }}/api/v1/servers"
+        url: '{{ powerdns_api_url }}/api/v1/servers'
         method: GET
         headers:
-          X-API-Key: "{{ powerdns_api_key }}"
+          X-API-Key: '{{ powerdns_api_key }}'
         status_code: 200
       register: pdns_api_test
 
     - name: Display PowerDNS server info
       debug:
-        msg: "PowerDNS API is accessible. Server: {{ pdns_api_test.json }}"
+        msg: 'PowerDNS API is accessible. Server: {{ pdns_api_test.json }}'
 
     - name: Run initial sync from NetBox to PowerDNS (dry-run)
       command: |
@@ -71,11 +71,11 @@
 
     - name: Display dry-run results
       debug:
-        msg: "{{ sync_dry_run.stdout_lines }}"
+        msg: '{{ sync_dry_run.stdout_lines }}'
 
     - name: Prompt for actual sync
       pause:
-        prompt: "Review the dry-run results above. Press Enter to perform actual sync or Ctrl-C to abort"
+        prompt: 'Review the dry-run results above. Press Enter to perform actual sync or Ctrl-C to abort'
 
     - name: Run actual sync from NetBox to PowerDNS
       command: |
@@ -89,7 +89,7 @@
 
     - name: Display sync results
       debug:
-        msg: "{{ sync_result.stdout_lines }}"
+        msg: '{{ sync_result.stdout_lines }}'
 
     - name: Create sync script wrapper
       copy:
@@ -119,10 +119,10 @@
     - name: Display DNS test results
       debug:
         msg:
-          - "DNS Resolution Test:"
-          - "Query: ns1.{{ homelab_domain }}"
-          - "Result: {{ dns_test.stdout }}"
-          - ""
-          - "Integration Complete!"
-          - "NetBox DNS zones are now synced to PowerDNS"
-          - "Sync script created at: /tmp/netbox-powerdns-sync.sh"
+          - 'DNS Resolution Test:'
+          - 'Query: ns1.{{ homelab_domain }}'
+          - 'Result: {{ dns_test.stdout }}'
+          - ''
+          - 'Integration Complete!'
+          - 'NetBox DNS zones are now synced to PowerDNS'
+          - 'Sync script created at: /tmp/netbox-powerdns-sync.sh'

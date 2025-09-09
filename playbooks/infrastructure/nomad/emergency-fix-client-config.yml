@@ -127,7 +127,7 @@
 
     - name: Display validation errors if any
       ansible.builtin.debug:
-        msg: "Validation failed: {{ validation_result.stderr }}"
+        msg: 'Validation failed: {{ validation_result.stderr }}'
       when: validation_result.rc != 0
 
 - name: Verify All Nodes
@@ -146,9 +146,9 @@
     - name: Display node status
       ansible.builtin.debug:
         msg:
-          - "Nomad client configuration restored!"
-          - ""
-          - "All Nomad nodes:"
-          - "{{ node_status.stdout_lines }}"
-          - ""
-          - "Ports 80 and 443 are now available for Traefik!"
+          - 'Nomad client configuration restored!'
+          - ''
+          - 'All Nomad nodes:'
+          - '{{ node_status.stdout_lines }}'
+          - ''
+          - 'Ports 80 and 443 are now available for Traefik!'

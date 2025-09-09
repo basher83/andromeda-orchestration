@@ -158,6 +158,6 @@
     - name: Display mesh status
       ansible.builtin.debug:
         msg:
-          - "Node: {{ inventory_hostname }}"
-          - "Active connections: {{ connection_count.stdout }}"
-          - "Expected: 3+ (children) + 3 (mesh peers)"
+          - 'Node: {{ inventory_hostname }}'
+          - 'Active connections: {{ connection_count.stdout }}'
+          - 'Expected: 3+ (children) + 3 (mesh peers)'

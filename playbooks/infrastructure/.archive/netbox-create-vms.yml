@@ -6,9 +6,9 @@
   gather_facts: false
   become: false
   vars:
-    ansible_python_interpreter: "{{ ansible_playbook_python }}"
-    netbox_url: "https://192.168.30.213"
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+    netbox_url: 'https://192.168.30.213'
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
     netbox_validate_certs: false
 
@@ -28,25 +28,25 @@
     # Create cluster type first
     - name: Create Proxmox cluster type
       netbox.netbox.netbox_cluster_type:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "Proxmox VE"
-          slug: "proxmox-ve"
-          description: "Proxmox Virtual Environment Cluster"
+          name: 'Proxmox VE'
+          slug: 'proxmox-ve'
+          description: 'Proxmox Virtual Environment Cluster'
         state: present
 
     # Create virtualization cluster
     - name: Create Doggos virtualization cluster
       netbox.netbox.netbox_cluster:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "doggos-cluster"
-          cluster_type: "proxmox-ve"
-          comments: "3-node Proxmox cluster with Nomad"
+          name: 'doggos-cluster'
+          cluster_type: 'proxmox-ve'
+          comments: '3-node Proxmox cluster with Nomad'
         state: present
 
     # Get VM data from inventory
@@ -63,106 +63,106 @@
     - name: Display VMs to be created
       debug:
         msg:
-          - "Creating {{ vm_list | length }} VMs:"
-          - "{{ vm_list }}"
+          - 'Creating {{ vm_list | length }} VMs:'
+          - '{{ vm_list }}'
 
     # Create Virtual Machines
     - name: Create Virtual Machines in NetBox
       netbox.netbox.netbox_virtual_machine:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item.name }}"
-          cluster: "doggos-cluster"
-          status: "active"
+          name: '{{ item.name }}'
+          cluster: 'doggos-cluster'
+          status: 'active'
           vcpus: 8
           memory: 16384
           disk: 68
           comments: "Nomad {{ 'Server' if 'server' in item.role else 'Client' }} on {{ item.host }}"
-          virtual_machine_role: "{{ item.role }}"
-          platform: "linux"
+          virtual_machine_role: '{{ item.role }}'
+          platform: 'linux'
         state: present
-      loop: "{{ vm_list }}"
+      loop: '{{ vm_list }}'
 
     # Create VM interfaces
     - name: Create primary interface for VMs
       netbox.netbox.netbox_vm_interface:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          virtual_machine: "{{ item.name }}"
-          name: "eth0"
-          description: "2.5G Network Interface"
+          virtual_machine: '{{ item.name }}'
+          name: 'eth0'
+          description: '2.5G Network Interface'
         state: present
-      loop: "{{ vm_list }}"
+      loop: '{{ vm_list }}'
 
     - name: Create secondary interface for VMs
       netbox.netbox.netbox_vm_interface:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          virtual_machine: "{{ item.name }}"
-          name: "eth1"
-          description: "10G Network Interface"
+          virtual_machine: '{{ item.name }}'
+          name: 'eth1'
+          description: '10G Network Interface'
         state: present
-      loop: "{{ vm_list }}"
+      loop: '{{ vm_list }}'
 
     # Create IP addresses for VMs - Management network (192.168.10.x)
     - name: Create IP addresses for VMs on management network
       netbox.netbox.netbox_ip_address:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          address: "{{ item.ip }}/24"
-          status: "active"
-          description: "{{ item.name }} - Management Network"
-          dns_name: "{{ item.name }}.homelab.local"
+          address: '{{ item.ip }}/24'
+          status: 'active'
+          description: '{{ item.name }} - Management Network'
+          dns_name: '{{ item.name }}.homelab.local'
           assigned_object:
-            virtual_machine: "{{ item.name }}"
-            name: "eth0"
+            virtual_machine: '{{ item.name }}'
+            name: 'eth0'
         state: present
-      loop: "{{ vm_list }}"
+      loop: '{{ vm_list }}'
       register: vm_primary_ips
 
     # Create IP addresses for VMs - Data network (192.168.11.x)
     - name: Create IP addresses for VMs on data network
       netbox.netbox.netbox_ip_address:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
           address: "{{ item.ip | regex_replace('192.168.10', '192.168.11') }}/24"
-          status: "active"
-          description: "{{ item.name }} - Data Network (10G)"
-          dns_name: "{{ item.name }}-10g.homelab.local"
+          status: 'active'
+          description: '{{ item.name }} - Data Network (10G)'
+          dns_name: '{{ item.name }}-10g.homelab.local'
           assigned_object:
-            virtual_machine: "{{ item.name }}"
-            name: "eth1"
+            virtual_machine: '{{ item.name }}'
+            name: 'eth1'
         state: present
-      loop: "{{ vm_list }}"
+      loop: '{{ vm_list }}'
 
     # Set primary IPs for VMs
     - name: Set primary IPs for VMs
       netbox.netbox.netbox_virtual_machine:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item.0.name }}"
-          primary_ip4: "{{ item.1.ip_address.id }}"
+          name: '{{ item.0.name }}'
+          primary_ip4: '{{ item.1.ip_address.id }}'
         state: present
-      loop: "{{ vm_list | zip(vm_primary_ips.results) | list }}"
+      loop: '{{ vm_list | zip(vm_primary_ips.results) | list }}'
       when: vm_primary_ips is defined
 
     - name: Summary
       debug:
         msg:
-          - "VM creation completed!"
-          - "Created {{ vm_list | length }} Virtual Machines"
-          - "Each VM has 2 network interfaces (eth0, eth1)"
-          - "Each VM has IPs on both 192.168.10.x and 192.168.11.x networks"
-          - "NetBox URL: {{ netbox_url }}"
+          - 'VM creation completed!'
+          - 'Created {{ vm_list | length }} Virtual Machines'
+          - 'Each VM has 2 network interfaces (eth0, eth1)'
+          - 'Each VM has IPs on both 192.168.10.x and 192.168.11.x networks'
+          - 'NetBox URL: {{ netbox_url }}'

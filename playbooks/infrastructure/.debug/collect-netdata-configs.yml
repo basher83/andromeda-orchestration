@@ -7,7 +7,7 @@
 
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
-    report_dir: "reports/netdata"
+    report_dir: 'reports/netdata'
 
   tasks:
     - name: Check if Netdata is installed
@@ -59,7 +59,7 @@
 
     - name: Get Netdata API info
       ansible.builtin.uri:
-        url: "http://localhost:19999/api/v1/info"
+        url: 'http://localhost:19999/api/v1/info'
         return_content: yes
       register: netdata_api_info
       when:
@@ -69,7 +69,7 @@
 
     - name: Get streaming status from API
       ansible.builtin.uri:
-        url: "http://localhost:19999/api/v1/mgmt/streaming"
+        url: 'http://localhost:19999/api/v1/mgmt/streaming'
         return_content: yes
       register: streaming_api
       when:
@@ -95,27 +95,27 @@
     - name: Compile host report
       ansible.builtin.set_fact:
         host_report:
-          hostname: "{{ inventory_hostname }}"
+          hostname: '{{ inventory_hostname }}'
           ansible_host: "{{ ansible_host | default('N/A') }}"
-          timestamp: "{{ timestamp }}"
-          netdata_installed: "{{ netdata_binary.stat.exists }}"
+          timestamp: '{{ timestamp }}'
+          netdata_installed: '{{ netdata_binary.stat.exists }}'
           netdata_version: "{{ netdata_version.stdout | default('Not installed') }}"
           service_state: "{{ netdata_service.status.ActiveState | default('Unknown') }}"
           service_enabled: "{{ netdata_service.status.UnitFileState | default('Unknown') }}"
-          listening_ports: "{{ listening_ports.stdout_lines | default([]) }}"
+          listening_ports: '{{ listening_ports.stdout_lines | default([]) }}'
           role: "{{ 'parent' if inventory_hostname in groups.get('netdata_parents', []) else 'child' if inventory_hostname in groups.get('netdata_children', []) else 'standalone' }}"
           configurations:
             netdata_conf: "{{ netdata_conf.content | default('') | b64decode | default('Not found') }}"
             stream_conf: "{{ stream_conf.content | default('') | b64decode | default('Not found') }}"
             consul_conf: "{{ consul_conf.content | default('') | b64decode | default('Not found') }}"
             consul_service: "{{ consul_service_file.content | default('') | b64decode | default('Not registered') }}"
-          api_info: "{{ netdata_api_info.json | default({}) }}"
-          streaming_status: "{{ streaming_api.json | default({}) }}"
-          recent_logs: "{{ netdata_logs.stdout_lines | default([]) }}"
+          api_info: '{{ netdata_api_info.json | default({}) }}'
+          streaming_status: '{{ streaming_api.json | default({}) }}'
+          recent_logs: '{{ netdata_logs.stdout_lines | default([]) }}'
 
     - name: Create local report directory
       ansible.builtin.file:
-        path: "{{ report_dir }}"
+        path: '{{ report_dir }}'
         state: directory
         mode: '0755'
       delegate_to: localhost
@@ -124,8 +124,8 @@
 
     - name: Save individual host configuration
       ansible.builtin.copy:
-        content: "{{ host_report | to_nice_yaml }}"
-        dest: "{{ report_dir }}/netdata_{{ inventory_hostname }}_{{ timestamp }}.yml"
+        content: '{{ host_report | to_nice_yaml }}'
+        dest: '{{ report_dir }}/netdata_{{ inventory_hostname }}_{{ timestamp }}.yml'
         mode: '0644'
       delegate_to: localhost
       become: no
@@ -136,25 +136,25 @@
 
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M') }}"
-    report_dir: "reports/netdata"
+    report_dir: 'reports/netdata'
 
   tasks:
     - name: Find all host reports
       ansible.builtin.find:
-        paths: "{{ report_dir }}"
-        patterns: "netdata_*_{{ timestamp }}.yml"
+        paths: '{{ report_dir }}'
+        patterns: 'netdata_*_{{ timestamp }}.yml'
       register: host_reports
 
     - name: Load all host reports
       ansible.builtin.include_vars:
-        file: "{{ item.path }}"
+        file: '{{ item.path }}'
         name: "host_{{ item.path | basename | regex_replace('netdata_(.*)_.*\\.yml', '\\1') }}"
-      loop: "{{ host_reports.files }}"
+      loop: '{{ host_reports.files }}'
 
     - name: Create summary report
       ansible.builtin.template:
         src: netdata_summary_report.j2
-        dest: "{{ report_dir }}/netdata_configuration_summary_{{ timestamp }}.md"
+        dest: '{{ report_dir }}/netdata_configuration_summary_{{ timestamp }}.md'
         mode: '0644'
       vars:
         all_hosts: "{{ hostvars | dict2items | selectattr('key', 'match', '^host_') | map(attribute='value') | list }}"

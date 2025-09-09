@@ -9,7 +9,7 @@
 - name: Update Nomad Client ACL Policy with KV Access
   hosts: nomad-server-1-lloyd
   vars:
-    consul_api: "http://127.0.0.1:8500"
+    consul_api: 'http://127.0.0.1:8500'
     consul_management_token: >-
       {{ (lookup('infisical.vault.read_secrets',
                  universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
@@ -22,64 +22,64 @@
   tasks:
     - name: Display current nomad-client policy
       ansible.builtin.uri:
-        url: "{{ consul_api }}/v1/acl/policy/name/nomad-client"
+        url: '{{ consul_api }}/v1/acl/policy/name/nomad-client'
         method: GET
         headers:
-          X-Consul-Token: "{{ consul_management_token }}"
+          X-Consul-Token: '{{ consul_management_token }}'
       register: current_policy
 
     - name: Show current policy rules
       ansible.builtin.debug:
         msg:
-          - "=== Current nomad-client Policy Rules ==="
-          - "{{ current_policy.json.Rules }}"
+          - '=== Current nomad-client Policy Rules ==='
+          - '{{ current_policy.json.Rules }}'
 
     - name: Update nomad-client ACL policy with KV access using template
       ansible.builtin.uri:
-        url: "{{ consul_api }}/v1/acl/policy/{{ current_policy.json.ID }}"
+        url: '{{ consul_api }}/v1/acl/policy/{{ current_policy.json.ID }}'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_management_token }}"
+          X-Consul-Token: '{{ consul_management_token }}'
         body_format: json
         body:
-          Name: "nomad-client"
-          Description: "Policy for Nomad clients with KV access"
+          Name: 'nomad-client'
+          Description: 'Policy for Nomad clients with KV access'
           Rules: "{{ lookup('file', '../../../roles/nomad/files/consul-policies/nomad-client.hcl') }}"
       register: policy_update
 
     - name: Display updated policy
       ansible.builtin.debug:
         msg:
-          - "=== Policy Update Result ==="
-          - "Policy ID: {{ policy_update.json.ID }}"
-          - "Policy Name: {{ policy_update.json.Name }}"
-          - "Description: {{ policy_update.json.Description }}"
-          - ""
-          - "Updated Rules:"
-          - "{{ policy_update.json.Rules }}"
+          - '=== Policy Update Result ==='
+          - 'Policy ID: {{ policy_update.json.ID }}'
+          - 'Policy Name: {{ policy_update.json.Name }}'
+          - 'Description: {{ policy_update.json.Description }}'
+          - ''
+          - 'Updated Rules:'
+          - '{{ policy_update.json.Rules }}'
 
     - name: Verify policy update
       ansible.builtin.uri:
-        url: "{{ consul_api }}/v1/acl/policy/name/nomad-client"
+        url: '{{ consul_api }}/v1/acl/policy/name/nomad-client'
         method: GET
         headers:
-          X-Consul-Token: "{{ consul_management_token }}"
+          X-Consul-Token: '{{ consul_management_token }}'
       register: verified_policy
 
     - name: Confirm KV access is now included
       ansible.builtin.debug:
         msg:
-          - "=== Verification Complete ==="
-          - "✅ KV access has been added to nomad-client policy"
-          - "✅ PowerDNS jobs should now be able to read from Consul KV"
-          - ""
-          - "Ready to test with:"
-          - "nomad job run nomad-jobs/platform-services/powerdns-auth.nomad.hcl"
+          - '=== Verification Complete ==='
+          - '✅ KV access has been added to nomad-client policy'
+          - '✅ PowerDNS jobs should now be able to read from Consul KV'
+          - ''
+          - 'Ready to test with:'
+          - 'nomad job run nomad-jobs/platform-services/powerdns-auth.nomad.hcl'
       when: "'key_prefix' in verified_policy.json.Rules"
 
     - name: Warning if KV access not found
       ansible.builtin.debug:
         msg:
-          - "⚠️  WARNING: KV access may not have been added properly"
-          - "Please check the policy manually"
+          - '⚠️  WARNING: KV access may not have been added properly'
+          - 'Please check the policy manually'
       when: "'key_prefix' not in verified_policy.json.Rules"

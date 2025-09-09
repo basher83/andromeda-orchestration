@@ -40,7 +40,7 @@
     - name: Wait for Consul to be ready
       ansible.builtin.wait_for:
         port: 8500
-        host: "127.0.0.1"
+        host: '127.0.0.1'
         delay: 5
         timeout: 30
 
@@ -60,7 +60,7 @@
     - name: Display status
       ansible.builtin.debug:
         msg:
-          - "Consul client ACLs fixed!"
-          - ""
-          - "Consul members:"
-          - "{{ members_status.stdout_lines }}"
+          - 'Consul client ACLs fixed!'
+          - ''
+          - 'Consul members:'
+          - '{{ members_status.stdout_lines }}'

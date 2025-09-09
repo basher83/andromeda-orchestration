@@ -38,5 +38,5 @@
           - "'dport 53' in nft_rules.stdout"
           - "'dport 8081' in nft_rules.stdout"
           - "'20000-32000' in nft_rules.stdout"
-        fail_msg: "Required ports not found in nftables rules"
-        success_msg: "All required ports are configured"
+        fail_msg: 'Required ports not found in nftables rules'
+        success_msg: 'All required ports are configured'

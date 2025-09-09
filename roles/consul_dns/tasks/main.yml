@@ -8,15 +8,15 @@
       - homelab_domain is string
       - homelab_domain | length > 0
       - homelab_domain is not match("\.local$")
-    fail_msg: "homelab_domain must be set in inventory group_vars and must not end with .local"
-    success_msg: "homelab_domain is properly configured: {{ homelab_domain }}"
+    fail_msg: 'homelab_domain must be set in inventory group_vars and must not end with .local'
+    success_msg: 'homelab_domain is properly configured: {{ homelab_domain }}'
 
 - name: Include OS-specific variables
-  include_vars: "{{ ansible_os_family }}.yml"
+  include_vars: '{{ ansible_os_family }}.yml'
   failed_when: false
 
 - name: Configure DNS resolution method
-  include_tasks: "{{ consul_dns_method }}.yml"
+  include_tasks: '{{ consul_dns_method }}.yml'
   when: consul_dns_method in ['systemd-resolved', 'dnsmasq', 'resolv']
 
 - name: Register infrastructure services

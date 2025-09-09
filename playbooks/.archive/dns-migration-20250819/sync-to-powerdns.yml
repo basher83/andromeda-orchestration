@@ -5,10 +5,10 @@
   connection: local
   gather_facts: false
   vars:
-    netbox_url: "https://192.168.30.213"
-    powerdns_api_url: "http://192.168.11.21:21421/api/v1"  # Dynamic port on nomad-client-2
-    powerdns_api_key: "changeme789xyz"  # From job configuration
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    netbox_url: 'https://192.168.30.213'
+    powerdns_api_url: 'http://192.168.11.21:21421/api/v1' # Dynamic port on nomad-client-2
+    powerdns_api_key: 'changeme789xyz' # From job configuration
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
 
   tasks:
@@ -26,74 +26,74 @@
 
     - name: Get DNS zones from NetBox
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/zones/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/zones/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: netbox_zones
 
     - name: Get DNS records from NetBox
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/records/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/records/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
+          Authorization: 'Token {{ netbox_token }}'
         validate_certs: false
       register: netbox_records
 
     - name: Check PowerDNS API connectivity
       uri:
-        url: "{{ powerdns_api_url }}/servers/localhost"
+        url: '{{ powerdns_api_url }}/servers/localhost'
         method: GET
         headers:
-          X-API-Key: "{{ powerdns_api_key }}"
+          X-API-Key: '{{ powerdns_api_key }}'
       register: pdns_status
 
     - name: Create zones in PowerDNS
       uri:
-        url: "{{ powerdns_api_url }}/servers/localhost/zones"
+        url: '{{ powerdns_api_url }}/servers/localhost/zones'
         method: POST
         headers:
-          X-API-Key: "{{ powerdns_api_key }}"
-          Content-Type: "application/json"
+          X-API-Key: '{{ powerdns_api_key }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
-          name: "{{ item.name }}."
-          kind: "Native"
+          name: '{{ item.name }}.'
+          kind: 'Native'
           masters: []
           nameservers:
-            - "ns1.homelab.local."
+            - 'ns1.homelab.local.'
           rrsets:
-            - name: "{{ item.name }}."
-              type: "SOA"
+            - name: '{{ item.name }}.'
+              type: 'SOA'
               records:
-                - content: "{{ item.soa_mname.name }} {{ item.soa_rname }} {{ item.soa_serial }} {{ item.soa_refresh }} {{ item.soa_retry }} {{ item.soa_expire }} {{ item.soa_minimum }}"
+                - content: '{{ item.soa_mname.name }} {{ item.soa_rname }} {{ item.soa_serial }} {{ item.soa_refresh }} {{ item.soa_retry }} {{ item.soa_expire }} {{ item.soa_minimum }}'
                   disabled: false
-              ttl: "{{ item.soa_ttl }}"
+              ttl: '{{ item.soa_ttl }}'
         status_code: [201, 204, 409]
-      loop: "{{ netbox_zones.json.results }}"
+      loop: '{{ netbox_zones.json.results }}'
       when: netbox_zones.json.count > 0
       register: zone_creation
       failed_when: zone_creation.status not in [201, 204, 409]
 
     - name: Add A records to PowerDNS
       uri:
-        url: "{{ powerdns_api_url }}/servers/localhost/zones/{{ item.zone.name }}."
+        url: '{{ powerdns_api_url }}/servers/localhost/zones/{{ item.zone.name }}.'
         method: PATCH
         headers:
-          X-API-Key: "{{ powerdns_api_key }}"
-          Content-Type: "application/json"
+          X-API-Key: '{{ powerdns_api_key }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
           rrsets:
-            - name: "{{ item.fqdn }}"
-              type: "{{ item.type }}"
-              changetype: "REPLACE"
+            - name: '{{ item.fqdn }}'
+              type: '{{ item.type }}'
+              changetype: 'REPLACE'
               records:
-                - content: "{{ item.value }}"
+                - content: '{{ item.value }}'
                   disabled: false
-              ttl: "{{ item.ttl | default(3600) }}"
+              ttl: '{{ item.ttl | default(3600) }}'
       loop: "{{ netbox_records.json.results | selectattr('type', 'equalto', 'A') | list }}"
       when:
         - netbox_records.json.count > 0
@@ -102,21 +102,21 @@
 
     - name: Add NS records to PowerDNS
       uri:
-        url: "{{ powerdns_api_url }}/servers/localhost/zones/{{ item.zone.name }}."
+        url: '{{ powerdns_api_url }}/servers/localhost/zones/{{ item.zone.name }}.'
         method: PATCH
         headers:
-          X-API-Key: "{{ powerdns_api_key }}"
-          Content-Type: "application/json"
+          X-API-Key: '{{ powerdns_api_key }}'
+          Content-Type: 'application/json'
         body_format: json
         body:
           rrsets:
-            - name: "{{ item.fqdn }}"
-              type: "{{ item.type }}"
-              changetype: "REPLACE"
+            - name: '{{ item.fqdn }}'
+              type: '{{ item.type }}'
+              changetype: 'REPLACE'
               records:
-                - content: "{{ item.value }}."
+                - content: '{{ item.value }}.'
                   disabled: false
-              ttl: "{{ item.ttl | default(3600) }}"
+              ttl: '{{ item.ttl | default(3600) }}'
       loop: "{{ netbox_records.json.results | selectattr('type', 'equalto', 'NS') | list }}"
       when:
         - netbox_records.json.count > 0
@@ -125,12 +125,12 @@
     - name: Display sync summary
       debug:
         msg:
-          - "DNS Sync Complete!"
-          - "Zones synced: {{ netbox_zones.json.count }}"
-          - "Records processed: {{ netbox_records.json.count }}"
-          - ""
-          - "PowerDNS API: {{ powerdns_api_url }}"
-          - ""
-          - "Test with:"
-          - "  dig @192.168.11.20 ns1.homelab.local"
-          - "  dig @192.168.11.20 homelab.local SOA"
+          - 'DNS Sync Complete!'
+          - 'Zones synced: {{ netbox_zones.json.count }}'
+          - 'Records processed: {{ netbox_records.json.count }}'
+          - ''
+          - 'PowerDNS API: {{ powerdns_api_url }}'
+          - ''
+          - 'Test with:'
+          - '  dig @192.168.11.20 ns1.homelab.local'
+          - '  dig @192.168.11.20 homelab.local SOA'

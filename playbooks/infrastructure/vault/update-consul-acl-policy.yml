@@ -16,20 +16,20 @@
                 env_slug='prod',
                 path='/apollo-13/consul',
                 secret_name='CONSUL_MASTER_TOKEN').value }}
-    policy_name: "vault-client-policy"
-    consul_addr: "http://127.0.0.1:8500"
+    policy_name: 'vault-client-policy'
+    consul_addr: 'http://127.0.0.1:8500'
 
   tasks:
     - name: Verify master token is set
       ansible.builtin.assert:
         that:
           - consul_master_token != ""
-        fail_msg: "Failed to retrieve CONSUL_MASTER_TOKEN from Infisical"
-        success_msg: "Master token verified"
+        fail_msg: 'Failed to retrieve CONSUL_MASTER_TOKEN from Infisical'
+        success_msg: 'Master token verified'
 
     - name: Copy updated Vault client ACL policy file
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../../../roles/consul/files/policies/vault-client.hcl"
+        src: '{{ playbook_dir }}/../../../roles/consul/files/policies/vault-client.hcl'
         dest: /tmp/vault-client-policy.hcl
         mode: '0600'
       become: true
@@ -48,7 +48,7 @@
       ansible.builtin.debug:
         msg:
           - "✅ Policy '{{ policy_name }}' has been updated"
-          - "{{ policy_update.stdout }}"
+          - '{{ policy_update.stdout }}'
 
     - name: Clean up policy file
       ansible.builtin.file:
@@ -59,9 +59,9 @@
     - name: Display next steps
       ansible.builtin.debug:
         msg:
-          - "✅ ACL Policy updated successfully!"
-          - ""
+          - '✅ ACL Policy updated successfully!'
+          - ''
           - "The tokens don't need to be regenerated - the existing tokens"
-          - "will automatically use the updated policy permissions."
-          - ""
-          - "Next: Run the fix-vault-service-registration playbook to apply the service configuration."
+          - 'will automatically use the updated policy permissions.'
+          - ''
+          - 'Next: Run the fix-vault-service-registration playbook to apply the service configuration.'

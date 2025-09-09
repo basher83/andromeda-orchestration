@@ -9,16 +9,16 @@
   tasks:
     - name: Get Netdata info via API
       ansible.builtin.uri:
-        url: "http://{{ ansible_host }}:19999/api/v1/info"
+        url: 'http://{{ ansible_host }}:19999/api/v1/info'
         method: GET
       register: netdata_info
 
     - name: Display basic info
       ansible.builtin.debug:
         msg:
-          - "Host: {{ inventory_hostname }}"
-          - "Version: {{ netdata_info.json.version }}"
-          - "UID: {{ netdata_info.json.uid }}"
+          - 'Host: {{ inventory_hostname }}'
+          - 'Version: {{ netdata_info.json.version }}'
+          - 'UID: {{ netdata_info.json.uid }}'
           - "Mirrored hosts: {{ netdata_info.json['mirrored-hosts'] | default([]) | length }}"
 
     - name: Check streaming connections
@@ -30,4 +30,4 @@
 
     - name: Display connections
       ansible.builtin.debug:
-        msg: "{{ connections.stdout_lines }}"
+        msg: '{{ connections.stdout_lines }}'

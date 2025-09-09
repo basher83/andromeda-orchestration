@@ -1,45 +1,45 @@
 ---
 - name: Configure apps plugin
   ansible.builtin.lineinfile:
-    path: "{{ netdata_config_dir }}/netdata.conf"
+    path: '{{ netdata_config_dir }}/netdata.conf'
     regexp: '^\s*# apps = '
-    line: "    apps = {{ netdata_plugins.apps | lower }}"
+    line: '    apps = {{ netdata_plugins.apps | lower }}'
     insertafter: '^\[plugins\]'
   when: netdata_plugins.apps is defined
   notify: restart netdata
 
 - name: Configure proc plugin
   ansible.builtin.lineinfile:
-    path: "{{ netdata_config_dir }}/netdata.conf"
+    path: '{{ netdata_config_dir }}/netdata.conf'
     regexp: '^\s*# proc = '
-    line: "    proc = {{ netdata_plugins.proc | lower }}"
+    line: '    proc = {{ netdata_plugins.proc | lower }}'
     insertafter: '^\[plugins\]'
   when: netdata_plugins.proc is defined
   notify: restart netdata
 
 - name: Configure cgroups plugin
   ansible.builtin.lineinfile:
-    path: "{{ netdata_config_dir }}/netdata.conf"
+    path: '{{ netdata_config_dir }}/netdata.conf'
     regexp: '^\s*# cgroups = '
-    line: "    cgroups = {{ netdata_plugins.cgroups | lower }}"
+    line: '    cgroups = {{ netdata_plugins.cgroups | lower }}'
     insertafter: '^\[plugins\]'
   when: netdata_plugins.cgroups is defined
   notify: restart netdata
 
 - name: Configure tc plugin
   ansible.builtin.lineinfile:
-    path: "{{ netdata_config_dir }}/netdata.conf"
+    path: '{{ netdata_config_dir }}/netdata.conf'
     regexp: '^\s*# tc = '
-    line: "    tc = {{ netdata_plugins.tc | lower }}"
+    line: '    tc = {{ netdata_plugins.tc | lower }}'
     insertafter: '^\[plugins\]'
   when: netdata_plugins.tc is defined
   notify: restart netdata
 
 - name: Configure diskspace plugin
   ansible.builtin.lineinfile:
-    path: "{{ netdata_config_dir }}/netdata.conf"
+    path: '{{ netdata_config_dir }}/netdata.conf'
     regexp: '^\s*# diskspace = '
-    line: "    diskspace = {{ netdata_plugins.diskspace | lower }}"
+    line: '    diskspace = {{ netdata_plugins.diskspace | lower }}'
     insertafter: '^\[plugins\]'
   when: netdata_plugins.diskspace is defined
   notify: restart netdata

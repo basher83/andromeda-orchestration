@@ -69,7 +69,7 @@
 - **Priority**: P0 (Critical)
 - **Blockers**: None (Vault Phase 2 complete)
 - **Related**: PRs #71, #72, #76 (merged but not applied)
-- **Next Actions**: 
+- **Next Actions**:
   1. Configure PostgreSQL connection in Vault
   2. Deploy PostgreSQL with Vault-managed credentials
   3. Apply domain configuration to services

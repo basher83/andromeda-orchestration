@@ -3,20 +3,20 @@
 netdata_cloud_enabled: false
 
 # Claiming credentials
-netdata_claim_token: ""
-netdata_claim_rooms: ""
-netdata_claim_url: "https://app.netdata.cloud"
+netdata_claim_token: ''
+netdata_claim_rooms: ''
+netdata_claim_url: 'https://app.netdata.cloud'
 
 # Proxy configuration
-netdata_claim_proxy: ""
+netdata_claim_proxy: ''
 
 # Claiming behavior
-netdata_claim_force: false  # Force reclaim even if already claimed
-netdata_claim_insecure: false  # Skip SSL verification
+netdata_claim_force: false # Force reclaim even if already claimed
+netdata_claim_insecure: false # Skip SSL verification
 
 # Infisical integration for claim tokens
 netdata_use_infisical: false
-netdata_infisical_path: "/apollo-13/services/netdata"
+netdata_infisical_path: '/apollo-13/services/netdata'
 
 # Node metadata for cloud
 netdata_cloud_node_labels: {}

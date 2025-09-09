@@ -6,5 +6,5 @@ nomad_package_dependencies:
   - curl
   - gnupg-agent
   - software-properties-common
-  - dmidecode  # Required for host metrics
-  - iproute2   # Required for network configuration
+  - dmidecode # Required for host metrics
+  - iproute2 # Required for network configuration

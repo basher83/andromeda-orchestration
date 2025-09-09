@@ -88,6 +88,10 @@ infisical-scan-results.sarif
 # KICS scan results
 kics-results/
 
+# MegaLinter reports and artifacts (auto-generated)
+megalinter-reports/
+megalinter-report.sarif
+
 # System reports - contain sensitive infrastructure data
 reports/netdata/
 reports/**/*.yml
@@ -120,3 +124,5 @@ reports/nomad/*.json
 !reports/**/*_sanitized.md
 !reports/**/*_summary.md
 .mcp.json
+# Act local testing
+.env.act

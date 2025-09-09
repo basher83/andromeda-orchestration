@@ -7,9 +7,9 @@
 - name: Set VAULT_ADDR environment variable for dev mode
   ansible.builtin.lineinfile:
     path: /etc/environment
-    line: "VAULT_ADDR=http://{{ ansible_default_ipv4.address }}:8200"
+    line: 'VAULT_ADDR=http://{{ ansible_default_ipv4.address }}:8200'
     create: true
-    mode: "0644"
+    mode: '0644'
 
 - name: Create vault profile script for dev mode
   ansible.builtin.copy:
@@ -27,21 +27,21 @@
     dest: /etc/profile.d/vault.sh
     owner: root
     group: root
-    mode: "0644"
+    mode: '0644'
 
 - name: Display dev mode information
   ansible.builtin.debug:
     msg:
-      - "Vault is configured in DEVELOPMENT mode"
-      - "This mode is NOT suitable for production"
-      - "Root token: {{ vault_dev_root_token }}"
-      - "Vault UI: http://{{ ansible_default_ipv4.address }}:8200/ui"
-      - "API Address: http://{{ ansible_default_ipv4.address }}:8200"
-      - ""
-      - "To access Vault:"
+      - 'Vault is configured in DEVELOPMENT mode'
+      - 'This mode is NOT suitable for production'
+      - 'Root token: {{ vault_dev_root_token }}'
+      - 'Vault UI: http://{{ ansible_default_ipv4.address }}:8200/ui'
+      - 'API Address: http://{{ ansible_default_ipv4.address }}:8200'
+      - ''
+      - 'To access Vault:'
       - "  export VAULT_ADDR='http://{{ ansible_default_ipv4.address }}:8200'"
       - "  export VAULT_TOKEN='{{ vault_dev_root_token }}'"
-      - "  vault status"
+      - '  vault status'
 
 - name: Register Vault service with Consul (if available)
   ansible.builtin.include_tasks: consul_register.yml

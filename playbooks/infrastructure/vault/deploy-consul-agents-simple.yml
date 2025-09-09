@@ -11,19 +11,19 @@
   gather_facts: true
 
   vars:
-    consul_version: "1.20.5"
-    consul_datacenter: "dc1"
-    consul_data_dir: "/opt/consul/data"
-    consul_config_dir: "/etc/consul.d"
-    consul_log_dir: "/var/log/consul"
-    consul_user: "consul"
-    consul_group: "consul"
+    consul_version: '1.20.5'
+    consul_datacenter: 'dc1'
+    consul_data_dir: '/opt/consul/data'
+    consul_config_dir: '/etc/consul.d'
+    consul_log_dir: '/var/log/consul'
+    consul_user: 'consul'
+    consul_group: 'consul'
 
     # Consul servers to join
     consul_retry_join:
-      - "192.168.11.11"  # nomad-server-1-lloyd
-      - "192.168.11.12"  # nomad-server-2-holly
-      - "192.168.11.13"  # nomad-server-3-mable
+      - '192.168.11.11' # nomad-server-1-lloyd
+      - '192.168.11.12' # nomad-server-2-holly
+      - '192.168.11.13' # nomad-server-3-mable
 
     # Get from environment variables
     consul_encrypt: "{{ lookup('env', 'CONSUL_ENCRYPT') }}"
@@ -34,21 +34,21 @@
       ansible.builtin.assert:
         that:
           - consul_encrypt != ""
-        fail_msg: "CONSUL_ENCRYPT environment variable must be set"
-        success_msg: "Environment variables verified"
+        fail_msg: 'CONSUL_ENCRYPT environment variable must be set'
+        success_msg: 'Environment variables verified'
 
     - name: Create consul user and group
       block:
         - name: Create consul group
           ansible.builtin.group:
-            name: "{{ consul_group }}"
+            name: '{{ consul_group }}'
             system: true
             state: present
 
         - name: Create consul user
           ansible.builtin.user:
-            name: "{{ consul_user }}"
-            group: "{{ consul_group }}"
+            name: '{{ consul_user }}'
+            group: '{{ consul_group }}'
             system: true
             shell: /bin/false
             home: /var/lib/consul
@@ -57,16 +57,16 @@
 
     - name: Create Consul directories
       ansible.builtin.file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: directory
-        owner: "{{ consul_user }}"
-        group: "{{ consul_group }}"
+        owner: '{{ consul_user }}'
+        group: '{{ consul_group }}'
         mode: '0755'
       loop:
         - /opt/consul
-        - "{{ consul_data_dir }}"
-        - "{{ consul_config_dir }}"
-        - "{{ consul_log_dir }}"
+        - '{{ consul_data_dir }}'
+        - '{{ consul_config_dir }}'
+        - '{{ consul_log_dir }}'
         - /var/lib/consul
 
     - name: Download and install Consul
@@ -85,7 +85,7 @@
 
         - name: Download Consul binary
           ansible.builtin.unarchive:
-            src: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip"
+            src: 'https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip'
             dest: /usr/local/bin
             remote_src: true
             owner: root
@@ -96,9 +96,9 @@
     - name: Generate Consul client configuration
       ansible.builtin.template:
         src: consul-client-vault.hcl.j2
-        dest: "{{ consul_config_dir }}/consul.hcl"
-        owner: "{{ consul_user }}"
-        group: "{{ consul_group }}"
+        dest: '{{ consul_config_dir }}/consul.hcl'
+        owner: '{{ consul_user }}'
+        group: '{{ consul_group }}'
         mode: '0640'
       notify: restart consul
 
@@ -123,9 +123,9 @@
               timeout = "5s"
             }
           }
-        dest: "{{ consul_config_dir }}/vault-service.hcl"
-        owner: "{{ consul_user }}"
-        group: "{{ consul_group }}"
+        dest: '{{ consul_config_dir }}/vault-service.hcl'
+        owner: '{{ consul_user }}'
+        group: '{{ consul_group }}'
         mode: '0640'
       notify: reload consul
 
@@ -179,9 +179,9 @@
     - name: Display Consul status
       ansible.builtin.debug:
         msg:
-          - "Consul agent deployed on {{ inventory_hostname }}"
-          - "Agent status:"
-          - "{{ consul_members.stdout }}"
+          - 'Consul agent deployed on {{ inventory_hostname }}'
+          - 'Agent status:'
+          - '{{ consul_members.stdout }}'
 
   handlers:
     - name: restart consul

@@ -11,10 +11,10 @@
   become: false
 
   vars:
-    ansible_become: false  # Override group_vars for this assessment
-    report_dir: "{{ playbook_dir }}/../../reports/nomad"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
-    nomad_api_endpoint: "http://{{ inventory_hostname }}:4646"
+    ansible_become: false # Override group_vars for this assessment
+    report_dir: '{{ playbook_dir }}/../../reports/nomad'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
+    nomad_api_endpoint: 'http://{{ inventory_hostname }}:4646'
     volume_base_paths:
       - /opt/nomad/volumes
       - /opt/nomad/volumes/dynamic
@@ -25,7 +25,7 @@
       delegate_to: localhost
       become: false
       file:
-        path: "{{ report_dir }}"
+        path: '{{ report_dir }}'
         state: directory
         mode: '0755'
       run_once: true
@@ -33,7 +33,7 @@
     # Check Nomad client status
     - name: Query Nomad client status
       uri:
-        url: "{{ nomad_api_endpoint }}/v1/agent/self"
+        url: '{{ nomad_api_endpoint }}/v1/agent/self'
         method: GET
       register: nomad_self
       failed_when: false
@@ -41,7 +41,7 @@
     # Get node information
     - name: Get Nomad node information
       uri:
-        url: "{{ nomad_api_endpoint }}/v1/node/{{ nomad_self.json.stats.client.node_id }}"
+        url: '{{ nomad_api_endpoint }}/v1/node/{{ nomad_self.json.stats.client.node_id }}'
         method: GET
       register: nomad_node
       when: nomad_self is success
@@ -49,7 +49,7 @@
     # Check for configured host volumes
     - name: Extract host volumes from configuration
       set_fact:
-        configured_volumes: "{{ nomad_node.json.HostVolumes | default({}) }}"
+        configured_volumes: '{{ nomad_node.json.HostVolumes | default({}) }}'
       when:
         - nomad_self is success
         - nomad_node is defined
@@ -64,22 +64,22 @@
     # Check for existing volume directories
     - name: Check for volume directories
       stat:
-        path: "{{ item }}"
+        path: '{{ item }}'
       register: volume_paths
-      loop: "{{ volume_base_paths }}"
+      loop: '{{ volume_base_paths }}'
 
     # List contents of volume directories
     - name: List existing volumes
       find:
-        paths: "{{ item.item }}"
+        paths: '{{ item.item }}'
         file_type: directory
         recurse: false
       register: existing_volumes
-      loop: "{{ volume_paths.results }}"
+      loop: '{{ volume_paths.results }}'
       when: item.stat.exists | default(false)
       failed_when: false
       loop_control:
-        label: "{{ item.item }}"
+        label: '{{ item.item }}'
 
     # Check for volume usage
     - name: Get volume disk usage
@@ -90,7 +90,7 @@
           echo "Directory does not exist"
         fi
       register: volume_usage
-      loop: "{{ volume_base_paths }}"
+      loop: '{{ volume_base_paths }}'
       changed_when: false
       failed_when: false
 
@@ -128,7 +128,7 @@
     # Check for CSI plugins
     - name: Query CSI plugins
       uri:
-        url: "{{ nomad_api_endpoint }}/v1/plugins?type=csi"
+        url: '{{ nomad_api_endpoint }}/v1/plugins?type=csi'
         method: GET
       register: csi_plugins
       failed_when: false
@@ -136,7 +136,7 @@
     # Check for dynamic volume plugin scripts
     - name: Check for volume plugin scripts
       stat:
-        path: "/opt/nomad/plugins/{{ item }}"
+        path: '/opt/nomad/plugins/{{ item }}'
       register: plugin_scripts
       loop:
         - ext4-volume
@@ -147,23 +147,23 @@
     - name: Compile storage assessment
       set_fact:
         storage_assessment:
-          node_name: "{{ inventory_hostname }}"
-          timestamp: "{{ timestamp }}"
+          node_name: '{{ inventory_hostname }}'
+          timestamp: '{{ timestamp }}'
           nomad_client:
             status: "{{ 'healthy' if nomad_self is success else 'unhealthy' }}"
             node_id: "{{ nomad_self.json.stats.client.node_id | default('unknown') }}"
             datacenter: "{{ nomad_self.json.stats.client.dc | default('unknown') }}"
 
           filesystem:
-            devices: "{{ filesystem_info.stdout_lines | default([]) }}"
-            mounts: "{{ mount_info.stdout_lines | default([]) }}"
+            devices: '{{ filesystem_info.stdout_lines | default([]) }}'
+            mounts: '{{ mount_info.stdout_lines | default([]) }}'
 
           host_volumes:
-            configured: "{{ configured_volumes | default({}) }}"
-            config_file: "{{ config_volumes.stdout_lines | default([]) }}"
+            configured: '{{ configured_volumes | default({}) }}'
+            config_file: '{{ config_volumes.stdout_lines | default([]) }}'
 
           volume_directories:
-            base_paths: "{{ volume_base_paths }}"
+            base_paths: '{{ volume_base_paths }}'
             existing_paths: "{{ volume_paths.results | map(attribute='stat') | map('json_query', '{path: item, exists: exists}') | list }}"
 
           existing_volumes: "{{ existing_volumes.results | selectattr('files', 'defined') | map(attribute='files') | list | flatten | map(attribute='path') | list }}"
@@ -174,28 +174,28 @@
             ephemeral_disk:
               available: true
               path: /alloc/data
-              notes: "Always available in Nomad"
+              notes: 'Always available in Nomad'
 
             static_host_volumes:
-              configured: "{{ configured_volumes | length > 0 }}"
-              count: "{{ configured_volumes | length }}"
-              volumes: "{{ configured_volumes.keys() | list if configured_volumes else [] }}"
+              configured: '{{ configured_volumes | length > 0 }}'
+              count: '{{ configured_volumes | length }}'
+              volumes: '{{ configured_volumes.keys() | list if configured_volumes else [] }}'
 
             dynamic_host_volumes:
               plugins_installed: "{{ dict(plugin_scripts.results | map(attribute='item') | zip(plugin_scripts.results | map(attribute='stat.exists') | map('default', false))) }}"
-              loop_devices: "{{ loop_devices.stdout_lines | default([]) }}"
+              loop_devices: '{{ loop_devices.stdout_lines | default([]) }}'
 
             csi_volumes:
-              plugins: "{{ csi_plugins.json | default([]) if csi_plugins is success else [] }}"
-              configured: "{{ (csi_plugins.json | default([]) | length) > 0 if csi_plugins is success else false }}"
+              plugins: '{{ csi_plugins.json | default([]) if csi_plugins is success else [] }}'
+              configured: '{{ (csi_plugins.json | default([]) | length) > 0 if csi_plugins is success else false }}'
 
     # Save individual node report
     - name: Save node storage report
       delegate_to: localhost
       become: false
       copy:
-        content: "{{ storage_assessment | to_nice_yaml }}"
-        dest: "{{ report_dir }}/storage_assessment_node_{{ inventory_hostname }}_{{ timestamp }}.yml"
+        content: '{{ storage_assessment | to_nice_yaml }}'
+        dest: '{{ report_dir }}/storage_assessment_node_{{ inventory_hostname }}_{{ timestamp }}.yml'
         mode: '0644'
 
     # Aggregate all node data
@@ -286,7 +286,7 @@
 
           ---
           Report generated by: nomad-storage-assessment.yml
-        dest: "{{ report_dir }}/storage_assessment_summary_{{ timestamp }}.md"
+        dest: '{{ report_dir }}/storage_assessment_summary_{{ timestamp }}.md'
         mode: '0644'
 
     # Display summary

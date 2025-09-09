@@ -6,7 +6,7 @@
   tasks:
     - name: Apply nftables configuration
       ansible.builtin.template:
-        src: "{{ playbook_dir }}/../../roles/system_base/templates/nftables.conf.j2"
+        src: '{{ playbook_dir }}/../../roles/system_base/templates/nftables.conf.j2'
         dest: /etc/nftables.conf
         mode: '0644'
         owner: root

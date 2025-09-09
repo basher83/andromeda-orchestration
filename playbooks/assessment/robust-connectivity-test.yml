@@ -10,14 +10,14 @@
   hosts: all
   gather_facts: true
   vars:
-    connectivity_report_dir: "{{ playbook_dir }}/../../reports/connectivity"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    connectivity_report_dir: '{{ playbook_dir }}/../../reports/connectivity'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
 
   tasks:
     - name: Create connectivity report directory
       local_action:
         module: ansible.builtin.file
-        path: "{{ connectivity_report_dir }}"
+        path: '{{ connectivity_report_dir }}'
         state: directory
         mode: '0755'
       run_once: true
@@ -49,34 +49,34 @@
 
     - name: Test ICMP connectivity to all nodes
       ansible.builtin.command:
-        cmd: "ping -c 2 -W 2 {{ item.ip }}"
-      loop: "{{ connectivity_targets }}"
+        cmd: 'ping -c 2 -W 2 {{ item.ip }}'
+      loop: '{{ connectivity_targets }}'
       register: ping_results
       changed_when: false
       failed_when: false
 
     - name: Test SSH connectivity to all nodes
       ansible.builtin.wait_for:
-        host: "{{ item.ip }}"
+        host: '{{ item.ip }}'
         port: 22
         timeout: 5
-        msg: "SSH port 22 not reachable on {{ item.hostname }} ({{ item.ip }})"
-      loop: "{{ connectivity_targets }}"
+        msg: 'SSH port 22 not reachable on {{ item.hostname }} ({{ item.ip }})'
+      loop: '{{ connectivity_targets }}'
       register: ssh_results
       failed_when: false
 
     - name: Test DNS resolution for all nodes
       ansible.builtin.command:
-        cmd: "nslookup {{ item.hostname }}"
-      loop: "{{ connectivity_targets }}"
+        cmd: 'nslookup {{ item.hostname }}'
+      loop: '{{ connectivity_targets }}'
       register: dns_results
       changed_when: false
       failed_when: false
 
     - name: Test reverse DNS for all nodes
       ansible.builtin.command:
-        cmd: "nslookup {{ item.ip }}"
-      loop: "{{ connectivity_targets }}"
+        cmd: 'nslookup {{ item.ip }}'
+      loop: '{{ connectivity_targets }}'
       register: rdns_results
       changed_when: false
       failed_when: false
@@ -85,8 +85,8 @@
       ansible.builtin.set_fact:
         node_connectivity_report:
           source:
-            hostname: "{{ ansible_hostname }}"
-            fqdn: "{{ ansible_fqdn }}"
+            hostname: '{{ ansible_hostname }}'
+            fqdn: '{{ ansible_fqdn }}'
             ip: >-
               {{ ansible_default_ipv4.address | default('N/A')
               if ansible_default_ipv4 is defined else 'N/A' }}
@@ -120,7 +120,7 @@
             {% endfor %}
             {{ test_results }}
           summary:
-            total_targets: "{{ connectivity_targets | length }}"
+            total_targets: '{{ connectivity_targets | length }}'
             icmp_success_count: "{{ test_results | selectattr('icmp_success', 'equalto', true) | list | length }}"
             ssh_reachable_count: "{{ test_results | selectattr('ssh_reachable', 'equalto', true) | list | length }}"
             dns_working_count: "{{ test_results | selectattr('dns_resolves', 'equalto', true) | list | length }}"
@@ -129,22 +129,22 @@
     - name: Save node connectivity report
       local_action:
         module: ansible.builtin.copy
-        content: "{{ node_connectivity_report | to_nice_yaml }}"
-        dest: "{{ connectivity_report_dir }}/connectivity_{{ ansible_hostname }}_{{ timestamp }}.yml"
+        content: '{{ node_connectivity_report | to_nice_yaml }}'
+        dest: '{{ connectivity_report_dir }}/connectivity_{{ ansible_hostname }}_{{ timestamp }}.yml'
         mode: '0644'
 
 - name: Generate Connectivity Summary Report
   hosts: localhost
   gather_facts: false
   vars:
-    connectivity_report_dir: "{{ playbook_dir }}/../../reports/connectivity"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    connectivity_report_dir: '{{ playbook_dir }}/../../reports/connectivity'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
 
   tasks:
     - name: Find all connectivity reports
       ansible.builtin.find:
-        paths: "{{ connectivity_report_dir }}"
-        patterns: "connectivity_*_{{ timestamp }}.yml"
+        paths: '{{ connectivity_report_dir }}'
+        patterns: 'connectivity_*_{{ timestamp }}.yml'
       register: connectivity_reports
 
     - name: Generate markdown summary
@@ -178,7 +178,7 @@
           ## Detailed Results
 
           See individual YAML reports in: `{{ connectivity_report_dir }}`
-        dest: "{{ connectivity_report_dir }}/connectivity_summary_{{ timestamp }}.md"
+        dest: '{{ connectivity_report_dir }}/connectivity_summary_{{ timestamp }}.md'
         mode: '0644'
 
     - name: Display completion message

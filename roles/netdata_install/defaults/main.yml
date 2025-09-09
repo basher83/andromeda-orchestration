@@ -1,8 +1,8 @@
 ---
 # Netdata installation defaults - minimal configuration
-netdata_install_method: "repository"  # repository, package, or script
-netdata_version: "stable"  # stable, edge, or nightly (for script method)
-netdata_repository_channel: "stable"  # stable or edge
+netdata_install_method: 'repository' # repository, package, or script
+netdata_version: 'stable' # stable, edge, or nightly (for script method)
+netdata_repository_channel: 'stable' # stable or edge
 
 # User and group
 netdata_user: netdata
@@ -18,5 +18,5 @@ netdata_log_dir: /var/log/netdata
 netdata_package_name: netdata
 
 # Script installation options
-netdata_install_flags: "--dont-wait --disable-telemetry"
-netdata_install_script_url: "https://my-netdata.io/kickstart.sh"
+netdata_install_flags: '--dont-wait --disable-telemetry'
+netdata_install_script_url: 'https://my-netdata.io/kickstart.sh'

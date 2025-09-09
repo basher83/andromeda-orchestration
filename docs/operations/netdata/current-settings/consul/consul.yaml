@@ -8,7 +8,7 @@
 jobs:
   - name: local
     url: http://127.0.0.1:8500
-    acl_token: "consul_api_token"
+    acl_token: 'consul_api_token'
     update_every: 1
     timeout: 2
     autodetection_retry: 0

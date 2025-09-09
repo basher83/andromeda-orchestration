@@ -9,7 +9,7 @@
   ansible.builtin.systemd:
     name: consul
     state: reloaded
-  failed_when: false  # Don't fail if consul isn't installed
+  failed_when: false # Don't fail if consul isn't installed
 
 - name: restart consul-template
   ansible.builtin.systemd:

@@ -4,21 +4,21 @@
   ansible.builtin.file:
     path: /opt/nomad/volumes/dynamic/.registry
     state: directory
-    mode: "0755"
+    mode: '0755'
   become: true
 
 - name: Install ext4 dynamic volume plugin
   ansible.builtin.copy:
     src: ext4-volume
     dest: /opt/nomad/plugins/ext4-volume
-    mode: "0755"
+    mode: '0755'
   become: true
 
 - name: Install nomad-dynvol@.service unit
   ansible.builtin.copy:
     src: nomad-dynvol@.service
     dest: /etc/systemd/system/nomad-dynvol@.service
-    mode: "0644"
+    mode: '0644'
   become: true
 
 - name: Reload systemd units

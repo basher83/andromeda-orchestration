@@ -9,7 +9,7 @@
   gather_facts: false
 
   vars:
-    consul_config_dir: "/etc/consul.d"
+    consul_config_dir: '/etc/consul.d'
 
   tasks:
     - name: Check if consul.hcl has agent token configured
@@ -22,7 +22,7 @@
     - name: Display token configuration status
       ansible.builtin.debug:
         msg:
-          - "Node: {{ inventory_hostname }}"
+          - 'Node: {{ inventory_hostname }}'
           - "Token configured: {{ 'Yes' if token_check.stdout | length > 0 else 'No' }}"
           - "Token prefix: {{ token_check.stdout + '...' if token_check.stdout else 'No token found' }}"
 
@@ -35,7 +35,7 @@
 
     - name: Display Consul ACL info
       ansible.builtin.debug:
-        msg: "{{ consul_info.stdout_lines }}"
+        msg: '{{ consul_info.stdout_lines }}'
 
     - name: Test service registration directly with API
       ansible.builtin.shell: |
@@ -75,7 +75,7 @@
 
     - name: Display API test results
       ansible.builtin.debug:
-        msg: "{{ api_test.stdout_lines }}"
+        msg: '{{ api_test.stdout_lines }}'
 
     - name: Check current Vault service registration status
       ansible.builtin.shell: |
@@ -86,7 +86,7 @@
     - name: Summary
       ansible.builtin.debug:
         msg:
-          - "================== Summary for {{ inventory_hostname }} =================="
+          - '================== Summary for {{ inventory_hostname }} =================='
           - "Token configured: {{ 'Yes' if token_check.stdout | length > 0 else 'No' }}"
-          - "Vault services registered: {{ vault_service_count.stdout }}"
-          - "=========================================================================="
+          - 'Vault services registered: {{ vault_service_count.stdout }}'
+          - '=========================================================================='

@@ -22,8 +22,8 @@
       ansible.builtin.assert:
         that:
           - consul_token != ""
-        fail_msg: "Failed to retrieve CONSUL_MASTER_TOKEN from Infisical"
-        success_msg: "Master token verified"
+        fail_msg: 'Failed to retrieve CONSUL_MASTER_TOKEN from Infisical'
+        success_msg: 'Master token verified'
 
     - name: Get all Vault service nodes
       ansible.builtin.shell: |
@@ -34,20 +34,20 @@
 
     - name: Get healthy Vault services
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8500/v1/health/service/vault?passing"
+        url: 'http://127.0.0.1:8500/v1/health/service/vault?passing'
         method: GET
         headers:
-          X-Consul-Token: "{{ consul_token }}"
+          X-Consul-Token: '{{ consul_token }}'
         status_code: 200
       register: healthy_vault
       become: true
 
     - name: Get all Vault service health details
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8500/v1/health/service/vault"
+        url: 'http://127.0.0.1:8500/v1/health/service/vault'
         method: GET
         headers:
-          X-Consul-Token: "{{ consul_token }}"
+          X-Consul-Token: '{{ consul_token }}'
         status_code: 200
       register: all_vault_health
       become: true
@@ -64,26 +64,26 @@
     - name: Display status summary
       ansible.builtin.debug:
         msg:
-          - "🎉 ==================== VAULT-CONSUL INTEGRATION STATUS ===================="
-          - ""
-          - "✅ Service Discovery: OPERATIONAL"
-          - "   - Total Vault nodes registered: {{ vault_nodes.stdout_lines | length - 1 }}"
-          - "   - Healthy nodes: {{ healthy_vault.json | length }}"
-          - ""
-          - "📊 Node Status:"
-          - "{{ node_summary }}"
-          - ""
-          - "🔒 Security:"
-          - "   - ACL Integration: ✅ Enabled"
-          - "   - Individual node tokens: ✅ Configured"
-          - "   - Service write permissions: ✅ Granted"
-          - ""
-          - "📝 Configuration:"
-          - "   - Health check endpoint: http://<node>:8200/v1/sys/health"
-          - "   - Check interval: 10s"
-          - "   - Check timeout: 5s"
-          - ""
-          - "============================================================================"
-          - ""
-          - "🚀 All systems operational! Vault services are successfully registered"
-          - "   and monitored by Consul with proper ACL permissions."
+          - '🎉 ==================== VAULT-CONSUL INTEGRATION STATUS ===================='
+          - ''
+          - '✅ Service Discovery: OPERATIONAL'
+          - '   - Total Vault nodes registered: {{ vault_nodes.stdout_lines | length - 1 }}'
+          - '   - Healthy nodes: {{ healthy_vault.json | length }}'
+          - ''
+          - '📊 Node Status:'
+          - '{{ node_summary }}'
+          - ''
+          - '🔒 Security:'
+          - '   - ACL Integration: ✅ Enabled'
+          - '   - Individual node tokens: ✅ Configured'
+          - '   - Service write permissions: ✅ Granted'
+          - ''
+          - '📝 Configuration:'
+          - '   - Health check endpoint: http://<node>:8200/v1/sys/health'
+          - '   - Check interval: 10s'
+          - '   - Check timeout: 5s'
+          - ''
+          - '============================================================================'
+          - ''
+          - '🚀 All systems operational! Vault services are successfully registered'
+          - '   and monitored by Consul with proper ACL permissions.'

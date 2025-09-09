@@ -32,7 +32,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
       when: config_updated.changed or task_config_updated.changed
@@ -49,8 +49,8 @@
     - name: Display status
       ansible.builtin.debug:
         msg:
-          - "Service identity requirement disabled!"
-          - "You can now deploy jobs without identity blocks."
-          - ""
-          - "Nomad server status:"
-          - "{{ nomad_status.stdout_lines }}"
+          - 'Service identity requirement disabled!'
+          - 'You can now deploy jobs without identity blocks.'
+          - ''
+          - 'Nomad server status:'
+          - '{{ nomad_status.stdout_lines }}'

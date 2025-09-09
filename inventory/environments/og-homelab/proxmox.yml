@@ -42,7 +42,7 @@ token_secret: >-
 # Group vms by tags for reference in playbooks.
 keyed_groups:
   - key: proxmox_tags_parsed
-    separator: ""
+    separator: ''
     prefix: tag_
 
 compose:

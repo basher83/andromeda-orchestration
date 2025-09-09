@@ -11,7 +11,7 @@
         name: pbs
         ansible_host: 192.168.30.200
         ansible_user: root
-        ansible_password: "{{ vault_pbs_password }}"
+        ansible_password: '{{ vault_pbs_password }}'
 
 - name: Check PBS side
   hosts: pbs
@@ -32,7 +32,7 @@
 
     - name: Display connectivity test
       ansible.builtin.debug:
-        msg: "{{ connectivity.stdout_lines }}"
+        msg: '{{ connectivity.stdout_lines }}'
 
     - name: Check Netdata process
       ansible.builtin.shell: |
@@ -46,7 +46,7 @@
 
     - name: Display process info
       ansible.builtin.debug:
-        msg: "{{ netdata_proc.stdout_lines }}"
+        msg: '{{ netdata_proc.stdout_lines }}'
 
     - name: Run tcpdump briefly to see if PBS is trying to connect
       ansible.builtin.shell: |
@@ -58,4 +58,4 @@
 
     - name: Display tcpdump
       ansible.builtin.debug:
-        msg: "{{ tcpdump_out.stdout_lines }}"
+        msg: '{{ tcpdump_out.stdout_lines }}'

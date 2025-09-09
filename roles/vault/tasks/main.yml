@@ -3,11 +3,11 @@
 # Orchestrates installation and configuration based on mode
 
 - name: Include OS-specific variables
-  ansible.builtin.include_vars: "{{ item }}"
+  ansible.builtin.include_vars: '{{ item }}'
   with_first_found:
     - files:
-        - "{{ ansible_distribution }}.yml"
-        - "{{ ansible_os_family }}.yml"
+        - '{{ ansible_distribution }}.yml'
+        - '{{ ansible_os_family }}.yml'
       paths:
         - ../vars
       skip: true
@@ -47,9 +47,9 @@
 
 - name: Start and enable Vault service
   ansible.builtin.systemd:
-    name: "{{ vault_service_name }}"
-    state: "{{ vault_service_state }}"
-    enabled: "{{ vault_service_enabled }}"
+    name: '{{ vault_service_name }}'
+    state: '{{ vault_service_state }}'
+    enabled: '{{ vault_service_enabled }}'
     daemon_reload: true
   tags:
     - vault-service

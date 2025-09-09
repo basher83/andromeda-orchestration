@@ -9,7 +9,7 @@
 
 - name: Parse current configuration
   set_fact:
-    consul_current_config: "{{ consul_config_content.content | b64decode }}"
+    consul_current_config: '{{ consul_config_content.content | b64decode }}'
 
 - name: Check if telemetry is already configured
   set_fact:
@@ -18,7 +18,7 @@
 - name: Enable telemetry in Consul configuration
   blockinfile:
     path: /etc/consul.d/consul.hcl
-    marker: "# {mark} ANSIBLE MANAGED TELEMETRY BLOCK"
+    marker: '# {mark} ANSIBLE MANAGED TELEMETRY BLOCK'
     block: |
 
       # Expose Prometheus endpoint for monitoring

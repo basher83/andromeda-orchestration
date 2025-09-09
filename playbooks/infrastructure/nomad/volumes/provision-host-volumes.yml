@@ -16,8 +16,8 @@
     # Default volumes to create
     default_volumes:
       - name: powerdns-mysql
-        owner: 999      # MySQL container user
-        group: 999      # MySQL container group
+        owner: 999 # MySQL container user
+        group: 999 # MySQL container group
         mode: '0755'
 
       - name: traefik-certs
@@ -26,19 +26,19 @@
         mode: '0755'
 
       - name: prometheus-data
-        owner: 65534    # nobody user (Prometheus default)
-        group: 65534    # nogroup
+        owner: 65534 # nobody user (Prometheus default)
+        group: 65534 # nogroup
         mode: '0755'
 
       - name: grafana-data
-        owner: 472      # Grafana container user
-        group: 472      # Grafana container group
+        owner: 472 # Grafana container user
+        group: 472 # Grafana container group
         mode: '0755'
 
       - name: postgres-data
-        owner: 999      # Postgres container user
-        group: 999      # Postgres container group
-        mode: '0700'    # Postgres requires 0700
+        owner: 999 # Postgres container user
+        group: 999 # Postgres container group
+        mode: '0700' # Postgres requires 0700
 
       - name: mysql-backup
         owner: root
@@ -53,12 +53,12 @@
         mode: "{{ volume_mode | default('0755') }}"
 
     # Determine which volumes to create
-    volumes_to_create: "{{ single_volume if volume_name is defined else default_volumes }}"
+    volumes_to_create: '{{ single_volume if volume_name is defined else default_volumes }}'
 
   tasks:
     - name: Ensure Nomad volumes base directory exists
       file:
-        path: "{{ nomad_volumes_base }}"
+        path: '{{ nomad_volumes_base }}'
         state: directory
         owner: root
         group: root
@@ -66,18 +66,18 @@
 
     - name: Create volume directories
       file:
-        path: "{{ nomad_volumes_base }}/{{ item.name }}"
+        path: '{{ nomad_volumes_base }}/{{ item.name }}'
         state: directory
-        owner: "{{ item.owner }}"
-        group: "{{ item.group }}"
-        mode: "{{ item.mode }}"
-      loop: "{{ volumes_to_create }}"
+        owner: '{{ item.owner }}'
+        group: '{{ item.group }}'
+        mode: '{{ item.mode }}'
+      loop: '{{ volumes_to_create }}'
       when: item.name != ''
 
     - name: Set SELinux context if enabled
       command: |
         chcon -Rt svirt_sandbox_file_t {{ nomad_volumes_base }}/{{ item.name }}
-      loop: "{{ volumes_to_create }}"
+      loop: '{{ volumes_to_create }}'
       when:
         - item.name != ''
         - ansible_selinux.status == "enabled"
@@ -92,18 +92,18 @@
           Owner: {{ item.owner }}:{{ item.group }}
           Mode: {{ item.mode }}
           Purpose: {{ item.purpose | default('General purpose storage') }}
-        dest: "{{ nomad_volumes_base }}/{{ item.name }}/.volume-info"
+        dest: '{{ nomad_volumes_base }}/{{ item.name }}/.volume-info'
         owner: root
         group: root
         mode: '0644'
-      loop: "{{ volumes_to_create }}"
+      loop: '{{ volumes_to_create }}'
       when: item.name != ''
 
     - name: Verify volumes were created
       stat:
-        path: "{{ nomad_volumes_base }}/{{ item.name }}"
+        path: '{{ nomad_volumes_base }}/{{ item.name }}'
       register: volume_stats
-      loop: "{{ volumes_to_create }}"
+      loop: '{{ volumes_to_create }}'
       when: item.name != ''
 
     - name: Display volume creation results
@@ -114,7 +114,7 @@
           Exists: {{ item.stat.exists }}
           Owner: {{ item.stat.uid if item.stat.exists else 'N/A' }}
           Mode: {{ item.stat.mode if item.stat.exists else 'N/A' }}
-      loop: "{{ volume_stats.results }}"
+      loop: '{{ volume_stats.results }}'
       when: item.item.name is defined and item.item.name != ''
 
     - name: Check Nomad client configuration
@@ -136,7 +136,7 @@
               read_only = false
             }
           }
-      loop: "{{ volumes_to_create }}"
+      loop: '{{ volumes_to_create }}'
       when:
         - item.name != ''
         - item.name not in nomad_config.content | b64decode
@@ -165,7 +165,7 @@
 
           # Cleanup old backups (keep last 7 days)
           find "$BACKUP_BASE" -name "*.tar.gz" -mtime +7 -delete
-        dest: "{{ nomad_volumes_base }}/backup-volumes.sh"
+        dest: '{{ nomad_volumes_base }}/backup-volumes.sh'
         owner: root
         group: root
         mode: '0755'

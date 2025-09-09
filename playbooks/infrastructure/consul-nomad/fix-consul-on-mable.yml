@@ -7,7 +7,7 @@
   become: true
   vars:
     consul_config_file: /etc/consul.d/consul.hcl
-    consul_encrypt_key: "$GOSSIP_KEY"
+    consul_encrypt_key: '$GOSSIP_KEY'
 
   tasks:
     - name: Check if bind_addr is configured
@@ -19,9 +19,9 @@
 
     - name: Add bind_addr to Consul configuration
       ansible.builtin.lineinfile:
-        path: "{{ consul_config_file }}"
+        path: '{{ consul_config_file }}'
         line: 'bind_addr = "192.168.11.22"'
-        insertafter: "^datacenter"
+        insertafter: '^datacenter'
         state: present
       when: bind_addr_exists.rc != 0
 
@@ -34,22 +34,22 @@
 
     - name: Add advertise_addr to Consul configuration
       ansible.builtin.lineinfile:
-        path: "{{ consul_config_file }}"
+        path: '{{ consul_config_file }}'
         line: 'advertise_addr = "192.168.11.22"'
-        insertafter: "bind_addr"
+        insertafter: 'bind_addr'
         state: present
       when: advertise_addr_exists.rc != 0
 
     - name: Update bind_addr if it exists
       ansible.builtin.replace:
-        path: "{{ consul_config_file }}"
+        path: '{{ consul_config_file }}'
         regexp: '^bind_addr\s*=.*'
         replace: 'bind_addr = "192.168.11.22"'
       when: bind_addr_exists.rc == 0
 
     - name: Update advertise_addr if it exists
       ansible.builtin.replace:
-        path: "{{ consul_config_file }}"
+        path: '{{ consul_config_file }}'
         regexp: '^advertise_addr\s*=.*'
         replace: 'advertise_addr = "192.168.11.22"'
       when: advertise_addr_exists.rc == 0
@@ -88,7 +88,7 @@
 
     - name: Display Consul members
       ansible.builtin.debug:
-        msg: "{{ consul_members.stdout_lines }}"
+        msg: '{{ consul_members.stdout_lines }}'
 
 - name: Apply Consul token to Nomad on this node
   hosts: nomad-client-3-mable
@@ -100,8 +100,8 @@
   tasks:
     - name: Update Consul stanza with token
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG WITH TOKEN"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIG WITH TOKEN'
         block: |
           consul {
             address = "127.0.0.1:8500"
@@ -130,7 +130,7 @@
             }
           }
         state: present
-        validate: "nomad config validate %s"
+        validate: 'nomad config validate %s'
       register: config_updated
 
     - name: Restart Nomad if configuration changed
@@ -143,7 +143,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
       when: config_updated.changed
@@ -181,8 +181,8 @@
     - name: Display Nomad client nodes in Consul
       ansible.builtin.debug:
         msg:
-          - "Nomad clients registered:"
-          - "{{ nomad_client_nodes.stdout_lines }}"
+          - 'Nomad clients registered:'
+          - '{{ nomad_client_nodes.stdout_lines }}'
 
     - name: Check if mable is registered
       ansible.builtin.debug:

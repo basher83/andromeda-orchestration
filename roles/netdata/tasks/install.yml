@@ -7,7 +7,7 @@
 
 - name: Install Netdata dependencies for script installation
   ansible.builtin.package:
-    name: "{{ netdata_dependencies }}"
+    name: '{{ netdata_dependencies }}'
     state: present
   when: netdata_install_method == "script"
 
@@ -25,13 +25,13 @@
 # [FIXME]: Why are we creating directories? The installer does that
 - name: Create Netdata directories
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: directory
-    owner: "{{ netdata_user }}"
-    group: "{{ netdata_group }}"
+    owner: '{{ netdata_user }}'
+    group: '{{ netdata_group }}'
     mode: '0755'
   loop:
-    - "{{ netdata_config_dir }}"
-    - "{{ netdata_lib_dir }}"
-    - "{{ netdata_cache_dir }}"
-    - "{{ netdata_log_dir }}"
+    - '{{ netdata_config_dir }}'
+    - '{{ netdata_lib_dir }}'
+    - '{{ netdata_cache_dir }}'
+    - '{{ netdata_log_dir }}'

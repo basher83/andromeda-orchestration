@@ -11,7 +11,7 @@
 - name: Generate Consul service definition
   ansible.builtin.template:
     src: consul-service.json.j2
-    dest: "/etc/consul.d/netdata.json"
+    dest: '/etc/consul.d/netdata.json'
     owner: consul
     group: consul
     mode: '0644'
@@ -20,24 +20,24 @@
 
 - name: Register service via Consul API (alternative method)
   ansible.builtin.uri:
-    url: "{{ netdata_consul_url }}/v1/agent/service/register"
+    url: '{{ netdata_consul_url }}/v1/agent/service/register'
     method: PUT
     headers:
-      X-Consul-Token: "{{ netdata_consul_acl_token | default(omit) }}"
+      X-Consul-Token: '{{ netdata_consul_acl_token | default(omit) }}'
     body_format: json
     body:
-      ID: "{{ netdata_consul_service_name }}-{{ ansible_hostname }}"
-      Name: "{{ netdata_consul_service_name }}"
-      Tags: "{{ netdata_consul_service_tags }}"
-      Meta: "{{ netdata_consul_service_meta }}"
-      Port: "{{ netdata_consul_service_port | int }}"
-      Address: "{{ ansible_default_ipv4.address }}"
-      EnableTagOverride: "{{ netdata_consul_enable_tag_override }}"
+      ID: '{{ netdata_consul_service_name }}-{{ ansible_hostname }}'
+      Name: '{{ netdata_consul_service_name }}'
+      Tags: '{{ netdata_consul_service_tags }}'
+      Meta: '{{ netdata_consul_service_meta }}'
+      Port: '{{ netdata_consul_service_port | int }}'
+      Address: '{{ ansible_default_ipv4.address }}'
+      EnableTagOverride: '{{ netdata_consul_enable_tag_override }}'
       Check:
-        HTTP: "{{ netdata_consul_health_check_http }}"
-        Interval: "{{ netdata_consul_health_check_interval }}"
-        Timeout: "{{ netdata_consul_health_check_timeout }}"
-    validate_certs: "{{ not netdata_consul_tls_skip_verify }}"
+        HTTP: '{{ netdata_consul_health_check_http }}'
+        Interval: '{{ netdata_consul_health_check_interval }}'
+        Timeout: '{{ netdata_consul_health_check_timeout }}'
+    validate_certs: '{{ not netdata_consul_tls_skip_verify }}'
     status_code: [200]
   when: netdata_consul_health_check_enabled
   register: service_registration
@@ -45,11 +45,11 @@
 
 - name: Verify service registration
   ansible.builtin.uri:
-    url: "{{ netdata_consul_url }}/v1/agent/service/{{ netdata_consul_service_name }}-{{ ansible_hostname }}"
+    url: '{{ netdata_consul_url }}/v1/agent/service/{{ netdata_consul_service_name }}-{{ ansible_hostname }}'
     method: GET
     headers:
-      X-Consul-Token: "{{ netdata_consul_acl_token | default(omit) }}"
-    validate_certs: "{{ not netdata_consul_tls_skip_verify }}"
+      X-Consul-Token: '{{ netdata_consul_acl_token | default(omit) }}'
+    validate_certs: '{{ not netdata_consul_tls_skip_verify }}'
   register: service_check
   failed_when: false
 

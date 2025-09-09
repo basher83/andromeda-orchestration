@@ -5,6 +5,7 @@ This file tracks all production deployments to the infrastructure.
 ## Format
 
 Each deployment entry should include:
+
 - Date and time (UTC)
 - Component deployed
 - Version/commit hash
@@ -34,6 +35,7 @@ Each deployment entry should include:
 - **Related Issue**: GitHub #100 - Automate Certificate Rotation and Distribution
 - **Archon Task**: 1c57b421-dfd8-4147-8483-3f5c852c31d3
 - **Notes**: Deployment method violated project standards. Should have used:
+
   ```bash
   uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
     -i inventory/doggos-homelab/infisical.proxmox.yml \
@@ -81,6 +83,7 @@ Each deployment entry should include:
 ## Rollback Procedures
 
 See individual service documentation for rollback procedures:
+
 - Vault: `docs/implementation/vault/production-deployment.md`
 - Nomad Jobs: Use `nomad job revert` or redeploy previous version
 - Ansible: Rerun playbooks with previous configuration

@@ -19,30 +19,30 @@
     vault_url: "{{ lookup('env', 'VAULT_ADDR') | default('https://vault.spaceships.work:8200', true) }}"
     vault_admin_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
     # Token configuration
-    token_ttl: "720h"  # 30 days
+    token_ttl: '720h' # 30 days
     token_renewable: true
     token_display_name: "vault-pki-exporter-{{ ansible_date_time.epoch | default('manual') }}"
 
   tasks:
     - name: Verify Vault connectivity
       community.hashi_vault.vault_read:
-        url: "{{ vault_url }}"
+        url: '{{ vault_url }}'
         auth_method: token
-        token: "{{ vault_admin_token }}"
+        token: '{{ vault_admin_token }}'
         path: sys/health
       register: vault_health
       failed_when: false
 
     - name: Check Vault health status
       ansible.builtin.fail:
-        msg: "Vault is not accessible or sealed. Please check VAULT_ADDR and VAULT_TOKEN."
+        msg: 'Vault is not accessible or sealed. Please check VAULT_ADDR and VAULT_TOKEN.'
       when: vault_health.failed | default(false) and vault_health.status != 200
 
     - name: Create PKI reader policy
       community.hashi_vault.vault_write:
-        url: "{{ vault_url }}"
+        url: '{{ vault_url }}'
         auth_method: token
-        token: "{{ vault_admin_token }}"
+        token: '{{ vault_admin_token }}'
         path: sys/policies/acl/pki-reader
         data:
           policy: |
@@ -108,7 +108,7 @@
 
     - name: Display policy creation result
       ansible.builtin.debug:
-        msg: "PKI reader policy created/updated successfully"
+        msg: 'PKI reader policy created/updated successfully'
       when: policy_creation is succeeded
 
     - name: Check if monitoring token already exists in Infisical
@@ -117,9 +117,9 @@
 
     - name: Validate existing token if present
       community.hashi_vault.vault_read:
-        url: "{{ vault_url }}"
+        url: '{{ vault_url }}'
         auth_method: token
-        token: "{{ existing_token }}"
+        token: '{{ existing_token }}'
         path: auth/token/lookup-self
       register: token_lookup
       when: existing_token | length > 0
@@ -127,17 +127,17 @@
 
     - name: Check if existing token needs renewal
       ansible.builtin.set_fact:
-        token_needs_renewal: "{{ token_lookup is succeeded and token_lookup.data.data.ttl < 86400 }}"
+        token_needs_renewal: '{{ token_lookup is succeeded and token_lookup.data.data.ttl < 86400 }}'
       when: existing_token | length > 0
 
     - name: Renew existing token if expiring soon
       community.hashi_vault.vault_write:
-        url: "{{ vault_url }}"
+        url: '{{ vault_url }}'
         auth_method: token
-        token: "{{ existing_token }}"
+        token: '{{ existing_token }}'
         path: auth/token/renew-self
         data:
-          increment: "{{ token_ttl }}"
+          increment: '{{ token_ttl }}'
       register: renewed_token
       when:
         - existing_token | length > 0
@@ -146,16 +146,16 @@
 
     - name: Create new monitoring token
       community.hashi_vault.vault_token_create:
-        url: "{{ vault_url }}"
+        url: '{{ vault_url }}'
         auth_method: token
-        token: "{{ vault_admin_token }}"
+        token: '{{ vault_admin_token }}'
         policies:
           - pki-reader
-        ttl: "{{ token_ttl }}"
-        renewable: "{{ token_renewable }}"
-        display_name: "{{ token_display_name }}"
-        orphan: true  # Create as orphan token (won't be revoked if parent is revoked)
-        no_default_policy: true  # Don't include default policy
+        ttl: '{{ token_ttl }}'
+        renewable: '{{ token_renewable }}'
+        display_name: '{{ token_display_name }}'
+        orphan: true # Create as orphan token (won't be revoked if parent is revoked)
+        no_default_policy: true # Don't include default policy
       register: new_token
       when: >
         existing_token | length == 0 or
@@ -177,23 +177,23 @@
     - name: Display token information
       ansible.builtin.debug:
         msg:
-          - "Token Status:"
+          - 'Token Status:'
           - "  Action: {{ 'Created new token' if new_token is defined and new_token is succeeded else ('Renewed existing token' if renewed_token is defined and renewed_token is succeeded else 'Using existing valid token') }}"
           - "  Display Name: {{ token_display_name if new_token is defined else 'existing' }}"
-          - "  TTL: {{ token_ttl }}"
-          - "  Renewable: {{ token_renewable }}"
-          - ""
-          - "IMPORTANT: Store this token in Infisical at:"
-          - "  Path: /apollo-13/vault"
-          - "  Key: VAULT_PKI_MONITOR_TOKEN"
-          - ""
-          - "To store in Infisical CLI:"
+          - '  TTL: {{ token_ttl }}'
+          - '  Renewable: {{ token_renewable }}'
+          - ''
+          - 'IMPORTANT: Store this token in Infisical at:'
+          - '  Path: /apollo-13/vault'
+          - '  Key: VAULT_PKI_MONITOR_TOKEN'
+          - ''
+          - 'To store in Infisical CLI:'
           - "  infisical secrets set VAULT_PKI_MONITOR_TOKEN --env=staging --path='/apollo-13/vault'"
-          - ""
-          - "Then deploy the exporter with:"
+          - ''
+          - 'Then deploy the exporter with:'
           - "  infisical run --env=staging --path='/apollo-13/vault' -- \\"
           - "    uv run ansible-playbook playbooks/infrastructure/vault/deploy-pki-exporter.yml \\"
-          - "    -i inventory/doggos-homelab/infisical.proxmox.yml"
+          - '    -i inventory/doggos-homelab/infisical.proxmox.yml'
 
     - name: Save token to file (temporary - for manual Infisical upload)
       ansible.builtin.copy:
@@ -216,17 +216,16 @@
     - name: Final instructions
       ansible.builtin.debug:
         msg:
-          - "✅ Setup complete!"
-          - ""
-          - "{% if new_token is defined and new_token is succeeded %}"
-          - "New token has been created and saved to: /tmp/vault-pki-monitor-token.sh"
-          - "1. Source the file: source /tmp/vault-pki-monitor-token.sh"
+          - '✅ Setup complete!'
+          - ''
+          - '{% if new_token is defined and new_token is succeeded %}'
+          - 'New token has been created and saved to: /tmp/vault-pki-monitor-token.sh'
+          - '1. Source the file: source /tmp/vault-pki-monitor-token.sh'
           - "2. Store in Infisical: infisical secrets set VAULT_PKI_MONITOR_TOKEN --env=staging --path='/apollo-13/vault'"
-          - "3. Delete the temp file: rm /tmp/vault-pki-monitor-token.sh"
-          - "{% else %}"
-          - "Token is valid and ready to use."
-          - "{% endif %}"
-
+          - '3. Delete the temp file: rm /tmp/vault-pki-monitor-token.sh'
+          - '{% else %}'
+          - 'Token is valid and ready to use.'
+          - '{% endif %}'
 # Usage notes:
 # - This playbook requires the community.hashi_vault collection
 # - Install with: ansible-galaxy collection install community.hashi_vault

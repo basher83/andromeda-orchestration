@@ -5,7 +5,7 @@
   become: true
   gather_facts: true
   vars:
-    backup_dir: "/root/netdata-backup-{{ ansible_date_time.epoch }}"
+    backup_dir: '/root/netdata-backup-{{ ansible_date_time.epoch }}'
 
   tasks:
     - name: Check if Netdata is installed
@@ -28,7 +28,7 @@
 
     - name: Create backup directory
       ansible.builtin.file:
-        path: "{{ backup_dir }}"
+        path: '{{ backup_dir }}'
         state: directory
         mode: '0700'
       when: netdata_binary.stat.exists
@@ -36,14 +36,14 @@
     - name: Backup Netdata configuration directory
       ansible.builtin.archive:
         path: /etc/netdata/
-        dest: "{{ backup_dir }}/netdata-config.tar.gz"
+        dest: '{{ backup_dir }}/netdata-config.tar.gz'
         format: gz
       when: netdata_binary.stat.exists
 
     - name: Backup Consul service registration
       ansible.builtin.copy:
         src: /etc/consul.d/netdata.json
-        dest: "{{ backup_dir }}/consul-netdata.json"
+        dest: '{{ backup_dir }}/consul-netdata.json'
         remote_src: true
         mode: preserve
       failed_when: false
@@ -60,10 +60,10 @@
           Configuration files backed up:
           - /etc/netdata/* -> netdata-config.tar.gz
           - /etc/consul.d/netdata.json -> consul-netdata.json (if exists)
-        dest: "{{ backup_dir }}/backup-info.txt"
+        dest: '{{ backup_dir }}/backup-info.txt'
       when: netdata_binary.stat.exists
 
     - name: Display backup location
       ansible.builtin.debug:
-        msg: "Netdata configuration backed up to: {{ backup_dir }}"
+        msg: 'Netdata configuration backed up to: {{ backup_dir }}'
       when: netdata_binary.stat.exists

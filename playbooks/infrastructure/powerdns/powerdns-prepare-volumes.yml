@@ -18,8 +18,8 @@
       file:
         path: /opt/nomad/volumes/powerdns-mysql
         state: directory
-        owner: 999  # MySQL container user
-        group: 999  # MySQL container group
+        owner: 999 # MySQL container user
+        group: 999 # MySQL container group
         mode: '0755'
 
     - name: Verify volume was created
@@ -29,4 +29,4 @@
 
     - name: Display volume status
       debug:
-        msg: "PowerDNS MySQL volume created: {{ volume_stat.stat.exists }}"
+        msg: 'PowerDNS MySQL volume created: {{ volume_stat.stat.exists }}'

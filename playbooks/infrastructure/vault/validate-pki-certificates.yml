@@ -7,32 +7,32 @@
 - name: Comprehensive PKI Certificate Validation
   hosts: vault_production
   gather_facts: yes
-  
+
   vars:
-    tls_dir: "/opt/vault/tls"
-    warning_days: 7  # Warn if certificate expires in less than 7 days
-    critical_days: 3  # Critical if certificate expires in less than 3 days
-    
+    tls_dir: '/opt/vault/tls'
+    warning_days: 7 # Warn if certificate expires in less than 7 days
+    critical_days: 3 # Critical if certificate expires in less than 3 days
+
   tasks:
     - name: Check certificate files exist
       ansible.builtin.stat:
-        path: "{{ item }}"
+        path: '{{ item }}'
       register: cert_files
       loop:
-        - "{{ tls_dir }}/tls.crt"
-        - "{{ tls_dir }}/tls.key"
-        - "{{ tls_dir }}/ca-bundle.pem"
+        - '{{ tls_dir }}/tls.crt'
+        - '{{ tls_dir }}/tls.key'
+        - '{{ tls_dir }}/ca-bundle.pem'
       become: true
 
     - name: Verify all certificate files present
       ansible.builtin.assert:
         that:
           - item.stat.exists
-        fail_msg: "Certificate file {{ item.item }} is missing!"
-        success_msg: "Certificate file {{ item.item }} exists"
-      loop: "{{ cert_files.results }}"
+        fail_msg: 'Certificate file {{ item.item }} is missing!'
+        success_msg: 'Certificate file {{ item.item }} exists'
+      loop: '{{ cert_files.results }}'
       loop_control:
-        label: "{{ item.item }}"
+        label: '{{ item.item }}'
 
     - name: Get certificate expiration date
       ansible.builtin.shell: |
@@ -110,50 +110,50 @@
     - name: Display certificate validation results
       ansible.builtin.debug:
         msg:
-          - "====================================="
-          - "{{ cert_emoji }} {{ inventory_hostname }} Certificate Status: {{ cert_status }}"
-          - "====================================="
-          - ""
-          - "Certificate Details:"
-          - "{{ cert_details.stdout_lines }}"
-          - ""
-          - "Expiration Status:"
-          - "  Expires: {{ cert_expiry.stdout }}"
-          - "  Days remaining: {{ days_until_expiry.stdout }}"
-          - "  Status: {{ cert_status }}"
-          - ""
-          - "Validation Results:"
+          - '====================================='
+          - '{{ cert_emoji }} {{ inventory_hostname }} Certificate Status: {{ cert_status }}'
+          - '====================================='
+          - ''
+          - 'Certificate Details:'
+          - '{{ cert_details.stdout_lines }}'
+          - ''
+          - 'Expiration Status:'
+          - '  Expires: {{ cert_expiry.stdout }}'
+          - '  Days remaining: {{ days_until_expiry.stdout }}'
+          - '  Status: {{ cert_status }}'
+          - ''
+          - 'Validation Results:'
           - "  Chain validation: {{ 'PASSED' if 'OK' in chain_validation.stdout else 'FAILED: ' + chain_validation.stdout }}"
           - "  Cert/Key match: {{ 'PASSED' if cert_key_match.stdout == 'MATCH' else 'FAILED' }}"
           - "  TLS verification: {{ 'PASSED' if 'Verify return code: 0' in tls_verify.stdout else 'FAILED' }}"
-          - "====================================="
+          - '====================================='
 
 - name: Certificate Renewal Recommendations
   hosts: localhost
   gather_facts: no
-  
+
   tasks:
     - name: Display renewal recommendations
       ansible.builtin.debug:
         msg:
-          - "====================================="
-          - "📋 Certificate Management Summary"
-          - "====================================="
-          - ""
-          - "Current Configuration:"
-          - "  • Certificate TTL: 30 days"
-          - "  • Warning threshold: 7 days"
-          - "  • Critical threshold: 3 days"
-          - ""
-          - "Renewal Strategy:"
-          - "  • Manual: Run the replacement playbook every 25 days"
-          - "  • Automated: Implement Issue #100 for automatic rotation"
-          - ""
-          - "To renew certificates manually:"
+          - '====================================='
+          - '📋 Certificate Management Summary'
+          - '====================================='
+          - ''
+          - 'Current Configuration:'
+          - '  • Certificate TTL: 30 days'
+          - '  • Warning threshold: 7 days'
+          - '  • Critical threshold: 3 days'
+          - ''
+          - 'Renewal Strategy:'
+          - '  • Manual: Run the replacement playbook every 25 days'
+          - '  • Automated: Implement Issue #100 for automatic rotation'
+          - ''
+          - 'To renew certificates manually:'
           - "  uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certificates.yml \\"
-          - "    -i inventory/environments/vault-cluster/production.yaml"
-          - ""
-          - "To check certificate status:"
+          - '    -i inventory/environments/vault-cluster/production.yaml'
+          - ''
+          - 'To check certificate status:'
           - "  uv run ansible-playbook playbooks/infrastructure/vault/validate-pki-certificates.yml \\"
-          - "    -i inventory/environments/vault-cluster/production.yaml"
-          - "====================================="
+          - '    -i inventory/environments/vault-cluster/production.yaml'
+          - '====================================='

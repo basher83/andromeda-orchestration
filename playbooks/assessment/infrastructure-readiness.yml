@@ -16,8 +16,8 @@
   hosts: all
   gather_facts: true
   vars:
-    report_dir: "{{ playbook_dir }}/../../reports/infrastructure"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    report_dir: '{{ playbook_dir }}/../../reports/infrastructure'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
     # Minimum requirements for services
     min_requirements:
       netbox:
@@ -38,32 +38,32 @@
         cpu_cores: 2
     required_ports:
       consul:
-        - { port: 8300, proto: tcp, desc: "Server RPC" }
-        - { port: 8301, proto: tcp, desc: "Serf LAN" }
-        - { port: 8301, proto: udp, desc: "Serf LAN" }
-        - { port: 8302, proto: tcp, desc: "Serf WAN" }
-        - { port: 8302, proto: udp, desc: "Serf WAN" }
-        - { port: 8500, proto: tcp, desc: "HTTP API" }
-        - { port: 8600, proto: tcp, desc: "DNS" }
-        - { port: 8600, proto: udp, desc: "DNS" }
+        - { port: 8300, proto: tcp, desc: 'Server RPC' }
+        - { port: 8301, proto: tcp, desc: 'Serf LAN' }
+        - { port: 8301, proto: udp, desc: 'Serf LAN' }
+        - { port: 8302, proto: tcp, desc: 'Serf WAN' }
+        - { port: 8302, proto: udp, desc: 'Serf WAN' }
+        - { port: 8500, proto: tcp, desc: 'HTTP API' }
+        - { port: 8600, proto: tcp, desc: 'DNS' }
+        - { port: 8600, proto: udp, desc: 'DNS' }
       nomad:
-        - { port: 4646, proto: tcp, desc: "HTTP API" }
-        - { port: 4647, proto: tcp, desc: "RPC" }
-        - { port: 4648, proto: tcp, desc: "Serf" }
+        - { port: 4646, proto: tcp, desc: 'HTTP API' }
+        - { port: 4647, proto: tcp, desc: 'RPC' }
+        - { port: 4648, proto: tcp, desc: 'Serf' }
       powerdns:
-        - { port: 53, proto: tcp, desc: "DNS" }
-        - { port: 53, proto: udp, desc: "DNS" }
-        - { port: 8081, proto: tcp, desc: "API/Web" }
+        - { port: 53, proto: tcp, desc: 'DNS' }
+        - { port: 53, proto: udp, desc: 'DNS' }
+        - { port: 8081, proto: tcp, desc: 'API/Web' }
       netbox:
-        - { port: 8080, proto: tcp, desc: "HTTP" }
-        - { port: 443, proto: tcp, desc: "HTTPS" }
+        - { port: 8080, proto: tcp, desc: 'HTTP' }
+        - { port: 443, proto: tcp, desc: 'HTTPS' }
 
   tasks:
     - name: Create report directory
       delegate_to: localhost
       run_once: true
       ansible.builtin.file:
-        path: "{{ report_dir }}"
+        path: '{{ report_dir }}'
         state: directory
         mode: '0755'
 
@@ -72,13 +72,13 @@
       tags: [resources, always]
       ansible.builtin.set_fact:
         system_resources:
-          total_ram_mb: "{{ ansible_memtotal_mb | default(0) }}"
-          free_ram_mb: "{{ ansible_memfree_mb | default(0) }}"
+          total_ram_mb: '{{ ansible_memtotal_mb | default(0) }}'
+          free_ram_mb: '{{ ansible_memfree_mb | default(0) }}'
           used_ram_percent: >-
             {{ ((ansible_memtotal_mb | default(1) - ansible_memfree_mb | default(0))
             / ansible_memtotal_mb | default(1) * 100) | round(2) }}
-          total_swap_mb: "{{ ansible_swaptotal_mb | default(0) }}"
-          cpu_cores: "{{ ansible_processor_vcpus | default(ansible_processor_cores | default(1)) }}"
+          total_swap_mb: '{{ ansible_swaptotal_mb | default(0) }}'
+          cpu_cores: '{{ ansible_processor_vcpus | default(ansible_processor_cores | default(1)) }}'
           cpu_model: "{{ ansible_processor[2] | default('Unknown') if ansible_processor is defined else 'Unknown' }}"
 
     - name: Get disk usage
@@ -216,33 +216,33 @@
     - name: Check required ports for Consul
       tags: [network, ports, consul]
       ansible.builtin.wait_for:
-        port: "{{ item.port }}"
+        port: '{{ item.port }}'
         host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         state: stopped
         timeout: 2
-      loop: "{{ required_ports.consul }}"
+      loop: '{{ required_ports.consul }}'
       register: consul_ports
       failed_when: false
       when: ansible_default_ipv4 is defined
 
     - name: Check required ports for Nomad
       ansible.builtin.wait_for:
-        port: "{{ item.port }}"
+        port: '{{ item.port }}'
         host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         state: stopped
         timeout: 2
-      loop: "{{ required_ports.nomad }}"
+      loop: '{{ required_ports.nomad }}'
       register: nomad_ports
       failed_when: false
       when: ansible_default_ipv4 is defined
 
     - name: Check required ports for PowerDNS
       ansible.builtin.wait_for:
-        port: "{{ item.port }}"
+        port: '{{ item.port }}'
         host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         state: stopped
         timeout: 2
-      loop: "{{ required_ports.powerdns }}"
+      loop: '{{ required_ports.powerdns }}'
       register: powerdns_ports
       failed_when: false
       when: ansible_default_ipv4 is defined
@@ -251,7 +251,7 @@
     - name: Check for persistent volume capabilities
       tags: [storage]
       ansible.builtin.stat:
-        path: "{{ item }}"
+        path: '{{ item }}'
       loop:
         - /var/lib/docker/volumes
         - /var/lib/nomad
@@ -297,36 +297,36 @@
     - name: Compile infrastructure readiness report
       ansible.builtin.set_fact:
         readiness_report:
-          hostname: "{{ ansible_hostname }}"
-          fqdn: "{{ ansible_fqdn }}"
-          os: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
-          kernel: "{{ ansible_kernel }}"
+          hostname: '{{ ansible_hostname }}'
+          fqdn: '{{ ansible_fqdn }}'
+          os: '{{ ansible_distribution }} {{ ansible_distribution_version }}'
+          kernel: '{{ ansible_kernel }}'
           virtualization: "{{ ansible_virtualization_type | default('none') }}"
           # Resources
           resources:
             cpu:
-              cores: "{{ system_resources.cpu_cores }}"
-              model: "{{ system_resources.cpu_model }}"
+              cores: '{{ system_resources.cpu_cores }}'
+              model: '{{ system_resources.cpu_model }}'
             memory:
-              total_mb: "{{ system_resources.total_ram_mb }}"
-              free_mb: "{{ system_resources.free_ram_mb }}"
-              used_percent: "{{ system_resources.used_ram_percent }}"
-              swap_mb: "{{ system_resources.total_swap_mb }}"
-            storage: "{{ disk_usage }}"
+              total_mb: '{{ system_resources.total_ram_mb }}'
+              free_mb: '{{ system_resources.free_ram_mb }}'
+              used_percent: '{{ system_resources.used_ram_percent }}'
+              swap_mb: '{{ system_resources.total_swap_mb }}'
+            storage: '{{ disk_usage }}'
           # Container/Orchestration
           container_runtime:
-            docker: "{{ docker_check.rc == 0 }}"
-            podman: "{{ podman_check.rc == 0 }}"
-            containerd: "{{ containerd_check.rc == 0 }}"
+            docker: '{{ docker_check.rc == 0 }}'
+            podman: '{{ podman_check.rc == 0 }}'
+            containerd: '{{ containerd_check.rc == 0 }}'
           orchestration:
             nomad:
-              installed: "{{ nomad_check.rc == 0 }}"
+              installed: '{{ nomad_check.rc == 0 }}'
               version: >-
                 {{ nomad_check.stdout | default('Not installed') }}
               consul_integrated: >-
                 {{ consul_nomad_integration.stdout is defined and
                 'consul' in consul_nomad_integration.stdout | lower }}
-            kubernetes: "{{ k8s_check.rc == 0 }}"
+            kubernetes: '{{ k8s_check.rc == 0 }}'
           # Network
           network:
             connectivity_tests: |
@@ -404,37 +404,37 @@
     - name: Save individual node readiness report
       delegate_to: localhost
       ansible.builtin.copy:
-        content: "{{ readiness_report | to_nice_yaml }}"
-        dest: "{{ report_dir }}/readiness_node_{{ ansible_hostname }}_{{ timestamp }}.yml"
+        content: '{{ readiness_report | to_nice_yaml }}'
+        dest: '{{ report_dir }}/readiness_node_{{ ansible_hostname }}_{{ timestamp }}.yml'
         mode: '0644'
 
 - name: Generate Infrastructure Readiness Summary
   hosts: localhost
   gather_facts: false
   vars:
-    report_dir: "{{ playbook_dir }}/../../reports/infrastructure"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    report_dir: '{{ playbook_dir }}/../../reports/infrastructure'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
 
   tasks:
     - name: Read all node reports
       ansible.builtin.find:
-        paths: "{{ report_dir }}"
-        patterns: "readiness_node_*_{{ timestamp }}.yml"
+        paths: '{{ report_dir }}'
+        patterns: 'readiness_node_*_{{ timestamp }}.yml'
       register: node_reports
 
     - name: Load node data
       ansible.builtin.include_vars:
-        file: "{{ item.path }}"
+        file: '{{ item.path }}'
         name: "ready_node_{{ item.path | basename | regex_replace('readiness_node_(.+)_.*\\.yml', '\\1') }}"
-      loop: "{{ node_reports.files }}"
+      loop: '{{ node_reports.files }}'
 
     - name: Generate summary report
       ansible.builtin.template:
         src: infrastructure_readiness_summary.j2
-        dest: "{{ report_dir }}/infrastructure_readiness_summary_{{ timestamp }}.md"
+        dest: '{{ report_dir }}/infrastructure_readiness_summary_{{ timestamp }}.md'
         mode: '0644'
       vars:
-        all_nodes: "{{ hostvars }}"
+        all_nodes: '{{ hostvars }}'
 
     - name: Display completion message
       ansible.builtin.debug:

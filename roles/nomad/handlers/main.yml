@@ -1,10 +1,10 @@
 - name: Create Nomad configuration
   ansible.builtin.template:
     src: nomad.hcl.j2
-    dest: "{{ nomad_config_dir }}/nomad.hcl"
-    owner: "{{ nomad_user }}"
-    group: "{{ nomad_group }}"
-    mode: "0640"
+    dest: '{{ nomad_config_dir }}/nomad.hcl'
+    owner: '{{ nomad_user }}'
+    group: '{{ nomad_group }}'
+    mode: '0640'
   notify:
     - Validate nomad config
     - Restart nomad after validation

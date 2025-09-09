@@ -20,6 +20,7 @@ As our infrastructure automation grows more complex with HashiCorp Vault, Consul
 - Available disk space and resources
 
 Running production playbooks without these checks can lead to:
+
 - Failed deployments that leave infrastructure in inconsistent states
 - Time wasted troubleshooting issues that could have been detected early
 - Potential security risks from partial configurations
@@ -36,6 +37,7 @@ We will implement comprehensive smoke test playbooks for each major infrastructu
 5. **Be easily executable** - Integrate with mise tasks for single-command execution
 
 The Vault smoke test implementation serves as the reference pattern with:
+
 - 12+ comprehensive test categories
 - Smart handling of recovery keys (existence check by default, retrieval optional)
 - Integration with Infisical for secrets management
@@ -65,6 +67,7 @@ The Vault smoke test implementation serves as the reference pattern with:
 - **Over-reliance** - Teams might skip manual verification assuming smoke tests catch everything
 
 Mitigation strategies:
+
 - Use `no_log` for sensitive operations
 - Include smoke test updates in PR reviews
 - Document that smoke tests are first-line, not only-line, validation

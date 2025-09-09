@@ -17,35 +17,35 @@
 
     # Custom alarm thresholds for this environment
     netdata_consul_kv_defaults:
-      - key: "netdata/alarms/cpu/10min_usage_warning_low"
-        value: "70"  # Lower threshold for development
-      - key: "netdata/alarms/cpu/10min_usage_warning_high"
-        value: "80"
-      - key: "netdata/alarms/cpu/10min_usage_critical_low"
-        value: "80"
-      - key: "netdata/alarms/cpu/10min_usage_critical_high"
-        value: "90"
-      - key: "netdata/alarms/cpu/10min_iowait_warning_low"
-        value: "15"  # More sensitive to IO wait
-      - key: "netdata/alarms/cpu/10min_iowait_warning_high"
-        value: "30"
-      - key: "netdata/alarms/cpu/10min_iowait_critical_low"
-        value: "30"
-      - key: "netdata/alarms/cpu/10min_iowait_critical_high"
-        value: "40"
+      - key: 'netdata/alarms/cpu/10min_usage_warning_low'
+        value: '70' # Lower threshold for development
+      - key: 'netdata/alarms/cpu/10min_usage_warning_high'
+        value: '80'
+      - key: 'netdata/alarms/cpu/10min_usage_critical_low'
+        value: '80'
+      - key: 'netdata/alarms/cpu/10min_usage_critical_high'
+        value: '90'
+      - key: 'netdata/alarms/cpu/10min_iowait_warning_low'
+        value: '15' # More sensitive to IO wait
+      - key: 'netdata/alarms/cpu/10min_iowait_warning_high'
+        value: '30'
+      - key: 'netdata/alarms/cpu/10min_iowait_critical_low'
+        value: '30'
+      - key: 'netdata/alarms/cpu/10min_iowait_critical_high'
+        value: '40'
 
     # Add custom templates for other alarms
     netdata_consul_template_configs:
-      - name: "memory.conf.ctmpl"
-        destination: "/etc/netdata/health.d/memory.conf"
-        command: "systemctl restart netdata"
-        wait_min: "5s"
-        wait_max: "30s"
-      - name: "disk.conf.ctmpl"
-        destination: "/etc/netdata/health.d/disk.conf"
-        command: "systemctl restart netdata"
-        wait_min: "5s"
-        wait_max: "30s"
+      - name: 'memory.conf.ctmpl'
+        destination: '/etc/netdata/health.d/memory.conf'
+        command: 'systemctl restart netdata'
+        wait_min: '5s'
+        wait_max: '30s'
+      - name: 'disk.conf.ctmpl'
+        destination: '/etc/netdata/health.d/disk.conf'
+        command: 'systemctl restart netdata'
+        wait_min: '5s'
+        wait_max: '30s'
 
   tasks:
     - name: Deploy Netdata with consul-template
@@ -58,33 +58,33 @@
 
   vars:
     consul_url: "http://{{ groups['consul_servers'][0] }}:8500"
-    consul_token: "{{ vault_consul_management_token }}"
+    consul_token: '{{ vault_consul_management_token }}'
 
   tasks:
     - name: Update CPU warning threshold for production
       ansible.builtin.uri:
-        url: "{{ consul_url }}/v1/kv/netdata/alarms/cpu/10min_usage_warning_low"
+        url: '{{ consul_url }}/v1/kv/netdata/alarms/cpu/10min_usage_warning_low'
         method: PUT
-        body: "85"  # Increase threshold for production
+        body: '85' # Increase threshold for production
         headers:
-          X-Consul-Token: "{{ consul_token }}"
+          X-Consul-Token: '{{ consul_token }}'
       when: environment == "production"
 
     - name: Update IO wait thresholds based on workload type
       ansible.builtin.uri:
-        url: "{{ consul_url }}/v1/kv/netdata/alarms/cpu/10min_iowait_warning_high"
+        url: '{{ consul_url }}/v1/kv/netdata/alarms/cpu/10min_iowait_warning_high'
         method: PUT
         body: "{{ '60' if workload_type == 'database' else '40' }}"
         headers:
-          X-Consul-Token: "{{ consul_token }}"
+          X-Consul-Token: '{{ consul_token }}'
 
     - name: Disable CPU steal alarms for non-virtualized hosts
       ansible.builtin.uri:
-        url: "{{ consul_url }}/v1/kv/netdata/alarms/cpu/20min_steal_critical_high"
+        url: '{{ consul_url }}/v1/kv/netdata/alarms/cpu/20min_steal_critical_high'
         method: PUT
-        body: "999"  # Effectively disable by setting very high threshold
+        body: '999' # Effectively disable by setting very high threshold
         headers:
-          X-Consul-Token: "{{ consul_token }}"
+          X-Consul-Token: '{{ consul_token }}'
       when: not is_virtualized | default(true)
 # Example: Create custom alarm templates
 - name: Create custom Netdata alarm templates
@@ -95,7 +95,7 @@
   tasks:
     - name: Create memory alarm template
       ansible.builtin.copy:
-        dest: "./memory.conf.ctmpl"
+        dest: './memory.conf.ctmpl'
         content: |
           # Memory alarms managed by Consul
           template: ram_in_use
@@ -112,7 +112,7 @@
 
     - name: Create disk alarm template
       ansible.builtin.copy:
-        dest: "./disk.conf.ctmpl"
+        dest: './disk.conf.ctmpl'
         content: |
           # Disk space alarms managed by Consul
           template: disk_space_usage

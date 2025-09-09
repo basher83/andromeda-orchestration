@@ -12,18 +12,18 @@
   tasks:
     - name: Check current Docker daemon configuration
       ansible.builtin.stat:
-        path: "{{ docker_daemon_config }}"
+        path: '{{ docker_daemon_config }}'
       register: docker_config_file
 
     - name: Read existing Docker daemon config
       ansible.builtin.slurp:
-        src: "{{ docker_daemon_config }}"
+        src: '{{ docker_daemon_config }}'
       register: docker_config_content
       when: docker_config_file.stat.exists
 
     - name: Parse existing config or create new
       ansible.builtin.set_fact:
-        docker_config: "{{ (docker_config_content.content | b64decode | from_json) if docker_config_file.stat.exists else {} }}"
+        docker_config: '{{ (docker_config_content.content | b64decode | from_json) if docker_config_file.stat.exists else {} }}'
 
     - name: Update Docker daemon config with Consul DNS
       ansible.builtin.set_fact:
@@ -31,8 +31,8 @@
 
     - name: Write updated Docker daemon configuration
       ansible.builtin.copy:
-        content: "{{ docker_config_updated | to_nice_json }}"
-        dest: "{{ docker_daemon_config }}"
+        content: '{{ docker_config_updated | to_nice_json }}'
+        dest: '{{ docker_daemon_config }}'
         backup: true
         mode: '0644'
       register: docker_config_changed
@@ -40,7 +40,7 @@
     - name: Configure systemd-resolved for Consul DNS (if using systemd-resolved)
       ansible.builtin.blockinfile:
         path: /etc/systemd/resolved.conf
-        marker: "# {mark} ANSIBLE MANAGED - CONSUL DNS"
+        marker: '# {mark} ANSIBLE MANAGED - CONSUL DNS'
         block: |
           [Resolve]
           DNS=127.0.0.1:8600
@@ -57,8 +57,8 @@
         protocol: udp
         destination_port: 53
         jump: DNAT
-        to_destination: "{{ ansible_default_ipv4.address }}:8600"
-        comment: "Redirect Docker DNS queries to Consul"
+        to_destination: '{{ ansible_default_ipv4.address }}:8600'
+        comment: 'Redirect Docker DNS queries to Consul'
       register: iptables_rule_added
 
     - name: Also redirect TCP DNS queries
@@ -69,8 +69,8 @@
         protocol: tcp
         destination_port: 53
         jump: DNAT
-        to_destination: "{{ ansible_default_ipv4.address }}:8600"
-        comment: "Redirect Docker DNS TCP queries to Consul"
+        to_destination: '{{ ansible_default_ipv4.address }}:8600'
+        comment: 'Redirect Docker DNS TCP queries to Consul'
 
     - name: Save iptables rules
       ansible.builtin.shell: |
@@ -133,10 +133,10 @@
     - name: Display DNS test results
       ansible.builtin.debug:
         msg:
-          - "Host: {{ inventory_hostname }}"
-          - "Docker DNS configured: {{ docker_config_changed.changed }}"
-          - "DNS test result:"
-          - "{{ dns_test.stdout_lines }}"
+          - 'Host: {{ inventory_hostname }}'
+          - 'Docker DNS configured: {{ docker_config_changed.changed }}'
+          - 'DNS test result:'
+          - '{{ dns_test.stdout_lines }}'
 
 - name: Restart Traefik to pick up DNS changes
   hosts: nomad-server-1-lloyd
@@ -158,6 +158,6 @@
     - name: Display Traefik status
       ansible.builtin.debug:
         msg:
-          - "Traefik restarted: {{ traefik_restart.changed }}"
-          - "Recent logs:"
-          - "{{ traefik_logs.stdout_lines }}"
+          - 'Traefik restarted: {{ traefik_restart.changed }}'
+          - 'Recent logs:'
+          - '{{ traefik_logs.stdout_lines }}'

@@ -3,8 +3,8 @@
 # This inventory connects to NetBox as the source of truth for infrastructure
 
 plugin: netbox.netbox.nb_inventory
-api_endpoint: https://192.168.30.213  # NetBox URL (LXC 213 on pve1)
-validate_certs: false  # Set to true in production with proper certs
+api_endpoint: https://192.168.30.213 # NetBox URL (LXC 213 on pve1)
+validate_certs: false # Set to true in production with proper certs
 
 # API token retrieved from Infisical
 token: >-
@@ -19,31 +19,31 @@ token: >-
 # Enable caching to handle connection failures gracefully
 cache: true
 cache_plugin: ansible.builtin.jsonfile
-cache_timeout: 86400  # 24 hours - use cached data if NetBox is unreachable
+cache_timeout: 86400 # 24 hours - use cached data if NetBox is unreachable
 cache_connection: .ansible_cache/netbox
 cache_prefix: netbox_inventory
 
 # Grouping configuration
 group_by:
-  - device_roles  # Group by device role (e.g., server, switch, router)
-  - sites        # Group by site (e.g., og-homelab, doggos-homelab)
-  - platforms    # Group by platform (e.g., linux, proxmox)
-  - tags         # Group by tags
+  - device_roles # Group by device role (e.g., server, switch, router)
+  - sites # Group by site (e.g., og-homelab, doggos-homelab)
+  - platforms # Group by platform (e.g., linux, proxmox)
+  - tags # Group by tags
 
 # Create groups for specific attributes
 keyed_groups:
   # Group by status
   - key: status
     prefix: status
-    separator: "_"
+    separator: '_'
   # Group by manufacturer
   - key: manufacturer
     prefix: manufacturer
-    separator: "_"
+    separator: '_'
   # Group by device type
   - key: device_type
     prefix: type
-    separator: "_"
+    separator: '_'
 
 # Compose variables for hosts
 compose:

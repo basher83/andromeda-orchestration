@@ -30,7 +30,6 @@ token_id: >-
              path='/apollo-13/proxmox',
              secret_name='ANSIBLE_TOKEN_ID')).value }}
 
-
 # Expects INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET environment variables
 token_secret: >-
   {{ (lookup('infisical.vault.read_secrets',
@@ -44,7 +43,7 @@ token_secret: >-
 # Group vms by tags for reference in playbooks.
 keyed_groups:
   - key: proxmox_tags_parsed
-    separator: ""
+    separator: ''
     prefix: tag_
 
 compose:

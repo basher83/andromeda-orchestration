@@ -9,19 +9,19 @@
   vars:
     # External DNS servers to use as fallback
     external_dns_servers:
-      - "8.8.8.8"        # Google DNS
-      - "8.8.4.4"        # Google DNS
-      - "1.1.1.1"        # Cloudflare DNS
-      - "1.0.0.1"        # Cloudflare DNS
+      - '8.8.8.8' # Google DNS
+      - '8.8.4.4' # Google DNS
+      - '1.1.1.1' # Cloudflare DNS
+      - '1.0.0.1' # Cloudflare DNS
 
     # Consul DNS configuration
     consul_dns_port: 8600
-    consul_dns_domain: "consul"
+    consul_dns_domain: 'consul'
 
   tasks:
     - name: Display current DNS configuration
       ansible.builtin.debug:
-        msg: "Fixing DNS resolution loops on {{ inventory_hostname }}"
+        msg: 'Fixing DNS resolution loops on {{ inventory_hostname }}'
 
     - name: Check current systemd-resolved status
       ansible.builtin.command: resolvectl status
@@ -50,7 +50,7 @@
     - name: Configure systemd-resolved with proper DNS hierarchy
       ansible.builtin.blockinfile:
         path: /etc/systemd/resolved.conf
-        marker: "# {mark} ANSIBLE MANAGED DNS CONFIGURATION"
+        marker: '# {mark} ANSIBLE MANAGED DNS CONFIGURATION'
         block: |
           # External DNS servers for internet resolution
           DNS={{ external_dns_servers | join(' ') }}
@@ -124,7 +124,7 @@
     - name: Display DNS test results
       ansible.builtin.debug:
         msg:
-          - "DNS resolution test for registry-1.docker.io:"
+          - 'DNS resolution test for registry-1.docker.io:'
           - "{{ dns_test.stdout_lines | default(['Test failed']) }}"
 
     - name: Test Consul DNS resolution (if Consul is running)
@@ -137,7 +137,7 @@
     - name: Display Consul DNS test results
       ansible.builtin.debug:
         msg:
-          - "Consul DNS resolution test:"
+          - 'Consul DNS resolution test:'
           - "{{ consul_dns_test.stdout_lines | default(['Test failed or skipped']) }}"
       when: consul_dns_test is defined
 
@@ -148,7 +148,7 @@
 
     - name: Display final DNS configuration
       ansible.builtin.debug:
-        msg: "DNS configuration updated successfully on {{ inventory_hostname }}"
+        msg: 'DNS configuration updated successfully on {{ inventory_hostname }}'
       when: "'8.8.8.8' in final_dns_status.stdout"
 
   handlers:
@@ -166,8 +166,8 @@
     - name: Summary of changes
       ansible.builtin.debug:
         msg:
-          - "✅ DNS resolution loop configuration fixed"
+          - '✅ DNS resolution loop configuration fixed'
           - "✅ External DNS: {{ external_dns_servers | join(', ') }}"
-          - "✅ systemd-resolved stub listener disabled"
-          - "✅ Consul DNS still available at 127.0.0.1:{{ consul_dns_port }}"
-          - "🔄 Docker registry resolution should now work"
+          - '✅ systemd-resolved stub listener disabled'
+          - '✅ Consul DNS still available at 127.0.0.1:{{ consul_dns_port }}'
+          - '🔄 Docker registry resolution should now work'

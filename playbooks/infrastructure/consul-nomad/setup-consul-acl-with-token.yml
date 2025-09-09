@@ -9,7 +9,7 @@
 - name: Setup Consul ACL for Nomad Integration
   hosts: nomad-server-1-lloyd
   vars:
-    consul_api: "http://127.0.0.1:8500"
+    consul_api: 'http://127.0.0.1:8500'
     consul_management_token: >-
       {{ (lookup('infisical.vault.read_secrets',
                  universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
@@ -22,22 +22,22 @@
   tasks:
     - name: Test Consul API with management token
       ansible.builtin.uri:
-        url: "{{ consul_api }}/v1/status/leader"
+        url: '{{ consul_api }}/v1/status/leader'
         method: GET
         headers:
-          X-Consul-Token: "{{ consul_management_token }}"
+          X-Consul-Token: '{{ consul_management_token }}'
       register: consul_test
 
     - name: Create Nomad server ACL policy
       ansible.builtin.uri:
-        url: "{{ consul_api }}/v1/acl/policy"
+        url: '{{ consul_api }}/v1/acl/policy'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_management_token }}"
+          X-Consul-Token: '{{ consul_management_token }}'
         body_format: json
         body:
-          Name: "nomad-server"
-          Description: "Policy for Nomad servers"
+          Name: 'nomad-server'
+          Description: 'Policy for Nomad servers'
           Rules: |
             agent_prefix "" {
               policy = "read"
@@ -54,14 +54,14 @@
 
     - name: Create Nomad client ACL policy
       ansible.builtin.uri:
-        url: "{{ consul_api }}/v1/acl/policy"
+        url: '{{ consul_api }}/v1/acl/policy'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_management_token }}"
+          X-Consul-Token: '{{ consul_management_token }}'
         body_format: json
         body:
-          Name: "nomad-client"
-          Description: "Policy for Nomad clients"
+          Name: 'nomad-client'
+          Description: 'Policy for Nomad clients'
           Rules: |
             agent_prefix "" {
               policy = "read"
@@ -80,44 +80,44 @@
 
     - name: Create token for Nomad servers
       ansible.builtin.uri:
-        url: "{{ consul_api }}/v1/acl/token"
+        url: '{{ consul_api }}/v1/acl/token'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_management_token }}"
+          X-Consul-Token: '{{ consul_management_token }}'
         body_format: json
         body:
-          Description: "Token for Nomad server integration"
+          Description: 'Token for Nomad server integration'
           Policies:
-            - Name: "nomad-server"
+            - Name: 'nomad-server'
       register: server_token_result
 
     - name: Create token for Nomad clients
       ansible.builtin.uri:
-        url: "{{ consul_api }}/v1/acl/token"
+        url: '{{ consul_api }}/v1/acl/token'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_management_token }}"
+          X-Consul-Token: '{{ consul_management_token }}'
         body_format: json
         body:
-          Description: "Token for Nomad client integration"
+          Description: 'Token for Nomad client integration'
           Policies:
-            - Name: "nomad-client"
+            - Name: 'nomad-client'
       register: client_token_result
 
     - name: Save tokens
       ansible.builtin.set_fact:
-        nomad_server_token: "{{ server_token_result.json.SecretID }}"
-        nomad_client_token: "{{ client_token_result.json.SecretID }}"
+        nomad_server_token: '{{ server_token_result.json.SecretID }}'
+        nomad_client_token: '{{ client_token_result.json.SecretID }}'
 
     - name: Display tokens
       ansible.builtin.debug:
         msg:
-          - "=== CONSUL ACL TOKENS FOR NOMAD ==="
-          - ""
-          - "Nomad Server Token: {{ nomad_server_token }}"
-          - "Nomad Client Token: {{ nomad_client_token }}"
-          - ""
-          - "These tokens will be automatically applied to Nomad configuration"
+          - '=== CONSUL ACL TOKENS FOR NOMAD ==='
+          - ''
+          - 'Nomad Server Token: {{ nomad_server_token }}'
+          - 'Nomad Client Token: {{ nomad_client_token }}'
+          - ''
+          - 'These tokens will be automatically applied to Nomad configuration'
 
     - name: Store tokens in Infisical
       delegate_to: localhost
@@ -159,8 +159,8 @@
 
     - name: Update Consul stanza with token
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG WITH TOKEN"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIG WITH TOKEN'
         block: |
           consul {
             address = "127.0.0.1:8500"
@@ -189,7 +189,7 @@
             }
           }
         state: present
-        validate: "nomad config validate %s"
+        validate: 'nomad config validate %s'
       register: config_updated
 
     - name: Restart Nomad if configuration changed
@@ -202,7 +202,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
       when: config_updated.changed
@@ -233,8 +233,8 @@
     - name: Display registered services
       ansible.builtin.debug:
         msg:
-          - "Registered services in Consul:"
-          - "{{ consul_services.stdout_lines }}"
+          - 'Registered services in Consul:'
+          - '{{ consul_services.stdout_lines }}'
 
     - name: Check Nomad service details
       ansible.builtin.command: |
@@ -245,7 +245,7 @@
 
     - name: Display Nomad nodes in Consul
       ansible.builtin.debug:
-        msg: "{{ nomad_nodes.stdout_lines }}"
+        msg: '{{ nomad_nodes.stdout_lines }}'
       when: nomad_nodes.rc == 0
 
     - name: Final status

@@ -11,7 +11,7 @@
         name: pbs
         ansible_host: 192.168.30.200
         ansible_user: root
-        ansible_password: "{{ vault_pbs_password }}"
+        ansible_password: '{{ vault_pbs_password }}'
 
 - name: Debug Netdata on PBS
   hosts: pbs
@@ -33,7 +33,7 @@
 
     - name: Display debug output
       ansible.builtin.debug:
-        msg: "{{ debug_output.stdout_lines }}"
+        msg: '{{ debug_output.stdout_lines }}'
 
     - name: Start Netdata normally
       ansible.builtin.systemd:
@@ -58,4 +58,4 @@
 
     - name: Display final status
       ansible.builtin.debug:
-        msg: "{{ final_check.stdout_lines }}"
+        msg: '{{ final_check.stdout_lines }}'

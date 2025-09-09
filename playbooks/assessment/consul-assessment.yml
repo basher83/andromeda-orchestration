@@ -37,13 +37,13 @@
                  secret_name='CONSUL_ACL_TOKEN_DOGGOS' if is_doggos_cluster else 'CONSUL_ACL_TOKEN_OG')).value }}
     consul_dns_port: 8600
     consul_api_port: 8500
-    report_dir: "{{ playbook_dir }}/../../reports/consul"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    report_dir: '{{ playbook_dir }}/../../reports/consul'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
 
   tasks:
     - name: Create report directory
       ansible.builtin.file:
-        path: "{{ report_dir }}"
+        path: '{{ report_dir }}'
         state: directory
         mode: '0755'
       delegate_to: localhost
@@ -71,7 +71,7 @@
     - name: Get Consul cluster members
       ansible.builtin.command: consul members
       environment:
-        CONSUL_HTTP_TOKEN: "{{ consul_acl_token }}"
+        CONSUL_HTTP_TOKEN: '{{ consul_acl_token }}'
       register: consul_members
       when: consul_installed.rc == 0
       changed_when: false
@@ -79,7 +79,7 @@
     - name: Check Consul leader
       ansible.builtin.command: consul operator raft list-peers
       environment:
-        CONSUL_HTTP_TOKEN: "{{ consul_acl_token }}"
+        CONSUL_HTTP_TOKEN: '{{ consul_acl_token }}'
       register: consul_leader
       when: consul_installed.rc == 0
       changed_when: false
@@ -87,15 +87,15 @@
     - name: List Consul services
       ansible.builtin.command: consul catalog services
       environment:
-        CONSUL_HTTP_TOKEN: "{{ consul_acl_token }}"
+        CONSUL_HTTP_TOKEN: '{{ consul_acl_token }}'
       register: consul_services
       when: consul_installed.rc == 0
       changed_when: false
 
     - name: Check Consul DNS port
       ansible.builtin.wait_for:
-        port: "{{ consul_dns_port }}"
-        host: "{{ ansible_default_ipv4.address }}"
+        port: '{{ consul_dns_port }}'
+        host: '{{ ansible_default_ipv4.address }}'
         timeout: 5
       register: consul_dns_check
       failed_when: false
@@ -109,21 +109,21 @@
     - name: Compile node report
       ansible.builtin.set_fact:
         node_report:
-          hostname: "{{ ansible_hostname }}"
-          consul_installed: "{{ consul_installed.rc == 0 }}"
+          hostname: '{{ ansible_hostname }}'
+          consul_installed: '{{ consul_installed.rc == 0 }}'
           consul_version: "{{ consul_version_output.stdout | default('Not installed') }}"
           consul_service_active: "{{ consul_service.status.ActiveState | default('unknown') == 'active' }}"
-          consul_members: "{{ consul_members.stdout_lines | default([]) }}"
-          consul_leader: "{{ consul_leader.stdout_lines | default([]) }}"
-          consul_services: "{{ consul_services.stdout_lines | default([]) }}"
-          consul_dns_listening: "{{ not consul_dns_check.failed | default(false) }}"
-          consul_dns_working: "{{ consul_dns_test.stdout_lines | default([]) | length > 0 }}"
-          timestamp: "{{ ansible_date_time.iso8601 }}"
+          consul_members: '{{ consul_members.stdout_lines | default([]) }}'
+          consul_leader: '{{ consul_leader.stdout_lines | default([]) }}'
+          consul_services: '{{ consul_services.stdout_lines | default([]) }}'
+          consul_dns_listening: '{{ not consul_dns_check.failed | default(false) }}'
+          consul_dns_working: '{{ consul_dns_test.stdout_lines | default([]) | length > 0 }}'
+          timestamp: '{{ ansible_date_time.iso8601 }}'
 
     - name: Save individual node report
       ansible.builtin.copy:
-        content: "{{ node_report | to_nice_yaml }}"
-        dest: "{{ report_dir }}/consul_node_{{ ansible_hostname }}_{{ timestamp }}.yml"
+        content: '{{ node_report | to_nice_yaml }}'
+        dest: '{{ report_dir }}/consul_node_{{ ansible_hostname }}_{{ timestamp }}.yml'
         mode: '0644'
       delegate_to: localhost
 
@@ -131,26 +131,26 @@
   hosts: localhost
   gather_facts: true
   vars:
-    report_dir: "{{ playbook_dir }}/../../reports/consul"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    report_dir: '{{ playbook_dir }}/../../reports/consul'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
 
   tasks:
     - name: Read all node reports
       ansible.builtin.find:
-        paths: "{{ report_dir }}"
-        patterns: "consul_node_*_{{ timestamp }}.yml"
+        paths: '{{ report_dir }}'
+        patterns: 'consul_node_*_{{ timestamp }}.yml'
       register: node_reports
 
     - name: Load node data
       ansible.builtin.include_vars:
-        file: "{{ item.path }}"
+        file: '{{ item.path }}'
         name: "node_{{ item.path | basename | regex_replace('consul_node_(.+)_.*\\.yml', '\\1') }}"
-      loop: "{{ node_reports.files }}"
+      loop: '{{ node_reports.files }}'
 
     - name: Generate cluster summary
       ansible.builtin.template:
-        src: "{{ playbook_dir }}/templates/consul_cluster_summary.j2"
-        dest: "{{ report_dir }}/consul_cluster_summary_{{ timestamp }}.md"
+        src: '{{ playbook_dir }}/templates/consul_cluster_summary.j2'
+        dest: '{{ report_dir }}/consul_cluster_summary_{{ timestamp }}.md'
         mode: '0644'
       vars:
         all_nodes: >-

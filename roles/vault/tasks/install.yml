@@ -4,32 +4,32 @@
 
 - name: Create vault group
   ansible.builtin.group:
-    name: "{{ vault_group }}"
+    name: '{{ vault_group }}'
     system: true
     state: present
 
 - name: Create vault user
   ansible.builtin.user:
-    name: "{{ vault_user }}"
-    group: "{{ vault_group }}"
+    name: '{{ vault_user }}'
+    group: '{{ vault_group }}'
     system: true
     shell: /bin/false
-    home: "{{ vault_base_dir }}"
+    home: '{{ vault_base_dir }}'
     create_home: false
 
 - name: Create vault directories
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: directory
-    owner: "{{ vault_user }}"
-    group: "{{ vault_group }}"
-    mode: "0755"
+    owner: '{{ vault_user }}'
+    group: '{{ vault_group }}'
+    mode: '0755'
   loop:
-    - "{{ vault_base_dir }}"
-    - "{{ vault_config_dir }}"
-    - "{{ vault_data_dir }}"
-    - "{{ vault_log_dir }}"
-    - "{{ vault_tls_dir }}"
+    - '{{ vault_base_dir }}'
+    - '{{ vault_config_dir }}'
+    - '{{ vault_data_dir }}'
+    - '{{ vault_log_dir }}'
+    - '{{ vault_tls_dir }}'
 
 - name: Install required packages
   ansible.builtin.package:
@@ -61,12 +61,12 @@
 
 - name: Download Vault binary
   ansible.builtin.unarchive:
-    src: "{{ vault_download_url }}"
+    src: '{{ vault_download_url }}'
     dest: /tmp
     remote_src: true
     owner: root
     group: root
-    mode: "0755"
+    mode: '0755'
   when: >
     not vault_binary.stat.exists or
     (installed_version is defined and installed_version != vault_version)
@@ -77,7 +77,7 @@
     dest: /usr/local/bin/vault
     owner: root
     group: root
-    mode: "0755"
+    mode: '0755'
     remote_src: true
   when: >
     not vault_binary.stat.exists or
@@ -90,7 +90,7 @@
     dest: /etc/systemd/system/vault.service
     owner: root
     group: root
-    mode: "0644"
+    mode: '0644'
   notify:
     - reload systemd
     - restart vault

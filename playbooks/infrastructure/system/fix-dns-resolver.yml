@@ -68,10 +68,10 @@
     - name: Display DNS test results
       ansible.builtin.debug:
         msg:
-          - "Host: {{ inventory_hostname }}"
-          - "External DNS test:"
-          - "{{ dns_test.stdout_lines }}"
-          - "Consul DNS test:"
+          - 'Host: {{ inventory_hostname }}'
+          - 'External DNS test:'
+          - '{{ dns_test.stdout_lines }}'
+          - 'Consul DNS test:'
           - "{{ consul_dns_test.stdout_lines | default(['Not available']) }}"
 
     - name: Restart Netdata to reconnect to cloud

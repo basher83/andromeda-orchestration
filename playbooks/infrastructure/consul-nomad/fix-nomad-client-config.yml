@@ -25,16 +25,16 @@
 
     - name: Fix incomplete client block
       ansible.builtin.lineinfile:
-        path: "{{ nomad_config_file }}"
-        line: "}"
-        insertbefore: "^# === Consul integration ==="
+        path: '{{ nomad_config_file }}'
+        line: '}'
+        insertbefore: '^# === Consul integration ==='
         state: present
       when: client_block_status.stdout == "incomplete"
 
     - name: Add consul configuration for clients
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION'
         block: |
           consul {
             address = "127.0.0.1:8500"
@@ -62,7 +62,7 @@
             }
           }
         state: present
-        validate: "nomad config validate %s"
+        validate: 'nomad config validate %s'
       register: config_updated
 
     - name: Restart Nomad client service
@@ -75,7 +75,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
       when: config_updated.changed or client_block_status.stdout == "incomplete"
@@ -92,9 +92,9 @@
     - name: Display node status
       ansible.builtin.debug:
         msg:
-          - "Nomad client configuration fixed!"
-          - ""
-          - "All Nomad nodes:"
-          - "{{ node_status.stdout_lines }}"
-          - ""
-          - "Configuration is now ready for deployments!"
+          - 'Nomad client configuration fixed!'
+          - ''
+          - 'All Nomad nodes:'
+          - '{{ node_status.stdout_lines }}'
+          - ''
+          - 'Configuration is now ready for deployments!'

@@ -113,7 +113,7 @@
 
     - name: Wait for Nomad to be ready
       uri:
-        url: "http://{{ ansible_default_ipv4.address }}:4646/v1/agent/health"
+        url: 'http://{{ ansible_default_ipv4.address }}:4646/v1/agent/health'
         method: GET
         status_code: 200
       register: nomad_health
@@ -132,7 +132,7 @@
 
     - name: Display registered volumes
       debug:
-        msg: "Registered host volumes: {{ node_info.json.HostVolumes.keys() | list }}"
+        msg: 'Registered host volumes: {{ node_info.json.HostVolumes.keys() | list }}'
       when:
         - node_info is defined
         - node_info.json is defined

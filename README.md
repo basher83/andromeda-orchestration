@@ -4,6 +4,7 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration?path=README.md&display_timestamp=author&style=plastic&logo=github)
 [![CI](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml/badge.svg)](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml)
+[![MegaLinter](https://github.com/basher83/andromeda-orchestration/workflows/MegaLinter/badge.svg?branch=main)](https://github.com/basher83/andromeda-orchestration/actions?query=workflow%3AMegaLinter+branch%3Amain)
 
 ![Ansible](https://img.shields.io/badge/Ansible-000000?style=plastic&logo=ansible&logoColor=)
 
@@ -62,16 +63,18 @@ This project provides a framework for managing network infrastructure using Ansi
 
 3. **Configure secrets and authentication**
 
-   ```bash
-   # Copy the template and add your secrets
-   cp .mise.local.toml.example .mise.local.toml
+```bash
+ # Copy the template and add your secrets
+ cp .mise.local.toml.example .mise.local.toml
+```
 
-   # Edit with your actual tokens and credentials
-   # The file is gitignored and won't be committed
-   $EDITOR .mise.local.toml
+# Edit with your actual tokens and credentials
 
-   # Mise will automatically load these environment variables
-   ```
+# The file is gitignored and won't be committed
+
+$EDITOR .mise.local.toml
+
+# Mise will automatically load these environment variables
 
 4. **Test the setup**
 

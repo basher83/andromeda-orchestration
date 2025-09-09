@@ -11,7 +11,7 @@
         name: pbs
         ansible_host: 192.168.30.200
         ansible_user: root
-        ansible_password: "{{ vault_pbs_password }}"
+        ansible_password: '{{ vault_pbs_password }}'
 
 - name: Debug PBS Netdata streaming
   hosts: pbs
@@ -40,7 +40,7 @@
 
     - name: Display logs
       ansible.builtin.debug:
-        msg: "{{ log_output.stdout_lines }}"
+        msg: '{{ log_output.stdout_lines }}'
 
     - name: Check current connections
       ansible.builtin.shell: |
@@ -54,7 +54,7 @@
 
     - name: Display connection status
       ansible.builtin.debug:
-        msg: "{{ connection_status.stdout_lines }}"
+        msg: '{{ connection_status.stdout_lines }}'
 
     - name: Verify stream.conf
       ansible.builtin.shell: |
@@ -65,7 +65,7 @@
 
     - name: Display stream config
       ansible.builtin.debug:
-        msg: "{{ stream_conf.stdout_lines }}"
+        msg: '{{ stream_conf.stdout_lines }}'
 
     - name: Test connectivity to pve1
       ansible.builtin.shell: |
@@ -76,4 +76,4 @@
 
     - name: Display connectivity test
       ansible.builtin.debug:
-        msg: "{{ nc_test.stdout_lines }}"
+        msg: '{{ nc_test.stdout_lines }}'

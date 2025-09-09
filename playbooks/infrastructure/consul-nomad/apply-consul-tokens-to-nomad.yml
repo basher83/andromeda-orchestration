@@ -23,8 +23,8 @@
 
     - name: Update Consul stanza with token
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIG WITH TOKEN"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIG WITH TOKEN'
         block: |
           consul {
             address = "127.0.0.1:8500"
@@ -53,7 +53,7 @@
             }
           }
         state: present
-        validate: "nomad config validate %s"
+        validate: 'nomad config validate %s'
       register: config_updated
 
     - name: Restart Nomad if configuration changed
@@ -66,7 +66,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
       when: config_updated.changed
@@ -97,8 +97,8 @@
     - name: Display registered services
       ansible.builtin.debug:
         msg:
-          - "Registered services in Consul:"
-          - "{{ consul_services.stdout_lines }}"
+          - 'Registered services in Consul:'
+          - '{{ consul_services.stdout_lines }}'
 
     - name: Check Nomad service details
       ansible.builtin.command: |
@@ -117,15 +117,15 @@
     - name: Display Nomad server nodes in Consul
       ansible.builtin.debug:
         msg:
-          - "Nomad servers registered:"
-          - "{{ nomad_nodes.stdout_lines }}"
+          - 'Nomad servers registered:'
+          - '{{ nomad_nodes.stdout_lines }}'
       when: nomad_nodes.rc == 0
 
     - name: Display Nomad client nodes in Consul
       ansible.builtin.debug:
         msg:
-          - "Nomad clients registered:"
-          - "{{ nomad_client_nodes.stdout_lines }}"
+          - 'Nomad clients registered:'
+          - '{{ nomad_client_nodes.stdout_lines }}'
       when: nomad_client_nodes.rc == 0
 
     - name: Final status

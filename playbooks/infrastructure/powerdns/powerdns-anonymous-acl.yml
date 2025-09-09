@@ -6,7 +6,7 @@
   gather_facts: no
 
   vars:
-    consul_token: "edf460f9-f79a-e0b8-512c-c07f57efc065"
+    consul_token: 'edf460f9-f79a-e0b8-512c-c07f57efc065'
 
   tasks:
     - name: Create anonymous read policy for PowerDNS
@@ -34,4 +34,4 @@
 
     - name: Display result
       debug:
-        msg: "PowerDNS KV is now readable anonymously (for testing)"
+        msg: 'PowerDNS KV is now readable anonymously (for testing)'

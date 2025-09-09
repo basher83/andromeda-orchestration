@@ -36,24 +36,24 @@
                  secret_name='VAULT_PROD_ROOT_TOKEN')).value | default('FAILED') }}
 
     # Vault leader address for API operations
-    vault_leader_addr: "https://192.168.10.33:8200"
+    vault_leader_addr: 'https://192.168.10.33:8200'
 
     # Test endpoints
     vault_nodes:
       - name: vault-master-lloyd
-        address: "https://192.168.10.30:8200"
+        address: 'https://192.168.10.30:8200'
         role: transit-master
-        expected_mode: dev  # Currently in dev, will be prod after migration
+        expected_mode: dev # Currently in dev, will be prod after migration
       - name: vault-prod-1-holly
-        address: "https://192.168.10.33:8200"
+        address: 'https://192.168.10.33:8200'
         role: production
         expected_mode: prod
       - name: vault-prod-2-mable
-        address: "https://192.168.10.34:8200"
+        address: 'https://192.168.10.34:8200'
         role: production
         expected_mode: prod
       - name: vault-prod-3-lloyd
-        address: "https://192.168.10.35:8200"
+        address: 'https://192.168.10.35:8200'
         role: production
         expected_mode: prod
 
@@ -70,66 +70,66 @@
     test_results: {}
 
   tasks:
-    - name: "SMOKE TEST 1: Verify Infisical environment variables are loaded"
+    - name: 'SMOKE TEST 1: Verify Infisical environment variables are loaded'
       assert:
         that:
           - lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') | length > 0
           - lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') | length > 0
-        fail_msg: "❌ FAILED: Infisical environment variables not found. Check .mise.local.toml"
-        success_msg: "✅ PASSED: Infisical environment variables loaded"
+        fail_msg: '❌ FAILED: Infisical environment variables not found. Check .mise.local.toml'
+        success_msg: '✅ PASSED: Infisical environment variables loaded'
       register: test1_result
 
-    - name: "SMOKE TEST 2: Verify Infisical secret retrieval"
+    - name: 'SMOKE TEST 2: Verify Infisical secret retrieval'
       assert:
         that:
           - vault_token_test != 'FAILED'
           - vault_token_test | length > 0
-        fail_msg: "❌ FAILED: Cannot retrieve secrets from Infisical"
-        success_msg: "✅ PASSED: Successfully retrieved Vault token from Infisical"
+        fail_msg: '❌ FAILED: Cannot retrieve secrets from Infisical'
+        success_msg: '✅ PASSED: Successfully retrieved Vault token from Infisical'
       register: test2_result
 
-    - name: "SMOKE TEST 3: Test network connectivity to Vault nodes"
+    - name: 'SMOKE TEST 3: Test network connectivity to Vault nodes'
       uri:
-        url: "{{ item.address }}/v1/sys/health"
+        url: '{{ item.address }}/v1/sys/health'
         method: GET
         validate_certs: no
         status_code: [200, 429, 472, 473, 501, 503]
         timeout: 5
-      loop: "{{ vault_nodes }}"
+      loop: '{{ vault_nodes }}'
       loop_control:
-        label: "{{ item.name }}"
+        label: '{{ item.name }}'
       register: health_checks
       ignore_errors: yes
-      check_mode: no  # Always run this test even in check mode
+      check_mode: no # Always run this test even in check mode
 
-    - name: "SMOKE TEST 3 RESULTS: Evaluate network connectivity"
+    - name: 'SMOKE TEST 3 RESULTS: Evaluate network connectivity'
       assert:
         that:
           - health_checks.results | selectattr('failed', 'equalto', false) | list | length > 0
-        fail_msg: "❌ FAILED: No Vault nodes are reachable"
+        fail_msg: '❌ FAILED: No Vault nodes are reachable'
         success_msg: "✅ PASSED: {{ health_checks.results | selectattr('failed', 'equalto', false) | list | length }}/{{ vault_nodes | length }} Vault nodes are reachable"
       register: test3_result
 
-    - name: "SMOKE TEST 4: Authenticate to Vault using Infisical token"
+    - name: 'SMOKE TEST 4: Authenticate to Vault using Infisical token'
       uri:
-        url: "{{ vault_leader_addr }}/v1/auth/token/lookup-self"
+        url: '{{ vault_leader_addr }}/v1/auth/token/lookup-self'
         method: GET
         headers:
-          X-Vault-Token: "{{ vault_token_test }}"
+          X-Vault-Token: '{{ vault_token_test }}'
         validate_certs: no
         status_code: [200, 403]
       register: token_lookup
       when: vault_token_test != 'FAILED'
       ignore_errors: yes
-      check_mode: no  # Always run this test even in check mode
+      check_mode: no # Always run this test even in check mode
 
-    - name: "SMOKE TEST 4 RESULTS: Evaluate Vault authentication"
+    - name: 'SMOKE TEST 4 RESULTS: Evaluate Vault authentication'
       assert:
         that:
           - token_lookup is not failed
           - token_lookup.status == 200
-        fail_msg: "❌ FAILED: Cannot authenticate to Vault with Infisical token"
-        success_msg: "✅ PASSED: Successfully authenticated to Vault"
+        fail_msg: '❌ FAILED: Cannot authenticate to Vault with Infisical token'
+        success_msg: '✅ PASSED: Successfully authenticated to Vault'
       when:
         - vault_token_test != 'FAILED'
         - token_lookup is defined
@@ -137,10 +137,10 @@
 
     - name: "SMOKE TEST 5: List Raft peers (equivalent to 'vault operator raft list-peers')"
       uri:
-        url: "{{ vault_leader_addr }}/v1/sys/storage/raft/configuration"
+        url: '{{ vault_leader_addr }}/v1/sys/storage/raft/configuration'
         method: GET
         headers:
-          X-Vault-Token: "{{ vault_token_test }}"
+          X-Vault-Token: '{{ vault_token_test }}'
         validate_certs: no
         status_code: [200]
       register: raft_peers
@@ -148,9 +148,9 @@
         - vault_token_test != 'FAILED'
         - token_lookup.status | default(0) == 200
       ignore_errors: yes
-      check_mode: no  # Always run this test even in check mode
+      check_mode: no # Always run this test even in check mode
 
-    - name: "SMOKE TEST 5 RESULTS: Display Raft cluster status"
+    - name: 'SMOKE TEST 5 RESULTS: Display Raft cluster status'
       debug:
         msg: |
           ✅ PASSED: Successfully retrieved Raft peer information
@@ -168,21 +168,21 @@
         - raft_peers is defined and raft_peers is not failed
       register: test5_result
 
-    - name: "SMOKE TEST 6: Check Vault seal status for each node"
+    - name: 'SMOKE TEST 6: Check Vault seal status for each node'
       uri:
-        url: "{{ item.0.address }}/v1/sys/seal-status"
+        url: '{{ item.0.address }}/v1/sys/seal-status'
         method: GET
         validate_certs: no
         status_code: [200, 501, 503]
-      loop: "{{ vault_nodes | zip(health_checks.results) | list }}"
+      loop: '{{ vault_nodes | zip(health_checks.results) | list }}'
       loop_control:
-        label: "{{ item.0.name }}"
+        label: '{{ item.0.name }}'
       register: seal_status_checks
       ignore_errors: yes
       check_mode: no
       when: not item.1.failed
 
-    - name: "SMOKE TEST 6 RESULTS: Evaluate seal status"
+    - name: 'SMOKE TEST 6 RESULTS: Evaluate seal status'
       debug:
         msg: |
           Vault Seal Status:
@@ -193,20 +193,20 @@
           {% endfor %}
       register: test6_result
 
-    - name: "SMOKE TEST 7: Verify token permissions"
+    - name: 'SMOKE TEST 7: Verify token permissions'
       uri:
-        url: "{{ vault_leader_addr }}/v1/sys/capabilities-self"
+        url: '{{ vault_leader_addr }}/v1/sys/capabilities-self'
         method: POST
         headers:
-          X-Vault-Token: "{{ vault_token_test }}"
+          X-Vault-Token: '{{ vault_token_test }}'
         body_format: json
         body:
           paths:
-            - "/sys/mounts"
-            - "/sys/policies/acl"
-            - "/pki/*"
-            - "/transit/*"
-            - "/sys/storage/raft/configuration"
+            - '/sys/mounts'
+            - '/sys/policies/acl'
+            - '/pki/*'
+            - '/transit/*'
+            - '/sys/storage/raft/configuration'
         validate_certs: no
         status_code: [200]
       register: token_capabilities
@@ -216,7 +216,7 @@
       ignore_errors: yes
       check_mode: no
 
-    - name: "SMOKE TEST 7 RESULTS: Display token capabilities"
+    - name: 'SMOKE TEST 7 RESULTS: Display token capabilities'
       debug:
         msg: |
           Token Capabilities:
@@ -230,7 +230,7 @@
       when: token_capabilities is defined and token_capabilities is not failed
       register: test7_result
 
-    - name: "SMOKE TEST 8: Verify operational secrets availability"
+    - name: 'SMOKE TEST 8: Verify operational secrets availability'
       block:
         - name: Test retrieval of each operational secret
           ansible.builtin.set_fact:
@@ -242,19 +242,19 @@
                          env_slug='prod',
                          path='/apollo-13/vault',
                          secret_name=item)).value | default('FAILED') }}
-          loop: "{{ operational_secrets }}"
-          no_log: "{{ not verbose_output }}"
+          loop: '{{ operational_secrets }}'
+          no_log: '{{ not verbose_output }}'
           register: operational_secrets_check
 
         - name: Evaluate operational secrets availability
           assert:
             that:
               - operational_secrets_check is not failed
-            fail_msg: "❌ FAILED: Cannot retrieve all operational secrets from Infisical"
-            success_msg: "✅ PASSED: All {{ operational_secrets | length }} operational secrets are retrievable"
+            fail_msg: '❌ FAILED: Cannot retrieve all operational secrets from Infisical'
+            success_msg: '✅ PASSED: All {{ operational_secrets | length }} operational secrets are retrievable'
           register: test8_result
 
-    - name: "SMOKE TEST 9: Verify recovery keys existence (without retrieval)"
+    - name: 'SMOKE TEST 9: Verify recovery keys existence (without retrieval)'
       block:
         - name: Get all secrets in vault folder
           ansible.builtin.set_fact:
@@ -275,8 +275,8 @@
           assert:
             that:
               - recovery_key_count | int == 5
-            fail_msg: "❌ FAILED: Expected 5 recovery keys in Infisical, found {{ recovery_key_count }}"
-            success_msg: "✅ PASSED: All 5 recovery keys confirmed present in Infisical (not retrieved)"
+            fail_msg: '❌ FAILED: Expected 5 recovery keys in Infisical, found {{ recovery_key_count }}'
+            success_msg: '✅ PASSED: All 5 recovery keys confirmed present in Infisical (not retrieved)'
           register: test9_result
 
         - name: Test recovery key retrieval (if requested)
@@ -298,29 +298,29 @@
                 that:
                   - recovery_key_test != 'FAILED'
                   - recovery_key_test | length > 0
-                fail_msg: "❌ FAILED: Cannot retrieve recovery keys from Infisical"
-                success_msg: "✅ PASSED: Recovery keys are retrievable when needed"
+                fail_msg: '❌ FAILED: Cannot retrieve recovery keys from Infisical'
+                success_msg: '✅ PASSED: Recovery keys are retrievable when needed'
           when: test_recovery_keys | bool
 
-    - name: "SMOKE TEST 10: Test write/read operations"
+    - name: 'SMOKE TEST 10: Test write/read operations'
       block:
         - name: Generate test data
           set_fact:
-            test_timestamp: "{{ ansible_date_time.epoch }}"
-            test_path: "secret/data/smoke-test-{{ ansible_date_time.epoch }}"
+            test_timestamp: '{{ ansible_date_time.epoch }}'
+            test_path: 'secret/data/smoke-test-{{ ansible_date_time.epoch }}'
 
         - name: Write test secret to Vault
           uri:
-            url: "{{ vault_leader_addr }}/v1/{{ test_path }}"
+            url: '{{ vault_leader_addr }}/v1/{{ test_path }}'
             method: POST
             headers:
-              X-Vault-Token: "{{ vault_token_test }}"
+              X-Vault-Token: '{{ vault_token_test }}'
             body_format: json
             body:
               data:
-                test: "smoke-test"
-                timestamp: "{{ test_timestamp }}"
-                host: "{{ ansible_hostname }}"
+                test: 'smoke-test'
+                timestamp: '{{ test_timestamp }}'
+                host: '{{ ansible_hostname }}'
             validate_certs: no
             status_code: [200, 204]
           register: write_test
@@ -328,10 +328,10 @@
 
         - name: Read test secret back
           uri:
-            url: "{{ vault_leader_addr }}/v1/{{ test_path }}"
+            url: '{{ vault_leader_addr }}/v1/{{ test_path }}'
             method: GET
             headers:
-              X-Vault-Token: "{{ vault_token_test }}"
+              X-Vault-Token: '{{ vault_token_test }}'
             validate_certs: no
             status_code: [200]
           register: read_test
@@ -343,16 +343,16 @@
               - write_test is not failed
               - read_test is not failed
               - read_test.json.data.data.timestamp == test_timestamp
-            fail_msg: "❌ FAILED: Cannot perform write/read operations in Vault"
-            success_msg: "✅ PASSED: Write/read operations successful"
+            fail_msg: '❌ FAILED: Cannot perform write/read operations in Vault'
+            success_msg: '✅ PASSED: Write/read operations successful'
           register: test10_result
 
         - name: Clean up test secret
           uri:
-            url: "{{ vault_leader_addr }}/v1/{{ test_path }}"
+            url: '{{ vault_leader_addr }}/v1/{{ test_path }}'
             method: DELETE
             headers:
-              X-Vault-Token: "{{ vault_token_test }}"
+              X-Vault-Token: '{{ vault_token_test }}'
             validate_certs: no
             status_code: [204, 404]
           check_mode: no
@@ -361,21 +361,21 @@
         - token_lookup.status | default(0) == 200
       ignore_errors: yes
 
-    - name: "SMOKE TEST 11: Check critical ports accessibility"
+    - name: 'SMOKE TEST 11: Check critical ports accessibility'
       wait_for:
         host: "{{ item.address | regex_replace('https?://([^:]+):.*', '\\1') }}"
-        port: "{{ item.port }}"
+        port: '{{ item.port }}'
         timeout: 5
         state: started
       loop:
-        - { address: "{{ vault_leader_addr }}", port: 8200, service: "Vault API" }
-        - { address: "{{ vault_leader_addr }}", port: 8201, service: "Vault Raft" }
+        - { address: '{{ vault_leader_addr }}', port: 8200, service: 'Vault API' }
+        - { address: '{{ vault_leader_addr }}', port: 8201, service: 'Vault Raft' }
       loop_control:
-        label: "{{ item.service }} on port {{ item.port }}"
+        label: '{{ item.service }} on port {{ item.port }}'
       register: port_checks
       ignore_errors: yes
 
-    - name: "SMOKE TEST 11 RESULTS: Evaluate port accessibility"
+    - name: 'SMOKE TEST 11 RESULTS: Evaluate port accessibility'
       debug:
         msg: |
           Port Accessibility:
@@ -384,17 +384,17 @@
           {% endfor %}
       register: test11_result
 
-    - name: "SMOKE TEST 12: Check disk space for Raft storage"
+    - name: 'SMOKE TEST 12: Check disk space for Raft storage'
       command: df -h /opt/vault
       register: disk_space
-      delegate_to: "{{ item }}"
+      delegate_to: '{{ item }}'
       loop:
         - vault-prod-1-holly
         - vault-prod-2-mable
         - vault-prod-3-lloyd
       ignore_errors: yes
 
-    - name: "SMOKE TEST 12 RESULTS: Display disk space"
+    - name: 'SMOKE TEST 12 RESULTS: Display disk space'
       debug:
         msg: |
           Disk Space for Raft Storage:
@@ -406,7 +406,7 @@
           {% endfor %}
       register: test12_result
 
-    - name: "SMOKE TEST SUMMARY"
+    - name: 'SMOKE TEST SUMMARY'
       debug:
         msg: |
           ===============================================
@@ -468,11 +468,11 @@
   hosts: vault_cluster
   gather_facts: no
   tasks:
-    - name: "SSH CONNECTIVITY TEST: Test SSH access to Vault nodes"
+    - name: 'SSH CONNECTIVITY TEST: Test SSH access to Vault nodes'
       ping:
       register: ping_result
       ignore_errors: yes
 
-    - name: "SSH CONNECTIVITY RESULTS: Report SSH connectivity"
+    - name: 'SSH CONNECTIVITY RESULTS: Report SSH connectivity'
       debug:
         msg: "{{ inventory_hostname }}: {{ '✅ SSH Connected' if ping_result is not failed else '❌ SSH Failed' }}"

@@ -45,12 +45,12 @@ all:
         vault_master: {}
         vault_production: {}
       vars:
-        vault_datacenter: "doggos-cluster"
-        vault_domain: "vault.spaceships.work"
+        vault_datacenter: 'doggos-cluster'
+        vault_domain: 'vault.spaceships.work'
         vault_port: 8200
         vault_cluster_port: 8201
-        vault_data_dir: "/opt/vault/data"
-        vault_config_dir: "/etc/vault.d"
-        vault_log_dir: "/opt/vault/logs"
-        vault_user: "vault"
-        ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+        vault_data_dir: '/opt/vault/data'
+        vault_config_dir: '/etc/vault.d'
+        vault_log_dir: '/opt/vault/logs'
+        vault_user: 'vault'
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'

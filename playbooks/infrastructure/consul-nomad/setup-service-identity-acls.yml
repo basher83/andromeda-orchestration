@@ -70,9 +70,9 @@
           -role-name=nomad-server \
           -token={{ consul_management_token }}
       with_items:
-        - "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"  # Server token
+        - "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}" # Server token
       register: token_update
-      failed_when: false  # Don't fail if role already attached
+      failed_when: false # Don't fail if role already attached
 
     - name: Create service identity for common services
       ansible.builtin.shell: |
@@ -106,7 +106,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
 
@@ -122,8 +122,8 @@
     - name: Display status
       ansible.builtin.debug:
         msg:
-          - "Nomad server status:"
-          - "{{ nomad_status.stdout_lines }}"
-          - ""
-          - "Service identity ACLs configured!"
-          - "You can now deploy jobs with service identity blocks."
+          - 'Nomad server status:'
+          - '{{ nomad_status.stdout_lines }}'
+          - ''
+          - 'Service identity ACLs configured!'
+          - 'You can now deploy jobs with service identity blocks.'

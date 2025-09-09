@@ -13,8 +13,8 @@
     vault_config_dir: /etc/vault.d
     vault_data_dir: /opt/vault/data
     vault_tls_dir: /opt/vault/tls
-    vault_addr: "https://{{ ansible_default_ipv4.address }}:8200"
-    vault_cluster_addr: "https://{{ ansible_default_ipv4.address }}:8201"
+    vault_addr: 'https://{{ ansible_default_ipv4.address }}:8200'
+    vault_cluster_addr: 'https://{{ ansible_default_ipv4.address }}:8201'
 
   tasks:
     - name: Stop Vault dev instance if running
@@ -26,15 +26,15 @@
 
     - name: Create Vault directories
       file:
-        path: "{{ item }}"
+        path: '{{ item }}'
         state: directory
         owner: vault
         group: vault
         mode: '0750'
       loop:
-        - "{{ vault_config_dir }}"
-        - "{{ vault_data_dir }}"
-        - "{{ vault_tls_dir }}"
+        - '{{ vault_config_dir }}'
+        - '{{ vault_data_dir }}'
+        - '{{ vault_tls_dir }}'
         - /opt/vault/backup
 
     - name: Create production configuration
@@ -107,7 +107,7 @@
           #   service = "vault"
           #   service_tags = "master,transit"
           # }
-        dest: "{{ vault_config_dir }}/vault.hcl"
+        dest: '{{ vault_config_dir }}/vault.hcl'
         owner: vault
         group: vault
         mode: '0640'
@@ -115,7 +115,7 @@
 
     - name: Check if TLS certificates exist
       stat:
-        path: "{{ vault_tls_dir }}/tls.crt"
+        path: '{{ vault_tls_dir }}/tls.crt'
       register: tls_cert
 
     - name: Display TLS status

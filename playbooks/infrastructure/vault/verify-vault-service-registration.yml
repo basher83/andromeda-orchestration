@@ -19,8 +19,8 @@
     - name: Display recent Consul logs
       ansible.builtin.debug:
         msg:
-          - "=== Recent Consul logs for {{ inventory_hostname }} ==="
-          - "{{ consul_logs.stdout_lines }}"
+          - '=== Recent Consul logs for {{ inventory_hostname }} ==='
+          - '{{ consul_logs.stdout_lines }}'
       when: consul_logs.stdout_lines | length > 0
 
     - name: Check if vault-service.hcl exists
@@ -30,7 +30,7 @@
 
     - name: Display service file status
       ansible.builtin.debug:
-        msg: "Service file exists: {{ service_file.stat.exists }}"
+        msg: 'Service file exists: {{ service_file.stat.exists }}'
 
     - name: Read service configuration if exists
       ansible.builtin.slurp:
@@ -40,7 +40,7 @@
 
     - name: Display service configuration
       ansible.builtin.debug:
-        msg: "{{ service_content.content | b64decode }}"
+        msg: '{{ service_content.content | b64decode }}'
       when: service_file.stat.exists
 
     - name: Force Consul to reload and parse configs
@@ -54,7 +54,7 @@
     - name: Display services after reload
       ansible.builtin.debug:
         msg:
-          - "Services after reload: {{ reload_result.stdout_lines[-1] }}"
+          - 'Services after reload: {{ reload_result.stdout_lines[-1] }}'
 
     - name: Check local agent services
       ansible.builtin.shell: |
@@ -66,8 +66,8 @@
     - name: Display local agent services
       ansible.builtin.debug:
         msg:
-          - "Local agent services:"
-          - "{{ local_services.stdout }}"
+          - 'Local agent services:'
+          - '{{ local_services.stdout }}'
 
 - name: Check from Consul server perspective
   hosts: nomad-server-1-lloyd
@@ -91,6 +91,6 @@
     - name: Display service registration summary
       ansible.builtin.debug:
         msg:
-          - "=== Service Registration Summary from Consul Server ==="
-          - "All services: {{ all_services.stdout }}"
-          - "Vault service nodes: {{ vault_nodes.stdout }}"
+          - '=== Service Registration Summary from Consul Server ==='
+          - 'All services: {{ all_services.stdout }}'
+          - 'Vault service nodes: {{ vault_nodes.stdout }}'

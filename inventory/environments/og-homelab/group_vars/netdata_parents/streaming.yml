@@ -22,14 +22,14 @@ netdata_streaming_destination: |
   {{ parents | join(' ') }}
 
 # Use the mesh API key for parent-to-parent streaming
-netdata_streaming_api_key: "netdata-parent-mesh-key"
+netdata_streaming_api_key: 'netdata-parent-mesh-key'
 
 # Accept streams from doggos parents for bidirectional mesh
 netdata_parent_children:
   # Accept from doggos parents (mesh replication)
-  - api_key: "netdata-parent-mesh-key"
-    allow_from: "192.168.10.0/24"
+  - api_key: 'netdata-parent-mesh-key'
+    allow_from: '192.168.10.0/24'
     history: 86400
-    memory_mode: "dbengine"
-    health_enabled: "auto"
-    multiple_connections: "allow"
+    memory_mode: 'dbengine'
+    health_enabled: 'auto'
+    multiple_connections: 'allow'

@@ -1,17 +1,17 @@
 - name: Unmount NFS shares
   ansible.builtin.mount:
-    path: "{{ item.mount_point }}"
+    path: '{{ item.mount_point }}'
     state: absent
-  loop: "{{ nfs_client_shares }}"
+  loop: '{{ nfs_client_shares }}'
   loop_control:
-    label: "{{ item.mount_point }}"
+    label: '{{ item.mount_point }}'
   become: true
 
 - name: Remove mount point directories
   ansible.builtin.file:
-    path: "{{ item.mount_point }}"
+    path: '{{ item.mount_point }}'
     state: absent
-  loop: "{{ nfs_client_shares }}"
+  loop: '{{ nfs_client_shares }}'
   loop_control:
-    label: "{{ item.mount_point }}"
+    label: '{{ item.mount_point }}'
   become: true

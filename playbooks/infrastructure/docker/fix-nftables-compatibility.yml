@@ -36,7 +36,7 @@
 
     - name: Ensure iptables uses nftables backend
       ansible.builtin.debug:
-        msg: "iptables is already using nftables backend: {{ iptables_version.stdout }}"
+        msg: 'iptables is already using nftables backend: {{ iptables_version.stdout }}'
 
     - name: Restart Docker service
       ansible.builtin.systemd:
@@ -63,8 +63,8 @@
   tasks:
     - name: Backup current configuration
       ansible.builtin.copy:
-        src: "{{ nomad_config_file }}"
-        dest: "{{ nomad_config_file }}.backup.{{ ansible_date_time.epoch }}"
+        src: '{{ nomad_config_file }}'
+        dest: '{{ nomad_config_file }}.backup.{{ ansible_date_time.epoch }}'
         remote_src: true
 
     - name: Remove duplicate consul blocks
@@ -96,8 +96,8 @@
 
     - name: Add single correct consul configuration
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION'
         block: |
           consul {
             address = "127.0.0.1:8500"
@@ -142,7 +142,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
       when: config_updated.changed
@@ -162,7 +162,7 @@
 
     - name: Check Docker status on clients
       ansible.builtin.command: docker version --format json
-      delegate_to: "{{ item }}"
+      delegate_to: '{{ item }}'
       with_items:
         - nomad-client-1-lloyd
         - nomad-client-2-holly
@@ -173,11 +173,11 @@
     - name: Display status
       ansible.builtin.debug:
         msg:
-          - "Configuration complete!"
-          - ""
-          - "All Nomad nodes:"
-          - "{{ node_status.stdout_lines }}"
-          - ""
-          - "Docker is now compatible with nftables"
-          - "Consul blocks are properly configured"
-          - "Services can now be deployed on all nodes"
+          - 'Configuration complete!'
+          - ''
+          - 'All Nomad nodes:'
+          - '{{ node_status.stdout_lines }}'
+          - ''
+          - 'Docker is now compatible with nftables'
+          - 'Consul blocks are properly configured'
+          - 'Services can now be deployed on all nodes'

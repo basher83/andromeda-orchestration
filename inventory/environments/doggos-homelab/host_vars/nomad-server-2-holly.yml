@@ -3,4 +3,4 @@ ansible_host: 192.168.10.12
 
 # Host-specific Vault configuration for nomad-server-2-holly
 vault_raft_retry_join:
-  - "http://192.168.10.13:8200"  # nomad-server-3-mable only
+  - 'http://192.168.10.13:8200' # nomad-server-3-mable only

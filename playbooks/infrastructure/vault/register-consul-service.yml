@@ -10,8 +10,8 @@
   gather_facts: yes
   become: yes
   vars:
-    consul_addr: "http://127.0.0.1:8500"
-    vault_addr: "https://{{ ansible_default_ipv4.address }}:8200"
+    consul_addr: 'http://127.0.0.1:8500'
+    vault_addr: 'https://{{ ansible_default_ipv4.address }}:8200'
 
     # Retrieve Consul token from Infisical
     consul_token: >-
@@ -34,7 +34,7 @@
       block:
         - name: Download Consul binary
           get_url:
-            url: "https://releases.hashicorp.com/consul/1.21.4/consul_1.21.4_linux_amd64.zip"
+            url: 'https://releases.hashicorp.com/consul/1.21.4/consul_1.21.4_linux_amd64.zip'
             dest: /tmp/consul.zip
             mode: '0644'
 
@@ -55,7 +55,7 @@
 
         - name: Create Consul directories
           file:
-            path: "{{ item }}"
+            path: '{{ item }}'
             state: directory
             owner: consul
             group: consul
@@ -155,32 +155,32 @@
 
     - name: Register Vault service via API
       uri:
-        url: "{{ consul_addr }}/v1/agent/service/register"
+        url: '{{ consul_addr }}/v1/agent/service/register'
         method: PUT
         headers:
-          X-Consul-Token: "{{ consul_token }}"
+          X-Consul-Token: '{{ consul_token }}'
         body_format: json
         body:
-          Name: "vault-master"
-          ID: "vault-master-lloyd"
+          Name: 'vault-master'
+          ID: 'vault-master-lloyd'
           Tags:
-            - "master"
-            - "transit"
-            - "production"
-            - "raft"
+            - 'master'
+            - 'transit'
+            - 'production'
+            - 'raft'
           Port: 8200
-          Address: "{{ ansible_default_ipv4.address }}"
+          Address: '{{ ansible_default_ipv4.address }}'
           Meta:
-            role: "transit-master"
-            mode: "production"
-            storage: "raft"
-            version: "1.18.3"
+            role: 'transit-master'
+            mode: 'production'
+            storage: 'raft'
+            version: '1.18.3'
           Check:
-            Name: "Vault Health"
-            HTTP: "{{ vault_addr }}/v1/sys/health"
-            Method: "GET"
-            Interval: "10s"
-            Timeout: "5s"
+            Name: 'Vault Health'
+            HTTP: '{{ vault_addr }}/v1/sys/health'
+            Method: 'GET'
+            Interval: '10s'
+            Timeout: '5s'
             TLSSkipVerify: false
             SuccessBeforePassing: 2
             FailuresBeforeCritical: 3
@@ -189,10 +189,10 @@
 
     - name: Verify service registration
       uri:
-        url: "{{ consul_addr }}/v1/catalog/service/vault"
+        url: '{{ consul_addr }}/v1/catalog/service/vault'
         method: GET
         headers:
-          X-Consul-Token: "{{ consul_token }}"
+          X-Consul-Token: '{{ consul_token }}'
         status_code: [200]
       register: vault_services
       delegate_to: localhost

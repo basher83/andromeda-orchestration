@@ -6,9 +6,9 @@
 - name: Apply Consul agent tokens to Nomad clients
   hosts: nomad-client-1-lloyd,nomad-client-2-holly,nomad-client-3-mable
   become: true
-  serial: 1  # Process one at a time to minimize disruption
+  serial: 1 # Process one at a time to minimize disruption
   vars:
-    consul_agent_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}"  # Nomad CLIENT token
+    consul_agent_token: "{{ nomad_server_token if node_type.stdout == 'server' else nomad_client_token }}" # Nomad CLIENT token
 
   tasks:
     - name: Update agent token in Consul config
@@ -39,7 +39,7 @@
     - name: Display verification results
       ansible.builtin.debug:
         msg:
-          - "Host: {{ inventory_hostname }}"
-          - "Token applied: {{ consul_agent_token }} (Nomad CLIENT token)"
-          - "Verification output:"
+          - 'Host: {{ inventory_hostname }}'
+          - 'Token applied: {{ consul_agent_token }} (Nomad CLIENT token)'
+          - 'Verification output:'
           - "{{ verification.stdout_lines | default(['No ACL errors found - looks good!']) }}"

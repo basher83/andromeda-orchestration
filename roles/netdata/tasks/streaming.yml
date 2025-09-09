@@ -1,26 +1,26 @@
 ---
 - name: Retrieve streaming API key from Infisical
   infisical.vault.read_secrets:
-    path: "{{ netdata_infisical_path }}"
-    env_slug: "{{ infisical_environment }}"
+    path: '{{ netdata_infisical_path }}'
+    env_slug: '{{ infisical_environment }}'
   register: netdata_secrets
   when: netdata_use_infisical
 
 - name: Configure Netdata streaming
   ansible.builtin.template:
     src: stream.conf.j2
-    dest: "{{ netdata_config_dir }}/stream.conf"
-    owner: "{{ netdata_user }}"
-    group: "{{ netdata_group }}"
+    dest: '{{ netdata_config_dir }}/stream.conf'
+    owner: '{{ netdata_user }}'
+    group: '{{ netdata_group }}'
     mode: '0640'
     backup: true
   notify: restart netdata
 
 - name: Create streaming SSL directory
   ansible.builtin.file:
-    path: "{{ netdata_config_dir }}/ssl"
+    path: '{{ netdata_config_dir }}/ssl'
     state: directory
-    owner: "{{ netdata_user }}"
-    group: "{{ netdata_group }}"
+    owner: '{{ netdata_user }}'
+    group: '{{ netdata_group }}'
     mode: '0700'
   when: netdata_streaming_ssl_enabled | default(false)

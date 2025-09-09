@@ -13,74 +13,74 @@
     vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
 
     # PKI Configuration
-    pki_int_path: "pki_int"
-    pki_int_max_lease_ttl: "43800h"  # 5 years for intermediate CA
+    pki_int_path: 'pki_int'
+    pki_int_max_lease_ttl: '43800h' # 5 years for intermediate CA
 
     # Root CA path (from issue #95)
-    pki_root_path: "pki"
+    pki_root_path: 'pki'
 
     # Intermediate CA Configuration
-    int_ca_common_name: "HomeLab Intermediate CA"
-    int_ca_issuer_name: "homelab-int-ca-2025"
-    int_ca_ttl: "43800h"  # 5 years
+    int_ca_common_name: 'HomeLab Intermediate CA'
+    int_ca_issuer_name: 'homelab-int-ca-2025'
+    int_ca_ttl: '43800h' # 5 years
 
     # URLs Configuration
-    vault_public_url: "https://vault.spaceships.work:8200"
+    vault_public_url: 'https://vault.spaceships.work:8200'
 
     # Certificate Roles for Intermediate CA
     pki_int_roles:
-      - name: "infrastructure"
-        description: "Infrastructure services (Consul, Nomad, Vault)"
+      - name: 'infrastructure'
+        description: 'Infrastructure services (Consul, Nomad, Vault)'
         allowed_domains:
-          - "consul.service.consul"
-          - "nomad.service.consul"
-          - "vault.spaceships.work"
-          - "*.consul"
-          - "*.nomad"
-          - "*.vault"
+          - 'consul.service.consul'
+          - 'nomad.service.consul'
+          - 'vault.spaceships.work'
+          - '*.consul'
+          - '*.nomad'
+          - '*.vault'
         allow_subdomains: true
         allow_bare_domains: true
         allow_glob_domains: false
         server_flag: true
         client_flag: true
-        max_ttl: "720h"     # 30 days
-        ttl: "168h"         # 7 days default
+        max_ttl: '720h' # 30 days
+        ttl: '168h' # 7 days default
 
-      - name: "application"
-        description: "Application services"
+      - name: 'application'
+        description: 'Application services'
         allowed_domains:
-          - "*.spaceships.work"
-          - "*.app.local"
-          - "*.service.consul"
+          - '*.spaceships.work'
+          - '*.app.local'
+          - '*.service.consul'
         allow_subdomains: true
         allow_bare_domains: false
         allow_glob_domains: true
         server_flag: true
         client_flag: false
-        max_ttl: "168h"     # 7 days
-        ttl: "24h"          # 1 day default
+        max_ttl: '168h' # 7 days
+        ttl: '24h' # 1 day default
 
-      - name: "database"
-        description: "Database services"
+      - name: 'database'
+        description: 'Database services'
         allowed_domains:
-          - "*.db.local"
-          - "*.database.consul"
-          - "postgres.spaceships.work"
-          - "mysql.spaceships.work"
+          - '*.db.local'
+          - '*.database.consul'
+          - 'postgres.spaceships.work'
+          - 'mysql.spaceships.work'
         allow_subdomains: true
         allow_bare_domains: true
         server_flag: true
         client_flag: true
-        max_ttl: "720h"     # 30 days
-        ttl: "168h"         # 7 days default
+        max_ttl: '720h' # 30 days
+        ttl: '168h' # 7 days default
 
   tasks:
     - name: Verify Vault connectivity
       community.hashi_vault.vault_read:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "sys/health"
+        token: '{{ vault_token }}'
+        path: 'sys/health'
         validate_certs: false
       register: vault_health
       failed_when: false
@@ -89,169 +89,169 @@
       ansible.builtin.assert:
         that:
           - vault_health is not failed
-        fail_msg: "Cannot connect to Vault at {{ vault_addr }}"
-        success_msg: "Vault is accessible"
+        fail_msg: 'Cannot connect to Vault at {{ vault_addr }}'
+        success_msg: 'Vault is accessible'
 
     - name: Check if intermediate PKI engine is already enabled
       community.hashi_vault.vault_read:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "sys/mounts/{{ pki_int_path }}"
+        token: '{{ vault_token }}'
+        path: 'sys/mounts/{{ pki_int_path }}'
         validate_certs: false
       register: pki_int_mount_check
       failed_when: false
 
     - name: Enable intermediate PKI secrets engine
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "sys/mounts/{{ pki_int_path }}"
+        token: '{{ vault_token }}'
+        path: 'sys/mounts/{{ pki_int_path }}'
         validate_certs: false
         data:
-          type: "pki"
-          description: "Intermediate Certificate Authority"
+          type: 'pki'
+          description: 'Intermediate Certificate Authority'
           config:
-            max_lease_ttl: "{{ pki_int_max_lease_ttl }}"
+            max_lease_ttl: '{{ pki_int_max_lease_ttl }}'
       when: pki_int_mount_check.data is not defined
       register: pki_int_enabled
 
     - name: Tune intermediate PKI mount if already exists
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "sys/mounts/{{ pki_int_path }}/tune"
+        token: '{{ vault_token }}'
+        path: 'sys/mounts/{{ pki_int_path }}/tune'
         validate_certs: false
         data:
-          max_lease_ttl: "{{ pki_int_max_lease_ttl }}"
+          max_lease_ttl: '{{ pki_int_max_lease_ttl }}'
       when: pki_int_mount_check.data is defined
 
     - name: Check if intermediate CA certificate already exists
       community.hashi_vault.vault_read:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "{{ pki_int_path }}/ca/pem"
+        token: '{{ vault_token }}'
+        path: '{{ pki_int_path }}/ca/pem'
         validate_certs: false
       register: existing_int_ca
       failed_when: false
 
     - name: Generate intermediate CA CSR
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "{{ pki_int_path }}/intermediate/generate/internal"
+        token: '{{ vault_token }}'
+        path: '{{ pki_int_path }}/intermediate/generate/internal'
         validate_certs: false
         data:
-          common_name: "{{ int_ca_common_name }}"
-          issuer_name: "{{ int_ca_issuer_name }}"
-          key_type: "rsa"
+          common_name: '{{ int_ca_common_name }}'
+          issuer_name: '{{ int_ca_issuer_name }}'
+          key_type: 'rsa'
           key_bits: 4096
           exclude_cn_from_sans: true
-          ou: "Infrastructure Services"
-          organization: "HomeLab"
+          ou: 'Infrastructure Services'
+          organization: 'HomeLab'
       when: existing_int_ca.data is not defined or existing_int_ca.data.data is not defined
       register: int_csr_result
 
     - name: Sign intermediate CA with root CA
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "{{ pki_root_path }}/root/sign-intermediate"
+        token: '{{ vault_token }}'
+        path: '{{ pki_root_path }}/root/sign-intermediate'
         validate_certs: false
         data:
-          csr: "{{ int_csr_result.data.data.csr }}"
-          format: "pem_bundle"
+          csr: '{{ int_csr_result.data.data.csr }}'
+          format: 'pem_bundle'
           max_path_length: 1
-          ttl: "{{ int_ca_ttl }}"
+          ttl: '{{ int_ca_ttl }}'
           use_csr_values: true
       when: int_csr_result is not skipped
       register: signed_int_cert
 
     - name: Import signed intermediate certificate
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "{{ pki_int_path }}/intermediate/set-signed"
+        token: '{{ vault_token }}'
+        path: '{{ pki_int_path }}/intermediate/set-signed'
         validate_certs: false
         data:
-          certificate: "{{ signed_int_cert.data.data.certificate }}"
+          certificate: '{{ signed_int_cert.data.data.certificate }}'
       when: signed_int_cert is not skipped
       register: int_cert_imported
 
     - name: Save intermediate CA certificate chain to local file
       ansible.builtin.copy:
-        content: "{{ signed_int_cert.data.data.certificate if signed_int_cert is not skipped else existing_int_ca.data.data }}"
-        dest: "/tmp/homelab-intermediate-ca.pem"
+        content: '{{ signed_int_cert.data.data.certificate if signed_int_cert is not skipped else existing_int_ca.data.data }}'
+        dest: '/tmp/homelab-intermediate-ca.pem'
         mode: '0644'
       delegate_to: localhost
       when: (signed_int_cert is not skipped) or (existing_int_ca.data.data is defined)
 
     - name: Configure intermediate CA URLs
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "{{ pki_int_path }}/config/urls"
+        token: '{{ vault_token }}'
+        path: '{{ pki_int_path }}/config/urls'
         validate_certs: false
         data:
-          issuing_certificates: "{{ vault_public_url }}/v1/{{ pki_int_path }}/ca"
-          crl_distribution_points: "{{ vault_public_url }}/v1/{{ pki_int_path }}/crl"
-          ocsp_servers: "{{ vault_public_url }}/v1/{{ pki_int_path }}/ocsp"
+          issuing_certificates: '{{ vault_public_url }}/v1/{{ pki_int_path }}/ca'
+          crl_distribution_points: '{{ vault_public_url }}/v1/{{ pki_int_path }}/crl'
+          ocsp_servers: '{{ vault_public_url }}/v1/{{ pki_int_path }}/ocsp'
 
     - name: Configure CRL settings for intermediate CA
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "{{ pki_int_path }}/config/crl"
+        token: '{{ vault_token }}'
+        path: '{{ pki_int_path }}/config/crl'
         validate_certs: false
         data:
-          expiry: "72h"
+          expiry: '72h'
           disable: false
 
     - name: Create intermediate PKI roles
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        path: "{{ pki_int_path }}/roles/{{ item.name }}"
+        token: '{{ vault_token }}'
+        path: '{{ pki_int_path }}/roles/{{ item.name }}'
         validate_certs: false
         data:
-          allowed_domains: "{{ item.allowed_domains }}"
-          allow_subdomains: "{{ item.allow_subdomains }}"
-          allow_bare_domains: "{{ item.allow_bare_domains }}"
-          allow_glob_domains: "{{ item.allow_glob_domains | default(false) }}"
-          server_flag: "{{ item.server_flag }}"
-          client_flag: "{{ item.client_flag }}"
+          allowed_domains: '{{ item.allowed_domains }}'
+          allow_subdomains: '{{ item.allow_subdomains }}'
+          allow_bare_domains: '{{ item.allow_bare_domains }}'
+          allow_glob_domains: '{{ item.allow_glob_domains | default(false) }}'
+          server_flag: '{{ item.server_flag }}'
+          client_flag: '{{ item.client_flag }}'
           code_signing_flag: false
           email_protection_flag: false
-          key_type: "rsa"
+          key_type: 'rsa'
           key_bits: 2048
-          max_ttl: "{{ item.max_ttl }}"
-          ttl: "{{ item.ttl }}"
+          max_ttl: '{{ item.max_ttl }}'
+          ttl: '{{ item.ttl }}'
           enforce_hostnames: true
           allow_ip_sans: true
-          ou: "{{ item.description }}"
-          organization: "HomeLab"
-      loop: "{{ pki_int_roles }}"
+          ou: '{{ item.description }}'
+          organization: 'HomeLab'
+      loop: '{{ pki_int_roles }}'
       loop_control:
-        label: "{{ item.name }}"
+        label: '{{ item.name }}'
 
     - name: Test certificate generation with infrastructure role
       community.hashi_vault.vault_pki_generate_certificate:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_token }}"
-        engine_mount_point: "{{ pki_int_path }}"
-        role_name: "infrastructure"
-        common_name: "test-service.consul.service.consul"
-        ttl: "24h"
+        token: '{{ vault_token }}'
+        engine_mount_point: '{{ pki_int_path }}'
+        role_name: 'infrastructure'
+        common_name: 'test-service.consul.service.consul'
+        ttl: '24h'
         validate_certs: false
       register: test_int_cert
 
@@ -260,8 +260,8 @@
         that:
           - test_int_cert is not failed
           - test_int_cert.data.data.certificate is defined
-        fail_msg: "Failed to generate test certificate from intermediate CA"
-        success_msg: "Successfully generated test certificate from intermediate CA"
+        fail_msg: 'Failed to generate test certificate from intermediate CA'
+        success_msg: 'Successfully generated test certificate from intermediate CA'
 
     - name: Store intermediate CA chain in Infisical for backup
       ansible.builtin.shell: |
@@ -277,35 +277,35 @@
     - name: Display intermediate PKI setup summary
       ansible.builtin.debug:
         msg:
-          - "✅ Intermediate PKI Infrastructure Setup Complete!"
-          - ""
-          - "🔐 Intermediate CA Configuration:"
-          - "   - Common Name: {{ int_ca_common_name }}"
-          - "   - Issuer Name: {{ int_ca_issuer_name }}"
-          - "   - Valid For: {{ int_ca_ttl }}"
-          - "   - Mount Path: {{ pki_int_path }}/"
-          - "   - Signed By: HomeLab Root CA"
-          - ""
-          - "📝 Certificate Roles Created:"
-          - "   - infrastructure: For HashiCorp services (30-day max TTL)"
-          - "   - application: For application services (7-day max TTL)"
-          - "   - database: For database services (30-day max TTL)"
-          - ""
-          - "🌐 CA URLs Configured:"
-          - "   - CA Certificate: {{ vault_public_url }}/v1/{{ pki_int_path }}/ca"
-          - "   - CRL: {{ vault_public_url }}/v1/{{ pki_int_path }}/crl"
-          - "   - OCSP: {{ vault_public_url }}/v1/{{ pki_int_path }}/ocsp"
-          - ""
-          - "📋 Next Steps:"
-          - "   1. Replace self-signed certificates (Issue #97)"
-          - "   2. Implement mTLS (Issue #98)"
-          - "   3. Set up certificate rotation (Issue #99)"
-          - ""
-          - "🔒 Intermediate CA certificate chain saved to:"
-          - "   - Local: /tmp/homelab-intermediate-ca.pem"
-          - "   - Infisical: /apollo-13/pki/INTERMEDIATE_CA_CERTIFICATE"
-          - ""
-          - "⚡ Best Practice Achieved:"
-          - "   - Root CA now only signs intermediate CAs"
-          - "   - All service certificates will be issued by intermediate CA"
-          - "   - Shorter certificate lifetimes for better security"
+          - '✅ Intermediate PKI Infrastructure Setup Complete!'
+          - ''
+          - '🔐 Intermediate CA Configuration:'
+          - '   - Common Name: {{ int_ca_common_name }}'
+          - '   - Issuer Name: {{ int_ca_issuer_name }}'
+          - '   - Valid For: {{ int_ca_ttl }}'
+          - '   - Mount Path: {{ pki_int_path }}/'
+          - '   - Signed By: HomeLab Root CA'
+          - ''
+          - '📝 Certificate Roles Created:'
+          - '   - infrastructure: For HashiCorp services (30-day max TTL)'
+          - '   - application: For application services (7-day max TTL)'
+          - '   - database: For database services (30-day max TTL)'
+          - ''
+          - '🌐 CA URLs Configured:'
+          - '   - CA Certificate: {{ vault_public_url }}/v1/{{ pki_int_path }}/ca'
+          - '   - CRL: {{ vault_public_url }}/v1/{{ pki_int_path }}/crl'
+          - '   - OCSP: {{ vault_public_url }}/v1/{{ pki_int_path }}/ocsp'
+          - ''
+          - '📋 Next Steps:'
+          - '   1. Replace self-signed certificates (Issue #97)'
+          - '   2. Implement mTLS (Issue #98)'
+          - '   3. Set up certificate rotation (Issue #99)'
+          - ''
+          - '🔒 Intermediate CA certificate chain saved to:'
+          - '   - Local: /tmp/homelab-intermediate-ca.pem'
+          - '   - Infisical: /apollo-13/pki/INTERMEDIATE_CA_CERTIFICATE'
+          - ''
+          - '⚡ Best Practice Achieved:'
+          - '   - Root CA now only signs intermediate CAs'
+          - '   - All service certificates will be issued by intermediate CA'
+          - '   - Shorter certificate lifetimes for better security'

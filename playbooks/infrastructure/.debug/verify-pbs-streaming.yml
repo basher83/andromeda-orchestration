@@ -11,7 +11,7 @@
         name: pbs
         ansible_host: 192.168.30.200
         ansible_user: root
-        ansible_password: "{{ vault_pbs_password }}"
+        ansible_password: '{{ vault_pbs_password }}'
 
 - name: Check PBS streaming status
   hosts: pbs
@@ -40,7 +40,7 @@
 
     - name: Display PBS status
       ansible.builtin.debug:
-        msg: "{{ pbs_status.stdout_lines }}"
+        msg: '{{ pbs_status.stdout_lines }}'
 
 - name: Check pve1 for incoming connections
   hosts: pve1
@@ -63,4 +63,4 @@
 
     - name: Display pve1 status
       ansible.builtin.debug:
-        msg: "{{ pve1_status.stdout_lines }}"
+        msg: '{{ pve1_status.stdout_lines }}'

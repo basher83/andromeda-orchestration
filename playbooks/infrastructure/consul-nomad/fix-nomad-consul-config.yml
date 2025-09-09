@@ -24,8 +24,8 @@
 
     - name: Backup current configuration
       ansible.builtin.copy:
-        src: "{{ nomad_config_file }}"
-        dest: "{{ nomad_config_file }}.backup.{{ ansible_date_time.epoch }}"
+        src: '{{ nomad_config_file }}'
+        dest: '{{ nomad_config_file }}.backup.{{ ansible_date_time.epoch }}'
         remote_src: true
 
     - name: Remove all existing consul blocks and ansible markers
@@ -60,8 +60,8 @@
 
     - name: Add single correct consul configuration
       ansible.builtin.blockinfile:
-        path: "{{ nomad_config_file }}"
-        marker: "# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION"
+        path: '{{ nomad_config_file }}'
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION'
         block: |
           consul {
             address = "127.0.0.1:8500"
@@ -89,7 +89,7 @@
             }
           }
         state: present
-        validate: "nomad config validate %s"
+        validate: 'nomad config validate %s'
       register: config_updated
 
     - name: Restart Nomad service
@@ -102,7 +102,7 @@
     - name: Wait for Nomad to be ready
       ansible.builtin.wait_for:
         port: 4646
-        host: "{{ ansible_default_ipv4.address }}"
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 30
 
@@ -124,14 +124,14 @@
     - name: Display status
       ansible.builtin.debug:
         msg:
-          - "Nomad configuration fixed!"
-          - "Number of consul blocks: {{ consul_block_count.stdout }}"
-          - ""
-          - "Nomad server status:"
-          - "{{ nomad_status.stdout_lines }}"
-          - ""
-          - "Next steps:"
-          - "1. Deploy PowerDNS without service identities"
-          - "2. Deploy Traefik without service identities"
-          - "3. Test basic functionality"
-          - "4. Add service identities gradually"
+          - 'Nomad configuration fixed!'
+          - 'Number of consul blocks: {{ consul_block_count.stdout }}'
+          - ''
+          - 'Nomad server status:'
+          - '{{ nomad_status.stdout_lines }}'
+          - ''
+          - 'Next steps:'
+          - '1. Deploy PowerDNS without service identities'
+          - '2. Deploy Traefik without service identities'
+          - '3. Test basic functionality'
+          - '4. Add service identities gradually'

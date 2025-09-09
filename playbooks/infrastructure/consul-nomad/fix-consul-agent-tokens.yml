@@ -12,7 +12,7 @@
   tasks:
     - name: Display target host
       ansible.builtin.debug:
-        msg: "Fixing Consul agent token on {{ inventory_hostname }}"
+        msg: 'Fixing Consul agent token on {{ inventory_hostname }}'
 
     - name: Check current agent token configuration
       ansible.builtin.shell: |
@@ -22,11 +22,11 @@
 
     - name: Display current configuration
       ansible.builtin.debug:
-        msg: "Current agent token config: {{ current_agent_token.stdout }}"
+        msg: 'Current agent token config: {{ current_agent_token.stdout }}'
 
     - name: Update agent token in ACL stanza
       ansible.builtin.replace:
-        path: "{{ consul_config_file }}"
+        path: '{{ consul_config_file }}'
         regexp: 'agent\s*=\s*""'
         replace: 'agent = "{{ consul_agent_token }}"'
         backup: true
@@ -40,7 +40,7 @@
 
     - name: Display new configuration
       ansible.builtin.debug:
-        msg: "New agent token config: {{ new_agent_token.stdout }}"
+        msg: 'New agent token config: {{ new_agent_token.stdout }}'
 
     - name: Validate Consul configuration
       ansible.builtin.command: consul validate /etc/consul.d/
@@ -81,7 +81,7 @@
 
     - name: Display Consul members
       ansible.builtin.debug:
-        msg: "{{ consul_members.stdout_lines }}"
+        msg: '{{ consul_members.stdout_lines }}'
 
     - name: Check Consul ACL status
       ansible.builtin.shell: |
@@ -93,8 +93,8 @@
     - name: Display token verification
       ansible.builtin.debug:
         msg:
-          - "Token verification result:"
-          - "{{ token_status.stdout_lines }}"
+          - 'Token verification result:'
+          - '{{ token_status.stdout_lines }}'
 
 - name: Verify fix from leader node
   hosts: nomad-server-3-mable
@@ -122,8 +122,8 @@
     - name: Display all registered nodes
       ansible.builtin.debug:
         msg:
-          - "All Consul nodes:"
-          - "{{ all_nodes.stdout_lines }}"
+          - 'All Consul nodes:'
+          - '{{ all_nodes.stdout_lines }}'
 
     - name: Check for ACL violations in cluster
       ansible.builtin.shell: |
@@ -134,13 +134,13 @@
 
     - name: Display ACL monitor results
       ansible.builtin.debug:
-        msg: "{{ acl_monitor.stdout_lines }}"
+        msg: '{{ acl_monitor.stdout_lines }}'
 
     - name: Summary
       ansible.builtin.debug:
         msg:
-          - "============================================"
-          - "Fix completed for nomad-server-1 and nomad-server-2"
-          - "Agent token updated: 00b57268-c5f9-edb4-bc90-639fb4ab3232"
-          - "Consul services restarted and validated"
-          - "============================================"
+          - '============================================'
+          - 'Fix completed for nomad-server-1 and nomad-server-2'
+          - 'Agent token updated: 00b57268-c5f9-edb4-bc90-639fb4ab3232'
+          - 'Consul services restarted and validated'
+          - '============================================'

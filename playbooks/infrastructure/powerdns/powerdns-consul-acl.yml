@@ -6,7 +6,7 @@
   gather_facts: no
 
   vars:
-    consul_token: "edf460f9-f79a-e0b8-512c-c07f57efc065"
+    consul_token: 'edf460f9-f79a-e0b8-512c-c07f57efc065'
 
   tasks:
     - name: Create PowerDNS KV read policy
@@ -38,4 +38,4 @@
 
     - name: Display result
       debug:
-        msg: "PowerDNS ACL policy applied to Nomad client token"
+        msg: 'PowerDNS ACL policy applied to Nomad client token'

@@ -6,15 +6,15 @@
   gather_facts: false
   become: false
   vars:
-    netbox_url: "https://192.168.30.213"
+    netbox_url: 'https://192.168.30.213'
     netbox_validate_certs: false
 
   tasks:
     - name: Test NetBox API (no auth)
       uri:
-        url: "{{ netbox_url }}/api/"
+        url: '{{ netbox_url }}/api/'
         method: GET
-        validate_certs: "{{ netbox_validate_certs }}"
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 403]
       register: api_test
       ignore_errors: true
@@ -22,7 +22,7 @@
     - name: Display API test result
       debug:
         msg:
-          - "NetBox API Status: {{ api_test.status }}"
+          - 'NetBox API Status: {{ api_test.status }}'
           - "NetBox is {{ 'accessible' if api_test.status == 200 else 'requires authentication' if api_test.status == 403 else 'not reachable' }}"
 
     - name: Prompt for NetBox token
@@ -43,17 +43,17 @@
 
     - name: Set token from input
       set_fact:
-        netbox_token: "{{ token_input.user_input }}"
+        netbox_token: '{{ token_input.user_input }}'
       when: token_input.user_input is defined
       no_log: true
 
     - name: Test with provided token
       uri:
-        url: "{{ netbox_url }}/api/status/"
+        url: '{{ netbox_url }}/api/status/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+          Authorization: 'Token {{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
       register: auth_test
       when: netbox_token is defined
 
@@ -67,11 +67,11 @@
 
     - name: Check for DNS plugin
       uri:
-        url: "{{ netbox_url }}/api/plugins/netbox-dns/"
+        url: '{{ netbox_url }}/api/plugins/netbox-dns/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+          Authorization: 'Token {{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         status_code: [200, 404]
       register: dns_plugin_test
       when: netbox_token is defined
@@ -85,9 +85,9 @@
     - name: Export token for further use
       debug:
         msg:
-          - ""
-          - "To use this token in other playbooks, export it:"
+          - ''
+          - 'To use this token in other playbooks, export it:'
           - "export NETBOX_TOKEN='{{ netbox_token }}'"
-          - ""
-          - "Or save it to Infisical for permanent storage."
+          - ''
+          - 'Or save it to Infisical for permanent storage.'
       when: netbox_token is defined and auth_test.status == 200

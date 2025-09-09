@@ -4,28 +4,28 @@
 
 # Enable parent mode
 netdata_parent_enabled: true
-netdata_parent_api_key: "{{ vault_netdata_parent_api_key }}"
+netdata_parent_api_key: '{{ vault_netdata_parent_api_key }}'
 
 # Web interface should be enabled on parents
 netdata_web_enabled: true
 
 # Memory mode - use dbengine for long-term storage
-netdata_memory_mode: "dbengine"
-netdata_dbengine_disk_space: 1024  # 1GB for metrics storage
-netdata_history: 86400  # 24 hours of detailed metrics
+netdata_memory_mode: 'dbengine'
+netdata_dbengine_disk_space: 1024 # 1GB for metrics storage
+netdata_history: 86400 # 24 hours of detailed metrics
 
 # Enable ML anomaly detection on parent
 netdata_ml_enabled: true
 
 # Consul service registration
 netdata_consul_enabled: true
-netdata_consul_service_name: "netdata-parent"
+netdata_consul_service_name: 'netdata-parent'
 netdata_consul_service_tags:
-  - "monitoring"
-  - "metrics"
-  - "parent"
-  - "api"
-  - "web-ui"
+  - 'monitoring'
+  - 'metrics'
+  - 'parent'
+  - 'api'
+  - 'web-ui'
 
 # Enable telemetry export
 netdata_telemetry_enabled: true

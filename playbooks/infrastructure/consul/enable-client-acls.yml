@@ -12,7 +12,7 @@
     - name: Add ACL configuration to Consul
       ansible.builtin.blockinfile:
         path: /etc/consul.d/consul.hcl
-        marker: "# {mark} ANSIBLE MANAGED ACL CONFIGURATION"
+        marker: '# {mark} ANSIBLE MANAGED ACL CONFIGURATION'
         block: |
           # ACL Configuration
           acl {
@@ -37,7 +37,7 @@
     - name: Wait for Consul to be ready
       ansible.builtin.wait_for:
         port: 8500
-        host: "127.0.0.1"
+        host: '127.0.0.1'
         delay: 5
         timeout: 30
       when: config_updated.changed
@@ -58,7 +58,7 @@
     - name: Display status
       ansible.builtin.debug:
         msg:
-          - "Consul client ACLs enabled!"
-          - ""
-          - "Consul members:"
-          - "{{ members_status.stdout_lines }}"
+          - 'Consul client ACLs enabled!'
+          - ''
+          - 'Consul members:'
+          - '{{ members_status.stdout_lines }}'

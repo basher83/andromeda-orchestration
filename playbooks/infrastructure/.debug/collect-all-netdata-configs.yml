@@ -56,9 +56,9 @@
 
     - name: Read configuration files
       slurp:
-        src: "{{ item }}"
+        src: '{{ item }}'
       register: config_contents
-      loop: "{{ config_files }}"
+      loop: '{{ config_files }}'
       when: netdata_binary.stat.exists
       failed_when: false
 
@@ -94,7 +94,7 @@
 
     - name: Create report directory locally
       file:
-        path: "reports/netdata/configs/{{ timestamp }}"
+        path: 'reports/netdata/configs/{{ timestamp }}'
         state: directory
         mode: '0755'
       delegate_to: localhost
@@ -137,7 +137,7 @@
           {{ connectivity_test.stdout | default('No test results') }}
           ```
           {% endif %}
-        dest: "reports/netdata/configs/{{ timestamp }}/{{ inventory_hostname }}_netdata_config.md"
+        dest: 'reports/netdata/configs/{{ timestamp }}/{{ inventory_hostname }}_netdata_config.md'
         mode: '0644'
       delegate_to: localhost
       become: no
@@ -145,8 +145,8 @@
     - name: Display summary
       debug:
         msg:
-          - "Host: {{ inventory_hostname }} ({{ node_ip }})"
-          - "Role: {{ node_role }}"
+          - 'Host: {{ inventory_hostname }} ({{ node_ip }})'
+          - 'Role: {{ node_role }}'
           - "Netdata: {{ netdata_version.stdout | default('Not installed') }}"
           - "Service: {{ netdata_service.status.ActiveState | default('Unknown') }}"
-          - "Config saved to: reports/netdata/configs/{{ timestamp }}/{{ inventory_hostname }}_netdata_config.md"
+          - 'Config saved to: reports/netdata/configs/{{ timestamp }}/{{ inventory_hostname }}_netdata_config.md'

@@ -5,8 +5,8 @@
   connection: local
   gather_facts: false
   vars:
-    netbox_url: "https://192.168.30.213"
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    netbox_url: 'https://192.168.30.213'
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
 
   tasks:
@@ -33,17 +33,17 @@
     - name: Display connection info (without sensitive data)
       debug:
         msg:
-          - "NetBox URL: {{ netbox_url }}"
+          - 'NetBox URL: {{ netbox_url }}'
           - "Username retrieved: {{ 'Yes' if netbox_username else 'No' }}"
           - "API Key retrieved: {{ 'Yes' if netbox_api_key else 'No' }}"
-          - "Environment: {{ infisical_env }}"
+          - 'Environment: {{ infisical_env }}'
 
     - name: Test NetBox API connectivity
       uri:
-        url: "{{ netbox_url }}/api/"
+        url: '{{ netbox_url }}/api/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_api_key }}"
+          Authorization: 'Token {{ netbox_api_key }}'
         validate_certs: false
         status_code: [200, 403]
       register: api_test
@@ -55,10 +55,10 @@
 
     - name: Get API status if successful
       uri:
-        url: "{{ netbox_url }}/api/status/"
+        url: '{{ netbox_url }}/api/status/'
         method: GET
         headers:
-          Authorization: "Token {{ netbox_api_key }}"
+          Authorization: 'Token {{ netbox_api_key }}'
         validate_certs: false
       register: api_status
       when: api_test.status == 200

@@ -8,10 +8,10 @@
   gather_facts: false
   become: false
   vars:
-    ansible_python_interpreter: "{{ ansible_playbook_python }}"
-    netbox_url: "https://192.168.30.213"
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+    netbox_url: 'https://192.168.30.213'
     # Token retrieved from Infisical at /apollo-13/services/netbox
-    infisical_project_id: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod') }}"
     netbox_validate_certs: false
 
@@ -30,10 +30,10 @@
 
     - name: Test NetBox API connectivity
       uri:
-        url: "{{ netbox_url }}/api/"
+        url: '{{ netbox_url }}/api/'
         method: GET
-        validate_certs: "{{ netbox_validate_certs }}"
-        status_code: [200, 403]  # 403 if auth required
+        validate_certs: '{{ netbox_validate_certs }}'
+        status_code: [200, 403] # 403 if auth required
       register: api_test
       ignore_errors: true
 
@@ -44,122 +44,122 @@
 
     - name: Create sites
       netbox.netbox.netbox_site:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item.name }}"
-          slug: "{{ item.slug }}"
-          description: "{{ item.description }}"
+          name: '{{ item.name }}'
+          slug: '{{ item.slug }}'
+          description: '{{ item.description }}'
         state: present
       loop:
-        - name: "OG Homelab"
-          slug: "og-homelab"
-          description: "Original homelab Proxmox cluster"
-        - name: "Doggos Homelab"
-          slug: "doggos-homelab"
-          description: "3-node Proxmox cluster with Nomad"
+        - name: 'OG Homelab'
+          slug: 'og-homelab'
+          description: 'Original homelab Proxmox cluster'
+        - name: 'Doggos Homelab'
+          slug: 'doggos-homelab'
+          description: '3-node Proxmox cluster with Nomad'
       when: netbox_token is defined and netbox_token != ""
       tags: [sites]
 
     - name: Create IP prefixes
       netbox.netbox.netbox_prefix:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          prefix: "{{ item.prefix }}"
-          site: "{{ item.site }}"
-          description: "{{ item.description }}"
-          status: "active"
+          prefix: '{{ item.prefix }}'
+          site: '{{ item.site }}'
+          description: '{{ item.description }}'
+          status: 'active'
         state: present
       loop:
-        - prefix: "192.168.10.0/24"
-          site: "doggos-homelab"
-          description: "2.5G Network"
-        - prefix: "192.168.11.0/24"
-          site: "doggos-homelab"
-          description: "10G Network"
-        - prefix: "192.168.30.0/24"
-          site: "og-homelab"
-          description: "Management Network"
+        - prefix: '192.168.10.0/24'
+          site: 'doggos-homelab'
+          description: '2.5G Network'
+        - prefix: '192.168.11.0/24'
+          site: 'doggos-homelab'
+          description: '10G Network'
+        - prefix: '192.168.30.0/24'
+          site: 'og-homelab'
+          description: 'Management Network'
       when: netbox_token is defined and netbox_token != ""
       tags: [prefixes]
 
     - name: Create device roles
       netbox.netbox.netbox_device_role:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item.name }}"
-          slug: "{{ item.slug }}"
-          color: "{{ item.color }}"
+          name: '{{ item.name }}'
+          slug: '{{ item.slug }}'
+          color: '{{ item.color }}'
         state: present
       loop:
-        - name: "Proxmox Host"
-          slug: "proxmox-host"
-          color: "3f51b5"  # Blue
-        - name: "Nomad Server"
-          slug: "nomad-server"
-          color: "00bfa5"  # Teal
-        - name: "Nomad Client"
-          slug: "nomad-client"
-          color: "00c853"  # Green
-        - name: "DNS Server"
-          slug: "dns-server"
-          color: "ff9800"  # Orange
-        - name: "Load Balancer"
-          slug: "load-balancer"
-          color: "e91e63"  # Pink
+        - name: 'Proxmox Host'
+          slug: 'proxmox-host'
+          color: '3f51b5' # Blue
+        - name: 'Nomad Server'
+          slug: 'nomad-server'
+          color: '00bfa5' # Teal
+        - name: 'Nomad Client'
+          slug: 'nomad-client'
+          color: '00c853' # Green
+        - name: 'DNS Server'
+          slug: 'dns-server'
+          color: 'ff9800' # Orange
+        - name: 'Load Balancer'
+          slug: 'load-balancer'
+          color: 'e91e63' # Pink
       when: netbox_token is defined and netbox_token != ""
       tags: [roles]
 
     - name: Create manufacturers
       netbox.netbox.netbox_manufacturer:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          name: "{{ item }}"
+          name: '{{ item }}'
           slug: "{{ item | lower | replace(' ', '-') }}"
         state: present
       loop:
-        - "Proxmox"
-        - "Generic"
-        - "HashiCorp"
+        - 'Proxmox'
+        - 'Generic'
+        - 'HashiCorp'
       when: netbox_token is defined and netbox_token != ""
       tags: [manufacturers]
 
     - name: Create device types
       netbox.netbox.netbox_device_type:
-        netbox_url: "{{ netbox_url }}"
-        netbox_token: "{{ netbox_token }}"
-        validate_certs: "{{ netbox_validate_certs }}"
+        netbox_url: '{{ netbox_url }}'
+        netbox_token: '{{ netbox_token }}'
+        validate_certs: '{{ netbox_validate_certs }}'
         data:
-          manufacturer: "{{ item.manufacturer }}"
-          model: "{{ item.model }}"
-          slug: "{{ item.slug }}"
+          manufacturer: '{{ item.manufacturer }}'
+          model: '{{ item.model }}'
+          slug: '{{ item.slug }}'
         state: present
       loop:
-        - manufacturer: "Proxmox"
-          model: "Virtual Machine"
-          slug: "proxmox-vm"
-        - manufacturer: "Proxmox"
-          model: "LXC Container"
-          slug: "proxmox-lxc"
-        - manufacturer: "Generic"
-          model: "Physical Server"
-          slug: "physical-server"
+        - manufacturer: 'Proxmox'
+          model: 'Virtual Machine'
+          slug: 'proxmox-vm'
+        - manufacturer: 'Proxmox'
+          model: 'LXC Container'
+          slug: 'proxmox-lxc'
+        - manufacturer: 'Generic'
+          model: 'Physical Server'
+          slug: 'physical-server'
       when: netbox_token is defined and netbox_token != ""
       tags: [device_types]
 
     - name: Summary
       debug:
         msg:
-          - "NetBox setup tasks completed (if token was provided)"
-          - "NetBox URL: {{ netbox_url }}"
-          - "To complete setup:"
-          - "  1. Set NETBOX_TOKEN environment variable"
-          - "  2. Run with specific tags: --tags sites,prefixes,roles"
-          - "  3. Or run all: ansible-playbook playbooks/infrastructure/netbox-setup.yml"
+          - 'NetBox setup tasks completed (if token was provided)'
+          - 'NetBox URL: {{ netbox_url }}'
+          - 'To complete setup:'
+          - '  1. Set NETBOX_TOKEN environment variable'
+          - '  2. Run with specific tags: --tags sites,prefixes,roles'
+          - '  3. Or run all: ansible-playbook playbooks/infrastructure/netbox-setup.yml'

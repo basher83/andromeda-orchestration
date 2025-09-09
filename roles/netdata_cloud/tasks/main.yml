@@ -3,7 +3,7 @@
   ansible.builtin.assert:
     that:
       - netdata_cloud_enabled | bool
-    fail_msg: "Netdata Cloud claiming is not enabled. Set netdata_cloud_enabled to true."
+    fail_msg: 'Netdata Cloud claiming is not enabled. Set netdata_cloud_enabled to true.'
   tags:
     - netdata
     - netdata-cloud
@@ -13,20 +13,20 @@
   block:
     - name: Get Infisical secrets
       infisical.vault.read_secrets:
-        path: "{{ netdata_infisical_path }}"
+        path: '{{ netdata_infisical_path }}'
         env_slug: "{{ infisical_environment | default('prod') }}"
       register: netdata_secrets
       no_log: true
 
     - name: Set claim token from Infisical
       ansible.builtin.set_fact:
-        netdata_claim_token: "{{ netdata_secrets.secrets.NETDATA_CLAIM_TOKEN }}"
+        netdata_claim_token: '{{ netdata_secrets.secrets.NETDATA_CLAIM_TOKEN }}'
       when: netdata_secrets.secrets.NETDATA_CLAIM_TOKEN is defined
       no_log: true
 
     - name: Set claim rooms from Infisical
       ansible.builtin.set_fact:
-        netdata_claim_rooms: "{{ netdata_secrets.secrets.NETDATA_CLAIM_ROOMS }}"
+        netdata_claim_rooms: '{{ netdata_secrets.secrets.NETDATA_CLAIM_ROOMS }}'
       when: netdata_secrets.secrets.NETDATA_CLAIM_ROOMS is defined
       no_log: true
   tags:
@@ -39,7 +39,7 @@
     that:
       - netdata_claim_token | length > 0
       - netdata_claim_rooms | length > 0
-    fail_msg: "Both netdata_claim_token and netdata_claim_rooms are required for claiming"
+    fail_msg: 'Both netdata_claim_token and netdata_claim_rooms are required for claiming'
   tags:
     - netdata
     - netdata-cloud
@@ -75,7 +75,7 @@
 
     - name: Execute claim command
       ansible.builtin.command:
-        cmd: "{{ claim_command }}"
+        cmd: '{{ claim_command }}'
       register: claim_result
       failed_when: claim_result.rc != 0 and "already claimed" not in claim_result.stderr
       changed_when: claim_result.rc == 0

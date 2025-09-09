@@ -9,9 +9,9 @@
   hosts: vault-master-lloyd
   gather_facts: yes
   vars:
-    vault_addr: "https://{{ ansible_default_ipv4.address }}:8200"
-    transit_mount_path: "transit"
-    autounseal_key_name: "autounseal"
+    vault_addr: 'https://{{ ansible_default_ipv4.address }}:8200'
+    transit_mount_path: 'transit'
+    autounseal_key_name: 'autounseal'
 
     # Retrieve root token from Infisical (will be set after initialization)
     # For new initialization, this will be empty and we'll generate it
@@ -35,12 +35,12 @@
       assert:
         that:
           - vault_service.status.ActiveState == "active"
-        fail_msg: "Vault service is not running. Please start Vault first."
-        success_msg: "Vault service is active"
+        fail_msg: 'Vault service is not running. Please start Vault first.'
+        success_msg: 'Vault service is active'
 
     - name: Check Vault initialization status
       uri:
-        url: "{{ vault_addr }}/v1/sys/init"
+        url: '{{ vault_addr }}/v1/sys/init'
         method: GET
         validate_certs: no
         status_code: [200, 501]
@@ -51,7 +51,7 @@
       block:
         - name: Initialize Vault cluster
           uri:
-            url: "{{ vault_addr }}/v1/sys/init"
+            url: '{{ vault_addr }}/v1/sys/init'
             method: POST
             body_format: json
             body:
@@ -66,8 +66,8 @@
 
         - name: Save initialization response
           copy:
-            content: "{{ init_response.json | to_nice_json }}"
-            dest: "/opt/vault/init-keys-{{ ansible_date_time.epoch }}.json"
+            content: '{{ init_response.json | to_nice_json }}'
+            dest: '/opt/vault/init-keys-{{ ansible_date_time.epoch }}.json'
             mode: '0600'
             owner: vault
             group: vault
@@ -94,12 +94,12 @@
 
         - name: Set root token for immediate use
           set_fact:
-            vault_root_token: "{{ init_response.json.root_token }}"
+            vault_root_token: '{{ init_response.json.root_token }}'
       when: not init_status.json.initialized
 
     - name: Check if Vault is sealed
       uri:
-        url: "{{ vault_addr }}/v1/sys/seal-status"
+        url: '{{ vault_addr }}/v1/sys/seal-status'
         method: GET
         validate_certs: no
         status_code: [200]
@@ -108,14 +108,14 @@
 
     - name: Unseal Vault if sealed
       uri:
-        url: "{{ vault_addr }}/v1/sys/unseal"
+        url: '{{ vault_addr }}/v1/sys/unseal'
         method: POST
         body_format: json
         body:
-          key: "{{ item }}"
+          key: '{{ item }}'
         validate_certs: no
         status_code: [200]
-      loop: "{{ vault_unseal_keys | default([]) }}"
+      loop: '{{ vault_unseal_keys | default([]) }}'
       when:
         - seal_status.json.sealed
         - vault_unseal_keys is defined
@@ -123,28 +123,28 @@
 
     - name: Enable transit secrets engine
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_root_token }}"
-        path: "sys/mounts/{{ transit_mount_path }}"
+        token: '{{ vault_root_token }}'
+        path: 'sys/mounts/{{ transit_mount_path }}'
         data:
           type: transit
-          description: "Transit engine for auto-unseal"
+          description: 'Transit engine for auto-unseal'
           config:
-            default_lease_ttl: "0"
-            max_lease_ttl: "0"
+            default_lease_ttl: '0'
+            max_lease_ttl: '0'
             force_no_cache: false
       delegate_to: localhost
       when: vault_root_token != ''
 
     - name: Create auto-unseal key
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_root_token }}"
-        path: "{{ transit_mount_path }}/keys/{{ autounseal_key_name }}"
+        token: '{{ vault_root_token }}'
+        path: '{{ transit_mount_path }}/keys/{{ autounseal_key_name }}'
         data:
-          type: "aes256-gcm96"
+          type: 'aes256-gcm96'
           exportable: false
           allow_plaintext_backup: false
       delegate_to: localhost
@@ -152,10 +152,10 @@
 
     - name: Create auto-unseal policy
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_root_token }}"
-        path: "sys/policies/acl/autounseal"
+        token: '{{ vault_root_token }}'
+        path: 'sys/policies/acl/autounseal'
         data:
           policy: |
             # Auto-unseal policy
@@ -176,19 +176,19 @@
 
     - name: Create token for auto-unseal
       community.hashi_vault.vault_token_create:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_root_token }}"
+        token: '{{ vault_root_token }}'
         policies:
           - autounseal
         no_parent: true
         renewable: true
-        ttl: "87600h"  # 10 years
-        display_name: "auto-unseal-token"
+        ttl: '87600h' # 10 years
+        display_name: 'auto-unseal-token'
         meta:
-          purpose: "auto-unseal"
-          created_by: "ansible"
-          created_date: "{{ ansible_date_time.iso8601 }}"
+          purpose: 'auto-unseal'
+          created_by: 'ansible'
+          created_date: '{{ ansible_date_time.iso8601 }}'
       register: unseal_token
       delegate_to: localhost
       when: vault_root_token != ''
@@ -220,10 +220,10 @@
 
     - name: Verify transit key exists
       community.hashi_vault.vault_read:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_root_token }}"
-        path: "{{ transit_mount_path }}/keys/{{ autounseal_key_name }}"
+        token: '{{ vault_root_token }}'
+        path: '{{ transit_mount_path }}/keys/{{ autounseal_key_name }}'
       register: key_verify
       delegate_to: localhost
       when: vault_root_token != ''
@@ -240,10 +240,10 @@
 
     - name: Test transit encryption
       community.hashi_vault.vault_write:
-        url: "{{ vault_addr }}"
+        url: '{{ vault_addr }}'
         auth_method: token
-        token: "{{ vault_root_token }}"
-        path: "{{ transit_mount_path }}/encrypt/{{ autounseal_key_name }}"
+        token: '{{ vault_root_token }}'
+        path: '{{ transit_mount_path }}/encrypt/{{ autounseal_key_name }}'
         data:
           plaintext: "{{ 'test-auto-unseal' | b64encode }}"
       register: test_encrypt

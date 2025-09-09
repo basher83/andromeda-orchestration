@@ -19,11 +19,11 @@
   become: true
   vars:
     nomad_config_dir: /etc/nomad.d
-    nomad_config_file: "{{ nomad_config_dir }}/nomad.hcl"
-    backup_dir: "/var/backups/nomad/{{ ansible_date_time.date }}"
-    consul_address: "127.0.0.1:8500"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
-    report_dir: "{{ playbook_dir }}/../reports/nomad"
+    nomad_config_file: '{{ nomad_config_dir }}/nomad.hcl'
+    backup_dir: '/var/backups/nomad/{{ ansible_date_time.date }}'
+    consul_address: '127.0.0.1:8500'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
+    report_dir: '{{ playbook_dir }}/../reports/nomad'
 
   tasks:
     # Pre-flight checks
@@ -45,7 +45,7 @@
 
         - name: Test Consul API connectivity
           ansible.builtin.uri:
-            url: "http://{{ consul_address }}/v1/status/leader"
+            url: 'http://{{ consul_address }}/v1/status/leader'
             method: GET
             timeout: 5
           register: consul_api_test
@@ -57,7 +57,7 @@
       block:
         - name: Create backup directory
           ansible.builtin.file:
-            path: "{{ backup_dir }}"
+            path: '{{ backup_dir }}'
             state: directory
             mode: '0755'
             owner: root
@@ -65,21 +65,21 @@
 
         - name: Check if Nomad config exists
           ansible.builtin.stat:
-            path: "{{ nomad_config_file }}"
+            path: '{{ nomad_config_file }}'
           register: config_stat
 
         - name: Backup current Nomad configuration
           ansible.builtin.copy:
-            src: "{{ nomad_config_file }}"
-            dest: "{{ backup_dir }}/nomad.hcl.{{ timestamp }}"
+            src: '{{ nomad_config_file }}'
+            dest: '{{ backup_dir }}/nomad.hcl.{{ timestamp }}'
             remote_src: true
             mode: '0644'
           when: config_stat.stat.exists
 
         - name: Backup entire config directory
           ansible.builtin.archive:
-            path: "{{ nomad_config_dir }}"
-            dest: "{{ backup_dir }}/nomad-config-{{ timestamp }}.tar.gz"
+            path: '{{ nomad_config_dir }}'
+            dest: '{{ backup_dir }}/nomad-config-{{ timestamp }}.tar.gz'
             format: gz
           when: config_stat.stat.exists
 
@@ -95,7 +95,7 @@
 
         - name: Read current Nomad configuration
           ansible.builtin.slurp:
-            src: "{{ nomad_config_file }}"
+            src: '{{ nomad_config_file }}'
           register: current_config
 
         - name: Check if consul stanza already exists
@@ -104,8 +104,8 @@
 
         - name: Add Consul stanza to Nomad configuration
           ansible.builtin.blockinfile:
-            path: "{{ nomad_config_file }}"
-            marker: "# {mark} ANSIBLE MANAGED CONSUL INTEGRATION"
+            path: '{{ nomad_config_file }}'
+            marker: '# {mark} ANSIBLE MANAGED CONSUL INTEGRATION'
             block: |
               # Consul integration configuration
               consul {
@@ -134,8 +134,8 @@
                 # Check name for Nomad services in Consul
                 checks_use_advertise = true
               }
-            insertafter: "^data_dir"
-            validate: "nomad config validate %s"
+            insertafter: '^data_dir'
+            validate: 'nomad config validate %s'
             backup: true
           when: not consul_configured
           register: config_updated
@@ -159,7 +159,7 @@
         - name: Wait for Nomad to be ready
           ansible.builtin.wait_for:
             port: "{{ '4647' if node_type.stdout == 'server' else '4646' }}"
-            host: "{{ ansible_default_ipv4.address }}"
+            host: '{{ ansible_default_ipv4.address }}'
             timeout: 30
             delay: 5
 
@@ -181,10 +181,10 @@
 
         - name: Query Consul for Nomad services
           ansible.builtin.uri:
-            url: "http://{{ consul_address }}/v1/catalog/services"
+            url: 'http://{{ consul_address }}/v1/catalog/services'
             method: GET
           register: consul_services
-          delegate_to: "{{ inventory_hostname }}"
+          delegate_to: '{{ inventory_hostname }}'
 
         - name: Check if Nomad services are registered
           ansible.builtin.set_fact:
@@ -206,50 +206,50 @@
         - name: Compile node integration status
           ansible.builtin.set_fact:
             integration_status:
-              hostname: "{{ ansible_hostname }}"
-              node_type: "{{ node_type.stdout }}"
+              hostname: '{{ ansible_hostname }}'
+              node_type: '{{ node_type.stdout }}'
               consul_stanza_configured: true
               nomad_service_registered: >-
                 {{ nomad_in_consul if node_type.stdout == 'server'
                 else nomad_client_in_consul }}
               service_details: >-
                 {{ nomad_service_details.json | default([]) }}
-              timestamp: "{{ ansible_date_time.iso8601 }}"
+              timestamp: '{{ ansible_date_time.iso8601 }}'
 
         - name: Display integration status
           ansible.builtin.debug:
             msg:
-              - "Node: {{ ansible_hostname }} ({{ node_type.stdout }})"
+              - 'Node: {{ ansible_hostname }} ({{ node_type.stdout }})'
               - "Consul integration: {{ 'Enabled'
                 if integration_status.consul_stanza_configured else 'Not configured' }}"
               - "Service registered in Consul: {{ 'Yes' if integration_status.nomad_service_registered else 'No' }}"
-              - "Service instances: {{ integration_status.service_details | length }}"
+              - 'Service instances: {{ integration_status.service_details | length }}'
 
 # Generate summary report
 - name: Generate integration summary report
   hosts: localhost
   gather_facts: true
   vars:
-    report_dir: "{{ playbook_dir }}/../reports/nomad"
-    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
+    report_dir: '{{ playbook_dir }}/../reports/nomad'
+    timestamp: '{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}'
 
   tasks:
     - name: Create report directory
       ansible.builtin.file:
-        path: "{{ report_dir }}"
+        path: '{{ report_dir }}'
         state: directory
         mode: '0755'
 
     - name: Query Consul for all Nomad services
       ansible.builtin.uri:
-        url: "http://192.168.11.11:8500/v1/catalog/service/nomad"
+        url: 'http://192.168.11.11:8500/v1/catalog/service/nomad'
         method: GET
       register: nomad_servers_in_consul
       failed_when: false
 
     - name: Query Consul for all Nomad client services
       ansible.builtin.uri:
-        url: "http://192.168.11.11:8500/v1/catalog/service/nomad-client"
+        url: 'http://192.168.11.11:8500/v1/catalog/service/nomad-client'
         method: GET
       register: nomad_clients_in_consul
       failed_when: false
@@ -310,14 +310,14 @@
           nomad server members
           nomad node status
           ```
-        dest: "{{ report_dir }}/consul-nomad-integration-{{ timestamp }}.md"
+        dest: '{{ report_dir }}/consul-nomad-integration-{{ timestamp }}.md'
         mode: '0644'
 
     - name: Display completion message
       ansible.builtin.debug:
         msg:
-          - "Consul-Nomad integration configuration complete!"
-          - "Report saved to: {{ report_dir }}/consul-nomad-integration-{{ timestamp }}.md"
-          - ""
-          - "Run the following command to verify integration:"
-          - "  consul catalog services | grep nomad"
+          - 'Consul-Nomad integration configuration complete!'
+          - 'Report saved to: {{ report_dir }}/consul-nomad-integration-{{ timestamp }}.md'
+          - ''
+          - 'Run the following command to verify integration:'
+          - '  consul catalog services | grep nomad'

@@ -6,7 +6,7 @@
   hosts: "{{ target_hosts | default('tag_server') }}"
   become: true
   gather_facts: true
-  serial: 1  # Deploy one at a time for Raft cluster formation
+  serial: 1 # Deploy one at a time for Raft cluster formation
 
   pre_tasks:
     - name: Verify production deployment prerequisites
@@ -15,7 +15,7 @@
           - ansible_distribution in ['Ubuntu', 'Debian', 'RedHat', 'Rocky']
           - ansible_memtotal_mb >= 512
           - vault_mode is defined and vault_mode == "production"
-        fail_msg: "Production deployment requires supported OS and minimum 512MB RAM"
+        fail_msg: 'Production deployment requires supported OS and minimum 512MB RAM'
 
     - name: Check for existing Vault data
       ansible.builtin.stat:
@@ -37,13 +37,13 @@
 
   vars:
     # Force production mode
-    vault_mode: "production"
-    vault_storage_backend: "raft"
+    vault_mode: 'production'
+    vault_storage_backend: 'raft'
     vault_ui_enabled: true
-    vault_tls_disable: true  # Override in inventory for TLS
+    vault_tls_disable: true # Override in inventory for TLS
 
     # Raft configuration
-    vault_raft_node_id: "{{ ansible_hostname }}"
+    vault_raft_node_id: '{{ ansible_hostname }}'
 
     # Auto-unseal configuration (will be loaded from group_vars)
     # vault_auto_unseal_enabled: defined in group_vars
@@ -51,7 +51,7 @@
 
     # Telemetry
     vault_telemetry_enabled: true
-    vault_telemetry_prometheus_retention_time: "24h"
+    vault_telemetry_prometheus_retention_time: '24h'
 
     # Audit
     vault_audit_enabled: true
@@ -64,8 +64,8 @@
   tasks:
     - name: Wait for Vault to start
       ansible.builtin.wait_for:
-        port: "{{ vault_port }}"
-        host: "{{ ansible_default_ipv4.address }}"
+        port: '{{ vault_port }}'
+        host: '{{ ansible_default_ipv4.address }}'
         delay: 5
         timeout: 60
         state: started
@@ -74,7 +74,7 @@
       ansible.builtin.uri:
         url: "{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/init"
         method: GET
-        validate_certs: "{{ not vault_tls_disable }}"
+        validate_certs: '{{ not vault_tls_disable }}'
       register: vault_init_status
 
     - name: Initialize Vault (first node only)
@@ -86,14 +86,14 @@
           ansible.builtin.uri:
             url: "{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/init"
             method: POST
-            validate_certs: "{{ not vault_tls_disable }}"
+            validate_certs: '{{ not vault_tls_disable }}'
             body_format: json
             body:
               secret_shares: 5
               secret_threshold: 3
-              stored_shares: 0  # Set to 5 for auto-unseal with stored keys
-              recovery_shares: "{{ 5 if vault_auto_unseal_enabled else 0 }}"
-              recovery_threshold: "{{ 3 if vault_auto_unseal_enabled else 0 }}"
+              stored_shares: 0 # Set to 5 for auto-unseal with stored keys
+              recovery_shares: '{{ 5 if vault_auto_unseal_enabled else 0 }}'
+              recovery_threshold: '{{ 3 if vault_auto_unseal_enabled else 0 }}'
           register: vault_init_result
           no_log: true
 
@@ -125,17 +125,17 @@
               - Never store all keys together
               - Delete this file after securing the keys
               - Revoke root token after initial setup
-            dest: "/root/vault-init-{{ ansible_date_time.epoch }}.txt"
+            dest: '/root/vault-init-{{ ansible_date_time.epoch }}.txt'
             owner: root
             group: root
-            mode: "0600"
+            mode: '0600'
 
         - name: Display initialization summary
           ansible.builtin.debug:
             msg:
-              - "✅ Vault has been initialized successfully!"
-              - "Root token and unseal/recovery keys saved to: /root/vault-init-{{ ansible_date_time.epoch }}.txt"
-              - "IMPORTANT: Secure these credentials immediately and delete the file!"
+              - '✅ Vault has been initialized successfully!'
+              - 'Root token and unseal/recovery keys saved to: /root/vault-init-{{ ansible_date_time.epoch }}.txt'
+              - 'IMPORTANT: Secure these credentials immediately and delete the file!'
 
     - name: Unseal Vault (if not using auto-unseal)
       when:
@@ -146,36 +146,36 @@
           ansible.builtin.uri:
             url: "{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/seal-status"
             method: GET
-            validate_certs: "{{ not vault_tls_disable }}"
+            validate_certs: '{{ not vault_tls_disable }}'
           register: seal_status
 
         - name: Manual unseal required
           ansible.builtin.debug:
             msg:
-              - "⚠️  Vault is sealed and requires manual unsealing"
-              - ""
-              - "To unseal, run these commands on the Vault server:"
+              - '⚠️  Vault is sealed and requires manual unsealing'
+              - ''
+              - 'To unseal, run these commands on the Vault server:'
               - "  export VAULT_ADDR='{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}'"
-              - "  vault operator unseal <key-1>"
-              - "  vault operator unseal <key-2>"
-              - "  vault operator unseal <key-3>"
-              - ""
-              - "You need {{ seal_status.json.t }} keys to unseal (threshold)"
+              - '  vault operator unseal <key-1>'
+              - '  vault operator unseal <key-2>'
+              - '  vault operator unseal <key-3>'
+              - ''
+              - 'You need {{ seal_status.json.t }} keys to unseal (threshold)'
           when: seal_status.json.sealed
 
     - name: Enable audit logging (if unsealed)
       ansible.builtin.uri:
         url: "{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/audit/file"
         method: PUT
-        validate_certs: "{{ not vault_tls_disable }}"
+        validate_certs: '{{ not vault_tls_disable }}'
         headers:
           X-Vault-Token: "{{ vault_root_token | default('') }}"
         body_format: json
         body:
-          type: "file"
+          type: 'file'
           options:
             file_path: "{{ vault_audit_path | default('/var/log/vault/audit.log') }}"
-        status_code: [200, 204, 400]  # 400 if already enabled
+        status_code: [200, 204, 400] # 400 if already enabled
       when:
         - vault_audit_enabled | bool
         - vault_root_token is defined
@@ -200,24 +200,24 @@
     - name: Production deployment summary
       ansible.builtin.debug:
         msg:
-          - "=========================================="
-          - "Vault Production Deployment Status"
-          - "=========================================="
-          - ""
-          - "Node: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})"
-          - "API Address: {{ vault_api_addr }}"
-          - "Cluster Address: {{ vault_cluster_addr }}"
-          - "Storage: {{ vault_storage_backend }}"
+          - '=========================================='
+          - 'Vault Production Deployment Status'
+          - '=========================================='
+          - ''
+          - 'Node: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})'
+          - 'API Address: {{ vault_api_addr }}'
+          - 'Cluster Address: {{ vault_cluster_addr }}'
+          - 'Storage: {{ vault_storage_backend }}'
           - "Auto-unseal: {{ 'Enabled' if vault_auto_unseal_enabled else 'Disabled' }}"
           - "TLS: {{ 'Disabled' if vault_tls_disable else 'Enabled' }}"
           - "UI: {{ 'Enabled' if vault_ui_enabled else 'Disabled' }}"
-          - ""
+          - ''
           - "{% if vault_ui_enabled %}UI URL: {{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/ui{% endif %}"
-          - ""
-          - "Next Steps:"
-          - "1. Secure initialization credentials"
-          - "2. {% if not vault_auto_unseal_enabled %}Unseal all Vault nodes{% else %}Verify auto-unseal is working{% endif %}"
-          - "3. Configure auth methods and policies"
-          - "4. Enable audit logging"
-          - "5. Set up monitoring and backup"
-          - "=========================================="
+          - ''
+          - 'Next Steps:'
+          - '1. Secure initialization credentials'
+          - '2. {% if not vault_auto_unseal_enabled %}Unseal all Vault nodes{% else %}Verify auto-unseal is working{% endif %}'
+          - '3. Configure auth methods and policies'
+          - '4. Enable audit logging'
+          - '5. Set up monitoring and backup'
+          - '=========================================='

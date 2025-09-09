@@ -75,19 +75,19 @@ Reference `docs/implementation/dns-ipam/netbox-integration-patterns.md` for impl
 
 ## Usage Examples
 
-### List all hosts in an environment:
+### List all hosts in an environment
 
 ```bash
 ansible-inventory -i environments/doggos-homelab/ --list
 ```
 
-### Test dynamic inventory:
+### Test dynamic inventory
 
 ```bash
 ansible-inventory -i dynamic/netbox.yml --list
 ```
 
-### Run playbook against specific environment:
+### Run playbook against specific environment
 
 ```bash
 ansible-playbook -i environments/doggos-homelab/ playbooks/infrastructure/consul.yml
