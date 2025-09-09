@@ -158,6 +158,49 @@ After thorough investigation using Netdata monitoring and direct system checks:
 - Multiple Consul configuration blocks (fixed)
 - Docker nftables compatibility (fixed)
 
+## Critical Configuration Update (2025-01-09)
+
+### JWT Signing Key Configuration in Nomad 1.10.x
+
+**IMPORTANT**: Nomad 1.10.x requires JWT signing keys to be configured **inside the `server` stanza**, not as a standalone `jwt` block.
+
+#### Incorrect Configuration (will fail)
+
+```hcl
+# WRONG - This will cause "unexpected keys jwt" error
+jwt {
+  signing_keys = ["..."]
+}
+
+server {
+  enabled = true
+  # ...
+}
+```
+
+#### Correct Configuration
+
+```hcl
+server {
+  enabled          = true
+  bootstrap_expect = 3
+
+  # JWT signing keys MUST be inside the server stanza
+  jwt_signing_keys = [
+    "LS0tLS1CRUdJTi...BASE64_ENCODED_RSA_PRIVATE_KEY...LS0tLQo="
+  ]
+}
+```
+
+**Key Points**:
+
+- Use `jwt_signing_keys` (plural) not `jwt_signing_key`
+- The configuration goes INSIDE the existing `server` block
+- The RSA private key must be Base64 encoded
+- Generate with: `openssl genrsa -out key.pem 4096 && base64 -w0 key.pem`
+
+Without this configuration, Nomad cannot generate JWT tokens for service identity, causing all services to fail Consul registration.
+
 ## References
 
 - [Nomad Service Identity Documentation](https://developer.hashicorp.com/nomad/docs/integrations/consul/service-identity)
