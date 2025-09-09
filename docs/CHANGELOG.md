@@ -4,6 +4,49 @@ All notable changes to the documentation in `docs/` will be documented in this f
 
 > How to use this file: Review latest entries at the top to understand recent documentation changes. When updating docs, add a concise entry under today's date with Added/Changed/Removed subsections.
 
+## 2025-08-31
+
+### Changed
+
+- **Migrated task runner references to mise**: Updated all documentation to use `mise run` commands instead of `task` commands
+  - `task security` → `mise run security`
+  - `task security:secrets` → `mise run security:secrets`
+  - `task security:kics` → `mise run security:kics`
+  - `task hooks` → `uv run pre-commit run --all-files`
+  - `task setup` → `mise run setup`
+  - `task todos` → `./scripts/find-todos.sh`
+- **Fixed markdownlint command references**: Updated documentation to use correct `markdownlint-cli2` commands
+  - `uv run markdownlint docs/**/*.md` → `markdownlint-cli2 "**/*.md" "#.venv"`
+  - `markdownlint "**/*.md" --fix` → `markdownlint-cli2 "**/*.md" "#.venv" --fix`
+- **Updated files**: `docs/standards/security-standards.md`, `docs/operations/security-scanning.md`, `docs/operations/testing-strategy.md`, `docs/getting-started/pre-commit-setup.md`, `docs/INDEX.md`, `docs/standards/linting-standards.md`
+
+### Added
+
+- New comprehensive `docs/INDEX.md` file for detailed documentation navigation:
+  - Complete directory structure overview with descriptions for all 15+ documentation areas
+  - Key documents listings for each major section (standards, implementation, operations, etc.)
+  - Essential quick links organized by use case (Implementation, Operations, Development)
+  - Updated documentation coverage table including all current areas
+  - Cross-links to `README.md` for project status and quick start information
+
+### Changed
+
+- Refactored `docs/README.md` to focus on project overview and status:
+  - Reduced from 206 lines to ~35 lines for better focus
+  - Removed detailed directory navigation (moved to INDEX.md)
+  - Simplified quick start guide with essential steps only
+  - Maintained current project status and active implementation details
+  - Added prominent cross-link to INDEX.md for comprehensive navigation
+
+### Improved
+
+- **Documentation navigation structure**: Created clear separation between project status (README.md) and detailed navigation (INDEX.md)
+- **Cross-linking system**: Bidirectional navigation between overview and comprehensive index
+- **User experience**: Users can now quickly access project status or dive into detailed documentation as needed
+- **Maintainability**: Each file has a focused purpose, making updates easier and more targeted
+
+---
+
 ## 2025-08-21
 
 ### Added
