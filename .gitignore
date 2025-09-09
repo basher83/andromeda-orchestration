@@ -72,6 +72,12 @@ Thumbs.db
 *.crt
 .secrets.baseline
 
+# JWT signing keys - NEVER commit these!
+jwt-signing-key*
+**/jwt-signing-key*
+*signing-key*.pem
+*signing-key*.key
+
 # Testing
 molecule/**/create.yml
 molecule/**/destroy.yml
