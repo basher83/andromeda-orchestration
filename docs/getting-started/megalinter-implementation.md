@@ -49,7 +49,7 @@ MegaLinter has been successfully implemented with advanced performance optimizat
 
 To maintain backward compatibility while organizing linter configurations, we use **symbolic links** in the repository root that point to the actual configuration files in `.github/linters/`.
 
-#### Current Organization:
+#### Current Organization
 
 ```bash
 # Repository root (symlinks for compatibility)
@@ -65,7 +65,7 @@ To maintain backward compatibility while organizing linter configurations, we us
         └── .markdownlint.json 📄
 ```
 
-#### Benefits of This Approach:
+#### Benefits of This Approach
 
 **✅ Zero Breaking Changes:**
 
@@ -84,7 +84,7 @@ To maintain backward compatibility while organizing linter configurations, we us
 - No risk of configuration drift between multiple copies
 - Clear separation between symlinks and actual files
 
-#### How It Works:
+#### How It Works
 
 1. **Tools look for configs** in the root directory (standard locations)
 2. **Symlinks transparently redirect** to `.github/linters/` directory
@@ -122,7 +122,7 @@ Your repository has a comprehensive, multi-layered linting and code quality syst
 
 ### Primary Linting (MegaLinter - Always Active)
 
-#### Code Quality Linters:
+#### Code Quality Linters
 
 **🔧 Ansible Lint** (`ANSIBLE_ANSIBLE_LINT`)
 
@@ -168,7 +168,7 @@ Your repository has a comprehensive, multi-layered linting and code quality syst
 
 ### Additional Security & Infrastructure Checks
 
-#### Security Scanning:
+#### Security Scanning
 
 **🔐 Infisical Secret Scanning**
 
@@ -184,7 +184,7 @@ Your repository has a comprehensive, multi-layered linting and code quality syst
 
 ### Branch-Specific Linting Strategy
 
-#### Main Branch (Full Mode):
+#### Main Branch (Full Mode)
 
 ```yaml
 ENABLE_LINTERS: ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,YAML_V8R,PYTHON_RUFF,MARKDOWN_MARKDOWNLINT,REPOSITORY_SECRETLINT,REPOSITORY_TRIVY,REPOSITORY_GITLEAKS,ACTION_ACTIONLINT
@@ -194,7 +194,7 @@ ENABLE_LINTERS: ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,YAML_V8R,PYTHON
 - **Strict mode:** FAIL_ON_ERROR=true
 - **Timeout:** 20 minutes
 
-#### Develop Branch (Fast Mode):
+#### Develop Branch (Fast Mode)
 
 ```yaml
 ENABLE_LINTERS: ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,PYTHON_RUFF,MARKDOWN_MARKDOWNLINT,REPOSITORY_SECRETLINT,ACTION_ACTIONLINT
@@ -206,14 +206,14 @@ ENABLE_LINTERS: ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,PYTHON_RUFF,MAR
 
 ### Performance & Configuration
 
-#### Optimization Settings:
+#### Optimization Settings
 
 - **Parallel Processing:** 4 concurrent linters
 - **Smart Filtering:** Only scans IaC-relevant files
 - **Caching:** Enabled for faster subsequent runs
 - **Auto-fixes:** YAML and Markdown formatting applied automatically
 
-#### File Coverage:
+#### File Coverage
 
 - **Included:** `ansible/`, `roles/`, `playbooks/`, `nomad/`, `environments/`, `inventory/`, `plugins/`, `scripts/`, `tests/`, `docs/`
 - **Excluded:** `.git/`, `.venv/`, `node_modules/`, `megalinter-reports/`, `docs/archive/`, `reports/`, `kics-results/`
