@@ -1,0 +1,137 @@
+---
+# Fix duplicate Consul configuration blocks in Nomad
+# This resolves service registration issues by ensuring a single, correct Consul configuration
+
+- name: Fix duplicate Consul blocks in Nomad configuration
+  hosts: nomad-server-1-lloyd,nomad-server-2-holly,nomad-server-3-mable,nomad-client-1-lloyd,nomad-client-2-holly,nomad-client-3-mable
+  become: true
+
+  tasks:
+    - name: Check current Nomad configuration for duplicates
+      ansible.builtin.shell: |
+        grep -c "^consul {" /etc/nomad.d/nomad.hcl || echo 0
+      register: consul_block_count
+      changed_when: false
+
+    - name: Display current state
+      ansible.builtin.debug:
+        msg: "Found {{ consul_block_count.stdout }} consul blocks in configuration"
+
+    - name: Backup current configuration
+      ansible.builtin.copy:
+        src: /etc/nomad.d/nomad.hcl
+        dest: /etc/nomad.d/nomad.hcl.backup.{{ ansible_date_time.epoch }}
+        remote_src: true
+        mode: '0644'
+
+    - name: Remove all existing Consul configuration blocks
+      ansible.builtin.replace:
+        path: /etc/nomad.d/nomad.hcl
+        regexp: '(?s)# BEGIN ANSIBLE MANAGED CONSUL.*?# END ANSIBLE MANAGED CONSUL.*?\n'
+        replace: ''
+      when: consul_block_count.stdout | int > 0
+
+    - name: Remove any other Consul blocks
+      ansible.builtin.replace:
+        path: /etc/nomad.d/nomad.hcl
+        regexp: '(?s)consul\s*\{[^}]*\}[^}]*\}.*?\n'
+        replace: ''
+      when: consul_block_count.stdout | int > 0
+
+    - name: Get Consul token for this node
+      ansible.builtin.shell: |
+        grep "token =" /etc/nomad.d/nomad.hcl.backup.* | tail -1 | sed 's/.*token = "\([^"]*\)".*/\1/' || echo ""
+      register: consul_token
+      changed_when: false
+
+    - name: Add correct Consul configuration block
+      ansible.builtin.blockinfile:
+        path: /etc/nomad.d/nomad.hcl
+        marker: '# {mark} ANSIBLE MANAGED CONSUL CONFIGURATION'
+        insertafter: '^ui \{'
+        block: |
+
+          consul {
+            address = "127.0.0.1:8500"
+            {% if consul_token.stdout %}
+            token = "{{ consul_token.stdout }}"
+            {% endif %}
+
+            # Enable service registration
+            auto_advertise = true
+            server_auto_join = true
+            client_auto_join = true
+
+            # Service names
+            server_service_name = "nomad"
+            client_service_name = "nomad-client"
+
+            # Enable service checks
+            checks_use_advertise = true
+
+            # Service and task identity for workloads
+            service_identity {
+              enabled = true
+              auto    = true  # CRITICAL: This enables automatic service registration
+            }
+
+            task_identity {
+              enabled = true
+            }
+          }
+
+    - name: Validate Nomad configuration
+      ansible.builtin.command: nomad config validate /etc/nomad.d/
+      changed_when: false
+
+    - name: Restart Nomad service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      throttle: 1  # Restart one at a time
+
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: '{{ ansible_default_ipv4.address }}'
+        delay: 10
+        timeout: 60
+
+    - name: Verify Nomad is running
+      ansible.builtin.systemd:
+        name: nomad
+        state: started
+      register: nomad_status
+      failed_when: nomad_status.status.ActiveState != 'active'
+
+- name: Verify the fix
+  hosts: nomad-server-1-lloyd
+
+  tasks:
+    - name: Check Nomad server members
+      ansible.builtin.command: nomad server members
+      register: nomad_members
+      changed_when: false
+
+    - name: Check Consul services
+      ansible.builtin.command: consul catalog services
+      register: consul_services
+      changed_when: false
+      failed_when: false
+
+    - name: Display status
+      ansible.builtin.debug:
+        msg:
+          - '=== Configuration Fixed ==='
+          - ''
+          - 'Nomad Servers:'
+          - '{{ nomad_members.stdout_lines }}'
+          - ''
+          - 'Consul Services:'
+          - '{{ consul_services.stdout_lines | default(["(checking...)"]) }}'
+          - ''
+          - '✅ Duplicate Consul blocks removed'
+          - '✅ service_identity.auto = true is now set'
+          - ''
+          - 'Next: Redeploy your services to test registration'

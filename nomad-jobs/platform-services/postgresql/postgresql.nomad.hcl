@@ -68,6 +68,33 @@ job "postgresql" {
       # optional admin UI (e.g., pgbouncer/pgadmin later)
     }
 
+    # Service registration for Consul discovery
+    service {
+      name = "postgres"
+      port = "db"
+
+      # Required for service identity when enabled
+      identity {
+        aud = ["consul.io"]
+        ttl = "1h"
+      }
+
+      # Health check
+      check {
+        name     = "postgres-tcp"
+        type     = "tcp"
+        port     = "db"
+        interval = "10s"
+        timeout  = "2s"
+      }
+
+      tags = [
+        "database",
+        "postgresql",
+        "primary"
+      ]
+    }
+
     # Persist data on the host (simple + reliable)
     volume "postgres-data" {
       type      = "host"
@@ -144,24 +171,6 @@ job "postgresql" {
         PGDATA            = "/var/lib/postgresql/data/pgdata"
       }
 
-      service {
-        name = "postgres"
-        port = "db"
-        tags = ["tcp", "db", "postgres16"]
-
-        identity {
-          aud = ["consul.io"]
-          ttl = "1h"
-        }
-
-        check {
-          name     = "postgres-tcp" # Add descriptive name
-          type     = "tcp"
-          interval = "10s"
-          timeout  = "2s"
-          port     = "db" # Add explicit port reference
-        }
-      }
 
       resources {
         cpu    = 500
