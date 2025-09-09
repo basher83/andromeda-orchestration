@@ -4,7 +4,7 @@ This document explains the pre-commit setup for this project and which tools are
 
 ## Active Pre-commit Hooks
 
-The following hooks run automatically on `git commit` or via `task hooks`:
+The following hooks run automatically on `git commit` or via `uv run pre-commit run --all-files`:
 
 ### 1. General File Checks (pre-commit-hooks)
 
@@ -47,36 +47,36 @@ Due to compatibility issues, these tools are run via task commands instead of pr
 ### 1. Ansible Lint
 
 **Issue**: Module import errors in pre-commit environment
-**Run via**: `task lint:ansible` or `uv run ansible-lint`
+**Run via**: `mise run lint:ansible` or `uv run ansible-lint`
 
 ### 2. Security Scanning
 
 **Issue**: Integration complexity with Infisical CLI and KICS Docker containers
-**Run via**: `task security` (runs both Infisical secrets scan and KICS infrastructure scan)
+**Run via**: `mise run security` (runs both Infisical secrets scan and KICS infrastructure scan)
 
-- **Infisical secrets detection**: `task security:secrets`
-- **KICS infrastructure scan**: `task security:kics`
+- **Infisical secrets detection**: `mise run security:secrets`
+- **KICS infrastructure scan**: `mise run security:kics`
 
 ## Recommended Workflow
 
 1. **During development**: Run individual linters as needed
 
    ```bash
-   task lint:yaml     # Check YAML files
-   task lint:python   # Check Python code
-   task lint:ansible  # Check Ansible playbooks
+   mise run lint:yaml     # Check YAML files
+   mise run lint:python   # Check Python code
+   mise run lint:ansible  # Check Ansible playbooks
    ```
 
 2. **Before committing**: Run all pre-commit hooks
 
    ```bash
-   task hooks  # or: uv run pre-commit run --all-files
+   uv run pre-commit run --all-files  # Run all pre-commit hooks
    ```
 
 3. **For comprehensive check**: Run all linters
 
    ```bash
-   task lint  # Runs all linters including ansible-lint
+   mise run lint  # Runs all linters including ansible-lint
    ```
 
 ## Automatic Fixes
@@ -84,12 +84,12 @@ Due to compatibility issues, these tools are run via task commands instead of pr
 Some issues can be automatically fixed:
 
 ```bash
-task fix  # Auto-fix Python and some Ansible issues
+mise run fix  # This would auto-fix Python and some Ansible issues (if task existed)
 ```
 
 ## Installation
 
-Pre-commit hooks are installed automatically by `task setup`. To install manually:
+Pre-commit hooks are installed automatically by `mise run setup`. To install manually:
 
 ```bash
 uv run pre-commit install

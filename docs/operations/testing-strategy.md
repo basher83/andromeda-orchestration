@@ -159,8 +159,8 @@ GitHub Actions workflows (`.github/workflows/`):
 git clone <repo>
 cd andromeda-orchestration
 
-# Use task for complete setup
-task setup
+# Use mise for complete setup
+mise run setup
 
 # Or manually:
 uv venv
@@ -194,11 +194,11 @@ uv run ansible-galaxy collection install -r requirements.yml
 
    ```bash
    # Run all security scans (Infisical + KICS)
-   task security
+   mise run security
 
    # Or run individually
-   task security:secrets  # Infisical secrets detection
-   task security:kics     # Infrastructure security scan
+   mise run security:secrets  # Infisical secrets detection
+   mise run security:kics     # Infrastructure security scan
    ```
 
 ### Writing Tests
@@ -303,7 +303,7 @@ def test_invalid_credentials():
 
    ```bash
    # Run full repository scan
-   task security:secrets
+   mise run security:secrets
 
    # Or use Infisical CLI directly
    ./scripts/scan-secrets.sh full
@@ -319,7 +319,7 @@ def test_invalid_credentials():
 
    ```bash
    # Run KICS infrastructure scan
-   task security:kics
+   mise run security:kics
 
    # Results saved to kics-results/ directory
    # - results.json (JSON format)
@@ -330,7 +330,7 @@ def test_invalid_credentials():
 
    ```bash
    # Run all security scans
-   task security
+   mise run security
    ```
 
 4. **Dependency Scanning**:

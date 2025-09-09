@@ -32,7 +32,7 @@ brew install infisical/get-cli/infisical
 
 ```bash
 # Run secret scan
-task security:secrets
+mise run security:secrets
 
 # Manual scan
 infisical scan
@@ -61,7 +61,7 @@ repos:
         always_run: true
 ```
 
-**Note**: Currently run via `task security:secrets` due to integration complexity.
+**Note**: Currently run via `mise run security:secrets` due to integration complexity.
 
 ## KICS Infrastructure Security
 
@@ -81,7 +81,7 @@ Key settings:
 
 ```bash
 # Run KICS scan
-task security:kics
+mise run security:kics
 
 # Manual Docker command
 docker run -t -v "$(pwd)":/path checkmarx/kics scan \
@@ -104,7 +104,7 @@ Run all security scans with a single command:
 
 ```bash
 # Run all security scans
-task security
+mise run security
 ```
 
 This executes:
@@ -143,11 +143,13 @@ exclude-paths:
 ## Best Practices
 
 1. **Regular Scanning**
-   - Run `task security` before commits
+
+   - Run `mise run security` before commits
    - Include in CI/CD pipeline
    - Schedule weekly deep scans
 
 2. **Handle Findings Promptly**
+
    - Rotate any exposed secrets immediately
    - Fix high/critical infrastructure issues
    - Document false positives
@@ -188,10 +190,12 @@ jobs:
 ### Common Issues
 
 1. **Docker not available for KICS**
+
    - Ensure Docker is running
    - Check Docker permissions
 
 2. **Infisical CLI not found**
+
    - Install via package manager
    - Add to PATH
 

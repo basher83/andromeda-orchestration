@@ -34,8 +34,7 @@ CRITICAL:     Never store, rotate immediately if exposed
 
 ```yaml
 # Primary secret store
-Environment Variables:
-  INFISICAL_CLIENT_ID
+Environment Variables: INFISICAL_CLIENT_ID
   INFISICAL_CLIENT_SECRET
   INFISICAL_PROJECT_ID
 
@@ -59,13 +58,13 @@ password: "{{ lookup('env', 'SERVICE_PASSWORD') }}"
 
 - **Config**: `.infisical-scan.toml`
 - **Git Hook**: Runs automatically on commit
-- **Manual**: `task security:secrets`
+- **Manual**: `mise run security:secrets`
 - **Excludes**: Binary files, reports/, build artifacts
 
 ##### KICS Infrastructure Security
 
 - **Config**: `kics.config`
-- **Manual**: `task security:kics`
+- **Manual**: `mise run security:kics`
 - **Focus**: Ansible, Docker, Terraform security
 - **Fail On**: HIGH, CRITICAL findings
 
@@ -89,20 +88,20 @@ password: "{{ lookup('env', 'SERVICE_PASSWORD') }}"
   - `trailing-whitespace`: Clean code
   - `yamllint`: YAML validation
   - `bandit`: Python security checks
-- **Run**: `task hooks`
+- **Run**: `uv run pre-commit run --all-files`
 
 #### Scanning Commands
 
 ```bash
 # Run all security scans
-task security
+mise run security
 
 # Individual scans
-task security:secrets  # Secret detection
-task security:kics     # Infrastructure security
+mise run security:secrets  # Secret detection
+mise run security:kics     # Infrastructure security
 
 # Pre-commit checks
-task hooks
+uv run pre-commit run --all-files
 ```
 
 ### GitIgnore Patterns
@@ -143,7 +142,7 @@ reports/**/*.log
 
 - **Format**: Markdown only
 - **Process**: Remove IPs, hostnames, tokens
-- **Naming**: *_sanitized.md or*_summary.md
+- **Naming**: _\_sanitized.md or_\_summary.md
 - **Storage**: Can be committed to git
 
 ### Incident Response
@@ -197,7 +196,7 @@ Daily:
 
 Weekly:
 
-- [ ] Run `task security`
+- [ ] Run `mise run security`
 - [ ] Review uncommitted files
 - [ ] Clean old reports: `find reports -mtime +30 -delete`
 
@@ -247,7 +246,7 @@ Monthly:
   uri:
     url: https://api.example.com
     headers:
-      Authorization: "Bearer sk_live_abc123xyz"  # ❌
+      Authorization: "Bearer sk_live_abc123xyz" # ❌
 ```
 
 ### Good: Sanitized Report
@@ -256,11 +255,13 @@ Monthly:
 # Infrastructure Assessment Summary
 
 ## Findings
+
 - Cluster has 3 servers in HA configuration
 - All health checks passing
 - Resource utilization: ~60% CPU, ~40% Memory
 
 ## Recommendations
+
 - Consider adding 4th node for capacity
 ```
 
@@ -271,7 +272,7 @@ Monthly:
 nodes:
   - hostname: nomad-server-1.internal
     ip: 192.168.11.20
-    consul_token: "abc-123-def-456"  # ❌
+    consul_token: "abc-123-def-456" # ❌
 ```
 
 ## Exceptions
@@ -284,7 +285,7 @@ nodes:
 
 ### To Secure Practices
 
-1. **Audit existing code**: `task security:secrets`
+1. **Audit existing code**: `mise run security:secrets`
 1. **Move secrets to Infisical**: Never store in code
 1. **Update .gitignore**: Block sensitive patterns
 1. **Enable pre-commit**: `uv run pre-commit install`
@@ -309,7 +310,7 @@ git log -p -S "password" --all
 
 ```bash
 # Find documentation TODOs
-task todos
+./scripts/find-todos.sh
 
 # Manual search
 rg "\[TODO\]:" docs/ --type md
@@ -319,13 +320,13 @@ rg "\[TODO\]:" docs/ --type md
 
 ```bash
 # Full security check
-task security
+mise run security
 
 # Quick secret scan
 ./scripts/scan-secrets.sh quick
 
 # Check before commit
-task hooks
+uv run pre-commit run --all-files
 ```
 
 ## References
