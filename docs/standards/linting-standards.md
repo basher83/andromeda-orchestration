@@ -20,7 +20,7 @@ All Ansible projects must use ansible-lint with a `.ansible-lint` configuration 
 
 ```yaml
 # Use profile based on project maturity
-profile: production  # For production-ready code
+profile: production # For production-ready code
 # profile: shared    # For code intended for Galaxy/Automation Hub
 # profile: safety    # For security-focused environments
 # profile: moderate  # For active development
@@ -65,7 +65,7 @@ var_naming_pattern: "^[a-z_][a-z0-9_]*$"
 
 warn_list:
   - experimental
-  - fqcn[action-core]  # Allow short names for ansible.builtin
+  - fqcn[action-core] # Allow short names for ansible.builtin
 
 enable_list:
   - args
@@ -76,7 +76,7 @@ enable_list:
   - yaml[empty-values]
 
 skip_list:
-  - galaxy[no-changelog]  # Only if not publishing to Galaxy
+  - galaxy[no-changelog] # Only if not publishing to Galaxy
 
 use_default_rules: true
 offline: false
@@ -146,7 +146,7 @@ rules:
     max-end: 1
 
   truthy:
-    allowed-values: ['true', 'false', 'yes', 'no']
+    allowed-values: ["true", "false", "yes", "no"]
 
   # Ansible-specific settings
   document-start: disable
@@ -212,11 +212,11 @@ All markdown documentation must pass markdownlint validation to ensure consisten
 
 ```yaml
 # Add to .pre-commit-config.yaml
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.39.0
-    hooks:
-      - id: markdownlint
-        args: [--fix]
+- repo: https://github.com/igorshubovych/markdownlint-cli
+  rev: v0.39.0
+  hooks:
+    - id: markdownlint
+      args: [--fix]
 ```
 
 ### Python Linting
@@ -335,7 +335,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
@@ -355,12 +355,12 @@ jobs:
 
       - name: Run mypy
         run: mypy plugins scripts
-        continue-on-error: true  # Warning only initially
+        continue-on-error: true # Warning only initially
 
       - name: Run markdownlint
         uses: DavidAnson/markdownlint-cli2-action@v15
         with:
-          globs: '**/*.md'
+          globs: "**/*.md"
 ```
 
 ### Why Specific Rules Are Enabled/Disabled
@@ -406,7 +406,7 @@ jobs:
 
    ```yaml
    # Inline for specific instances
-   - name: Complex shell operation  # noqa: command-instead-of-module
+   - name: Complex shell operation # noqa: command-instead-of-module
      ansible.builtin.shell: |
        complex_command | with_pipes
    ```
@@ -416,7 +416,7 @@ jobs:
    ```yaml
    # In .ansible-lint for project-wide exceptions
    skip_list:
-     - rule-id  # Document why this is skipped
+     - rule-id # Document why this is skipped
    ```
 
 ### When to Use Ignore Comments
@@ -451,10 +451,10 @@ roles/geerlingguy.mysql/* fqcn
 
 ```yaml
 exclude_paths:
-  - .cache/      # Ansible fact cache
-  - .venv/       # Python virtual environments
-  - archive/     # Old code for reference
-  - molecule/    # Test scenarios (lint separately)
+  - .cache/ # Ansible fact cache
+  - .venv/ # Python virtual environments
+  - archive/ # Old code for reference
+  - molecule/ # Test scenarios (lint separately)
 ```
 
 **Parallel Execution:**
@@ -521,7 +521,7 @@ Automated linting improves code quality by:
         dest: /etc/nginx/nginx.conf
         owner: root
         group: root
-        mode: '0644'
+        mode: "0644"
         validate: "nginx -t -c %s"
       changed_when: true
       notify: reload nginx
@@ -550,20 +550,20 @@ Automated linting improves code quality by:
 ```yaml
 # This playbook has multiple linting issues
 
-- hosts: all  # ERROR: missing 'name' for play
+- hosts: all # ERROR: missing 'name' for play
   tasks:
-  - shell: apt-get update  # ERROR: should use package module
+    - shell: apt-get update # ERROR: should use package module
 
-  - name: install_nginx  # WARNING: name[casing] - should use spaces
-    apt: name=nginx state=latest  # ERROR: 'latest' is non-deterministic
+    - name: install_nginx # WARNING: name[casing] - should use spaces
+      apt: name=nginx state=latest # ERROR: 'latest' is non-deterministic
 
-  - command: systemctl start nginx  # ERROR: should use systemd module
-    # ERROR: missing 'changed_when' condition
+    - command: systemctl start nginx # ERROR: should use systemd module
+      # ERROR: missing 'changed_when' condition
 
-  - name: Set permissions
-    file:
-      path: /var/www
-      mode: 755  # ERROR: should use '0755' (octal notation)
+    - name: Set permissions
+      file:
+        path: /var/www
+        mode: 755 # ERROR: should use '0755' (octal notation)
 ```
 
 ## Exceptions
@@ -593,6 +593,7 @@ Linting rules may be relaxed for:
    ```
 
 3. **Progressively Increase Strictness:**
+
    - Fix violations category by category
    - Move from basic → moderate → safety → shared → production
    - Remove entries from `.ansible-lint-ignore` as issues are resolved
@@ -637,10 +638,10 @@ ruff check --fix .
 mypy plugins scripts --show-error-codes
 
 # Markdown linting
-markdownlint "**/*.md" --fix
+markdownlint-cli2 "**/*.md" "#.venv" --fix
 
 # Check specific markdown file
-markdownlint docs/standards/documentation-standards.md
+markdownlint-cli2 docs/standards/documentation-standards.md
 ```
 
 ## References
