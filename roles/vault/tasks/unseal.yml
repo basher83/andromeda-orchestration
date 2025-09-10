@@ -17,11 +17,23 @@
   when: vault_auto_unseal_type == "awskms"
 
 - name: Install Azure CLI for Key Vault unseal
-  ansible.builtin.shell: |
-    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  ansible.builtin.get_url:
+    url: https://aka.ms/InstallAzureCLIDeb
+    dest: /tmp/install-azure-cli.sh
+    mode: '0755'
+  when:
+    - vault_auto_unseal_type == "azurekeyvault"
+    - ansible_os_family == "Debian"
+  register: azure_cli_script
+
+- name: Execute Azure CLI installation script
+  ansible.builtin.command: bash /tmp/install-azure-cli.sh
   args:
     creates: /usr/bin/az
-  when: vault_auto_unseal_type == "azurekeyvault"
+  when:
+    - vault_auto_unseal_type == "azurekeyvault"
+    - azure_cli_script is defined
+    - azure_cli_script.changed
 
 - name: Create auto-unseal test script
   ansible.builtin.copy:

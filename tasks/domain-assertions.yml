@@ -4,7 +4,7 @@
 #   pre_tasks:
 #     - include_tasks: ../../tasks/domain-assertions.yml
 
-- name: Assert homelab_domain does not use .local
+- name: domain-assertions | Assert homelab_domain does not use .local
   ansible.builtin.assert:
     that:
       - homelab_domain is defined
@@ -12,7 +12,7 @@
     fail_msg: "homelab_domain must not use .local (macOS mDNS conflict). Found: {{ homelab_domain }}"
     success_msg: "Domain validation passed: {{ homelab_domain }}"
 
-- name: Assert cluster_subdomain is defined
+- name: domain-assertions | Assert cluster_subdomain is defined
   ansible.builtin.assert:
     that:
       - cluster_subdomain is defined
