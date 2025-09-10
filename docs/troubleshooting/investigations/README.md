@@ -4,7 +4,7 @@ This directory contains active investigation documents for complex infrastructur
 
 ## Directory Structure
 
-```
+```text
 investigations/
 ├── README.md                    # This file
 ├── template.md                  # Investigation template
@@ -73,4 +73,4 @@ Resolved investigations are moved to the `archive/` subdirectory for historical 
 
 ---
 
-_Last Updated: 2025-01-09_
+Last Updated: 2025-01-09
