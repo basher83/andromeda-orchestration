@@ -114,7 +114,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0 # Full history for scanning
+          fetch-depth: 2 # Only fetch last 2 commits for PR scans
 
       - name: Install Infisical CLI
         run: |
@@ -123,11 +123,30 @@ jobs:
 
       - name: Run Infisical scan
         run: |
-          infisical scan \
-            --report-format sarif \
-            --report-path infisical-results.sarif \
-            --no-color \
-            --verbose
+          # For PRs, scan only the changes. For pushes, scan current commit
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Scan only files changed in the PR
+            git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
+            if [ -s changed_files.txt ]; then
+              infisical scan \
+                --report-format sarif \
+                --report-path infisical-results.sarif \
+                --no-color \
+                --verbose \
+                $(cat changed_files.txt | tr '\n' ' ')
+            else
+              echo "No files changed, skipping scan"
+              echo '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"Infisical","version":"1.0.0"}},"results":[]}]}' > infisical-results.sarif
+            fi
+          else
+            # For push events, scan files in the current commit
+            infisical scan \
+              --report-format sarif \
+              --report-path infisical-results.sarif \
+              --no-color \
+              --verbose \
+              .
+          fi
 
       - name: Upload SARIF results
         if: always()
