@@ -1,0 +1,32 @@
+# GitLeaks configuration file
+title = "Gitleaks Configuration for Andromeda Orchestration"
+
+[extend]
+# Use the default gitleaks configuration as base
+useDefault = true
+
+[[rules]]
+description = "Ignore example passwords in documentation"
+id = "example-passwords"
+regex = '''(?i)(password|secret|key)\s*[=:]\s*["']?(changeme|example|placeholder|your-password-here)["']?'''
+path = '''(?i)\.(md|rst|txt|example|template)$'''
+
+[[rules]]
+description = "Ignore passwords in comments"
+id = "comment-passwords" 
+regex = '''#.*(?i)(password|secret|key)\s*[=:]\s*["']?(changeme|example)["']?'''
+
+# Allowlist specific files with known false positives
+[[rules.allowlist]]
+description = "PostgreSQL job file with example passwords in comments"
+files = ['''nomad-jobs/platform-services/postgresql/postgresql\.nomad\.hcl''']
+regexTarget = "line"
+regexes = ['''#.*changeme''']
+
+[[rules.allowlist]]
+description = "Variable template files"
+files = ['''.*\.variables\.(example|template)\.hcl$''']
+
+[[rules.allowlist]]
+description = "Documentation files"
+files = ['''docs/.*\.md$''']

@@ -66,3 +66,6 @@ SARIF_REPORT_FILE: megalinter-reports/megalinter-report.sarif
 SKIP_CLI_LINT_ERRORS: false
 FLAVOR_SUGGESTIONS: false
 MEGALINTER_FILES_TO_LINT_CACHE_ENABLED: true
+
+# Security linter configurations
+REPOSITORY_GITLEAKS_CONFIG_FILE: .gitleaks.toml
