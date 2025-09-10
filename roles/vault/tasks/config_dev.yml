@@ -4,14 +4,14 @@
 
 # Dev mode doesn't need a config file - it uses command line flags
 
-- name: Set VAULT_ADDR environment variable for dev mode
+- name: config_dev | Set VAULT_ADDR environment variable for dev mode
   ansible.builtin.lineinfile:
     path: /etc/environment
     line: 'VAULT_ADDR=http://{{ ansible_default_ipv4.address }}:8200'
     create: true
     mode: '0644'
 
-- name: Create vault profile script for dev mode
+- name: config_dev | Create vault profile script for dev mode
   ansible.builtin.copy:
     content: |
       # Vault dev mode environment
@@ -29,7 +29,7 @@
     group: root
     mode: '0644'
 
-- name: Display dev mode information
+- name: config_dev | Display dev mode information
   ansible.builtin.debug:
     msg:
       - 'Vault is configured in DEVELOPMENT mode'
@@ -43,7 +43,7 @@
       - "  export VAULT_TOKEN='{{ vault_dev_root_token }}'"
       - '  vault status'
 
-- name: Register Vault service with Consul (if available)
+- name: config_dev | Register Vault service with Consul (if available)
   ansible.builtin.include_tasks: consul_register.yml
   when:
     - "'consul' in group_names or consul_agent_enabled | default(false)"

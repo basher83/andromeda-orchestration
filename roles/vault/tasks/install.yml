@@ -2,13 +2,13 @@
 # Install Vault
 # Based on HashiCorp official installation patterns
 
-- name: Create vault group
+- name: install | Create vault group
   ansible.builtin.group:
     name: '{{ vault_group }}'
     system: true
     state: present
 
-- name: Create vault user
+- name: install | Create vault user
   ansible.builtin.user:
     name: '{{ vault_user }}'
     group: '{{ vault_group }}'
@@ -17,7 +17,7 @@
     home: '{{ vault_base_dir }}'
     create_home: false
 
-- name: Create vault directories
+- name: install | Create vault directories
   ansible.builtin.file:
     path: '{{ item }}'
     state: directory
@@ -31,7 +31,7 @@
     - '{{ vault_log_dir }}'
     - '{{ vault_tls_dir }}'
 
-- name: Install required packages
+- name: install | Install required packages
   ansible.builtin.package:
     name:
       - unzip
@@ -39,27 +39,27 @@
       - curl
     state: present
 
-- name: Check if Vault is already installed
+- name: install | Check if Vault is already installed
   ansible.builtin.stat:
     path: /usr/local/bin/vault
   register: vault_binary
 
-- name: Get installed Vault version
+- name: install | Get installed Vault version
   ansible.builtin.command: vault version
-  register: installed_vault_version
+  register: vault_installed_version
   changed_when: false
   failed_when: false
   when: vault_binary.stat.exists
 
-- name: Parse installed version
+- name: install | Parse installed version
   ansible.builtin.set_fact:
-    installed_version: "{{ installed_vault_version.stdout | regex_search('v([0-9.]+)', '\\1') | first }}"
+    vault_installed_version_parsed: "{{ vault_installed_version.stdout | regex_search('v([0-9.]+)', '\\1') | first }}"
   when:
     - vault_binary.stat.exists
-    - installed_vault_version.rc == 0
-    - installed_vault_version.stdout != ""
+    - vault_installed_version.rc == 0
+    - vault_installed_version.stdout != ""
 
-- name: Download Vault binary
+- name: install | Download Vault binary
   ansible.builtin.unarchive:
     src: '{{ vault_download_url }}'
     dest: /tmp
@@ -69,9 +69,9 @@
     mode: '0755'
   when: >
     not vault_binary.stat.exists or
-    (installed_version is defined and installed_version != vault_version)
+    (vault_installed_version_parsed is defined and vault_installed_version_parsed != vault_version)
 
-- name: Install Vault binary
+- name: install | Install Vault binary
   ansible.builtin.copy:
     src: /tmp/vault
     dest: /usr/local/bin/vault
@@ -81,10 +81,10 @@
     remote_src: true
   when: >
     not vault_binary.stat.exists or
-    (installed_version is defined and installed_version != vault_version)
+    (vault_installed_version_parsed is defined and vault_installed_version_parsed != vault_version)
   notify: restart vault
 
-- name: Create Vault systemd service file
+- name: install | Create Vault systemd service file
   ansible.builtin.template:
     src: "{{ 'vault-dev.service.j2' if vault_mode == 'dev' else 'vault.service.j2' }}"
     dest: /etc/systemd/system/vault.service
@@ -95,14 +95,14 @@
     - reload systemd
     - restart vault
 
-- name: Set vault binary capabilities
+- name: install | Set vault binary capabilities
   community.general.capabilities:
     path: /usr/local/bin/vault
     capability: cap_ipc_lock+ep
     state: present
   when: not vault_disable_mlock | bool
 
-- name: Clean up temporary files
+- name: install | Clean up temporary files
   ansible.builtin.file:
     path: /tmp/vault
     state: absent

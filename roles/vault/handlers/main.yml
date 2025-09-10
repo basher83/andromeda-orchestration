@@ -1,24 +1,24 @@
 ---
 # Handlers for Vault role
 
-- name: reload systemd
+- name: main | reload systemd
   ansible.builtin.systemd:
     daemon_reload: true
 
-- name: restart vault
+- name: main | restart vault
   ansible.builtin.systemd:
     name: '{{ vault_service_name }}'
     state: restarted
     daemon_reload: true
   when: vault_service_state == "started"
 
-- name: reload vault
+- name: main | reload vault
   ansible.builtin.systemd:
     name: '{{ vault_service_name }}'
     state: reloaded
   when: vault_service_state == "started"
 
-- name: unseal vault
+- name: main | unseal vault
   ansible.builtin.shell: |
     set -o pipefail
     if vault status 2>/dev/null | grep -q "Sealed.*true"; then
