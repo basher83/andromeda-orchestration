@@ -49,7 +49,10 @@
       "mcp__github__list_commits",
       "Bash(mise run lint:markdown:*)",
       "mcp__github__get_issue_comments",
-      "Bash(mise run lint:ansible:*)"
+      "Bash(mise run lint:ansible:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(rm:*)"
     ]
   },
   "statusLine": {

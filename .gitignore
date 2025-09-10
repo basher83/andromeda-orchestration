@@ -132,3 +132,4 @@ reports/nomad/*.json
 .mcp.json
 # Act local testing
 .env.act
+.mcp.backup.json
