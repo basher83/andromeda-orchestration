@@ -52,7 +52,9 @@
       "Bash(mise run lint:ansible:*)",
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(gh pr checkout:*)",
+      "Bash(yamllint:*)"
     ]
   },
   "statusLine": {
