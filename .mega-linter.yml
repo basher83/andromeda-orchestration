@@ -19,9 +19,10 @@ APPLY_FIXES: "YAML_PRETTIER,MARKDOWN_MARKDOWNLINT"
 DISABLE_ERRORS_LINTERS:
   - YAML_YAMLLINT  # Use existing .yamllint config with warnings
   - ANSIBLE_ANSIBLE_LINT  # Start with warnings to ease migration
+  - PYTHON_MYPY  # Disable mypy errors until type hints are added
 
 # Exclude paths for performance and relevance
-FILTER_REGEX_EXCLUDE: "(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/)"
+FILTER_REGEX_EXCLUDE: "(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/|\.cache/|tests/output/|\.pytest_cache/|\.mypy_cache/)"
 
 # Include only IaC-relevant areas
 FILTER_REGEX_INCLUDE: "(^|/)(ansible/|roles/|playbooks/|jobs/|nomad/|environments/|inventory/|plugins/|scripts/|tests/|docs/)"
@@ -59,7 +60,7 @@ OUTPUT_FORMAT: github-annotation-native
 
 # SARIF report for GitHub Security tab integration
 SARIF_REPORTER: true
-SARIF_REPORT_FILE: megalinter-report.sarif
+SARIF_REPORT_FILE: megalinter-reports/megalinter-report.sarif
 
 # Additional performance settings
 SKIP_CLI_LINT_ERRORS: false

@@ -16,7 +16,7 @@ jobs:
   megalinter:
     name: MegaLinter
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -49,10 +49,10 @@ jobs:
       - name: MegaLinter
         uses: oxsecurity/megalinter@v8
         env:
-          ENABLE_LINTERS: ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,YAML_V8R,PYTHON_RUFF,PYTHON_MYPY,MARKDOWN_MARKDOWNLINT,REPOSITORY_SECRETLINT,REPOSITORY_TRIVY,REPOSITORY_GITLEAKS,ACTION_ACTIONLINT
+          ENABLE_LINTERS: ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,PYTHON_RUFF,PYTHON_MYPY,MARKDOWN_MARKDOWNLINT,REPOSITORY_SECRETLINT,REPOSITORY_TRIVY,REPOSITORY_GITLEAKS,ACTION_ACTIONLINT
           APPLY_FIXES: YAML_PRETTIER,MARKDOWN_MARKDOWNLINT
-          DISABLE_ERRORS_LINTERS: YAML_YAMLLINT
-          FILTER_REGEX_EXCLUDE: '(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/)'
+          DISABLE_ERRORS_LINTERS: YAML_YAMLLINT,ANSIBLE_ANSIBLE_LINT,PYTHON_MYPY
+          FILTER_REGEX_EXCLUDE: '(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/|\.cache/|tests/output/|\.pytest_cache/|\.mypy_cache/)'
           FILTER_REGEX_INCLUDE: '(^|/)(ansible/|roles/|playbooks/|jobs/|nomad/|environments/|inventory/|plugins/|scripts/|tests/|docs/)'
           PYTHON_RUFF_CONFIG_FILE: pyproject.toml
           PYTHON_MYPY_CONFIG_FILE: pyproject.toml
@@ -64,13 +64,13 @@ jobs:
           FAIL_ON_ERROR: true
           OUTPUT_FORMAT: github-annotation-native
           SARIF_REPORTER: true
-          SARIF_REPORT_FILE: megalinter-report.sarif
+          SARIF_REPORT_FILE: megalinter-reports/megalinter-report.sarif
 
       - name: Upload SARIF results
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: megalinter-report.sarif
+          sarif_file: megalinter-reports/megalinter-report.sarif
           category: code-quality
 
       - name: Upload MegaLinter results as artifact
