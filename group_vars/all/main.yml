@@ -19,7 +19,7 @@ nomad_port: 4646
 vault_port: 8200
 
 # Common tags and metadata
-environment: "development"
+deployment_environment: "development"  # Note: 'environment' is reserved in Ansible
 managed_by: "ansible"
 
 # Timeouts and retries

@@ -78,7 +78,7 @@
 
   consul {
     address = "172.31.28.218:8500"
-    token   = "example-placeholder-token"
+    token   = "YOUR_CONSUL_TOKEN_HERE"  # Replace with actual token
 
     service_identity {
       aud = ["consul.io"]
@@ -113,7 +113,7 @@
 2. **Base64 Encode the Key**:
 
    ```bash
-   base64 -w 0 jwt_signing.key > jwt_signing_key_encoded.txt
+   base64 -w 0 jwt_signing.key > jwt_key_output.b64
    ```
 
 3. **Configure Nomad Server**:
