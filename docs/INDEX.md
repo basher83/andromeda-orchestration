@@ -89,6 +89,7 @@ Operational guides for deployed services: Netdata monitoring architecture, troub
 
 **Key Documents:**
 
+- [infrastructure-state.md](operations/infrastructure-state.md) - Current infrastructure deployment state
 - [netdata-architecture.md](operations/netdata-architecture.md) - Netdata monitoring architecture
 - [smoke-testing-procedures.md](operations/smoke-testing-procedures.md) - Operational testing procedures
 - [deployment-log.md](operations/deployment-log.md) - Deployment history and procedures

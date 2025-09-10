@@ -6,6 +6,7 @@ This directory contains operational guides, runbooks, and procedures for managin
 
 ### Core Operations Guides
 
+- **[infrastructure-state.md](infrastructure-state.md)** - Current infrastructure deployment state and service configurations
 - **[ansible-inventory.md](ansible-inventory.md)** - Ansible inventory structure, management, and best practices
 - **[dns-deployment-status.md](dns-deployment-status.md)** - Current status and tracking of DNS infrastructure deployment
 - **[firewall-port-strategy.md](firewall-port-strategy.md)** - Port allocation and firewall configuration strategies
