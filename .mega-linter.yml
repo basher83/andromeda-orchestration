@@ -8,8 +8,11 @@ ENABLE_LINTERS:
   - YAML_YAMLLINT
   - YAML_PRETTIER
   - PYTHON_RUFF
+  - PYTHON_MYPY
   - MARKDOWN_MARKDOWNLINT
   - REPOSITORY_SECRETLINT
+  - REPOSITORY_TRIVY
+  - REPOSITORY_GITLEAKS
   - ACTION_ACTIONLINT
 
 # Apply fixes for safe formatters
@@ -22,10 +25,10 @@ DISABLE_ERRORS_LINTERS:
   - PYTHON_MYPY  # Disable mypy errors until type hints are added
 
 # Exclude paths for performance and relevance
-FILTER_REGEX_EXCLUDE: "(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/|\.cache/|tests/output/|\.pytest_cache/|\.mypy_cache/)"
+FILTER_REGEX_EXCLUDE: '(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/|\.cache/|tests/output/|\.pytest_cache/|\.mypy_cache/)'
 
 # Include only IaC-relevant areas
-FILTER_REGEX_INCLUDE: "(^|/)(ansible/|roles/|playbooks/|jobs/|nomad/|environments/|inventory/|plugins/|scripts/|tests/|docs/)"
+FILTER_REGEX_INCLUDE: '(^|/)(ansible/|roles/|playbooks/|jobs/|nomad/|environments/|inventory/|plugins/|scripts/|tests/|docs/)'
 
 # Python-specific configuration
 PYTHON_RUFF_CONFIG_FILE: pyproject.toml
