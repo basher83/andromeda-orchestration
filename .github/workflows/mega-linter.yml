@@ -9,7 +9,6 @@ on:
   # Comment this line to trigger action only on pull-requests
   # (not recommended if you don't pay for GH Actions)
   push:
-
   pull_request:
     branches:
       - main
@@ -54,15 +53,8 @@ jobs:
         with:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
 
-          # If you use VALIDATE_ALL_CODEBASE = true, you can remove this line to
-          # improve performance
-          # fetch-depth: 0
-
       # MegaLinter
       - name: MegaLinter
-
-        # You can override MegaLinter flavor used to have faster performances
-        # More info at https://megalinter.io/latest/flavors/
         uses: oxsecurity/megalinter/flavors/cupcake@beta
 
         id: ml
@@ -83,18 +75,7 @@ jobs:
           #     github.ref == 'refs/heads/main'
           #   }}
           VALIDATE_ALL_CODEBASE: true
-
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # Uncomment to use ApiReporter (Grafana)
-          # API_REPORTER: true
-          # API_REPORTER_URL: ${{ secrets.API_REPORTER_URL }}
-          # API_REPORTER_BASIC_AUTH_USERNAME: ${{ secrets.API_REPORTER_BASIC_AUTH_USERNAME }}
-          # API_REPORTER_BASIC_AUTH_PASSWORD: ${{ secrets.API_REPORTER_BASIC_AUTH_PASSWORD }}
-          # API_REPORTER_METRICS_URL: ${{ secrets.API_REPORTER_METRICS_URL }}
-          # API_REPORTER_METRICS_BASIC_AUTH_USERNAME: ${{ secrets.API_REPORTER_METRICS_BASIC_AUTH_USERNAME }}
-          # API_REPORTER_METRICS_BASIC_AUTH_PASSWORD: ${{ secrets.API_REPORTER_METRICS_BASIC_AUTH_PASSWORD }}
-          # API_REPORTER_DEBUG: false
 
           # ADD YOUR CUSTOM ENV VARIABLES HERE TO OVERRIDE VALUES OF
           # .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
@@ -115,7 +96,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
             sarif_file: 'megalinter-reports/megalinter-report.sarif'
-        continue-on-error: true  # Workflow continues even if file doesn't exist
+        continue-on-error: true
 
       # Create pull request if applicable
       # (for now works only on PR from same repository, not from forks)
