@@ -107,65 +107,8 @@ jobs:
       - name: Run localhost test playbook
         run: uv run ansible-playbook -i inventory/localhost.yml tests/test_localhost.yml
 
-  secret-scan:
-    name: Secret Scanning (Infisical)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 2 # Only fetch last 2 commits for PR scans
-
-      - name: Install Infisical CLI
-        run: |
-          curl -fsSL 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
-          git fetch --depth=1 origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
-          git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
-          sudo apt-get update && sudo apt-get install -y infisical
-
-      - name: Run Infisical scan
-        run: |
-          # For PRs, scan only the changes. For pushes, scan current commit
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            # Scan only files changed in the PR
-            git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
-            if [ -s changed_files.txt ]; then
-              infisical scan \
-                --report-format sarif \
-                --report-path infisical-results.sarif \
-                --no-color \
-                --verbose \
-                $(cat changed_files.txt | tr '\n' ' ')
-            else
-              echo "No files changed, skipping scan"
-              echo '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"Infisical","version":"1.0.0"}},"results":[]}]}' > infisical-results.sarif
-            fi
-          else
-            # For push events, scan files in the current commit
-            infisical scan \
-              --report-format sarif \
-              --report-path infisical-results.sarif \
-              --no-color \
-              --verbose \
-              .
-          fi
-
-      - name: Upload SARIF results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: infisical-results.sarif
-          category: secret-scanning
-
-      - name: Upload scan results as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: infisical-scan-results
-          path: infisical-results.sarif
-          retention-days: 30
-
-  # Nomad jobs are now handled by the mega-linter.yml workflow for better integration
+  # Secret scanning is handled by MegaLinter (Gitleaks, Secretlint) and Trivy
+  # Removed redundant Infisical scanner to avoid false positives from historical commits
 
   kics-scan:
     name: Infrastructure Security (KICS)
@@ -204,7 +147,7 @@ jobs:
     name: Test Summary
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
-    needs: [lint-and-quality, secret-scan, kics-scan]
+    needs: [lint-and-quality, kics-scan]
     steps:
       - name: Summary
         run: |
