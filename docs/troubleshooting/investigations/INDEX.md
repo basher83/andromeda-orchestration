@@ -7,22 +7,22 @@ Track all investigation status and progress here.
 ### Current Active
 
 | Investigation | Status | Priority | Started | Updated | Description |
-|--------------|--------|----------|---------|---------|-------------|
-| [PostgreSQL Service Registration](2025-09-09-postgresql-service-registration.md) | ✅ RESOLVED | 🟡 HIGH | 2025-09-09 | 2025-09-09 | Service identity regression investigation |
+| ------------- | ------ | -------- | ------- | ------- | ----------- |
+|               |        |          |         |         |             |
 
 ### Recently Resolved
 
-| Investigation | Status | Priority | Resolved | Description |
-|--------------|--------|----------|----------|-------------|
-| [PostgreSQL Service Registration](2025-09-09-postgresql-service-registration.md) | ✅ RESOLVED | 🟡 HIGH | 2025-09-09 | Fixed duplicate service blocks and ACL authentication |
+| Investigation                                                                    | Status      | Priority | Resolved   | Description                                           |
+| -------------------------------------------------------------------------------- | ----------- | -------- | ---------- | ----------------------------------------------------- |
+| [PostgreSQL Service Registration](2025-09-09-postgresql-service-registration.md) | ✅ RESOLVED | 🟡 HIGH  | 2025-09-09 | Fixed duplicate service blocks and ACL authentication |
 
 ### Archived
 
 Investigations older than 30 days that have been resolved and documented
 
 | Investigation | Status | Archived | Permanent Doc |
-|--------------|--------|----------|---------------|
-| _None yet_ | - | - | - |
+| ------------- | ------ | -------- | ------------- |
+| _None yet_    | -      | -        | -             |
 
 ## Status Legend
 

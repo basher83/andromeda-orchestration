@@ -29,7 +29,7 @@ vim docs/troubleshooting/investigations/$(date +%Y-%m-%d)-new-issue.md
 
 ```bash
 # Update the investigations INDEX
-`docs/troubleshooting/investigations/INDEX.md`
+vim docs/troubleshooting/investigations/INDEX.md
 # Add your investigation to the "Current Active Investigations" section
 ```
 
@@ -203,4 +203,4 @@ git commit -m "docs: Add investigation for issue-name"
 
 ---
 
-Workflow Version: 1.0 | Last Updated: 2025-01-09
+Workflow Version: 1.0 | Last Updated: 2025-09-10 | Status source: investigations/INDEX.md

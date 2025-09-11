@@ -73,4 +73,6 @@ Resolved investigations are moved to the `archive/` subdirectory for historical 
 
 ---
 
-Last Updated: 2025-01-09
+Last Updated: 2025-09-10
+
+## Source of truth for statuses: investigations/INDEX.md
