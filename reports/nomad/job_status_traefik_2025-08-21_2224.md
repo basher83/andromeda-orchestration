@@ -1,6 +1,7 @@
 # Nomad Job Status Report
+
 Generated: 2025-08-22T02:24:58Z
-Nomad Endpoint: http://192.168.11.11:4646
+Nomad Endpoint: <http://192.168.11.11:4646>
 Namespace: default
 
 ## Job: traefik
@@ -13,6 +14,7 @@ Namespace: default
 - **Last Modified**: Unknown
 
 ### Full Job Details
+
 ```yaml
 Affinities: null
 AllAtOnce: false

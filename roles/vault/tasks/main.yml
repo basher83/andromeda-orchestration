@@ -2,7 +2,7 @@
 # Main tasks for Vault role
 # Orchestrates installation and configuration based on mode
 
-- name: Include OS-specific variables
+- name: main | Include OS-specific variables
   ansible.builtin.include_vars: '{{ item }}'
   with_first_found:
     - files:
@@ -12,26 +12,26 @@
         - ../vars
       skip: true
 
-- name: Install Vault
+- name: main | Install Vault
   ansible.builtin.include_tasks: install.yml
   tags:
     - vault-install
 
-- name: Configure Vault for dev mode
+- name: main | Configure Vault for dev mode
   ansible.builtin.include_tasks: config_dev.yml
   when: vault_mode == "dev"
   tags:
     - vault-config
     - vault-dev
 
-- name: Configure Vault for production mode
+- name: main | Configure Vault for production mode
   ansible.builtin.include_tasks: config_prod.yml
   when: vault_mode == "production"
   tags:
     - vault-config
     - vault-prod
 
-- name: Configure auto-unseal
+- name: main | Configure auto-unseal
   ansible.builtin.include_tasks: unseal.yml
   when:
     - vault_mode == "production"
@@ -39,13 +39,13 @@
   tags:
     - vault-unseal
 
-- name: Configure Nomad integration
+- name: main | Configure Nomad integration
   ansible.builtin.include_tasks: nomad_integration.yml
   when: vault_nomad_integration_enabled | bool
   tags:
     - vault-nomad
 
-- name: Start and enable Vault service
+- name: main | Start and enable Vault service
   ansible.builtin.systemd:
     name: '{{ vault_service_name }}'
     state: '{{ vault_service_state }}'

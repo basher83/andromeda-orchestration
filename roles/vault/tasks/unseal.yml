@@ -2,7 +2,7 @@
 # Configure auto-unseal for Vault
 # Supports multiple unseal providers
 
-- name: Validate auto-unseal configuration
+- name: unseal | Validate auto-unseal configuration
   ansible.builtin.assert:
     that:
       - vault_auto_unseal_type in ['transit', 'awskms', 'azurekeyvault', 'gcpckms']
@@ -10,20 +10,32 @@
       - vault_auto_unseal_config | length > 0
     fail_msg: 'Auto-unseal requires valid type and configuration'
 
-- name: Install AWS CLI for KMS unseal
+- name: unseal | Install AWS CLI for KMS unseal
   ansible.builtin.package:
     name: awscli
     state: present
   when: vault_auto_unseal_type == "awskms"
 
-- name: Install Azure CLI for Key Vault unseal
-  ansible.builtin.shell: |
-    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+- name: unseal | Install Azure CLI for Key Vault unseal
+  ansible.builtin.get_url:
+    url: https://aka.ms/InstallAzureCLIDeb
+    dest: /tmp/install-azure-cli.sh
+    mode: '0755'
+  when:
+    - vault_auto_unseal_type == "azurekeyvault"
+    - ansible_os_family == "Debian"
+  register: vault_azure_cli_script
+
+- name: unseal | Execute Azure CLI installation script
+  ansible.builtin.command: bash /tmp/install-azure-cli.sh
   args:
     creates: /usr/bin/az
-  when: vault_auto_unseal_type == "azurekeyvault"
+  when:
+    - vault_auto_unseal_type == "azurekeyvault"
+    - vault_azure_cli_script is defined
+    - vault_azure_cli_script.changed
 
-- name: Create auto-unseal test script
+- name: unseal | Create auto-unseal test script
   ansible.builtin.copy:
     content: |
       #!/bin/bash
@@ -52,7 +64,7 @@
     group: root
     mode: '0755'
 
-- name: Display auto-unseal configuration
+- name: unseal | Display auto-unseal configuration
   ansible.builtin.debug:
     msg:
       - 'Auto-unseal configured with {{ vault_auto_unseal_type }}'

@@ -52,7 +52,7 @@ git check-ignore reports/**/*.yml reports/**/*.json reports/**/*.txt
 
 ❌ **NEVER commit:**
 
-- Raw reports (*.yml,*.yaml, *.json,*.txt)
+- Raw reports (_.yml,_.yaml, _.json,_.txt)
 - Any file containing infrastructure details or credentials
 
 ### 3. Report Sanitization Process

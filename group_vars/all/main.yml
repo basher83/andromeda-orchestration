@@ -1,0 +1,28 @@
+---
+# Default variables for all groups
+# These are primarily used for CI/CD testing and can be overridden per environment
+
+# Domain configuration (required for domain-assertions.yml)
+homelab_domain: "example.com"  # Override with actual domain in inventory
+cluster_subdomain: "homelab"   # Override with actual subdomain in inventory
+fqdn_suffix: "{{ cluster_subdomain }}.{{ homelab_domain }}"  # Composite FQDN for centralized domain usage
+
+# Common infrastructure settings
+ansible_python_interpreter: /usr/bin/python3
+
+# Default network settings
+default_interface: "{{ ansible_default_ipv4.interface | default('eth0') }}"
+default_ipv4: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+
+# Service ports (common across clusters)
+consul_port: 8500
+nomad_port: 4646
+vault_port: 8200
+
+# Common tags and metadata
+deployment_environment: "development"  # Note: 'environment' is reserved in Ansible
+managed_by: "ansible"
+
+# Timeouts and retries
+default_timeout: 30
+default_retries: 3

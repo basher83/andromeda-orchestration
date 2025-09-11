@@ -1,3 +1,4 @@
+ARG MOLECULE_IMAGE=ubuntu:22.04
 FROM ${MOLECULE_IMAGE}
 
 RUN apt-get update && \

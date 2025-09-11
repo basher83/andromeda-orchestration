@@ -80,9 +80,9 @@ reviews:
       enabled: true
       timeout_ms: 300000  # Increased timeout for complex Ansible/infrastructure pipelines
 
-    # Secret detection
+    # Secret detection already covered by multiple tools; disable redundant ones
     gitleaks:
-      enabled: true
+      enabled: false
 
     # Enhanced security scanning - Infrastructure focused
     semgrep:

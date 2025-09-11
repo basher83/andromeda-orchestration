@@ -31,11 +31,14 @@
 
     - name: Update Docker daemon config with Consul DNS
       ansible.builtin.set_fact:
-        docker_config_updated: "{{ docker_config | combine({
-          'dns': [ansible_default_ipv4.address],
-          'dns-search': ['service.consul', 'node.consul'],
-          'dns-opts': ['ndots:0']
-        }) }}"
+        docker_config_updated: >-
+          {{
+            docker_config | combine({
+              'dns': [ansible_default_ipv4.address],
+              'dns-search': ['service.consul', 'node.consul'],
+              'dns-opts': ['ndots:0']
+            })
+          }}
 
     - name: Write updated Docker daemon configuration
       ansible.builtin.copy:

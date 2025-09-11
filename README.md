@@ -63,20 +63,20 @@ This project provides a framework for managing network infrastructure using Ansi
 
 3. **Configure secrets and authentication**
 
+## SECURITY: Never commit .mise.local.toml; it is gitignored and must stay local
+
 ```bash
- # Copy the template and add your secrets
- cp .mise.local.toml.example .mise.local.toml
-```
+# Copy the template and add your secrets
+cp .mise.local.toml.example .mise.local.toml
 
 # Edit with your actual tokens and credentials
-
 # The file is gitignored and won't be committed
-
 $EDITOR .mise.local.toml
 
 # Mise will automatically load these environment variables
+```
 
-4. **Test the setup**
+1. **Test the setup**
 
    ```bash
    uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list

@@ -95,7 +95,7 @@ infisical-scan-results.sarif
 kics-results/
 
 # MegaLinter reports and artifacts (auto-generated)
-megalinter-reports/
+megalinter-reports/*
 megalinter-report.sarif
 
 # System reports - contain sensitive infrastructure data
