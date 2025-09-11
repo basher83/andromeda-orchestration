@@ -1,74 +1,24 @@
-# MegaLinter Configuration for Andromeda IaC Repository
-# Based on megalinter-standards.md
-# https://megalinter.io/8/configuration/
+# Configuration file for MegaLinter
+#
+# See all available variables at https://megalinter.io/latest/config-file/ and in
+# linters documentation
 
-# Enable only linters relevant to Ansible + YAML + Nomad + Python + Markdown
-ENABLE_LINTERS:
-  - ANSIBLE_ANSIBLE_LINT
-  - YAML_YAMLLINT
-  - YAML_PRETTIER
-  - PYTHON_RUFF
-  - PYTHON_MYPY
-  - MARKDOWN_MARKDOWNLINT
-  - REPOSITORY_GITLEAKS  # Single secret scanner - fast and reliable
-  - ACTION_ACTIONLINT
+# all, none, or list of linter keys
+APPLY_FIXES: all
 
-# Apply fixes for safe formatters
-APPLY_FIXES: "YAML_PRETTIER,MARKDOWN_MARKDOWNLINT"
+# If you use ENABLE variable, all other languages/formats/tooling-formats will
+# be disabled by default
+# ENABLE:
 
-# Configure linter-specific settings to match existing configurations
-DISABLE_ERRORS_LINTERS:
-  - YAML_YAMLLINT  # Use existing .yamllint config with warnings
-  - ANSIBLE_ANSIBLE_LINT  # Start with warnings to ease migration
-  - PYTHON_MYPY  # Disable mypy errors until type hints are added
+# If you use ENABLE_LINTERS variable, all other linters will be disabled by
+# default
+# ENABLE_LINTERS:
 
-# Exclude paths for performance and relevance
-FILTER_REGEX_EXCLUDE: '(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/|\.cache/|tests/output/|\.pytest_cache/|\.mypy_cache/)'
+DISABLE:
+  - COPYPASTE # Comment to enable checks of excessive copy-pastes
+  # - SPELL # Uncomment to disable checks of spelling mistakes
 
-# Include only IaC-relevant areas
-FILTER_REGEX_INCLUDE: '(^|/)(ansible/|roles/|playbooks/|jobs/|nomad/|environments/|inventory/|plugins/|scripts/|tests/|docs/|\.claude/)'
-# Python-specific configuration
-PYTHON_RUFF_CONFIG_FILE: pyproject.toml
-PYTHON_MYPY_CONFIG_FILE: pyproject.toml
-
-# YAML configuration file (organized in linters directory)
-YAML_YAMLLINT_CONFIG_FILE: .github/linters/.yamllint
-
-# Ansible configuration file (organized in linters directory)
-ANSIBLE_ANSIBLE_LINT_CONFIG_FILE: .github/linters/.ansible-lint
-
-# Markdown configuration files (organized in linters directory)
-MARKDOWN_MARKDOWNLINT_CONFIG_FILE: .github/linters/.markdownlint.json
-
-# ActionLint configuration
-ACTION_ACTIONLINT_CONFIG_FILE: .github/actionlint.yml
-
-# Parallel processing for better performance
-PARALLEL: true
-PARALLEL_PROCESS_COUNT: 4
-
-# Performance optimizations
-LOG_LEVEL: INFO
-PRINT_ALL_FILES: false
 SHOW_ELAPSED_TIME: true
 
-# Fail on error mode
-FAIL_ON_ERROR: true
-
-# Custom output format
-OUTPUT_FORMAT: github-annotation-native
-
-# SARIF report for GitHub Security tab integration
-SARIF_REPORTER: true
-SARIF_REPORT_FILE: megalinter-reports/megalinter-report.sarif
-
-# Additional performance settings
-SKIP_CLI_LINT_ERRORS: false
-FLAVOR_SUGGESTIONS: false
-MEGALINTER_FILES_TO_LINT_CACHE_ENABLED: true
-
-# Security linter configurations
-REPOSITORY_GITLEAKS_CONFIG_FILE: .gitleaks.toml
-
-# Disable LLM features to avoid API key issues in CI
-LLM_ADVISOR_ENABLED: "false"
+# Uncomment if you want MegaLinter to detect errors but not block CI to pass
+# DISABLE_ERRORS: true
