@@ -1,0 +1,14 @@
+# ActionLint Configuration
+# https://github.com/rhysd/actionlint/blob/main/docs/config.md
+
+# Skip checking for self-hosted runners (we use GitHub-hosted)
+skip-checks:
+  - self-hosted-runner
+
+# Allow pyrightconfig.json for Python projects
+pyright:
+  config: pyproject.toml
+
+# Allow shellcheck for shell scripts
+shellcheck:
+  config: .shellcheckrc
