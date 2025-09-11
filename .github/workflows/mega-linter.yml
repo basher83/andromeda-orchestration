@@ -110,6 +110,12 @@ jobs:
             megalinter-reports
             mega-linter.log
 
+      - name: Upload MegaLinter scan results to GitHub Security tab
+        if: success() || failure()
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+            sarif_file: 'megalinter-reports/megalinter-report.sarif'
+
       # Create pull request if applicable
       # (for now works only on PR from same repository, not from forks)
       - name: Create Pull Request with applied fixes
