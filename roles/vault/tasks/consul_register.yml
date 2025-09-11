@@ -32,7 +32,9 @@
       EnableTagOverride: false
       Check:
         Name: 'Vault Health'
-        HTTP: "{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health"
+        HTTP: >-
+          {{ 'https' if not vault_tls_disable else 'http' }}://
+          {{- ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health
         Interval: '10s'
         Timeout: '5s'
         TLSSkipVerify: '{{ vault_tls_disable | bool }}'
@@ -70,5 +72,7 @@
     msg:
       - 'Vault registered with Consul'
       - 'Service name: vault.service.consul'
-      - "Health check: {{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health"
+      - >-
+        Health check: {{ 'https' if not vault_tls_disable else 'http' }}://
+        {{- ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health
   when: vault_consul_available | default(false)

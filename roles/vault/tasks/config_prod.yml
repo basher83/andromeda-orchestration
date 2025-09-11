@@ -43,7 +43,9 @@
 
     - name: config_prod | Fail if TLS enabled but certificates missing
       ansible.builtin.fail:
-        msg: 'TLS is enabled but certificate files are missing. Please provide certificates or set vault_tls_disable to true.'
+        msg: >-
+          TLS is enabled but certificate files are missing.
+          Please provide certificates or set vault_tls_disable to true.
       when: vault_tls_files.results | selectattr('stat.exists', 'equalto', false) | list | length > 0
 
   rescue:
@@ -58,7 +60,9 @@
           • Private Key: {{ vault_tls_key_file }}
           • CA Certificate: {{ vault_tls_ca_file | default('Not configured') }}
 
-          Status: {{ vault_tls_files.results | selectattr('stat.exists', 'equalto', false) | map(attribute='item') | list | join(', ') }} - MISSING
+          Status: >-
+            {{ vault_tls_files.results | selectattr('stat.exists', 'equalto', false)
+            | map(attribute='item') | list | join(', ') }} - MISSING
 
           ACTION TAKEN:
           • TLS has been automatically disabled for this deployment
@@ -95,7 +99,9 @@
   ansible.builtin.lineinfile:
     path: /etc/environment
     regexp: '^VAULT_ADDR='
-    line: "VAULT_ADDR={{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}"
+    line: >-
+      VAULT_ADDR={{ 'https' if not vault_tls_disable else 'http' }}://
+      {{- ansible_default_ipv4.address }}:{{ vault_port }}
     create: true
     mode: '0644'
 
@@ -103,7 +109,7 @@
   ansible.builtin.copy:
     content: |
       # Vault production environment
-      export VAULT_ADDR="{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}"
+      export VAULT_ADDR="{{ vault_addr_url }}"
       {% if not vault_tls_disable %}
       export VAULT_CACERT="{{ vault_tls_ca_file }}"
       {% endif %}
@@ -117,6 +123,10 @@
     dest: /etc/profile.d/vault.sh
     owner: root
     group: root
+    mode: '0644'
+  vars:
+    vault_addr_url: >-
+      {{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}
     mode: '0644'
 
 - name: config_prod | Create Vault policy files

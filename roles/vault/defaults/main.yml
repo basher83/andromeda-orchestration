@@ -5,7 +5,8 @@
 # Installation settings
 vault_version: '1.20.1'
 vault_architecture: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
-vault_download_url: 'https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_{{ vault_architecture }}.zip'
+vault_download_url: >-
+  https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_{{ vault_architecture }}.zip
 vault_checksum_url: 'https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_SHA256SUMS'
 
 # User and group
