@@ -63,7 +63,7 @@ jobs:
 
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/latest/flavors/
-        uses: oxsecurity/megalinter@beta
+        uses: oxsecurity/megalinter/flavors/cupcake@beta
 
         id: ml
 
@@ -115,6 +115,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
             sarif_file: 'megalinter-reports/megalinter-report.sarif'
+        continue-on-error: true  # Workflow continues even if file doesn't exist
 
       # Create pull request if applicable
       # (for now works only on PR from same repository, not from forks)
