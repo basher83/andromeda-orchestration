@@ -1,54 +1,54 @@
+# MegaLinter GitHub Action configuration file
+# More info at https://megalinter.io
 name: MegaLinter
 
-'on':
-  workflow_dispatch:
-  push:
-    branches: [main, develop]
+on:
+  # Trigger mega-linter at every push. Action will also be visible from Pull Requests to main
+  push: # Comment this line to trigger action only on pull-requests (not recommended if you don't pay for GH Actions)
   pull_request:
     branches: [main]
 
+env: # Comment env block if you don't want to apply fixes
+  # Apply linter fixes configuration
+  APPLY_FIXES: all # When active, APPLY_FIXES must also be defined as environment variable (in github/workflows/mega-linter.yml or other CI tool)
+  APPLY_FIXES_EVENT: pull_request # Decide which event triggers application of fixes in a commit or a PR (pull_request, push, all)
+  APPLY_FIXES_MODE: commit # If APPLY_FIXES is used, defines if the fixes are directly committed (commit) or posted in a PR (pull_request)
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 permissions:
-  contents: read
-  actions: read
-  security-events: write
+  # Give the default GITHUB_TOKEN write permission to commit and push, comment issues & post new PR
+  # Remove the ones you do not need
+  contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
   megalinter:
     name: MegaLinter
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     steps:
-      - name: Checkout repository
+      # Git Checkout
+      - name: Checkout Code
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0 # Full history for git-related linters
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # If you use VALIDATE_ALL_CODEBASE = true, you can remove this line to improve performances
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v6
-
-      - name: Sync project dependencies
-        run: |
-          uv sync --extra dev
-          uv run python -V
-
-      - name: Cache Ansible Galaxy collections
-        uses: actions/cache@v4
-        with:
-          path: ~/.ansible/collections
-          key: ansible-galaxy-${{ runner.os }}-${{ hashFiles('requirements.yml') }}
-          restore-keys: ansible-galaxy-${{ runner.os }}-
-
-      - name: Install Ansible Galaxy collections
-        run: uv run ansible-galaxy collection install -r requirements.yml
-
+      # MegaLinter
       - name: MegaLinter
+        id: ml
+        # You can override MegaLinter flavor used to have faster performances
+        # More info at https://megalinter.io/flavors/
         uses: oxsecurity/megalinter@v8
         env:
+          # All available variables are described in documentation
+          # https://megalinter.io/configuration/
+          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }} # Validates all source when push on main, else just the git diff with main. Override with true if you always want to lint all sources
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # ADD YOUR CUSTOM ENV VARIABLES HERE OR DEFINE THEM IN A FILE .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
           ENABLE_LINTERS: ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,PYTHON_RUFF,PYTHON_MYPY,MARKDOWN_MARKDOWNLINT,REPOSITORY_SECRETLINT,REPOSITORY_TRIVY,REPOSITORY_GITLEAKS,ACTION_ACTIONLINT
           APPLY_FIXES: YAML_PRETTIER,MARKDOWN_MARKDOWNLINT
           DISABLE_ERRORS_LINTERS: YAML_YAMLLINT,ANSIBLE_ANSIBLE_LINT,PYTHON_MYPY
@@ -66,71 +66,41 @@ jobs:
           SARIF_REPORTER: true
           SARIF_REPORT_FILE: megalinter-reports/megalinter-report.sarif
 
-      - name: Upload SARIF results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: megalinter-reports/megalinter-report.sarif
-          category: code-quality
-
-      - name: Upload MegaLinter results as artifact
-        if: always()
+      # Upload MegaLinter artifacts
+      - name: Archive production artifacts
+        if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: megalinter-results
-          path: megalinter-reports/
-          retention-days: 30
+          name: MegaLinter reports
+          path: |
+            megalinter-reports
+            mega-linter.log
 
-  hcl-format:
-    name: HCL Format & Nomad Validate
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Install Nomad CLI
+      # Create pull request if applicable (for now works only on PR from same repository, not from forks)
+      - name: Create Pull Request with applied fixes
+        id: cpr
+        if: steps.ml.outputs.has_updated_sources == 1 && (env.APPLY_FIXES_EVENT == 'all' || env.APPLY_FIXES_EVENT == github.event_name) && env.APPLY_FIXES_MODE == 'pull_request' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && !contains(github.event.head_commit.message, 'skip fix')
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          commit-message: '[MegaLinter] Apply linters automatic fixes'
+          title: '[MegaLinter] Apply linters automatic fixes'
+          labels: bot
+      - name: Create PR output
+        if: steps.ml.outputs.has_updated_sources == 1 && (env.APPLY_FIXES_EVENT == 'all' || env.APPLY_FIXES_EVENT == github.event_name) && env.APPLY_FIXES_MODE == 'pull_request' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && !contains(github.event.head_commit.message, 'skip fix')
         run: |
-          set -euo pipefail
-          NOMAD_VERSION="1.8.2"
-          curl -fsSL -o nomad.zip "https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip"
-          sudo apt-get update && sudo apt-get install -y unzip
-          unzip -o nomad.zip
-          sudo install -m 0755 nomad /usr/local/bin/nomad
-          nomad version
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
 
-      - name: Install Terragrunt (for HCL formatting)
-        run: |
-          set -euo pipefail
-          TERRAGRUNT_VERSION="v0.55.1"
-          curl -fsSL -o terragrunt "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
-          chmod +x terragrunt
-          sudo mv terragrunt /usr/local/bin/
-          terragrunt --version
-
-      - name: Format and check Nomad HCL files
-        run: |
-          if [ -d "nomad-jobs" ]; then
-            echo "Running terragrunt hclfmt to check formatting..."
-            terragrunt hclfmt --check --recursive nomad-jobs
-          else
-            echo "No nomad-jobs directory found."
-          fi
-
-      - name: Validate Nomad job files
-        run: |
-          set -euo pipefail
-          if [ -d "nomad-jobs" ]; then
-            mapfile -t files < <(find nomad-jobs -type f -name '*.nomad.hcl' -print)
-            if [ ${#files[@]} -eq 0 ]; then
-              echo "No Nomad job files found."
-              exit 0
-            fi
-            for f in "${files[@]}"; do
-              echo "::group::Validating $f"
-              nomad job validate "$f"
-              echo "::endgroup::"
-            done
-          else
-            echo "No nomad-jobs directory found."
-          fi
+      # Push new commit if applicable (for now works only on PR from same repository, not from forks)
+      - name: Prepare commit
+        if: steps.ml.outputs.has_updated_sources == 1 && (env.APPLY_FIXES_EVENT == 'all' || env.APPLY_FIXES_EVENT == github.event_name) && env.APPLY_FIXES_MODE == 'commit' && github.ref != 'refs/heads/main' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && !contains(github.event.head_commit.message, 'skip fix')
+        run: sudo chown -Rc $UID .git/
+      - name: Commit and push applied linter fixes
+        if: steps.ml.outputs.has_updated_sources == 1 && (env.APPLY_FIXES_EVENT == 'all' || env.APPLY_FIXES_EVENT == github.event_name) && env.APPLY_FIXES_MODE == 'commit' && github.ref != 'refs/heads/main' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && !contains(github.event.head_commit.message, 'skip fix')
+        uses: stefanzweifel/git-auto-commit-action@v6
+        with:
+          branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
+          commit_message: '[MegaLinter] Apply linters fixes'
+          commit_user_name: megalinter-bot
+          commit_user_email: 129584137+megalinter-bot@users.noreply.github.com
