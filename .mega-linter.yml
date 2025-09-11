@@ -46,6 +46,6 @@ DISABLE_ERRORS_LINTERS:
   - REPOSITORY_SEMGREP
   - REPOSITORY_KICS
 
-REPOSITORY_SEMGREP_ARGUMENTS: --config .semgrep/infrastructure-rules.yml
+# REPOSITORY_SEMGREP_ARGUMENTS: --config .semgrep/infrastructure-rules.yml
 MARKDOWN_SUMMARY_REPORTER: true
 SHOW_ELAPSED_TIME: true
