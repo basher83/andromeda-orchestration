@@ -113,7 +113,9 @@
 2. **Base64 Encode the Key**:
 
    ```bash
-   base64 -w 0 jwt_signing.key > jwt_key_output.b64
+   # Portable: works on GNU and BSD/macOS
+   base64 < jwt_signing.key | tr -d '\n' > jwt_key_output.b64
+
    ```
 
 3. **Configure Nomad Server**:
