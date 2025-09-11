@@ -7,8 +7,13 @@
     method: GET
     return_content: false
     status_code: [200]
-  register: vault_consul_available
+  register: _vault_consul_response
   failed_when: false
+
+- name: consul_register | Set standardized Consul availability flag
+  ansible.builtin.set_fact:
+    vault_consul_available: "{{ _vault_consul_response.status == 200 }}"
+  when: _vault_consul_response is succeeded
 
 - name: consul_register | Register Vault service with Consul
   ansible.builtin.uri:
@@ -35,7 +40,7 @@
         SuccessBeforePassing: 2
         FailuresBeforeCritical: 3
     status_code: [200]
-  when: vault_consul_available.status == 200
+  when: vault_consul_available | default(false)
 
 - name: consul_register | Register Vault UI service with Consul (if UI enabled)
   ansible.builtin.uri:
@@ -57,7 +62,7 @@
       EnableTagOverride: false
     status_code: [200]
   when:
-    - vault_consul_available.status == 200
+    - vault_consul_available | default(false)
     - vault_ui_enabled | bool
 
 - name: consul_register | Display Consul registration status
@@ -66,4 +71,4 @@
       - 'Vault registered with Consul'
       - 'Service name: vault.service.consul'
       - "Health check: {{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health"
-  when: vault_consul_available.status == 200
+  when: vault_consul_available | default(false)

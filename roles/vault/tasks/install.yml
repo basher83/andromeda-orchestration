@@ -53,7 +53,7 @@
 
 - name: install | Parse installed version
   ansible.builtin.set_fact:
-    vault_installed_version_parsed: "{{ vault_installed_version.stdout | regex_search('v([0-9.]+)', '\\1') | first }}"
+    vault_installed_version_parsed: "{{ vault_installed_version.stdout | regex_search('v([0-9.]+)', '\\1') }}"
   when:
     - vault_binary.stat.exists
     - vault_installed_version.rc == 0
