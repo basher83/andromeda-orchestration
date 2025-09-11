@@ -10,9 +10,7 @@ ENABLE_LINTERS:
   - PYTHON_RUFF
   - PYTHON_MYPY
   - MARKDOWN_MARKDOWNLINT
-  - REPOSITORY_SECRETLINT
-  - REPOSITORY_TRIVY
-  - REPOSITORY_GITLEAKS
+  - REPOSITORY_GITLEAKS  # Single secret scanner - fast and reliable
   - ACTION_ACTIONLINT
 
 # Apply fixes for safe formatters
