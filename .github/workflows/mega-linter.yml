@@ -48,6 +48,7 @@ jobs:
           # https://megalinter.io/configuration/
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }} # Validates all source when push on main, else just the git diff with main. Override with true if you always want to lint all sources
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # ADD YOUR CUSTOM ENV VARIABLES HERE OR DEFINE THEM IN A FILE .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
           ENABLE_LINTERS: ANSIBLE_ANSIBLE_LINT,YAML_YAMLLINT,YAML_PRETTIER,PYTHON_RUFF,PYTHON_MYPY,MARKDOWN_MARKDOWNLINT,REPOSITORY_SECRETLINT,REPOSITORY_TRIVY,REPOSITORY_GITLEAKS,ACTION_ACTIONLINT
           APPLY_FIXES: YAML_PRETTIER,MARKDOWN_MARKDOWNLINT
