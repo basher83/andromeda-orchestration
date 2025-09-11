@@ -1,1 +1,62 @@
-.github/linters/.ansible-lint
+# Ansible Lint Configuration
+# https://ansible-lint.readthedocs.io/
+
+# List of additional kind:pattern to be added at the top of the default
+# match list, first match determines the file kind.
+kinds:
+  - yaml: "**/inventory/*.yml"
+  - yaml: "**/inventory/*.yaml"
+
+# Exclude paths from linting
+exclude_paths:
+  - .cache/
+  - tests/
+  - docs/
+  - scripts/
+  - archive/
+  - .venv/
+  - venv/
+  - .github/
+
+# Enable progressive mode
+profile: production
+
+# Allow setting custom prefix for name[prefix] rule
+task_name_prefix: "{stem} | "
+
+# Ansible-lint does not fail on warnings from the rules or tags listed below
+warn_list:
+  - experimental  # all rules tagged as experimental
+  - fqcn[action-core]  # Allow short module names from ansible.builtin
+
+# Ansible-lint does not automatically load rules that have the 'opt-in' tag.
+# You must enable opt-in rules by listing each rule 'id' below.
+enable_list:
+  - args
+  - empty-string-compare
+  - no-log-password
+  - no-same-owner
+  - name[prefix]
+  - galaxy[version-incorrect]
+  - yaml[empty-values]
+
+# Report only a subset of tags and fully ignore any others
+# tags:
+#   - formatting
+
+# Ansible-lint will not look for these
+skip_list:
+  - galaxy[no-changelog]
+  - name[casing]  # Allow camelCase for variable names
+
+# Enforce variable naming pattern
+var_naming_pattern: "^[a-z_][a-z0-9_]*$"
+
+# Output formats
+use_default_rules: true
+offline: false
+write_list:
+  - none
+
+# Limit the depth of the nested blocks
+max_block_depth: 20

@@ -28,8 +28,8 @@ vim docs/troubleshooting/investigations/$(date +%Y-%m-%d)-new-issue.md
 ### 2. Update Status Tracking
 
 ```bash
-# Update the investigations README
-vim docs/troubleshooting/README.md
+# Update the investigations INDEX
+vim docs/troubleshooting/investigations/INDEX.md
 # Add your investigation to the "Current Active Investigations" section
 ```
 
@@ -203,4 +203,4 @@ git commit -m "docs: Add investigation for issue-name"
 
 ---
 
-_Workflow Version: 1.0 | Last Updated: 2025-01-09_
+Workflow Version: 1.0 | Last Updated: 2025-09-10 | Status source: investigations/INDEX.md

@@ -1,0 +1,81 @@
+# Pre-commit hooks for Ansible projects
+# Install: uv pip install pre-commit
+# Setup: uv run pre-commit install
+# Run: uv run pre-commit run --all-files
+
+repos:
+  # YAML linting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(\.infisical-scan\.toml)$
+      - id: end-of-file-fixer
+        exclude: ^(\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|roles/.*/files/.*\.(json|hcl)|.*\.j2)$
+      - id: check-yaml
+        args: [--unsafe] # Allow custom tags
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: pretty-format-json
+        args: [--autofix]
+        exclude: ^(\.env\.json|\.mcp\.json|\.infisical\.json|\.infisical-scan\.toml|uv\.lock|kics-results/.*\.json)$
+
+  # YAML formatting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: [--config-file=.yamllint]
+        types: [yaml]
+
+  # Python code quality (for custom modules/plugins)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.11
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # Python type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.17.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, types-pyyaml]
+        files: \.(py)$
+        exclude: ^(tests/|docs/|archive/)
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+
+  # Markdown linting
+  # Using markdownlint-cli2 for better configuration support
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.18.1
+    hooks:
+      - id: markdownlint-cli2
+        args: [--fix]
+
+  # Custom hooks
+  - repo: local
+    hooks:
+      - id: no-dot-local
+        name: Check for .local domains
+        entry: scripts/lint-no-dot-local.sh
+        language: script
+        files: \.(yml|yaml|hcl|nomad|tf)$
+        pass_filenames: false
+
+# Configuration for specific tools
+default_language_version:
+  # Use the system's Python 3 to avoid pinning to a specific minor version
+  python: python3

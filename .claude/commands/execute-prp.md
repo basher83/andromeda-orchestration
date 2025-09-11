@@ -7,7 +7,7 @@ argument-hint: [PRP file]
 
 Implement a feature using using the PRP file.
 
-## PRP File:
+## PRP File
 
 - @$ARGUMENTS
 

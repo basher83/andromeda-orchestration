@@ -4,14 +4,15 @@
 
 # Dev mode doesn't need a config file - it uses command line flags
 
-- name: Set VAULT_ADDR environment variable for dev mode
+- name: config_dev | Set VAULT_ADDR environment variable for dev mode
   ansible.builtin.lineinfile:
     path: /etc/environment
+    regexp: '^VAULT_ADDR='
     line: 'VAULT_ADDR=http://{{ ansible_default_ipv4.address }}:8200'
     create: true
     mode: '0644'
 
-- name: Create vault profile script for dev mode
+- name: config_dev | Create vault profile script for dev mode
   ansible.builtin.copy:
     content: |
       # Vault dev mode environment
@@ -29,7 +30,7 @@
     group: root
     mode: '0644'
 
-- name: Display dev mode information
+- name: config_dev | Display dev mode information
   ansible.builtin.debug:
     msg:
       - 'Vault is configured in DEVELOPMENT mode'
@@ -43,9 +44,29 @@
       - "  export VAULT_TOKEN='{{ vault_dev_root_token }}'"
       - '  vault status'
 
-- name: Register Vault service with Consul (if available)
-  ansible.builtin.include_tasks: consul_register.yml
+- name: config_dev | Check Consul availability for service registration
+  ansible.builtin.uri:
+    url: 'http://127.0.0.1:8500/v1/status/leader'
+    method: GET
+    return_content: false
+    status_code: [200]
+  register: _vault_consul_check
+  failed_when: false
+  when: "'consul' in group_names or consul_agent_enabled | default(false)"
+  tags:
+    - vault-consul
+
+- name: config_dev | Set standardized Consul availability flag
+  ansible.builtin.set_fact:
+    vault_consul_available: "{{ _vault_consul_check.status == 200 }}"
   when:
     - "'consul' in group_names or consul_agent_enabled | default(false)"
+    - _vault_consul_check is succeeded
+  tags:
+    - vault-consul
+
+- name: config_dev | Register Vault service with Consul (if available)
+  ansible.builtin.include_tasks: consul_register.yml
+  when: vault_consul_available | default(false)
   tags:
     - vault-consul

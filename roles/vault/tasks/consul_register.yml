@@ -1,15 +1,21 @@
 ---
 # Register Vault with Consul for service discovery
 
-- name: Check if Consul is available
-  ansible.builtin.wait_for:
-    port: 8500
-    host: 127.0.0.1
-    timeout: 5
-  register: consul_available
+- name: consul_register | Check if Consul is available
+  ansible.builtin.uri:
+    url: 'http://127.0.0.1:8500/v1/status/leader'
+    method: GET
+    return_content: false
+    status_code: [200]
+  register: _vault_consul_response
   failed_when: false
 
-- name: Register Vault service with Consul
+- name: consul_register | Set standardized Consul availability flag
+  ansible.builtin.set_fact:
+    vault_consul_available: "{{ _vault_consul_response.status == 200 }}"
+  when: _vault_consul_response is succeeded
+
+- name: consul_register | Register Vault service with Consul
   ansible.builtin.uri:
     url: 'http://127.0.0.1:8500/v1/agent/service/register'
     method: PUT
@@ -26,7 +32,9 @@
       EnableTagOverride: false
       Check:
         Name: 'Vault Health'
-        HTTP: "{{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health"
+        HTTP: >-
+          {{ 'https' if not vault_tls_disable else 'http' }}://
+          {{- ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health
         Interval: '10s'
         Timeout: '5s'
         TLSSkipVerify: '{{ vault_tls_disable | bool }}'
@@ -34,9 +42,9 @@
         SuccessBeforePassing: 2
         FailuresBeforeCritical: 3
     status_code: [200]
-  when: consul_available is succeeded
+  when: vault_consul_available | default(false)
 
-- name: Register Vault UI service with Consul (if UI enabled)
+- name: consul_register | Register Vault UI service with Consul (if UI enabled)
   ansible.builtin.uri:
     url: 'http://127.0.0.1:8500/v1/agent/service/register'
     method: PUT
@@ -56,13 +64,15 @@
       EnableTagOverride: false
     status_code: [200]
   when:
-    - consul_available is succeeded
+    - vault_consul_available | default(false)
     - vault_ui_enabled | bool
 
-- name: Display Consul registration status
+- name: consul_register | Display Consul registration status
   ansible.builtin.debug:
     msg:
       - 'Vault registered with Consul'
       - 'Service name: vault.service.consul'
-      - "Health check: {{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health"
-  when: consul_available is succeeded
+      - >-
+        Health check: {{ 'https' if not vault_tls_disable else 'http' }}://
+        {{- ansible_default_ipv4.address }}:{{ vault_port }}/v1/sys/health
+  when: vault_consul_available | default(false)

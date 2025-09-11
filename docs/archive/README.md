@@ -5,11 +5,13 @@ This directory contains archived documentation and files that are no longer acti
 ## Current Archive Contents
 
 ### `/infisical/`
+
 - Consolidated Infisical documentation files from August 26, 2025
 - `infisical-setup.md` - General setup guide (consolidated into infisical-complete-guide.md)
 - `andromeda-infisical-config.md` - Project-specific config (consolidated into infisical-complete-guide.md)
 
 ### Standalone Files
+
 - `assessment-playbook-fixes.md` - Historical assessment playbook fixes from July 2025
 - `documentation-review-findings.md` - Documentation review findings from July 2025
 
@@ -20,6 +22,7 @@ This directory contains archived documentation and files that are no longer acti
 All 1Password-related content has been **permanently removed** from the repository as it has been fully deprecated and replaced by Infisical. This includes:
 
 **Removed Files:**
+
 - `1pass.md` - 1Password Connect collection documentation
 - `1password-integration.md` - 1Password setup guide
 - `1password-connect-troubleshooting.md` - 1Password troubleshooting
@@ -32,6 +35,7 @@ All 1Password-related content has been **permanently removed** from the reposito
 - All 1Password inventory files
 
 **Removed Directories:**
+
 - `/bin/` - Contained ansible-connect wrapper
 - `/doggos-homelab/` - Contained 1Password inventory files
 - `/og-homelab/` - Contained 1Password inventory files
@@ -42,6 +46,7 @@ All 1Password-related content has been **permanently removed** from the reposito
 ## Migration Status
 
 ✅ **Complete**: The project has fully migrated to:
+
 - **Infisical** for repository/automation secrets
 - **HashiCorp Vault** for application/service secrets
 
@@ -50,19 +55,24 @@ No 1Password dependencies or references remain in the codebase.
 ## Archive Policy
 
 ### When to Archive
+
 Documents should be moved here when:
+
 1. They describe deprecated functionality
 2. They document completed one-time efforts
 3. They contain outdated patterns that could confuse developers
 4. They represent historical milestones
 
 ### When NOT to Archive
+
 Do not archive:
+
 1. Documentation that is still partially relevant
 2. Files frequently referenced for context
 3. Documentation that just needs updating
 
 ### Consider Deletion
+
 After archiving, evaluate if content should be permanently removed to reduce repository size and confusion.
 
 ## Note

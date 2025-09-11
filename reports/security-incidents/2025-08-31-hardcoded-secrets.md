@@ -11,6 +11,7 @@ Security scans (Infisical and KICS) identified hardcoded secrets in the reposito
 ## Findings Analysis
 
 ### Context
+
 - **Infrastructure Type**: Homelab (internal network only, no internet exposure)
 - **Access Requirements**: Physical network access or VPN required
 - **Secret Status**: Previously rotated, used for bootstrapping before Vault deployment
@@ -20,22 +21,26 @@ Security scans (Infisical and KICS) identified hardcoded secrets in the reposito
 #### 1. Active Code Findings
 
 **PostgreSQL Bootstrap File** (`nomad-jobs/platform-services/postgresql.nomad.hcl`)
+
 - **Purpose**: Database initialization before Vault was operational
 - **Current Status**: Needs update to use environment variables or Vault
 - **Risk Level**: LOW (internal only, passwords rotated)
 - **Action**: Update to use proper secret management
 
 #### 2. Archived Files (.archive/ directories)
+
 - **Purpose**: Historical test configurations
 - **Risk Level**: MINIMAL (not in use, test values)
 - **Action**: Consider cleanup (low priority)
 
 #### 3. Documentation Examples
+
 - **Finding**: Example curl commands with tokens in READMEs
 - **Risk Level**: FALSE POSITIVE (documentation examples)
 - **Action**: None required
 
 #### 4. KICS HTTP Findings
+
 - **Finding**: 44 instances of HTTP instead of HTTPS
 - **Context**: Internal service communication (localhost:8500, etc.)
 - **Risk Level**: LOW (standard for internal services)
@@ -53,6 +58,7 @@ Security scans (Infisical and KICS) identified hardcoded secrets in the reposito
 ### Priority 2: Infrastructure Improvements (Next Sprint)
 
 2. **Secret Management Migration**
+
    ```hcl
    # WRONG - What we have now
    env {
@@ -86,19 +92,21 @@ Security scans (Infisical and KICS) identified hardcoded secrets in the reposito
    - [ ] Add TLS to internal services where appropriate
    - [ ] Document TLS strategy for homelab environment
 
-5. **Git History** 
+5. **Git History**
    - [ ] Consider cleanup if deploying to production
    - [ ] Current assessment: Not required for internal homelab
 
 ## Security Best Practices Going Forward
 
 ### Development Guidelines
+
 - Use environment variables for secrets during development
 - Implement proper secret management (Vault/Infisical) as infrastructure matures
 - Run `mise run security:secrets` periodically to catch issues
 - Document when bootstrap passwords are necessary
 
 ### Pre-commit Protection
+
 - Infisical scanning configured in `.infisical-scan.toml`
 - Consider adding pre-commit hooks for automated checking
 - Regular security audits with both Infisical and KICS
@@ -106,11 +114,13 @@ Security scans (Infisical and KICS) identified hardcoded secrets in the reposito
 ## Risk Assessment
 
 ### Affected Systems
+
 - **PostgreSQL**: Bootstrap configuration only
 - **Internal Services**: Consul, Nomad, Netdata (localhost communication)
 - **Access Required**: Physical network or VPN access
 
 ### Actual Impact
+
 - **External Risk**: NONE (infrastructure not internet accessible)
 - **Internal Risk**: LOW (secrets rotated, bootstrap values only)
 - **Compliance**: N/A (homelab environment)

@@ -256,7 +256,7 @@ cat /etc/netdata/go.d/consul.conf
 1. Verify Consul API accessibility:
 
 ```bash
-curl -H "X-Consul-Token: your-token" http://localhost:8500/v1/agent/metrics
+curl -H "X-Consul-Token: <YOUR_CONSUL_TOKEN>" http://localhost:8500/v1/agent/metrics
 ```
 
 ### ACL Token Issues
@@ -276,7 +276,7 @@ service_prefix "" {
 1. Test token:
 
 ```bash
-curl -H "X-Consul-Token: your-token" http://localhost:8500/v1/agent/services
+curl -H "X-Consul-Token: <YOUR_CONSUL_TOKEN>" http://localhost:8500/v1/agent/services
 ```
 
 ## Integration with Other Roles
