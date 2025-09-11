@@ -18,11 +18,13 @@ The following variables must be set when deploying PostgreSQL:
 ### Method 1: Using Variable File (Recommended)
 
 1. Copy the example variables file:
+
    ```bash
    cp postgresql.variables.example.hcl postgresql.variables.hcl
    ```
 
 2. Edit `postgresql.variables.hcl` with your actual passwords:
+
    ```hcl
    postgres_password = "your-secure-postgres-password"
    pdns_password     = "your-secure-pdns-password"
@@ -31,6 +33,7 @@ The following variables must be set when deploying PostgreSQL:
    ```
 
 3. Deploy the job:
+
    ```bash
    nomad job run -var-file="postgresql.variables.hcl" postgresql.nomad.hcl
    ```
@@ -38,6 +41,7 @@ The following variables must be set when deploying PostgreSQL:
 ### Method 2: Using Nomad Variables (Secure)
 
 1. Create Nomad variables in the namespace:
+
    ```bash
    nomad var put nomad/jobs/postgresql \
      POSTGRES_PASSWORD="your-secure-postgres-password" \
@@ -47,6 +51,7 @@ The following variables must be set when deploying PostgreSQL:
    ```
 
 2. Deploy the job (it will automatically use the variables):
+
    ```bash
    nomad job run postgresql.nomad.hcl
    ```
@@ -54,6 +59,7 @@ The following variables must be set when deploying PostgreSQL:
 ### Method 3: Using Environment Variables
 
 1. Export the variables:
+
    ```bash
    export NOMAD_VAR_POSTGRES_PASSWORD="your-secure-postgres-password"
    export NOMAD_VAR_PDNS_PASSWORD="your-secure-pdns-password"
@@ -62,6 +68,7 @@ The following variables must be set when deploying PostgreSQL:
    ```
 
 2. Deploy the job:
+
    ```bash
    nomad job run postgresql.nomad.hcl
    ```
@@ -120,11 +127,13 @@ psql -h <node-ip> -p <dynamic-port> -U postgres
 If the job fails to start:
 
 1. Check that all required variables are set:
+
    ```bash
    nomad job inspect postgresql | grep PASSWORD
    ```
 
 2. Check the job logs:
+
    ```bash
    nomad alloc logs <alloc-id> postgres
    nomad alloc logs <alloc-id> init-pdns

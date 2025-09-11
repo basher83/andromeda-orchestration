@@ -10,7 +10,6 @@ This report provides a comprehensive audit of the current DNS and IP Address Man
 
 ### DNS Services Detected
 
-
 | Service | Node Count | Status |
 |---------|------------|--------|
 | No DNS services detected | - | ⚠️ Warning |
@@ -91,11 +90,10 @@ This report provides a comprehensive audit of the current DNS and IP Address Man
 - **Default Gateway**: 192.168.10.1
 - **DHCP-provided DNS**: No
 
-
 ### Subnet Summary
 
-
 **Discovered Subnets**:
+
 - 10.0.3.0/24
 - 172.17.0.0/16
 - 192.168.10.0/24
@@ -125,6 +123,7 @@ Based on the audit, the current DNS resolution flow appears to be:
 
 3. **Service Discovery**:
    - Consul DNS on port 8600: Available
+
 ### IPAM Current State
 
 - **IP Management**: Currently Ad-hoc
@@ -134,12 +133,14 @@ Based on the audit, the current DNS resolution flow appears to be:
 ## Gap Analysis for NetBox/PowerDNS Implementation
 
 ### DNS Gaps
+
 - ❌ No PowerDNS installation detected
 - ❌ No centralized DNS management API
 - ❌ No DNSSEC support detected
 - ❌ No DNS performance metrics or monitoring
 
 ### IPAM Gaps
+
 - ❌ No centralized IPAM system (NetBox) deployed
 - ❌ IP allocations scattered across multiple systems
 - ❌ No API-driven IP management
@@ -174,10 +175,12 @@ Based on this audit, the following actions are recommended:
 ## Migration Considerations
 
 ### Critical Services to Maintain
+
 - Local DNS resolution for all services
 - DHCP services if currently provided
 
 ### Data to Preserve
+
 - 30 custom host entries
 - All DHCP reservations
 - DNS zone configurations
@@ -186,4 +189,5 @@ Based on this audit, the following actions are recommended:
 ## Raw Data Files
 
 Individual node reports containing detailed configuration data are available in:
+
 - `/workspaces/netbox-ansible/reports/dns-ipam/dns_ipam_node_*_2025-08-22_2053.yml`

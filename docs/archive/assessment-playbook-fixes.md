@@ -7,6 +7,7 @@ This document addresses the issues with the assessment playbooks and provides so
 ### 1. DNS/IPAM Audit Playbook - Jinja2 Filter Errors
 
 **Problem**: The `first` filter was being used incorrectly with `default()`.
+
 ```yaml
 # INCORRECT:
 search_domains: >-
@@ -15,6 +16,7 @@ search_domains: >-
 ```
 
 **Solution**: Use proper conditional logic to handle empty results.
+
 ```yaml
 # CORRECT:
 search_domains: >-
@@ -29,12 +31,14 @@ search_domains: >-
 ### 2. Infrastructure Readiness Playbook - Accessing Undefined Variables
 
 **Problem**: Trying to access `.stdout` on a skipped task result.
+
 ```yaml
 # INCORRECT:
 consul_integrated: "{{ 'consul' in consul_nomad_integration.stdout | lower }}"
 ```
 
 **Solution**: Check if the variable is defined before accessing attributes.
+
 ```yaml
 # CORRECT:
 consul_integrated: >-
@@ -52,7 +56,9 @@ consul_integrated: >-
 **Solutions**:
 
 #### Option 1: Use IP Addresses Directly (Recommended for Assessment Phase)
+
 Modify the inventory to always use IP addresses:
+
 ```yaml
 compose:
   ansible_host: >-
@@ -61,7 +67,9 @@ compose:
 ```
 
 #### Option 2: Add Local DNS Resolution
+
 For hosts that need name resolution during assessment:
+
 ```yaml
 - name: Add temporary hosts entries for assessment
   ansible.builtin.lineinfile:
@@ -74,7 +82,9 @@ For hosts that need name resolution during assessment:
 ```
 
 #### Option 3: Skip Failed DNS Lookups
+
 Make DNS-dependent tasks more resilient:
+
 ```yaml
 - name: Test connectivity between nodes
   ansible.builtin.command:
@@ -188,13 +198,15 @@ Make DNS-dependent tasks more resilient:
 ## Network Architecture Considerations
 
 Given your network setup:
+
 - **192.168.11.x**: 10G high-speed network (servers)
 - **192.168.10.x**: 2.5G network (some clients)
 
-### Recommendations:
+### Recommendations
 
 1. **Use IP addresses directly** for critical infrastructure assessments
 2. **Document network segments** in inventory vars:
+
    ```yaml
    vars:
      network_10g: "192.168.11.0/24"
@@ -202,6 +214,7 @@ Given your network setup:
    ```
 
 3. **Group hosts by network** for targeted assessments:
+
    ```yaml
    groups:
      high_speed_network:
@@ -236,6 +249,7 @@ uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml \
 ## Summary
 
 The main issues were:
+
 1. Incorrect Jinja2 filter usage (fixed)
 2. Accessing attributes on undefined/skipped task results (fixed)
 3. DNS resolution failures (multiple solutions provided)
