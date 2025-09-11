@@ -11,32 +11,33 @@ id = "example-passwords"
 regex = '''(?i)(password|secret|key)\s*[=:]\s*["']?(changeme|example|placeholder|your-password-here)["']?'''
 path = '''(?i)\.(md|rst|txt|example|template)$'''
 
+  [rules.allowlist]
+  description = "Documentation files with example passwords"
+  paths = ['''docs/.*\.md$''', '''.*\.example$''', '''.*\.template$''']
+
 [[rules]]
 description = "Ignore passwords in comments"
 id = "comment-passwords"
 regex = '''#.*(?i)(password|secret|key)\s*[=:]\s*["']?(changeme|example)["']?'''
 
-# Allowlist specific files with known false positives
-[[rules.allowlist]]
-description = "PostgreSQL job file with example passwords in comments"
-files = ['''nomad-jobs/platform-services/postgresql/postgresql\.nomad\.hcl''']
-regexTarget = "line"
-regexes = ['''#.*changeme''']
+  [rules.allowlist]
+  description = "Comments with example passwords"
+  regexTarget = "line"
+  regexes = ['''#.*changeme''', '''#.*example''']
 
-[[rules.allowlist]]
-description = "Variable template files"
-files = ['''.*\.variables\.(example|template)\.hcl$''']
-
-[[rules.allowlist]]
-description = "Documentation files"
-files = ['''docs/.*\.md$''']
-
-[[rules.allowlist]]
-description = "Claude research reports with example configurations"
-files = ['''\.claude/research-reports/.*\.md$''']
-regexTarget = "line"
+# Global allowlist for known false positives
+[allowlist]
+description = "Global allowlist for known false positives"
+paths = [
+  '''nomad-jobs/platform-services/postgresql/postgresql\.nomad\.hcl''',
+  '''.*\.variables\.(example|template)\.hcl$''',
+  '''docs/.*\.md$''',
+  '''\.claude/research-reports/.*\.md$'''
+]
 regexes = [
   '''token.*=.*"[a-f0-9-]{36}"''',
   '''jwt_signing.*\.b64''',
-  '''example-placeholder-token'''
+  '''example-placeholder-token''',
+  '''#.*changeme''',
+  '''#.*example'''
 ]

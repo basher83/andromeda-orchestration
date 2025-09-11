@@ -72,8 +72,5 @@ MEGALINTER_FILES_TO_LINT_CACHE_ENABLED: true
 # Security linter configurations
 REPOSITORY_GITLEAKS_CONFIG_FILE: .gitleaks.toml
 
-LLM_ADVISOR_ENABLED: true
-LLM_PROVIDER: anthropic
-LLM_MODEL_NAME: claude-3-7-sonnet-latest
-LLM_MAX_TOKENS: 1000
-LLM_TEMPERATURE: 0.1
+# Disable LLM features to avoid API key issues in CI
+LLM_ADVISOR_ENABLED: "false"
