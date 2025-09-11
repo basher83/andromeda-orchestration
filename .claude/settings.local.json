@@ -54,7 +54,9 @@
       "Bash(gh run view:*)",
       "Bash(rm:*)",
       "Bash(gh pr checkout:*)",
-      "Bash(yamllint:*)"
+      "Bash(yamllint:*)",
+      "WebSearch",
+      "Bash(awk:*)"
     ]
   },
   "statusLine": {

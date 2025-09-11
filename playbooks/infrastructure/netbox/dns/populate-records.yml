@@ -147,7 +147,9 @@
       loop: '{{ dns_records }}'
       when: item.zone in zone_ids
       register: record_results
-      failed_when: record_results.status not in [200, 201] and 'already exists' not in (record_results.json | default({}) | string)
+      failed_when: >
+        record_results.status not in [200, 201] and
+        'already exists' not in (record_results.json | default({}) | string)
 
     - name: Create automatic PTR records for A records
       uri:
@@ -171,7 +173,9 @@
         - item.type == 'A'
         - item.value.split('.')[2] + '.' + item.value.split('.')[1] + '.' + item.value.split('.')[0] + '.in-addr.arpa' in zone_ids
       register: ptr_results
-      failed_when: ptr_results.status not in [200, 201] and 'already exists' not in (ptr_results.json | default({}) | string)
+      failed_when: >
+        ptr_results.status not in [200, 201] and
+        'already exists' not in (ptr_results.json | default({}) | string)
 
     - name: Display record creation summary
       debug:
