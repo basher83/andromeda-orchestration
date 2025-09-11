@@ -46,6 +46,22 @@
         msg: 'TLS is enabled but certificate files are missing. Please provide certificates or set vault_tls_disable to true.'
       when: vault_tls_files.results | selectattr('stat.exists', 'equalto', false) | list | length > 0
 
+  rescue:
+    - name: config_prod | Handle missing TLS certificates gracefully
+      ansible.builtin.debug:
+        msg: |
+          WARNING: TLS certificates are missing for Vault production configuration.
+          - Expected certificate file: {{ vault_tls_cert_file }}
+          - Expected key file: {{ vault_tls_key_file }}
+          - Expected CA file: {{ vault_tls_ca_file }}
+
+          Disabling TLS for this deployment to prevent downstream task failures.
+          Consider providing valid certificates or explicitly setting vault_tls_disable=true.
+
+    - name: config_prod | Disable TLS due to missing certificates
+      ansible.builtin.set_fact:
+        vault_tls_disable: true
+
 - name: config_prod | Create Vault audit log directory
   ansible.builtin.file:
     path: '{{ vault_log_dir }}'
@@ -58,6 +74,7 @@
 - name: config_prod | Set VAULT_ADDR environment variable for production
   ansible.builtin.lineinfile:
     path: /etc/environment
+    regexp: '^VAULT_ADDR='
     line: "VAULT_ADDR={{ 'https' if not vault_tls_disable else 'http' }}://{{ ansible_default_ipv4.address }}:{{ vault_port }}"
     create: true
     mode: '0644'

@@ -5,6 +5,7 @@
 # Domain configuration (required for domain-assertions.yml)
 homelab_domain: "example.com"  # Override with actual domain in inventory
 cluster_subdomain: "homelab"   # Override with actual subdomain in inventory
+fqdn_suffix: "{{ cluster_subdomain }}.{{ homelab_domain }}"  # Composite FQDN for centralized domain usage
 
 # Common infrastructure settings
 ansible_python_interpreter: /usr/bin/python3

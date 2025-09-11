@@ -10,13 +10,13 @@
     name: '{{ vault_service_name }}'
     state: restarted
     daemon_reload: true
-  when: vault_service_state == "started"
+  when: (vault_service_state | default("started")) == "started"
 
 - name: main | reload vault
   ansible.builtin.systemd:
     name: '{{ vault_service_name }}'
     state: reloaded
-  when: vault_service_state == "started"
+  when: (vault_service_state | default("started")) == "started"
 
 - name: main | unseal vault
   ansible.builtin.shell: |

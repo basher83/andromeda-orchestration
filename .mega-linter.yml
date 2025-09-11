@@ -28,8 +28,7 @@ DISABLE_ERRORS_LINTERS:
 FILTER_REGEX_EXCLUDE: '(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/|\.cache/|tests/output/|\.pytest_cache/|\.mypy_cache/)'
 
 # Include only IaC-relevant areas
-FILTER_REGEX_INCLUDE: '(^|/)(ansible/|roles/|playbooks/|jobs/|nomad/|environments/|inventory/|plugins/|scripts/|tests/|docs/)'
-
+FILTER_REGEX_INCLUDE: '(^|/)(ansible/|roles/|playbooks/|jobs/|nomad/|environments/|inventory/|plugins/|scripts/|tests/|docs/|\.claude/)'
 # Python-specific configuration
 PYTHON_RUFF_CONFIG_FILE: pyproject.toml
 PYTHON_MYPY_CONFIG_FILE: pyproject.toml

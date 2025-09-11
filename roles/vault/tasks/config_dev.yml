@@ -7,6 +7,7 @@
 - name: config_dev | Set VAULT_ADDR environment variable for dev mode
   ansible.builtin.lineinfile:
     path: /etc/environment
+    regexp: '^VAULT_ADDR='
     line: 'VAULT_ADDR=http://{{ ansible_default_ipv4.address }}:8200'
     create: true
     mode: '0644'

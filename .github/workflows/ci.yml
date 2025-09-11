@@ -118,7 +118,9 @@ jobs:
 
       - name: Install Infisical CLI
         run: |
-          curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
+          curl -fsSL 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
+          git fetch --depth=1 origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
           sudo apt-get update && sudo apt-get install -y infisical
 
       - name: Run Infisical scan
