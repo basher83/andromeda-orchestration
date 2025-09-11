@@ -16,7 +16,29 @@ APPLY_FIXES: all
 
 DISABLE:
   - COPYPASTE # Comment to enable checks of excessive copy-pastes
+  - TERRAFORM
   # - SPELL # Uncomment to disable checks of spelling mistakes
+
+DISABLE_LINTERS:
+  - REPOSITORY_GITLEAKS # Too noisey, too many false positives. Already have other solutions
+
+DISABLE_ERRORS_LINTERS:
+  - ACTION_ACTIONLINT
+  - ANSIBLE_ANSIBLE_LINT
+  - YAML_YAMLLINT
+  - YAML_PRETTIER
+  - YAML_V8R
+  - PYTHON_RUFF
+  - PYTHON_MYPY
+  - MARKDOWN_MARKDOWNLINT
+  - REPOSITORY_CHECKOV
+  - REPOSITORY_DEVSKIM
+  - REPOSITORY_KICS
+  - REPOSITORY_TRIVY
+  - SPELL_CSPELL
+  - SPELL_LYCHEE
+  - SQL_TSQLINT
+
 
 SHOW_ELAPSED_TIME: true
 
