@@ -37,7 +37,7 @@ collections:
   # HashiCorp Vault modules (for community.hashi_vault.vault_write/read)
   # Requires Python package 'hvac' on the controller/Execution Environment
   - name: community.hashi_vault
-    version: "==7.0.0"
+    version: ">=6.2.0,<7.0.0"  # v7.0.0 has compatibility issues
 
   # Cryptography modules (for TLS/SSL certificate generation)
   - name: community.crypto

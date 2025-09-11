@@ -1,0 +1,70 @@
+# MegaLinter Configuration for Andromeda IaC Repository
+# Based on megalinter-standards.md
+# https://megalinter.io/8/configuration/
+
+# Apply fixes for safe formatters
+APPLY_FIXES: all
+
+# Enable only linters relevant to Ansible + YAML + Nomad + Python + Markdown
+ENABLE_LINTERS:
+  - ANSIBLE_ANSIBLE_LINT
+  - YAML_YAMLLINT
+  - YAML_PRETTIER
+  - PYTHON_RUFF
+  - PYTHON_MYPY
+  - MARKDOWN_MARKDOWNLINT
+  # - REPOSITORY_GITLEAKS Too noisey, too many false positives. Already have other solutions
+  - ACTION_ACTIONLINT
+
+# Listed linters will be run, but if errors are found, they will be considered as non blocking
+DISABLE_ERRORS_LINTERS:
+  - ANSIBLE_ANSIBLE_LINT
+  - YAML_YAMLLINT
+  - YAML_PRETTIER
+  - PYTHON_RUFF
+  - PYTHON_MYPY
+  - MARKDOWN_MARKDOWNLINT
+  - ACTION_ACTIONLINT
+
+# Exclude paths for performance and relevance
+# Refine later to target per linter if only need specific linter in a directory
+# Proper usage seems to be to move .linter configs to env vars here.
+# Example: MARKDOWN_FILTER_REGEX_EXCLUDE: '(license\.md|docs/licenses)'
+# JSON_JSONLINT_FILTER_REGEX_EXCLUDE: '(\.vscode/)'
+# YAML_V8R_FILTER_REGEX_EXCLUDE: '(descriptors|templates/\.mega-linter\.yml|\.codecov\.yml)'
+
+FILTER_REGEX_EXCLUDE: '(^|/)(.git/|.tox/|.venv/|dist/|build/|node_modules/|vendor/|megalinter-reports/|docs/archive/|reports/|kics-results/|\.cache/|tests/output/|\.pytest_cache/|\.mypy_cache/)'
+
+# Include only IaC-relevant areas
+FILTER_REGEX_INCLUDE: '(^|/)(ansible/|roles/|playbooks/|jobs/|nomad/|inventory/|plugins/|scripts/|tests/|tasks/|docs/)'
+
+YAML_YAMLLINT_FILTER_REGEX_EXCLUDE: '(\.mega-linter\.yml)'
+YAML_PRETTIER_FILTER_REGEX_EXCLUDE: '(\.mega-linter\.yml)'
+
+# Parallel processing for better performance
+PARALLEL: true
+PARALLEL_PROCESS_COUNT: 4
+
+# Performance optimizations
+LOG_LEVEL: INFO
+PRINT_ALL_FILES: false
+SHOW_ELAPSED_TIME: true
+
+# Fail on error mode
+FAIL_ON_ERROR: true
+
+# Custom output format
+OUTPUT_FORMAT: github-annotation-native
+
+# SARIF report for GitHub Security tab integration
+SARIF_REPORTER: true
+SARIF_REPORT_FILE: megalinter-reports/megalinter-report.sarif
+
+# Additional performance settings
+SKIP_CLI_LINT_ERRORS: false
+FLAVOR_SUGGESTIONS: false
+MEGALINTER_FILES_TO_LINT_CACHE_ENABLED: true
+
+
+# Disable LLM features to avoid API key issues in CI
+LLM_ADVISOR_ENABLED: "false"

@@ -78,6 +78,7 @@ When invoked, you must follow these steps:
 **CRITICAL**: Different document types serve different purposes. You MUST understand these distinctions:
 
 ### Architecture Decision Records (ADRs)
+
 - **Purpose**: Document WHY decisions were made, NOT current state
 - **Location**: `/docs/project-management/decisions/ADR-*.md`
 - **Usage**: Historical context and decision rationale only
@@ -85,6 +86,7 @@ When invoked, you must follow these steps:
 - **Example**: "Vault was running in dev mode" describes a past problem, not current state
 
 ### Current State Sources (in order of trust)
+
 1. **CLAUDE.md** - THE authoritative source for current infrastructure configuration
    - Always check this FIRST for infrastructure state
    - Contains actual deployment status and configurations
@@ -105,6 +107,7 @@ When invoked, you must follow these steps:
    - Future planning and dependencies
 
 ### Handling Conflicting Information
+
 - **ADRs should NEVER be used to determine current infrastructure state**
 - **Completion markers (✅) can be outdated** due to regressions - verify with multiple sources
 - When documents conflict about infrastructure state:
@@ -116,6 +119,7 @@ When invoked, you must follow these steps:
 - Remember: Projects can regress, and developers may forget to update status markers
 
 ### Document Type Validation
+
 - If an ADR contains current state descriptions, flag this as a violation
 - ADRs should focus on: Context, Decision, Consequences, Alternatives
 - If you find state tracking in ADRs, recommend moving it to appropriate documents

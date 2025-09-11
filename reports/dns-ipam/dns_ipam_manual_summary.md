@@ -11,6 +11,7 @@ The DNS and IPAM audit of the Nomad infrastructure reveals a basic DNS setup usi
 ### DNS Configuration
 
 **Current State:**
+
 - **DNS Resolvers**: All nodes use external public DNS (Google: 8.8.8.8, 8.8.4.4 and Cloudflare: 1.1.1.1, 1.0.0.1)
 - **Search Domain**: `tailfb3ea.ts.net` (Tailscale network)
 - **Local DNS Services**: None (no BIND, dnsmasq, PowerDNS, Pi-hole, or unbound)
@@ -20,6 +21,7 @@ The DNS and IPAM audit of the Nomad infrastructure reveals a basic DNS setup usi
 ### Network Configuration
 
 **Network Segments:**
+
 - **192.168.10.0/24**: Primary 2.5G network (all nodes have eth0 on this network)
 - **192.168.11.0/24**: Secondary 10G network (all nodes have eth1 on this network)
 - **172.17.0.0/16**: Docker network (docker0 interface)
@@ -40,6 +42,7 @@ The DNS and IPAM audit of the Nomad infrastructure reveals a basic DNS setup usi
 ### IPAM Status
 
 **IP Allocation:**
+
 - Default Gateway: 192.168.10.1
 - ARP table entries: ~16 per node
 - No DHCP servers detected
@@ -49,6 +52,7 @@ The DNS and IPAM audit of the Nomad infrastructure reveals a basic DNS setup usi
 ### Service Availability
 
 **DNS Ports Status:**
+
 - Port 53 (Standard DNS): **Not listening** on any node
 - Port 8600 (Consul DNS): **Active** on all nodes
 - Port 5353 (mDNS): **Not listening** on any node
@@ -56,16 +60,19 @@ The DNS and IPAM audit of the Nomad infrastructure reveals a basic DNS setup usi
 ## Recommendations
 
 ### Immediate Actions
+
 1. **Deploy PowerDNS**: No DNS server is currently running. PowerDNS should be deployed as planned.
 2. **Configure DNS forwarding**: Set up PowerDNS to forward Consul queries to port 8600.
 3. **Update resolv.conf**: Point nodes to local PowerDNS once deployed instead of external DNS.
 
 ### Network Optimization
+
 1. **Utilize 10G network**: Consider moving critical services to the 192.168.11.x network for better performance.
 2. **DNS redundancy**: Deploy PowerDNS on multiple nodes for high availability.
 3. **IPAM integration**: Implement NetBox for centralized IP address management.
 
 ### Security Considerations
+
 1. **Internal DNS**: Moving from external DNS to internal will improve security and reduce latency.
 2. **DNS filtering**: Consider implementing DNS filtering/blocking once PowerDNS is deployed.
 3. **DNSSEC**: Plan for DNSSEC implementation in PowerDNS.
@@ -73,12 +80,14 @@ The DNS and IPAM audit of the Nomad infrastructure reveals a basic DNS setup usi
 ## Current Infrastructure Readiness
 
 ✅ **Ready for DNS deployment:**
+
 - Consul DNS is operational
 - No conflicting DNS services
 - Network segmentation in place
 - All nodes accessible via multiple networks
 
 ⚠️ **Areas needing attention:**
+
 - No FQDN resolution (hostnames not in DNS)
 - Reliance on external DNS servers
 - No centralized IPAM
