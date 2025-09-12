@@ -1,0 +1,154 @@
+# Task: Configure Consul Auto-Encrypt with mTLS
+
+**Task ID**: PKI-002
+**Parent Issue**: #98 (mTLS for Service Communication)
+**Priority**: P0 - Critical
+**Estimated Time**: 4 hours
+**Dependencies**: PKI-001
+
+## Objective
+
+Enable Consul auto-encrypt to automatically distribute and rotate TLS certificates for all Consul agents, establishing mutual TLS authentication across the cluster.
+
+## Prerequisites
+
+- [ ] PKI roles created (PKI-001)
+- [ ] Consul servers running and accessible
+- [ ] Ansible inventory updated with Consul nodes
+
+## Implementation Steps
+
+1. **Generate CA Certificate for Consul**
+
+   ```yaml
+   - name: Generate Consul CA certificate from Vault
+     community.hashi_vault.vault_read:
+       path: pki-int/ca/pem
+     register: consul_ca_cert
+
+   - name: Deploy CA certificate to all Consul nodes
+     ansible.builtin.copy:
+       content: "{{ consul_ca_cert.data.data }}"
+       dest: /opt/consul/tls/ca.crt
+       owner: consul
+       group: consul
+       mode: '0644'
+   ```
+
+2. **Configure Consul Servers for Auto-Encrypt**
+
+   ```yaml
+   - name: Update Consul server configuration
+     ansible.builtin.template:
+       src: consul-server-tls.hcl.j2
+       dest: /etc/consul.d/tls.hcl
+     vars:
+       consul_tls_config:
+         ca_file: "/opt/consul/tls/ca.crt"
+         cert_file: "/opt/consul/tls/consul.crt"
+         key_file: "/opt/consul/tls/consul.key"
+         verify_incoming: false  # Start with soft enforcement
+         verify_outgoing: true
+         verify_server_hostname: true
+         auto_encrypt:
+           allow_tls: true
+   ```
+
+3. **Generate Server Certificates**
+
+   ```yaml
+   - name: Generate Consul server certificates
+     community.hashi_vault.vault_pki_generate_certificate:
+       role_name: consul-agent
+       common_name: "{{ inventory_hostname }}.consul.spaceships.work"
+       alt_names:
+         - "server.dc1.consul"
+         - "consul.service.consul"
+       ip_sans:
+         - "{{ ansible_default_ipv4.address }}"
+         - "127.0.0.1"
+       ttl: "720h"
+     register: consul_cert
+
+   - name: Deploy server certificates
+     ansible.builtin.copy:
+       content: "{{ item.content }}"
+       dest: "{{ item.dest }}"
+       owner: consul
+       group: consul
+       mode: "{{ item.mode }}"
+     loop:
+       - { content: "{{ consul_cert.data.certificate }}", dest: "/opt/consul/tls/consul.crt", mode: "0644" }
+       - { content: "{{ consul_cert.data.private_key }}", dest: "/opt/consul/tls/consul.key", mode: "0600" }
+   ```
+
+4. **Configure Consul Clients for Auto-Encrypt**
+
+   ```yaml
+   - name: Configure Consul clients
+     ansible.builtin.template:
+       src: consul-client-tls.hcl.j2
+       dest: /etc/consul.d/tls.hcl
+     vars:
+       consul_tls_config:
+         ca_file: "/opt/consul/tls/ca.crt"
+         verify_outgoing: true
+         verify_server_hostname: true
+         auto_encrypt:
+           tls: true
+   ```
+
+5. **Implement Rolling Restart**
+
+   ```yaml
+   - name: Restart Consul servers (one at a time)
+     ansible.builtin.systemd:
+       name: consul
+       state: restarted
+     throttle: 1
+     when: inventory_hostname in groups['consul_servers']
+
+   - name: Wait for Consul server to rejoin
+     ansible.builtin.wait_for:
+       port: 8300
+       host: "{{ ansible_default_ipv4.address }}"
+       delay: 10
+       timeout: 60
+
+   - name: Restart Consul clients
+     ansible.builtin.systemd:
+       name: consul
+       state: restarted
+     when: inventory_hostname in groups['consul_clients']
+   ```
+
+## Success Criteria
+
+- [ ] All Consul agents have valid TLS certificates
+- [ ] Consul cluster communication encrypted
+- [ ] Auto-encrypt distributing certificates to clients
+- [ ] `consul members` shows all nodes healthy
+- [ ] No disruption to existing services
+
+## Validation
+
+```bash
+# Verify TLS is enabled
+consul info | grep -A5 "build"
+
+# Check certificate validity
+openssl x509 -in /opt/consul/tls/consul.crt -text -noout
+
+# Verify encrypted communication
+consul members -detailed
+
+# Test auto-encrypt
+consul agent -retry-join consul.service.consul -log-level=debug 2>&1 | grep "auto-encrypt"
+```
+
+## Notes
+
+- Starting with `verify_incoming: false` for soft enforcement
+- Will enable hard enforcement in PKI-006 after validation
+- Auto-encrypt eliminates need for manual client certificate management
+- Certificates auto-renewed before expiration
