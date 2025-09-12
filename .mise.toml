@@ -13,7 +13,7 @@ uv = "0.8.15"
 pre-commit = "4.3.0"
 
 # Linting tools
-ruff = "0.12.12"
+ruff = "0.13.0"
 markdownlint-cli2 = "0.18.1"
 yamllint = "1.35.1"
 # ansible-lint is installed via uv/pip, not mise
