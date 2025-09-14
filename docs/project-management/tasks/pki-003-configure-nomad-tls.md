@@ -1,10 +1,12 @@
-# Task: Configure Nomad TLS for Cluster Communication
-
-**Task ID**: PKI-003
-**Parent Issue**: #98 (mTLS for Service Communication)
-**Priority**: P0 - Critical
-**Estimated Time**: 3 hours
-**Dependencies**: PKI-001
+---
+Task: Configure Nomad TLS for Cluster Communication
+Task ID: PKI-003
+Parent Issue: 98 - mTLS for Service Communication
+Priority: P0 - Critical
+Estimated Time: 3 hours
+Dependencies: PKI-001
+Status: Ready
+---
 
 ## Objective
 
@@ -60,7 +62,7 @@ Enable TLS encryption and authentication for all Nomad cluster communication (RP
        state: directory
        owner: nomad
        group: nomad
-       mode: '0755'
+       mode: "0755"
 
    - name: Deploy Nomad certificates
      ansible.builtin.copy:
@@ -141,7 +143,7 @@ Enable TLS encryption and authentication for all Nomad cluster communication (RP
        name: nomad
        state: restarted
      when: nomad_node_role == "client"
-     throttle: 3  # Restart 3 clients at a time
+     throttle: 3 # Restart 3 clients at a time
    ```
 
 ## Success Criteria
@@ -154,23 +156,112 @@ Enable TLS encryption and authentication for all Nomad cluster communication (RP
 
 ## Validation
 
+Run validation playbook:
+
 ```bash
-# Verify TLS is enabled
-nomad agent-info | grep "tls"
-
-# Test HTTPS API
-curl -k https://localhost:4646/v1/status/leader
-
-# Verify certificate
-openssl s_client -connect localhost:4646 -showcerts
-
-# Check cluster health
-nomad server members
-nomad node status
-
-# Verify RPC encryption
-nomad operator raft list-peers
+uv run ansible-playbook playbooks/infrastructure/vault/validate-nomad-tls.yml
 ```
+
+The validation playbook performs the following checks:
+
+```yaml
+- name: Validate Nomad TLS Configuration
+  hosts: nomad_servers:nomad_clients
+  tasks:
+    - name: Verify TLS is enabled in Nomad configuration
+      ansible.builtin.command: uv run nomad agent-info
+      register: nomad_agent_info
+      changed_when: false
+
+    - name: Assert TLS settings are configured
+      ansible.builtin.assert:
+        that:
+          - "'tls' in nomad_agent_info.stdout"
+          - "'http = true' in nomad_agent_info.stdout or 'http=true' in nomad_agent_info.stdout"
+        fail_msg: "TLS not properly configured in Nomad"
+
+    - name: Test HTTPS API endpoint
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:4646/v1/status/leader"
+        validate_certs: yes
+        ca_path: /opt/nomad/tls/ca.crt
+        timeout: 10
+      register: api_test
+
+    - name: Assert API responds over HTTPS
+      ansible.builtin.assert:
+        that:
+          - api_test.status == 200
+        fail_msg: "Nomad HTTPS API not responding correctly"
+
+    - name: Verify certificate validity and properties
+      ansible.builtin.command: >
+        openssl x509 -in /opt/nomad/tls/nomad.crt -text -noout -checkend 86400
+      register: cert_check
+      changed_when: false
+      failed_when: cert_check.rc != 0
+
+    - name: Check Nomad cluster health (servers)
+      ansible.builtin.command: uv run nomad server members
+      register: server_members
+      changed_when: false
+      when: nomad_node_role == "server"
+
+    - name: Assert all servers are alive
+      ansible.builtin.assert:
+        that:
+          - "'alive' in server_members.stdout"
+        fail_msg: "Nomad server cluster health issues detected"
+      when: nomad_node_role == "server"
+
+    - name: Check Nomad node status (all nodes)
+      ansible.builtin.command: uv run nomad node status
+      register: node_status
+      changed_when: false
+
+    - name: Assert nodes are ready
+      ansible.builtin.assert:
+        that:
+          - "'ready' in node_status.stdout"
+        fail_msg: "Nomad nodes not in ready state"
+
+    - name: Verify RPC encryption (servers only)
+      ansible.builtin.command: uv run nomad operator raft list-peers
+      register: raft_peers
+      changed_when: false
+      when: nomad_node_role == "server"
+
+    - name: Assert Raft peers are accessible
+      ansible.builtin.assert:
+        that:
+          - raft_peers.rc == 0
+          - raft_peers.stdout | length > 0
+        fail_msg: "Nomad Raft communication issues detected"
+      when: nomad_node_role == "server"
+
+    - name: Validate environment variables are set
+      ansible.builtin.shell: |
+        source /etc/environment
+        [ -n "$NOMAD_ADDR" ] && [ -n "$NOMAD_CACERT" ]
+      register: env_check
+      changed_when: false
+
+    - name: Assert Nomad client environment is configured
+      ansible.builtin.assert:
+        that:
+          - env_check.rc == 0
+        fail_msg: "Nomad client environment variables not properly configured"
+```
+
+Expected output:
+
+- TLS enabled for both HTTP and RPC communication
+- HTTPS API endpoint responds correctly with valid certificates
+- All certificates valid and not expiring within 24 hours
+- All Nomad servers showing alive status in cluster
+- All Nomad nodes in ready state
+- Raft communication working correctly between servers
+- Environment variables properly configured for HTTPS client access
 
 ## Notes
 

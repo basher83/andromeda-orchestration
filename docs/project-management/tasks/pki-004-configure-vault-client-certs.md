@@ -1,10 +1,12 @@
-# Task: Configure Vault Client Certificate Authentication
-
-**Task ID**: PKI-004
-**Parent Issue**: #98 (mTLS for Service Communication)
-**Priority**: P1 - High
-**Estimated Time**: 2 hours
-**Dependencies**: PKI-001
+---
+Task: Configure Vault Client Certificate Authentication
+Task ID: PKI-004
+Parent Issue: 98 - mTLS for Service Communication
+Priority: P1 - High
+Estimated Time: 2 hours
+Dependencies: PKI-001, PKI-003
+Status: Ready
+---
 
 ## Objective
 
@@ -155,26 +157,145 @@ Enable client certificate authentication for Vault API access, allowing services
 
 ## Validation
 
+Run validation playbook:
+
 ```bash
-# List auth methods
-vault auth list
-
-# Test certificate authentication
-vault login -method=cert \
-  -ca-cert=/opt/vault/tls/ca.crt \
-  -client-cert=/opt/consul/tls/consul.crt \
-  -client-key=/opt/consul/tls/consul.key \
-  name=consul
-
-# Verify policies attached
-vault token lookup
-
-# Test API access with client cert
-curl --cert /opt/consul/tls/consul.crt \
-     --key /opt/consul/tls/consul.key \
-     --cacert /opt/vault/tls/ca.crt \
-     https://vault.service.consul:8200/v1/sys/health
+uv run ansible-playbook playbooks/infrastructure/vault/validate-vault-client-certs.yml
 ```
+
+The validation playbook performs the following checks:
+
+```yaml
+- name: Validate Vault Client Certificate Authentication
+  hosts: vault_servers
+  tasks:
+    - name: List enabled auth methods
+      community.hashi_vault.vault_list:
+        path: sys/auth
+      register: auth_methods
+
+    - name: Assert cert auth method is enabled
+      ansible.builtin.assert:
+        that:
+          - "'cert/' in auth_methods.data.data"
+        fail_msg: "Certificate auth method not enabled in Vault"
+
+    - name: Test certificate authentication for Consul
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:8200/v1/auth/cert/login"
+        method: POST
+        client_cert: /opt/consul/tls/consul.crt
+        client_key: /opt/consul/tls/consul.key
+        validate_certs: yes
+        ca_path: /opt/vault/tls/ca.crt
+        body_format: json
+        body:
+          name: "consul"
+      register: consul_cert_auth
+      when: inventory_hostname in groups['consul_servers'] or inventory_hostname in groups['consul_clients']
+
+    - name: Assert Consul certificate authentication succeeded
+      ansible.builtin.assert:
+        that:
+          - consul_cert_auth.status == 200
+          - consul_cert_auth.json.auth.client_token is defined
+          - consul_cert_auth.json.auth.policies is defined
+        fail_msg: "Consul certificate authentication failed"
+      when: consul_cert_auth is defined
+
+    - name: Test certificate authentication for Nomad
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:8200/v1/auth/cert/login"
+        method: POST
+        client_cert: /opt/nomad/tls/nomad.crt
+        client_key: /opt/nomad/tls/nomad.key
+        validate_certs: yes
+        ca_path: /opt/vault/tls/ca.crt
+        body_format: json
+        body:
+          name: "nomad"
+      register: nomad_cert_auth
+      when: inventory_hostname in groups['nomad_servers'] or inventory_hostname in groups['nomad_clients']
+
+    - name: Assert Nomad certificate authentication succeeded
+      ansible.builtin.assert:
+        that:
+          - nomad_cert_auth.status == 200
+          - nomad_cert_auth.json.auth.client_token is defined
+          - nomad_cert_auth.json.auth.policies is defined
+        fail_msg: "Nomad certificate authentication failed"
+      when: nomad_cert_auth is defined
+
+    - name: Verify token properties for Consul auth
+      community.hashi_vault.vault_token_lookup:
+        token: "{{ consul_cert_auth.json.auth.client_token }}"
+      register: consul_token_info
+      when: consul_cert_auth is defined and consul_cert_auth.json.auth.client_token is defined
+
+    - name: Assert Consul token has correct policies
+      ansible.builtin.assert:
+        that:
+          - "'consul-agent' in consul_token_info.data.data.policies"
+        fail_msg: "Consul token does not have correct policies attached"
+      when: consul_token_info is defined
+
+    - name: Verify token properties for Nomad auth
+      community.hashi_vault.vault_token_lookup:
+        token: "{{ nomad_cert_auth.json.auth.client_token }}"
+      register: nomad_token_info
+      when: nomad_cert_auth is defined and nomad_cert_auth.json.auth.client_token is defined
+
+    - name: Assert Nomad token has correct policies
+      ansible.builtin.assert:
+        that:
+          - "'nomad-server' in nomad_token_info.data.data.policies"
+        fail_msg: "Nomad token does not have correct policies attached"
+      when: nomad_token_info is defined
+
+    - name: Test API access with client certificate
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health"
+        client_cert: /opt/consul/tls/consul.crt
+        client_key: /opt/consul/tls/consul.key
+        validate_certs: yes
+        ca_path: /opt/vault/tls/ca.crt
+      register: api_health_check
+      when: inventory_hostname in groups['consul_servers'] or inventory_hostname in groups['consul_clients']
+
+    - name: Assert API responds with client certificate
+      ansible.builtin.assert:
+        that:
+          - api_health_check.status == 200
+          - api_health_check.json.initialized == true
+        fail_msg: "Vault API not accessible with client certificates"
+      when: api_health_check is defined
+
+    - name: Verify backward compatibility with token auth still works
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health"
+        validate_certs: yes
+        ca_path: /opt/vault/tls/ca.crt
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+      register: token_health_check
+      when: vault_token is defined
+
+    - name: Assert token authentication still works
+      ansible.builtin.assert:
+        that:
+          - token_health_check.status == 200
+        fail_msg: "Token authentication compatibility broken"
+      when: token_health_check is defined
+```
+
+Expected output:
+
+- Certificate auth method enabled and accessible
+- Consul and Nomad services can authenticate using their certificates
+- Authentication tokens contain correct policies (consul-agent, nomad-server)
+- API endpoints respond correctly with client certificate authentication
+- Backward compatibility maintained with existing token authentication
+- All certificate-based authentication requests return valid tokens with appropriate TTLs
 
 ## Notes
 

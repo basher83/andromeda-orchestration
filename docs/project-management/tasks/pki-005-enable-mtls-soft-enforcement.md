@@ -1,10 +1,12 @@
-# Task: Enable mTLS Soft Enforcement
-
-**Task ID**: PKI-005
-**Parent Issue**: #98 (mTLS for Service Communication)
-**Priority**: P0 - Critical
-**Estimated Time**: 2 hours
-**Dependencies**: PKI-002, PKI-003, PKI-004
+---
+Task: Enable mTLS Soft Enforcement
+Task ID: PKI-005
+Parent Issue: 98 - mTLS for Service Communication
+Priority: P0 - Critical
+Estimated Time: 2 hours
+Dependencies: PKI-002, PKI-003, PKI-004
+Status: Ready
+---
 
 ## Objective
 
@@ -44,7 +46,7 @@ Enable mTLS in permissive mode across all HashiCorp services to validate certifi
      ansible.builtin.replace:
        path: /etc/nomad.d/nomad.hcl
        regexp: 'verify_https_client\s*=\s*true'
-       replace: 'verify_https_client = false  # Soft enforcement'
+       replace: "verify_https_client = false  # Soft enforcement"
      notify: reload nomad
    ```
 
@@ -55,7 +57,7 @@ Enable mTLS in permissive mode across all HashiCorp services to validate certifi
      ansible.builtin.replace:
        path: /etc/vault.d/vault.hcl
        regexp: 'tls_require_and_verify_client_cert\s*=\s*true'
-       replace: 'tls_require_and_verify_client_cert = false  # Soft enforcement'
+       replace: "tls_require_and_verify_client_cert = false  # Soft enforcement"
      notify: reload vault
    ```
 
@@ -91,7 +93,7 @@ Enable mTLS in permissive mode across all HashiCorp services to validate certifi
    - name: Deploy mTLS validation script
      ansible.builtin.copy:
        dest: /usr/local/bin/validate-mtls.sh
-       mode: '0755'
+       mode: "0755"
        content: |
          #!/bin/bash
          echo "=== mTLS Soft Enforcement Validation ==="
@@ -131,19 +133,67 @@ Enable mTLS in permissive mode across all HashiCorp services to validate certifi
 
 ## Validation
 
+Run validation playbook:
+
 ```bash
-# Test mixed connections
-# TLS connection
-curl --cert client.crt --key client.key https://consul.service.consul:8501/v1/status/leader
+uv run ansible-playbook playbooks/infrastructure/vault/validate-mtls-soft-enforcement.yml
+```
 
-# Non-TLS connection (should still work)
-curl http://consul.service.consul:8500/v1/status/leader
+Validation playbook content:
 
-# Check logs for non-TLS attempts
-grep "connection without TLS" /var/log/tls-violations.log
+```yaml
+---
+- name: Validate mTLS Soft Enforcement
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Test TLS connection to Consul
+      ansible.builtin.uri:
+        url: "https://consul.service.consul:8501/v1/status/leader"
+        client_cert: /opt/consul/tls/consul.crt
+        client_key: /opt/consul/tls/consul.key
+        validate_certs: yes
+      register: tls_connection
+      changed_when: false
 
-# Monitor TLS vs non-TLS traffic ratio
-ss -tln | grep -E ":(8200|8300|8301|8500|8501|4646|4647|4648)"
+    - name: Test non-TLS connection to Consul (should work in soft mode)
+      ansible.builtin.uri:
+        url: "http://consul.service.consul:8500/v1/status/leader"
+        method: GET
+      register: non_tls_connection
+      changed_when: false
+      failed_when: false
+
+    - name: Check for non-TLS connection attempts in logs
+      ansible.builtin.command: grep "connection without TLS" /var/log/tls-violations.log
+      register: non_tls_attempts
+      changed_when: false
+      failed_when: false
+
+    - name: Monitor active TLS connections
+      ansible.builtin.command: ss -tln
+      register: active_connections
+      changed_when: false
+
+    - name: Filter HashiCorp service connections
+      ansible.builtin.set_fact:
+        service_connections: "{{ active_connections.stdout_lines | select('match', '.*:(8200|8300|8301|8500|8501|4646|4647|4648)') | list }}"
+
+    - name: Display validation results
+      ansible.builtin.debug:
+        msg: |
+          TLS Connection Status: {{ 'SUCCESS' if tls_connection.status == 200 else 'FAILED' }}
+          Non-TLS Connection Status: {{ 'ALLOWED' if non_tls_connection.status == 200 else 'BLOCKED' }}
+          Non-TLS Attempts Found: {{ non_tls_attempts.stdout_lines | length }}
+          Active Service Connections: {{ service_connections | length }}
+
+    - name: Verify soft enforcement is working
+      ansible.builtin.assert:
+        that:
+          - tls_connection.status == 200
+          - non_tls_connection.status == 200  # Should work in soft mode
+        fail_msg: "mTLS soft enforcement validation failed"
+        success_msg: "mTLS soft enforcement is working correctly"
 ```
 
 ## Monitoring Period

@@ -1,10 +1,12 @@
-# Task: Configure Consul Auto-Encrypt with mTLS
-
-**Task ID**: PKI-002
-**Parent Issue**: #98 (mTLS for Service Communication)
-**Priority**: P0 - Critical
-**Estimated Time**: 4 hours
-**Dependencies**: PKI-001
+---
+Task: Configure Consul Auto-Encrypt with mTLS
+Task ID: PKI-002
+Parent Issue: 98 - mTLS for Service Communication
+Priority: P0 - Critical
+Estimated Time: 4 hours
+Dependencies: PKI-001
+Status: Ready
+---
 
 ## Objective
 
@@ -32,7 +34,7 @@ Enable Consul auto-encrypt to automatically distribute and rotate TLS certificat
        dest: /opt/consul/tls/ca.crt
        owner: consul
        group: consul
-       mode: '0644'
+       mode: "0644"
    ```
 
 2. **Configure Consul Servers for Auto-Encrypt**
@@ -47,7 +49,7 @@ Enable Consul auto-encrypt to automatically distribute and rotate TLS certificat
          ca_file: "/opt/consul/tls/ca.crt"
          cert_file: "/opt/consul/tls/consul.crt"
          key_file: "/opt/consul/tls/consul.key"
-         verify_incoming: false  # Start with soft enforcement
+         verify_incoming: false # Start with soft enforcement
          verify_outgoing: true
          verify_server_hostname: true
          auto_encrypt:
@@ -132,19 +134,74 @@ Enable Consul auto-encrypt to automatically distribute and rotate TLS certificat
 
 ## Validation
 
+Run validation playbook:
+
 ```bash
-# Verify TLS is enabled
-consul info | grep -A5 "build"
-
-# Check certificate validity
-openssl x509 -in /opt/consul/tls/consul.crt -text -noout
-
-# Verify encrypted communication
-consul members -detailed
-
-# Test auto-encrypt
-consul agent -retry-join consul.service.consul -log-level=debug 2>&1 | grep "auto-encrypt"
+uv run ansible-playbook playbooks/infrastructure/vault/validate-consul-auto-encrypt.yml
 ```
+
+The validation playbook performs the following checks:
+
+```yaml
+- name: Validate Consul Auto-Encrypt Configuration
+  hosts: consul_servers:consul_clients
+  tasks:
+    - name: Verify TLS is enabled in Consul configuration
+      ansible.builtin.command: uv run consul info
+      register: consul_info
+      changed_when: false
+
+    - name: Assert TLS is configured
+      ansible.builtin.assert:
+        that:
+          - "'encrypt' in consul_info.stdout"
+        fail_msg: "TLS encryption not enabled in Consul"
+
+    - name: Check certificate validity
+      ansible.builtin.command: >
+        openssl x509 -in /opt/consul/tls/consul.crt -text -noout -checkend 86400
+      register: cert_check
+      changed_when: false
+      failed_when: cert_check.rc != 0
+
+    - name: Verify encrypted communication
+      ansible.builtin.command: uv run consul members -detailed
+      register: consul_members
+      changed_when: false
+
+    - name: Assert all members show encrypted status
+      ansible.builtin.assert:
+        that:
+          - "'Status=alive' in consul_members.stdout"
+        fail_msg: "Consul cluster communication issues detected"
+
+    - name: Test auto-encrypt functionality (clients only)
+      ansible.builtin.shell: >
+        systemctl status consul | grep -q "auto-encrypt" ||
+        journalctl -u consul --since="10 minutes ago" | grep -q "auto-encrypt"
+      register: auto_encrypt_test
+      changed_when: false
+      when: inventory_hostname in groups['consul_clients']
+
+    - name: Validate certificate auto-distribution
+      ansible.builtin.stat:
+        path: /opt/consul/tls/consul.crt
+      register: client_cert
+
+    - name: Assert client certificates exist
+      ansible.builtin.assert:
+        that:
+          - client_cert.stat.exists
+          - client_cert.stat.mode == '0644'
+        fail_msg: "Client certificates not properly distributed"
+```
+
+Expected output:
+
+- TLS encryption enabled in Consul configuration
+- All certificates valid and not expiring within 24 hours
+- All cluster members showing healthy status
+- Auto-encrypt successfully distributing certificates to clients
 
 ## Notes
 

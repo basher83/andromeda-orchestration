@@ -1,9 +1,12 @@
-# Task: Create Service PKI Roles
-
-**Task ID**: PKI-001
-**Parent Issue**: #98 (mTLS for Service Communication)
-**Priority**: P0 - Critical
-**Estimated Time**: 2 hours
+---
+Task: Create Service PKI Roles
+Task ID: PKI-001
+Parent Issue: 98 - mTLS for Service Communication
+Priority: P0 - Critical
+Estimated Time: 2 hours
+Dependencies: None
+Status: Ready
+---
 
 ## Objective
 
@@ -86,7 +89,7 @@ Create dedicated PKI roles in Vault for each HashiCorp service (Consul, Nomad, V
          allow_subdomains: true
          client_flag: true
          server_flag: false
-         max_ttl: "168h"  # 7 days for clients
+         max_ttl: "168h" # 7 days for clients
          ttl: "168h"
    ```
 

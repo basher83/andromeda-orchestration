@@ -1,10 +1,12 @@
-# Task: Enable mTLS Hard Enforcement
-
-**Task ID**: PKI-006
-**Parent Issue**: #98 (mTLS for Service Communication)
-**Priority**: P0 - Critical
-**Estimated Time**: 3 hours
-**Dependencies**: PKI-005 (48+ hours in soft enforcement)
+---
+Task: Enable mTLS Hard Enforcement
+Task ID: PKI-006
+Parent Issue: 98 - mTLS for Service Communication
+Priority: P0 - Critical
+Estimated Time: 3 hours
+Dependencies: PKI-005 (48+ hours in soft enforcement)
+Status: Ready
+---
 
 ## Objective
 
@@ -41,7 +43,7 @@ Enable strict mTLS verification across all HashiCorp services, rejecting any con
      ansible.builtin.replace:
        path: /etc/consul.d/tls.hcl
        regexp: 'verify_incoming\s*=\s*false'
-       replace: 'verify_incoming = true'
+       replace: "verify_incoming = true"
 
    - name: Update Consul intention defaults
      community.general.consul_intention:
@@ -69,7 +71,7 @@ Enable strict mTLS verification across all HashiCorp services, rejecting any con
      ansible.builtin.replace:
        path: /etc/nomad.d/nomad.hcl
        regexp: 'verify_https_client\s*=\s*false'
-       replace: 'verify_https_client = true'
+       replace: "verify_https_client = true"
 
    - name: Update Nomad ACL default policy
      ansible.builtin.copy:
@@ -92,7 +94,7 @@ Enable strict mTLS verification across all HashiCorp services, rejecting any con
      ansible.builtin.replace:
        path: /etc/vault.d/vault.hcl
        regexp: 'tls_require_and_verify_client_cert\s*=\s*false'
-       replace: 'tls_require_and_verify_client_cert = true'
+       replace: "tls_require_and_verify_client_cert = true"
    ```
 
 5. **Staged Rollout**
@@ -159,19 +161,89 @@ Enable strict mTLS verification across all HashiCorp services, rejecting any con
 
 ## Validation
 
+Run validation playbook:
+
 ```bash
-# Test rejection of non-TLS
-curl -v http://consul.service.consul:8500/v1/status/leader
-# Expected: Connection refused or TLS required error
+uv run ansible-playbook playbooks/infrastructure/vault/validate-mtls-hard-enforcement.yml
+```
 
-# Test acceptance of mTLS
-curl --cert client.crt --key client.key \
-     --cacert ca.crt \
-     https://consul.service.consul:8501/v1/status/leader
-# Expected: Success
+Validation playbook content:
 
-# Verify all connections encrypted
-netstat -tn | grep ESTABLISHED | grep -E ":(8200|8501|4647)"
+```yaml
+---
+- name: Validate mTLS Hard Enforcement
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Test rejection of non-TLS connection to Consul
+      ansible.builtin.uri:
+        url: "http://consul.service.consul:8500/v1/status/leader"
+        method: GET
+      register: non_tls_test
+      changed_when: false
+      failed_when: false
+
+    - name: Test acceptance of mTLS connection to Consul
+      ansible.builtin.uri:
+        url: "https://consul.service.consul:8501/v1/status/leader"
+        client_cert: /opt/consul/tls/consul.crt
+        client_key: /opt/consul/tls/consul.key
+        ca_path: /opt/consul/tls/ca.crt
+        validate_certs: yes
+      register: tls_test
+      changed_when: false
+
+    - name: Test mTLS connection to Nomad
+      ansible.builtin.uri:
+        url: "https://nomad.service.consul:4647/v1/status/leader"
+        client_cert: /opt/nomad/tls/nomad.crt
+        client_key: /opt/nomad/tls/nomad.key
+        ca_path: /opt/nomad/tls/ca.crt
+        validate_certs: yes
+      register: nomad_tls_test
+      changed_when: false
+
+    - name: Test mTLS connection to Vault
+      ansible.builtin.uri:
+        url: "https://vault.service.consul:8200/v1/sys/health"
+        client_cert: /opt/vault/tls/vault.crt
+        client_key: /opt/vault/tls/vault.key
+        ca_path: /opt/vault/tls/ca.crt
+        validate_certs: yes
+      register: vault_tls_test
+      changed_when: false
+
+    - name: Check established encrypted connections
+      ansible.builtin.command: netstat -tn
+      register: established_connections
+      changed_when: false
+
+    - name: Filter encrypted service connections
+      ansible.builtin.set_fact:
+        encrypted_connections: "{{ established_connections.stdout_lines | select('match', '.*ESTABLISHED.*:(8200|8501|4647)') | list }}"
+
+    - name: Display validation results
+      ansible.builtin.debug:
+        msg: |
+          Non-TLS Connection Status: {{ 'REJECTED' if non_tls_test.status != 200 else 'UNEXPECTEDLY ALLOWED' }}
+          Consul mTLS Status: {{ 'SUCCESS' if tls_test.status == 200 else 'FAILED' }}
+          Nomad mTLS Status: {{ 'SUCCESS' if nomad_tls_test.status == 200 else 'FAILED' }}
+          Vault mTLS Status: {{ 'SUCCESS' if vault_tls_test.status == 200 else 'FAILED' }}
+          Encrypted Connections: {{ encrypted_connections | length }}
+
+    - name: Verify hard enforcement is working
+      ansible.builtin.assert:
+        that:
+          - non_tls_test.status != 200  # Non-TLS should be rejected
+          - tls_test.status == 200      # mTLS should work
+          - nomad_tls_test.status == 200
+          - vault_tls_test.status == 200
+        fail_msg: "mTLS hard enforcement validation failed"
+        success_msg: "mTLS hard enforcement is working correctly"
+
+    - name: Log validation completion
+      ansible.builtin.debug:
+        msg: "mTLS hard enforcement validation completed successfully"
 ```
 
 ## Rollback Plan
