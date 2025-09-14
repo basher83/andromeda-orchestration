@@ -1,10 +1,12 @@
-# Task: Validate Zero-Downtime Certificate Rotation
-
-**Task ID**: PKI-010
-**Parent Issue**: #100 (Certificate Rotation and Distribution)
-**Priority**: P0 - Critical
-**Estimated Time**: 3 hours
-**Dependencies**: PKI-007, PKI-008, PKI-009
+---
+Task: Validate Zero-Downtime Certificate Rotation
+Task ID: PKI-010
+Parent Issue: 100 - Certificate Rotation and Distribution
+Priority: P0 - Critical
+Estimated Time: 3 hours
+Dependencies: PKI-007, PKI-008, PKI-009
+Status: Ready
+---
 
 ## Objective
 
@@ -27,7 +29,7 @@ Implement comprehensive validation to ensure certificate rotation occurs without
    - name: Zero-Downtime Certificate Rotation Validation
      hosts: localhost
      vars:
-       test_duration_seconds: 300  # 5 minutes
+       test_duration_seconds: 300 # 5 minutes
        probe_interval_ms: 500
        services:
          - { name: consul, port: 8501, endpoint: "/v1/status/leader" }
@@ -232,18 +234,282 @@ Implement comprehensive validation to ensure certificate rotation occurs without
 
 ## Validation
 
+Run validation playbook:
+
 ```bash
-# Run validation suite
-ansible-playbook playbooks/infrastructure/vault/validate-zero-downtime.yml
+uv run ansible-playbook playbooks/infrastructure/vault/validate-zero-downtime.yml
+```
 
-# Check failure logs
-for service in consul nomad vault; do
-  echo "=== $service failures ==="
-  cat /tmp/${service}-failures.log 2>/dev/null || echo "No failures"
-done
+The validation playbook performs comprehensive zero-downtime testing:
 
-# View validation report
-ls -la /var/log/cert-rotation-validation-*.html
+```yaml
+# playbooks/infrastructure/vault/validate-zero-downtime.yml
+---
+- name: Validate Zero-Downtime Certificate Rotation
+  hosts: all
+  vars:
+    test_duration_seconds: 300
+    probe_interval_ms: 500
+    services:
+      - { name: consul, port: 8501, endpoint: "/v1/status/leader" }
+      - { name: nomad, port: 4646, endpoint: "/v1/status/leader" }
+      - { name: vault, port: 8200, endpoint: "/v1/sys/health" }
+
+  tasks:
+    - name: Start availability monitoring for each service
+      ansible.builtin.shell: |
+        timeout {{ test_duration_seconds }}s bash -c '
+        service="{{ item.name }}"
+        port="{{ item.port }}"
+        endpoint="{{ item.endpoint }}"
+        interval_sec=$(echo "scale=3; {{ probe_interval_ms }}/1000" | bc)
+
+        success=0
+        failure=0
+        failure_log="/tmp/${service}-failures.log"
+        > "$failure_log"
+
+        while true; do
+          if curl -k -f -s --max-time 1 \
+               --cert /opt/${service}/tls/${service}.crt \
+               --key /opt/${service}/tls/${service}.key \
+               https://localhost:${port}${endpoint} >/dev/null 2>&1; then
+            success=$((success + 1))
+          else
+            failure=$((failure + 1))
+            echo "$(date "+%Y-%m-%d %H:%M:%S.%3N") - ${service} probe failed" >> "$failure_log"
+          fi
+          sleep $interval_sec
+        done
+
+        uptime=$(echo "scale=2; ${success}*100/(${success}+${failure})" | bc)
+        echo "{\"service\":\"${service}\",\"success\":${success},\"failure\":${failure},\"uptime\":${uptime}}"
+        ' > /tmp/{{ item.name }}-monitor.json 2>&1 &
+        echo $! > /tmp/{{ item.name }}-monitor.pid
+      loop: "{{ services }}"
+      async: "{{ test_duration_seconds + 10 }}"
+      poll: 0
+      register: monitor_jobs
+
+    - name: Wait for monitors to stabilize
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Deploy test workload for job continuity validation
+      ansible.builtin.copy:
+        dest: /tmp/test-job.nomad
+        content: |
+          job "zero-downtime-test" {
+            datacenters = ["dc1"]
+            type = "service"
+
+            group "continuity-test" {
+              count = 2
+
+              task "probe" {
+                driver = "docker"
+
+                config {
+                  image = "curlimages/curl:latest"
+                  command = "sh"
+                  args = ["-c", "while true; do curl -s consul.service.consul:8500/v1/status/leader && sleep 2; done"]
+                }
+
+                resources {
+                  cpu = 50
+                  memory = 32
+                }
+              }
+            }
+          }
+
+    - name: Start test workload
+      ansible.builtin.command: |
+        uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
+          -e job=/tmp/test-job.nomad
+      register: test_job_deploy
+      changed_when: false
+
+    - name: Monitor job status during rotation
+      ansible.builtin.shell: |
+        timeout {{ test_duration_seconds }}s bash -c '
+        while true; do
+          status=$(nomad job status zero-downtime-test -json 2>/dev/null | jq -r ".Status" || echo "unknown")
+          echo "$(date "+%H:%M:%S"): $status"
+          if [[ "$status" == "dead" ]]; then
+            echo "ERROR: Job died during rotation!"
+            exit 1
+          fi
+          sleep 5
+        done
+        '
+      register: job_monitoring
+      async: "{{ test_duration_seconds + 10 }}"
+      poll: 0
+
+    - name: Trigger certificate rotation during monitoring
+      ansible.builtin.include_tasks: ../cert_rotation/main.yml
+      vars:
+        force_renewal: true
+        target_services:
+          - consul
+          - nomad
+          - vault
+
+    - name: Record rotation completion timestamp
+      ansible.builtin.set_fact:
+        rotation_timestamp: "{{ ansible_date_time.iso8601 }}"
+
+    - name: Wait for all monitoring to complete
+      ansible.builtin.async_status:
+        jid: "{{ item.ansible_job_id }}"
+      loop: "{{ monitor_jobs.results }}"
+      register: monitor_results
+      until: monitor_results.finished
+      retries: "{{ (test_duration_seconds / 10) | int + 5 }}"
+      delay: 10
+
+    - name: Wait for job monitoring to complete
+      ansible.builtin.async_status:
+        jid: "{{ job_monitoring.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: "{{ (test_duration_seconds / 10) | int + 5 }}"
+      delay: 10
+
+    - name: Collect availability monitoring results
+      ansible.builtin.shell: |
+        for service in consul nomad vault; do
+          if [[ -f /tmp/${service}-monitor.json ]]; then
+            cat /tmp/${service}-monitor.json
+          fi
+        done
+      register: availability_results
+      changed_when: false
+
+    - name: Parse monitoring results
+      ansible.builtin.set_fact:
+        validation_results: |
+          {% set results = [] %}
+          {% for line in availability_results.stdout_lines %}
+            {% if line | regex_search('{.*}') %}
+              {% set _ = results.append(line | from_json) %}
+            {% endif %}
+          {% endfor %}
+          {{ results }}
+
+    - name: Check for failure logs
+      ansible.builtin.shell: |
+        for service in consul nomad vault; do
+          failure_log="/tmp/${service}-failures.log"
+          if [[ -f "$failure_log" ]] && [[ -s "$failure_log" ]]; then
+            echo "=== $service failures ==="
+            cat "$failure_log"
+          else
+            echo "=== $service failures ==="
+            echo "No failures recorded"
+          fi
+        done
+      register: failure_logs
+      changed_when: false
+
+    - name: Generate validation report
+      ansible.builtin.copy:
+        dest: "/var/log/cert-rotation-validation-{{ ansible_date_time.epoch }}.html"
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Zero-Downtime Certificate Rotation Validation</title>
+            <style>
+              body { font-family: monospace; margin: 20px; }
+              .pass { color: green; font-weight: bold; }
+              .fail { color: red; font-weight: bold; }
+              .summary { background: #f0f0f0; padding: 15px; margin: 10px 0; }
+            </style>
+          </head>
+          <body>
+            <h1>Zero-Downtime Certificate Rotation Validation Report</h1>
+            <div class="summary">
+              <h2>Test Parameters</h2>
+              <p>Duration: {{ test_duration_seconds }} seconds</p>
+              <p>Probe Interval: {{ probe_interval_ms }}ms</p>
+              <p>Rotation Time: {{ rotation_timestamp }}</p>
+            </div>
+
+            <h2>Service Availability Results</h2>
+            {% for service in validation_results %}
+            <div>
+              <h3>{{ service.service | title }}</h3>
+              <p>Uptime: <span class="{{ 'pass' if service.uptime | float >= 99.9 else 'fail' }}">{{ service.uptime }}%</span></p>
+              <p>Successful Probes: {{ service.success }}</p>
+              <p>Failed Probes: {{ service.failure }}</p>
+            </div>
+            {% endfor %}
+
+            <h2>Workload Continuity</h2>
+            <p>Status: <span class="{{ 'pass' if 'dead' not in job_result.stdout else 'fail' }}">
+              {{ 'PASSED' if 'dead' not in job_result.stdout else 'FAILED' }}
+            </span></p>
+
+            <h2>Overall Result</h2>
+            <p class="{{ 'pass' if (validation_results | selectattr('uptime', '<', 99.9) | list | length == 0) and ('dead' not in job_result.stdout) else 'fail' }}">
+              {{ 'PASSED' if (validation_results | selectattr('uptime', '<', 99.9) | list | length == 0) and ('dead' not in job_result.stdout) else 'FAILED' }}
+            </p>
+          </body>
+          </html>
+
+    - name: Assert zero-downtime achieved
+      ansible.builtin.assert:
+        that:
+          - item.uptime | float >= 99.9
+        fail_msg: "Service {{ item.service }} had {{ 100 - (item.uptime | float) }}% downtime!"
+      loop: "{{ validation_results }}"
+
+    - name: Assert workload continuity maintained
+      ansible.builtin.assert:
+        that:
+          - "'dead' not in job_result.stdout"
+        fail_msg: "Test workload was disrupted during certificate rotation!"
+
+    - name: Display validation summary
+      ansible.builtin.debug:
+        msg: |
+          === Zero-Downtime Validation Results ===
+          Test Duration: {{ test_duration_seconds }} seconds
+          Rotation Time: {{ rotation_timestamp }}
+
+          Service Availability:
+          {% for service in validation_results %}
+          - {{ service.service }}: {{ service.uptime }}% uptime ({{ service.failure }} failures)
+          {% endfor %}
+
+          Workload Impact: {{ 'None detected' if 'dead' not in job_result.stdout else 'Disruption detected' }}
+
+          Overall Result: {{ 'PASSED' if (validation_results | selectattr('uptime', '<', 99.9) | list | length == 0) and ('dead' not in job_result.stdout) else 'FAILED' }}
+
+          Report saved to: /var/log/cert-rotation-validation-{{ ansible_date_time.epoch }}.html
+
+    - name: Cleanup test workload
+      ansible.builtin.command: nomad job stop -purge zero-downtime-test
+      changed_when: false
+      failed_when: false
+
+    - name: Cleanup monitoring files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/consul-monitor.json
+        - /tmp/nomad-monitor.json
+        - /tmp/vault-monitor.json
+        - /tmp/consul-monitor.pid
+        - /tmp/nomad-monitor.pid
+        - /tmp/vault-monitor.pid
+        - /tmp/consul-failures.log
+        - /tmp/nomad-failures.log
+        - /tmp/vault-failures.log
+        - /tmp/test-job.nomad
 ```
 
 ## Performance Benchmarks

@@ -1,10 +1,12 @@
-# Task: Implement Automated Certificate Renewal
-
-**Task ID**: PKI-008
-**Parent Issue**: #100 (Certificate Rotation and Distribution)
-**Priority**: P0 - Critical
-**Estimated Time**: 4 hours
-**Dependencies**: PKI-007 (Monitoring must be in place)
+---
+Task: Implement Automated Certificate Renewal
+Task ID: PKI-008
+Parent Issue: 100 - Certificate Rotation and Distribution
+Priority: P0 - Critical
+Estimated Time: 4 hours
+Dependencies: PKI-007 (Monitoring must be in place)
+Status: Ready
+---
 
 ## Objective
 
@@ -67,7 +69,7 @@ Implement automated certificate renewal that triggers 30 days before expiration,
      ansible.builtin.file:
        path: "{{ backup_dir }}/{{ service_name }}/{{ ansible_date_time.date }}"
        state: directory
-       mode: '0700'
+       mode: "0700"
 
    - name: Backup existing certificate
      ansible.builtin.copy:
@@ -106,7 +108,7 @@ Implement automated certificate renewal that triggers 30 days before expiration,
            dest: "{{ cert_path }}"
            owner: "{{ service_name }}"
            group: "{{ service_name }}"
-           mode: '0644'
+           mode: "0644"
            backup: yes
 
        - name: Write new private key
@@ -115,7 +117,7 @@ Implement automated certificate renewal that triggers 30 days before expiration,
            dest: "{{ cert_path | replace('.crt', '.key') }}"
            owner: "{{ service_name }}"
            group: "{{ service_name }}"
-           mode: '0600'
+           mode: "0600"
            backup: yes
 
        - name: Update CA bundle if needed
@@ -124,7 +126,7 @@ Implement automated certificate renewal that triggers 30 days before expiration,
            dest: "{{ cert_path | replace(service_name + '.crt', 'ca-bundle.crt') }}"
            owner: "{{ service_name }}"
            group: "{{ service_name }}"
-           mode: '0644'
+           mode: "0644"
          when: new_cert.data.ca_chain is defined
      when: cert_valid is succeeded
 
@@ -201,7 +203,7 @@ Implement automated certificate renewal that triggers 30 days before expiration,
    - name: Create manual renewal script
      ansible.builtin.copy:
        dest: /usr/local/bin/renew-cert
-       mode: '0755'
+       mode: "0755"
        content: |
          #!/bin/bash
          set -e
@@ -229,7 +231,7 @@ Implement automated certificate renewal that triggers 30 days before expiration,
    - name: Deploy renewal status script
      ansible.builtin.copy:
        dest: /usr/local/bin/cert-renewal-status
-       mode: '0755'
+       mode: "0755"
        content: |
          #!/bin/bash
 
@@ -260,21 +262,94 @@ Implement automated certificate renewal that triggers 30 days before expiration,
 
 ## Validation
 
+Run validation playbook:
+
 ```bash
-# Check renewal timer status
-systemctl status cert-renewal.timer
+uv run ansible-playbook playbooks/infrastructure/vault/validate-certificate-renewal.yml
+```
 
-# View renewal service logs
-journalctl -u cert-renewal.service -n 50
+The validation playbook performs these checks:
 
-# Test manual renewal (dry-run)
-ansible-playbook /opt/ansible/playbooks/infrastructure/vault/renew-certificates.yml --check
+```yaml
+# playbooks/infrastructure/vault/validate-certificate-renewal.yml
+---
+- name: Validate Certificate Renewal Automation
+  hosts: all
+  tasks:
+    - name: Check renewal timer status
+      ansible.builtin.systemd:
+        name: cert-renewal.timer
+      register: timer_status
+      changed_when: false
 
-# Check renewal status
-/usr/local/bin/cert-renewal-status
+    - name: Assert timer is enabled and active
+      ansible.builtin.assert:
+        that:
+          - timer_status.status.ActiveState == "active"
+          - timer_status.status.UnitFileState == "enabled"
+        fail_msg: "Certificate renewal timer is not properly configured"
 
-# Verify backups
-ls -la /opt/certificate-backups/
+    - name: Check renewal service logs
+      ansible.builtin.shell: |
+        journalctl -u cert-renewal.service -n 10 --no-pager
+      register: service_logs
+      changed_when: false
+
+    - name: Test renewal playbook (dry-run)
+      ansible.builtin.command: |
+        uv run ansible-playbook playbooks/infrastructure/vault/renew-certificates.yml --check
+      register: dry_run_result
+      changed_when: false
+      failed_when: dry_run_result.rc != 0
+
+    - name: Check certificate backup directory
+      ansible.builtin.stat:
+        path: /opt/certificate-backups
+      register: backup_dir
+
+    - name: Assert backup directory exists and is accessible
+      ansible.builtin.assert:
+        that:
+          - backup_dir.stat.exists
+          - backup_dir.stat.isdir
+          - backup_dir.stat.mode == "0700"
+        fail_msg: "Certificate backup directory not properly configured"
+
+    - name: Check renewal status script
+      ansible.builtin.stat:
+        path: /usr/local/bin/cert-renewal-status
+      register: status_script
+
+    - name: Assert renewal status script is available
+      ansible.builtin.assert:
+        that:
+          - status_script.stat.exists
+          - status_script.stat.executable
+        fail_msg: "Certificate renewal status script not available"
+
+    - name: Validate certificate expiration monitoring
+      ansible.builtin.shell: |
+        for cert in /opt/*/tls/*.crt; do
+          if [[ -f "$cert" ]]; then
+            days_left=$(( ($(openssl x509 -enddate -noout -in "$cert" | cut -d= -f2 | xargs -I {} date -d {} +%s) - $(date +%s)) / 86400 ))
+            echo "$(basename $cert): $days_left days remaining"
+          fi
+        done
+      register: cert_expiry_check
+      changed_when: false
+
+    - name: Display validation results
+      ansible.builtin.debug:
+        msg: |
+          === Certificate Renewal Validation Results ===
+          Timer Status: {{ timer_status.status.ActiveState }}
+          Service Logs: Available ({{ service_logs.stdout_lines | length }} lines)
+          Dry Run: {{ 'PASSED' if dry_run_result.rc == 0 else 'FAILED' }}
+          Backup Directory: {{ 'OK' if backup_dir.stat.exists else 'MISSING' }}
+          Status Script: {{ 'OK' if status_script.stat.exists else 'MISSING' }}
+
+          Certificate Expiry Status:
+          {{ cert_expiry_check.stdout }}
 ```
 
 ## Notes

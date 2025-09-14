@@ -1,10 +1,12 @@
-# Task: Implement Service Reload Handlers for Certificate Updates
-
-**Task ID**: PKI-009
-**Parent Issue**: #100 (Certificate Rotation and Distribution)
-**Priority**: P0 - Critical
-**Estimated Time**: 2 hours
-**Dependencies**: PKI-008
+---
+Task: Implement Service Reload Handlers for Certificate Updates
+Task ID: PKI-009
+Parent Issue: 100 - Certificate Rotation and Distribution
+Priority: P0 - Critical
+Estimated Time: 2 hours
+Dependencies: PKI-008
+Status: Ready
+---
 
 ## Objective
 
@@ -153,9 +155,9 @@ Create intelligent service reload handlers that gracefully reload services after
    - name: Orchestrate service reloads
      vars:
        reload_order:
-         - vault  # Reload Vault first (PKI source)
+         - vault # Reload Vault first (PKI source)
          - consul # Then Consul (service discovery)
-         - nomad  # Finally Nomad (workload orchestrator)
+         - nomad # Finally Nomad (workload orchestrator)
 
      tasks:
        - name: Determine services needing reload
@@ -177,7 +179,7 @@ Create intelligent service reload handlers that gracefully reload services after
          include_tasks: "handlers/{{ item }}.yml"
          loop: "{{ services_to_reload }}"
          vars:
-           max_parallel: 1  # One service at a time
+           max_parallel: 1 # One service at a time
            health_check_timeout: 60
            rollback_on_failure: true
    ```
@@ -233,18 +235,166 @@ Create intelligent service reload handlers that gracefully reload services after
 
 ## Validation
 
+Run validation playbook:
+
 ```bash
-# Test Consul reload
-consul reload && consul members
+uv run ansible-playbook playbooks/infrastructure/vault/validate-service-reload-handlers.yml
+```
 
-# Test Nomad TLS reload
-nomad operator reload-tls
+The validation playbook performs these checks:
 
-# Test Vault reload
-kill -HUP $(pidof vault) && vault status
+```yaml
+# playbooks/infrastructure/vault/validate-service-reload-handlers.yml
+---
+- name: Validate Service Reload Handlers
+  hosts: all
+  tasks:
+    - name: Test Consul reload capability
+      block:
+        - name: Check Consul status before reload
+          ansible.builtin.uri:
+            url: "https://localhost:8501/v1/status/leader"
+            client_cert: /opt/consul/tls/consul.crt
+            client_key: /opt/consul/tls/consul.key
+            validate_certs: false
+          register: consul_before
+          changed_when: false
 
-# Verify no dropped connections during reload
-while true; do curl -k https://localhost:8501/v1/status/leader; sleep 0.5; done
+        - name: Test Consul reload
+          ansible.builtin.command: consul reload
+          register: consul_reload_result
+          changed_when: false
+
+        - name: Verify Consul cluster membership
+          ansible.builtin.command: consul members
+          register: consul_members
+          changed_when: false
+          failed_when: inventory_hostname not in consul_members.stdout
+
+        - name: Check Consul status after reload
+          ansible.builtin.uri:
+            url: "https://localhost:8501/v1/status/leader"
+            client_cert: /opt/consul/tls/consul.crt
+            client_key: /opt/consul/tls/consul.key
+            validate_certs: false
+          register: consul_after
+          changed_when: false
+
+    - name: Test Nomad TLS reload capability
+      block:
+        - name: Check Nomad status before reload
+          ansible.builtin.uri:
+            url: "https://localhost:4646/v1/status/leader"
+            client_cert: /opt/nomad/tls/nomad.crt
+            client_key: /opt/nomad/tls/nomad.key
+            validate_certs: false
+          register: nomad_before
+          changed_when: false
+
+        - name: Test Nomad TLS reload
+          ansible.builtin.command: |
+            nomad operator reload-tls
+          register: nomad_reload_result
+          changed_when: false
+
+        - name: Check Nomad status after reload
+          ansible.builtin.uri:
+            url: "https://localhost:4646/v1/status/leader"
+            client_cert: /opt/nomad/tls/nomad.crt
+            client_key: /opt/nomad/tls/nomad.key
+            validate_certs: false
+          register: nomad_after
+          changed_when: false
+
+    - name: Test Vault reload capability
+      block:
+        - name: Check Vault seal status before reload
+          ansible.builtin.uri:
+            url: "https://localhost:8200/v1/sys/seal-status"
+            validate_certs: false
+          register: vault_before
+          changed_when: false
+
+        - name: Send SIGHUP to Vault for reload
+          ansible.builtin.shell: |
+            kill -HUP $(pidof vault)
+          register: vault_reload_result
+          changed_when: false
+
+        - name: Wait for Vault to process reload
+          ansible.builtin.pause:
+            seconds: 5
+
+        - name: Check Vault status after reload
+          ansible.builtin.uri:
+            url: "https://localhost:8200/v1/sys/health"
+            client_cert: /opt/vault/tls/vault.crt
+            client_key: /opt/vault/tls/vault.key
+            validate_certs: false
+          register: vault_after
+          changed_when: false
+
+    - name: Test connection continuity during reload
+      block:
+        - name: Start continuous connection test
+          ansible.builtin.shell: |
+            timeout 30s bash -c '
+            failures=0
+            total=0
+            while true; do
+              if ! curl -k -s --max-time 1 https://localhost:8501/v1/status/leader >/dev/null 2>&1; then
+                failures=$((failures + 1))
+              fi
+              total=$((total + 1))
+              sleep 0.5
+            done
+            echo "Connection test: $failures failures out of $total attempts"
+            '
+          register: connection_test
+          changed_when: false
+          async: 35
+          poll: 0
+
+        - name: Trigger test reload during connection monitoring
+          ansible.builtin.command: consul reload
+          changed_when: false
+
+        - name: Wait for connection test to complete
+          ansible.builtin.async_status:
+            jid: "{{ connection_test.ansible_job_id }}"
+          register: connection_result
+          until: connection_result.finished
+          retries: 10
+          delay: 5
+
+    - name: Validate reload handler functionality
+      ansible.builtin.assert:
+        that:
+          - consul_reload_result.rc == 0
+          - nomad_reload_result.rc == 0
+          - vault_reload_result.rc == 0
+          - consul_before.status == 200
+          - consul_after.status == 200
+          - nomad_before.status == 200
+          - nomad_after.status == 200
+          - vault_before.status == 200
+          - vault_after.status == 200
+        fail_msg: "Service reload handlers validation failed"
+
+    - name: Display validation results
+      ansible.builtin.debug:
+        msg: |
+          === Service Reload Handlers Validation Results ===
+          Consul Reload: {{ 'PASSED' if consul_reload_result.rc == 0 else 'FAILED' }}
+          Nomad TLS Reload: {{ 'PASSED' if nomad_reload_result.rc == 0 else 'FAILED' }}
+          Vault Reload: {{ 'PASSED' if vault_reload_result.rc == 0 else 'FAILED' }}
+
+          Service Health:
+          - Consul: {{ consul_after.status }} (Before: {{ consul_before.status }})
+          - Nomad: {{ nomad_after.status }} (Before: {{ nomad_before.status }})
+          - Vault: {{ vault_after.status }} (Before: {{ vault_before.status }})
+
+          Connection Continuity: {{ connection_result.stdout if connection_result.stdout is defined else 'Test completed' }}
 ```
 
 ## Notes
