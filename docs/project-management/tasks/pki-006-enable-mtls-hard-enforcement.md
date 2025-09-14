@@ -10,7 +10,25 @@ Status: Ready
 
 ## Objective
 
-Enable strict mTLS verification across all HashiCorp services, rejecting any connections without valid client certificates.
+Create an Ansible playbook that enables strict mTLS verification across all HashiCorp services, rejecting any connections without valid client certificates. This includes configuration validation and service health verification.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/enable-mtls-hard-enforcement.yml
+- Create: playbooks/infrastructure/vault/validate-mtls-hard-enforcement.yml
+- Modify: Service configuration files (/etc/consul.d/tls.hcl, /etc/nomad.d/nomad.hcl, /etc/vault.d/vault.hcl)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/deploy-tls-certificates.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Similar task: PKI-005 (soft enforcement implementation)
+
+## Dependencies
+
+- PKI-005: Created soft enforcement configuration with logging that this task needs to analyze for non-TLS connections
+- Existing: Certificate files deployed to all services at /opt/*/tls/
+- Existing: Service configuration directories and permissions set up correctly
 
 ## Prerequisites
 
@@ -158,8 +176,21 @@ Enable strict mTLS verification across all HashiCorp services, rejecting any con
 - [ ] Service mesh communication fully encrypted
 - [ ] No service disruptions during rollout
 - [ ] Monitoring confirms 100% TLS usage
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/enable-mtls-hard-enforcement.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/enable-mtls-hard-enforcement.yml
+```
 
 Run validation playbook:
 

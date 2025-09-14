@@ -10,7 +10,26 @@ Status: Ready
 
 ## Objective
 
-Enable client certificate authentication for Vault API access, allowing services to authenticate using mTLS certificates instead of tokens.
+Create an Ansible playbook that enables client certificate authentication for Vault API access, allowing services to authenticate using mTLS certificates instead of tokens.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/configure-vault-client-certs.yml
+- Create: playbooks/infrastructure/vault/validate-vault-client-certs.yml
+- Modify: Vault configuration files for client certificate listener settings
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/setup-pki-intermediate-ca.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Auth method configuration: Similar patterns for enabling auth methods in existing playbooks
+
+## Dependencies
+
+- PKI-001: Created PKI roles for certificate issuance (client-auth role required)
+- PKI-003: Nomad TLS configured (nomad certificates available for testing)
+- Vault cluster must be running with TLS enabled
+- CA certificates deployed to Vault nodes
 
 ## Prerequisites
 
@@ -154,8 +173,21 @@ Enable client certificate authentication for Vault API access, allowing services
 - [ ] Client certificates can authenticate to Vault
 - [ ] Appropriate policies attached to cert auth roles
 - [ ] Token auth still works (backward compatibility)
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-vault-client-certs.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/configure-vault-client-certs.yml
+```
 
 Run validation playbook:
 

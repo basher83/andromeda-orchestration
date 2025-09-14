@@ -10,7 +10,27 @@ Status: Ready
 
 ## Objective
 
-Implement comprehensive validation to ensure certificate rotation occurs without any service downtime, connection drops, or job disruptions.
+Create an Ansible playbook that implements comprehensive validation to ensure certificate rotation occurs without any service downtime, connection drops, or job disruptions. This includes continuous availability monitoring, workload continuity testing, and detailed reporting.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/zero-downtime-validation.yml
+- Create: playbooks/infrastructure/vault/validate-zero-downtime.yml
+- Create: /tmp/availability-monitor.sh (via playbook)
+- Create: /tmp/test-job.nomad (via playbook)
+- Create: /var/log/cert-rotation-validation-{timestamp}.html (via playbook)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/automated-certificate-renewal.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Similar task: playbooks/infrastructure/vault/service-reload-handlers.yml
+
+## Dependencies
+
+- PKI-007, PKI-008, PKI-009: Provide certificate monitoring, renewal automation, and service reload handlers that this validation task needs to test
+- Existing: Test environment with HashiCorp services running
+- Existing: Load testing tools (curl, nomad CLI) for availability probing
 
 ## Prerequisites
 
@@ -231,8 +251,21 @@ Implement comprehensive validation to ensure certificate rotation occurs without
 - [ ] Running jobs/tasks unaffected
 - [ ] Certificate rotation completes successfully
 - [ ] Health checks pass throughout process
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/zero-downtime-validation.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/zero-downtime-validation.yml
+```
 
 Run validation playbook:
 

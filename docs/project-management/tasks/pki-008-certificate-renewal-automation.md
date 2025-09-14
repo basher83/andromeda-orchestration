@@ -10,7 +10,28 @@ Status: Ready
 
 ## Objective
 
-Implement automated certificate renewal that triggers 30 days before expiration, requests new certificates from Vault, and safely replaces existing certificates without service disruption.
+Create an Ansible playbook that implements automated certificate renewal, triggering 30 days before expiration, requesting new certificates from Vault, and safely replacing existing certificates without service disruption. This includes systemd timers, renewal scripts, and validation mechanisms.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/certificate-renewal-automation.yml
+- Create: playbooks/infrastructure/vault/validate-certificate-renewal.yml
+- Create: playbooks/infrastructure/vault/tasks/renew-single-certificate.yml
+- Create: /etc/systemd/system/cert-renewal.timer (via playbook)
+- Create: /etc/systemd/system/cert-renewal.service (via playbook)
+- Create: /usr/local/bin/renew-cert (via playbook)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/automated-certificate-renewal.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Similar task: playbooks/infrastructure/vault/deploy-tls-certificates.yml
+
+## Dependencies
+
+- PKI-007: Provides certificate monitoring that this task needs to determine renewal timing
+- Existing: Vault PKI roles and authentication mechanisms for certificate issuance
+- Existing: Service configuration and reload capabilities for certificate updates
 
 ## Prerequisites
 
@@ -259,8 +280,21 @@ Implement automated certificate renewal that triggers 30 days before expiration,
 - [ ] Service health verified after renewal
 - [ ] Manual renewal command available
 - [ ] Renewal status easily accessible
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/certificate-renewal-automation.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/certificate-renewal-automation.yml
+```
 
 Run validation playbook:
 

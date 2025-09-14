@@ -10,7 +10,27 @@ Status: Ready
 
 ## Objective
 
-Deploy comprehensive certificate expiration monitoring to track all certificates across the infrastructure and provide early warning before expiration.
+Create an Ansible playbook that deploys comprehensive certificate expiration monitoring to track all certificates across the infrastructure and provide early warning before expiration. This includes monitoring scripts, Consul health checks, and Prometheus exporters.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/implement-certificate-monitoring.yml
+- Create: playbooks/infrastructure/vault/validate-certificate-monitoring.yml
+- Create: /usr/local/bin/check-cert-expiry.sh (via playbook)
+- Create: /etc/consul.d/cert-monitor.json (via playbook)
+- Create: /etc/systemd/system/x509-certificate-exporter.service (via playbook)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/setup-pki-monitoring.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Similar task: playbooks/infrastructure/vault/monitor-pki-certificates.yml
+
+## Dependencies
+
+- PKI-001 through PKI-004: Provided certificate files at /opt/*/tls/ that this task needs to monitor
+- Existing: Consul service registration capability for health checks
+- Existing: Systemd for service management and cron for scheduling
 
 ## Prerequisites
 
@@ -251,8 +271,21 @@ Deploy comprehensive certificate expiration monitoring to track all certificates
 - [ ] Certificate inventory maintained and current
 - [ ] Daily reports generated and accessible
 - [ ] Alerts triggered for certificates approaching expiry
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/implement-certificate-monitoring.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/implement-certificate-monitoring.yml
+```
 
 Run validation playbook:
 

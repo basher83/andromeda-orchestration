@@ -10,7 +10,26 @@ Status: Ready
 
 ## Objective
 
-Enable TLS encryption and authentication for all Nomad cluster communication (RPC and HTTP) using Vault-issued certificates.
+Create an Ansible playbook that enables TLS encryption and authentication for all Nomad cluster communication (RPC and HTTP) using Vault-issued certificates.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/configure-nomad-tls.yml
+- Create: playbooks/infrastructure/vault/validate-nomad-tls.yml
+- Modify: Nomad configuration files for TLS settings
+- Modify: /etc/environment for Nomad client environment variables
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/deploy-tls-certificates.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Certificate generation: Similar pattern in setup-pki-intermediate-ca.yml (lines 246-256)
+
+## Dependencies
+
+- PKI-001: Created PKI roles for certificate issuance (nomad-agent role required)
+- Nomad cluster must be operational and accessible
+- Vault intermediate CA configured and issuing certificates
 
 ## Prerequisites
 
@@ -153,8 +172,21 @@ Enable TLS encryption and authentication for all Nomad cluster communication (RP
 - [ ] `nomad node status` shows all clients ready
 - [ ] API calls require HTTPS
 - [ ] No job disruptions during migration
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-nomad-tls.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/configure-nomad-tls.yml
+```
 
 Run validation playbook:
 

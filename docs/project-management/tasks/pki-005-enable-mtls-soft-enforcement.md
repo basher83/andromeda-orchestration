@@ -10,7 +10,28 @@ Status: Ready
 
 ## Objective
 
-Enable mTLS in permissive mode across all HashiCorp services to validate certificate configuration without disrupting existing connections.
+Create an Ansible playbook that enables mTLS in permissive mode across all HashiCorp services to validate certificate configuration without disrupting existing connections.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/enable-mtls-soft-enforcement.yml
+- Create: playbooks/infrastructure/vault/validate-mtls-soft-enforcement.yml
+- Modify: Consul, Nomad, and Vault configuration files for soft enforcement settings
+- Create: /usr/local/bin/validate-mtls.sh validation script
+- Create: /etc/rsyslog.d/tls-monitor.conf and /etc/logrotate.d/tls-logs
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/configure-production-nodes.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Configuration modification: Similar replace patterns in existing playbooks
+
+## Dependencies
+
+- PKI-002: Consul auto-encrypt configured (TLS certificates deployed)
+- PKI-003: Nomad TLS configured (TLS certificates and environment configured)
+- PKI-004: Vault client certs configured (Certificate authentication enabled)
+- All services must have TLS certificates deployed and functional
 
 ## Prerequisites
 
@@ -130,8 +151,21 @@ Enable mTLS in permissive mode across all HashiCorp services to validate certifi
 - [ ] No service disruptions occur
 - [ ] Monitoring captures non-TLS connection attempts
 - [ ] Validation script confirms soft enforcement active
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/enable-mtls-soft-enforcement.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/enable-mtls-soft-enforcement.yml
+```
 
 Run validation playbook:
 

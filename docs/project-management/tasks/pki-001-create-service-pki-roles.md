@@ -10,7 +10,24 @@ Status: Ready
 
 ## Objective
 
-Create dedicated PKI roles in Vault for each HashiCorp service (Consul, Nomad, Vault) to enable secure certificate issuance with appropriate constraints and parameters.
+Create an Ansible playbook that configures dedicated PKI roles in Vault for each HashiCorp service (Consul, Nomad, Vault) to enable secure certificate issuance with appropriate constraints and parameters.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/create-service-pki-roles.yml
+- Create: playbooks/infrastructure/vault/validate-pki-roles.yml
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/setup-pki-intermediate-ca.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Similar configuration: PKI role creation in setup-pki-intermediate-ca.yml (lines 218-244)
+
+## Dependencies
+
+- Root CA and Intermediate CA must be configured in Vault
+- PKI engines must be enabled and operational
+- Vault admin access and authentication configured
 
 ## Prerequisites
 
@@ -100,8 +117,21 @@ Create dedicated PKI roles in Vault for each HashiCorp service (Consul, Nomad, V
 - [ ] Certificate parameters match service requirements
 - [ ] Roles enforce proper domain constraints
 - [ ] TTL values align with rotation strategy
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/create-service-pki-roles.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/create-service-pki-roles.yml
+```
 
 Run validation playbook:
 

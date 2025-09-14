@@ -10,7 +10,25 @@ Status: Ready
 
 ## Objective
 
-Enable Consul auto-encrypt to automatically distribute and rotate TLS certificates for all Consul agents, establishing mutual TLS authentication across the cluster.
+Create an Ansible playbook that enables Consul auto-encrypt to automatically distribute and rotate TLS certificates for all Consul agents, establishing mutual TLS authentication across the cluster.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/configure-consul-auto-encrypt.yml
+- Create: playbooks/infrastructure/vault/validate-consul-auto-encrypt.yml
+- Modify: Consul configuration templates as needed
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/deploy-tls-certificates.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Service restart pattern: Rolling restart implementation in setup-pki-intermediate-ca.yml
+
+## Dependencies
+
+- PKI-001: Created PKI roles for certificate issuance (consul-agent role required)
+- Consul cluster must be operational and accessible
+- Vault intermediate CA configured and issuing certificates
 
 ## Prerequisites
 
@@ -131,8 +149,21 @@ Enable Consul auto-encrypt to automatically distribute and rotate TLS certificat
 - [ ] Auto-encrypt distributing certificates to clients
 - [ ] `consul members` shows all nodes healthy
 - [ ] No disruption to existing services
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-consul-auto-encrypt.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/configure-consul-auto-encrypt.yml
+```
 
 Run validation playbook:
 

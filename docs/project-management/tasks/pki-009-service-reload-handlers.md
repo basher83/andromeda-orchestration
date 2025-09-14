@@ -10,7 +10,28 @@ Status: Ready
 
 ## Objective
 
-Create intelligent service reload handlers that gracefully reload services after certificate updates without disrupting active connections or causing downtime.
+Create an Ansible playbook with intelligent service reload handlers that gracefully reload services after certificate updates without disrupting active connections or causing downtime. This includes role-based handlers, health validation, and rollback mechanisms.
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/service-reload-handlers.yml
+- Create: playbooks/infrastructure/vault/validate-service-reload-handlers.yml
+- Create: roles/cert_rotation/handlers/consul.yml
+- Create: roles/cert_rotation/handlers/nomad.yml
+- Create: roles/cert_rotation/handlers/vault.yml
+- Create: playbooks/infrastructure/vault/handlers/reload-orchestrator.yml
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/deploy-consul-agents.yml
+- Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
+- Similar task: playbooks/infrastructure/vault/enable-vault-tls.yml
+
+## Dependencies
+
+- PKI-008: Provides certificate renewal process that this task needs to handle with reload operations
+- Existing: Service configurations that support graceful reload (consul reload, nomad operator reload-tls, vault SIGHUP)
+- Existing: Health check endpoints for service validation
 
 ## Prerequisites
 
@@ -232,8 +253,21 @@ Create intelligent service reload handlers that gracefully reload services after
 - [ ] Health checks pass after reload
 - [ ] Rollback mechanism tested and working
 - [ ] No job/task disruptions during reload
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/service-reload-handlers.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/service-reload-handlers.yml
+```
 
 Run validation playbook:
 
