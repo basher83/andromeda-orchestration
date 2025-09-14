@@ -10,7 +10,7 @@ Status: Ready
 
 ## Objective
 
-Implement comprehensive PKI monitoring beyond basic expiration tracking, including CA health, certificate chain validation, issuance patterns, and anomaly detection.
+Create Ansible playbooks that implement comprehensive PKI monitoring beyond basic expiration tracking, including CA health, certificate chain validation, issuance patterns, and anomaly detection.
 
 ## Prerequisites
 
@@ -18,6 +18,27 @@ Implement comprehensive PKI monitoring beyond basic expiration tracking, includi
 - [ ] Basic certificate monitoring in place (PKI-007)
 - [ ] Access to Vault metrics endpoint
 - [ ] Alert manager configured
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/deploy-advanced-pki-monitoring.yml
+- Create: playbooks/infrastructure/vault/configure-pki-anomaly-detection.yml
+- Create: playbooks/infrastructure/vault/validate-pki-monitoring.yml
+- Create: scripts/pki-anomaly-detector.py (anomaly detection script)
+- Create: scripts/check-ca-health.sh (CA health monitoring script)
+- Modify: /etc/prometheus/rules/pki.yml (advanced PKI alerting rules)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/monitoring/deploy-prometheus-exporters.yml
+- Validation pattern: playbooks/assessment/infrastructure-readiness.yml
+- Similar task: PKI-007 (Basic certificate monitoring provides foundation)
+
+## Dependencies
+
+- PKI-007: Provides the basic certificate monitoring infrastructure that this task extends with advanced metrics and anomaly detection
+- PKI-013: Provides the certificate revocation infrastructure that integrates with advanced monitoring for revocation pattern analysis
+- Existing: Prometheus, Grafana, and AlertManager must be operational for metrics collection and visualization
 
 ## Implementation Steps
 
@@ -458,8 +479,23 @@ Implement comprehensive PKI monitoring beyond basic expiration tracking, includi
 - [ ] Dashboard providing full PKI visibility
 - [ ] CA health monitoring automated
 - [ ] All metrics flowing to Prometheus
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/deploy-advanced-pki-monitoring.yml
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-pki-anomaly-detection.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/deploy-advanced-pki-monitoring.yml
+uv run ansible-lint playbooks/infrastructure/vault/configure-pki-anomaly-detection.yml
+```
 
 Run validation playbook:
 

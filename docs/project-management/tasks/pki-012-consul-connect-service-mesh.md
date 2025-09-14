@@ -10,7 +10,7 @@ Status: Ready
 
 ## Objective
 
-Configure Consul Connect service mesh to use Vault as the certificate authority provider, enabling automatic mTLS between services with centralized PKI management.
+Create an Ansible playbook that configures Consul Connect service mesh to use Vault as the certificate authority provider, enabling automatic mTLS between services with centralized PKI management.
 
 ## Prerequisites
 
@@ -18,6 +18,25 @@ Configure Consul Connect service mesh to use Vault as the certificate authority 
 - [ ] Consul servers running with ACLs enabled
 - [ ] Consul agents on all nodes
 - [ ] Network connectivity between Consul and Vault
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/configure-consul-connect-vault-ca.yml
+- Create: playbooks/infrastructure/vault/validate-consul-connect.yml
+- Modify: inventory/group_vars/consul_servers.yml (Connect CA configuration)
+- Create: nomad-jobs/examples/connect-enabled-service.nomad.hcl (example Connect-enabled job)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/consul/configure-consul-cluster.yml
+- Validation pattern: playbooks/infrastructure/consul/validate-consul-cluster.yml
+- Similar task: PKI-002 (Consul TLS configuration provides foundation for Connect)
+
+## Dependencies
+
+- PKI-001: Provides the PKI root and intermediate CA infrastructure required for Connect CA provider configuration
+- PKI-002: Provides the basic Consul TLS configuration that Connect builds upon for service mesh security
+- Existing: Consul cluster must be operational with ACLs enabled for Connect service registration and intentions
 
 ## Implementation Steps
 
@@ -331,8 +350,21 @@ Configure Consul Connect service mesh to use Vault as the certificate authority 
 - [ ] Ingress gateway routing external traffic
 - [ ] Metrics and observability working
 - [ ] Certificate rotation happening automatically
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-consul-connect-vault-ca.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/configure-consul-connect-vault-ca.yml
+```
 
 Run validation playbook:
 

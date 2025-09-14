@@ -10,7 +10,7 @@ Status: Ready
 
 ## Objective
 
-Implement automated certificate distribution to Nomad jobs using Vault agent sidecars and template stanzas, enabling workloads to obtain and renew certificates dynamically.
+Create an Ansible playbook that implements automated certificate distribution to Nomad jobs using Vault agent sidecars and template stanzas, enabling workloads to obtain and renew certificates dynamically.
 
 ## Prerequisites
 
@@ -18,6 +18,24 @@ Implement automated certificate distribution to Nomad jobs using Vault agent sid
 - [ ] Nomad TLS enabled (PKI-003)
 - [ ] Vault policies created for job certificate access
 - [ ] Nomad integration with Vault configured
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/configure-nomad-certificate-distribution.yml
+- Create: playbooks/infrastructure/vault/validate-certificate-distribution.yml
+- Modify: nomad-jobs/examples/service-with-certs.nomad.hcl (example job with certificates)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/configure-pki-intermediate.yml
+- Validation pattern: playbooks/infrastructure/vault/validate-pki-basic.yml
+- Similar task: PKI-003 (Nomad TLS configuration provides foundation)
+
+## Dependencies
+
+- PKI-001: Provides the root and intermediate PKI infrastructure that this task extends for job certificate distribution
+- PKI-003: Provides the Nomad TLS configuration that enables secure communication between Nomad and Vault for certificate requests
+- Existing: Nomad cluster must be operational and integrated with Vault
 
 ## Implementation Steps
 
@@ -293,8 +311,21 @@ Implement automated certificate distribution to Nomad jobs using Vault agent sid
 - [ ] Vault agent sidecars working for long-running services
 - [ ] Template stanzas working for simpler deployments
 - [ ] Batch jobs can obtain short-lived certificates
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-nomad-certificate-distribution.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/configure-nomad-certificate-distribution.yml
+```
 
 Run validation playbook:
 

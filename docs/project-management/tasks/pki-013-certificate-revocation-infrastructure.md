@@ -10,7 +10,7 @@ Status: Ready
 
 ## Objective
 
-Deploy a comprehensive certificate revocation infrastructure including OCSP responder and CRL distribution to handle compromised certificates and maintain security posture.
+Create Ansible playbooks that deploy a comprehensive certificate revocation infrastructure including OCSP responder and CRL distribution to handle compromised certificates and maintain security posture.
 
 ## Prerequisites
 
@@ -18,6 +18,26 @@ Deploy a comprehensive certificate revocation infrastructure including OCSP resp
 - [ ] Web server available for CRL distribution
 - [ ] Database for revocation tracking
 - [ ] Monitoring infrastructure in place
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/configure-certificate-revocation.yml
+- Create: playbooks/infrastructure/vault/deploy-ocsp-responder.yml
+- Create: playbooks/infrastructure/vault/validate-certificate-revocation.yml
+- Create: scripts/cert-revoke (certificate revocation management script)
+- Create: scripts/emergency-ca-revoke (emergency CA revocation script)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/configure-pki-intermediate.yml
+- Validation pattern: playbooks/infrastructure/vault/validate-pki-basic.yml
+- Similar task: PKI-007 (Certificate monitoring provides foundation for revocation alerts)
+
+## Dependencies
+
+- PKI-001: Provides the root and intermediate PKI infrastructure required for CRL generation and OCSP response signing
+- PKI-007: Provides the certificate monitoring infrastructure that integrates with revocation status checking
+- Existing: Web server infrastructure must be available for CRL distribution endpoints
 
 ## Implementation Steps
 
@@ -336,8 +356,23 @@ Deploy a comprehensive certificate revocation infrastructure including OCSP resp
 - [ ] Certificate status checks integrated with monitoring
 - [ ] Emergency procedures tested and documented
 - [ ] Audit logging for all revocation events
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-certificate-revocation.yml
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/deploy-ocsp-responder.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/configure-certificate-revocation.yml
+uv run ansible-lint playbooks/infrastructure/vault/deploy-ocsp-responder.yml
+```
 
 Run validation playbook:
 

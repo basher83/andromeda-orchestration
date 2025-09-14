@@ -10,7 +10,7 @@ Status: Ready
 
 ## Objective
 
-Implement TLS performance optimizations including session resumption, OCSP stapling, certificate caching, and cipher suite optimization to minimize latency and CPU overhead.
+Create Ansible playbooks and scripts that implement TLS performance optimizations including session resumption, OCSP stapling, certificate caching, and cipher suite optimization to minimize latency and CPU overhead.
 
 ## Prerequisites
 
@@ -18,6 +18,29 @@ Implement TLS performance optimizations including session resumption, OCSP stapl
 - [ ] Performance baseline metrics collected
 - [ ] Load testing tools available
 - [ ] CPU and memory monitoring in place
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/configure-tls-performance-optimization.yml
+- Create: playbooks/infrastructure/vault/deploy-certificate-caching.yml
+- Create: playbooks/infrastructure/vault/validate-tls-performance.yml
+- Create: scripts/enable-ocsp-stapling.sh (OCSP stapling configuration script)
+- Create: scripts/monitor-tls-performance.sh (TLS performance monitoring script)
+- Create: scripts/cached-cert-request.py (certificate caching integration script)
+- Modify: /etc/consul.d/tls-performance.hcl (Consul TLS optimization)
+- Modify: /etc/nomad.d/nomad.hcl (Nomad TLS optimization)
+- Modify: /etc/vault.d/vault.hcl (Vault TLS optimization)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/consul/configure-consul-cluster.yml
+- Validation pattern: playbooks/assessment/infrastructure-readiness.yml
+- Similar task: PKI-002, PKI-003 (Basic TLS configurations provide foundation for optimization)
+
+## Dependencies
+
+- PKI-001 through PKI-006: Provides the complete mTLS infrastructure that this task optimizes for performance
+- Existing: All services must have mTLS operational before performance optimization, monitoring infrastructure must be in place for baseline and improvement metrics
 
 ## Implementation Steps
 
@@ -471,8 +494,23 @@ Implement TLS performance optimizations including session resumption, OCSP stapl
 - [ ] Certificate caching reducing Vault load
 - [ ] Handshake time < 10ms for resumed sessions
 - [ ] CPU usage reduced by >20%
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-tls-performance-optimization.yml
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/deploy-certificate-caching.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/configure-tls-performance-optimization.yml
+uv run ansible-lint playbooks/infrastructure/vault/deploy-certificate-caching.yml
+```
 
 Run validation playbook:
 

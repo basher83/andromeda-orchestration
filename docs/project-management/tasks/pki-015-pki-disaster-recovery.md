@@ -10,7 +10,7 @@ Status: Ready
 
 ## Objective
 
-Establish comprehensive disaster recovery procedures for the PKI infrastructure, including automated backups, recovery testing, and CA compromise response plans.
+Create Ansible playbooks and scripts that establish comprehensive disaster recovery procedures for the PKI infrastructure, including automated backups, recovery testing, and CA compromise response plans.
 
 ## Prerequisites
 
@@ -18,6 +18,29 @@ Establish comprehensive disaster recovery procedures for the PKI infrastructure,
 - [ ] Offline storage for root CA backup
 - [ ] Test environment for recovery validation
 - [ ] Documentation of all PKI dependencies
+
+## Files to Create/Modify
+
+- Create: playbooks/infrastructure/vault/configure-pki-backup.yml
+- Create: playbooks/infrastructure/vault/configure-pki-disaster-recovery.yml
+- Create: playbooks/infrastructure/vault/validate-pki-disaster-recovery.yml
+- Create: playbooks/infrastructure/vault/test-pki-dr.yml
+- Create: scripts/backup-pki.sh (automated PKI backup script)
+- Create: scripts/recover-pki.sh (PKI recovery script)
+- Create: scripts/ca-compromise-response.sh (emergency response script)
+- Create: scripts/verify-pki-backup.sh (backup verification script)
+- Create: /opt/pki/INCIDENT_RESPONSE.md (incident response procedures)
+
+## Reference Implementations
+
+- Pattern example: playbooks/infrastructure/vault/configure-vault-cluster.yml
+- Validation pattern: playbooks/assessment/infrastructure-readiness.yml
+- Similar task: No direct equivalent, but PKI-001 through PKI-006 provide the foundation infrastructure
+
+## Dependencies
+
+- PKI-001 through PKI-006: Provides the complete PKI infrastructure (root CA, intermediate CAs, roles, policies, agents, monitoring) that requires disaster recovery protection
+- Existing: Backup storage infrastructure (AWS S3/local storage), test environment for DR validation, monitoring system for DR alerts
 
 ## Implementation Steps
 
@@ -493,8 +516,23 @@ Establish comprehensive disaster recovery procedures for the PKI infrastructure,
 - [ ] CA compromise response plan validated
 - [ ] Backup verification automated
 - [ ] DR testing completed quarterly
+- [ ] Playbook passes syntax check
+- [ ] No linting errors reported
+- [ ] Validation playbook executes successfully
 
 ## Validation
+
+Syntax and lint checks:
+
+```bash
+# Syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-pki-backup.yml
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/configure-pki-disaster-recovery.yml
+
+# Lint check
+uv run ansible-lint playbooks/infrastructure/vault/configure-pki-backup.yml
+uv run ansible-lint playbooks/infrastructure/vault/configure-pki-disaster-recovery.yml
+```
 
 Run validation playbook:
 
