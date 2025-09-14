@@ -27,6 +27,15 @@ Create an Ansible playbook with intelligent service reload handlers that gracefu
 - Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
 - Similar task: playbooks/infrastructure/vault/enable-vault-tls.yml
 
+## Execution Environment
+
+- Target cluster: doggos-homelab (for Nomad/Consul services)
+- Inventory: inventory/environments/doggos-homelab/proxmox.yml
+- Required secrets (via Infisical):
+  - CONSUL_MASTER_TOKEN (path: /apollo-13/consul)
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-008: Provides certificate renewal process that this task needs to handle with reload operations

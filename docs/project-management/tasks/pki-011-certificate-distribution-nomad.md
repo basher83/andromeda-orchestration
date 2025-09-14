@@ -31,6 +31,15 @@ Create an Ansible playbook that implements automated certificate distribution to
 - Validation pattern: playbooks/infrastructure/vault/validate-pki-basic.yml
 - Similar task: PKI-003 (Nomad TLS configuration provides foundation)
 
+## Execution Environment
+
+- Target cluster: doggos-homelab (for Nomad/Consul services)
+- Inventory: inventory/environments/doggos-homelab/proxmox.yml
+- Required secrets (via Infisical):
+  - CONSUL_MASTER_TOKEN (path: /apollo-13/consul)
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-001: Provides the root and intermediate PKI infrastructure that this task extends for job certificate distribution

@@ -26,6 +26,15 @@ Create an Ansible playbook that enables mTLS in permissive mode across all Hashi
 - Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
 - Configuration modification: Similar replace patterns in existing playbooks
 
+## Execution Environment
+
+- Target cluster: doggos-homelab (for service configuration), vault-cluster (for PKI)
+- Inventory: inventory/environments/doggos-homelab/proxmox.yml (primary)
+- Required secrets (via Infisical):
+  - CONSUL_MASTER_TOKEN (path: /apollo-13/consul)
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-002: Consul auto-encrypt configured (TLS certificates deployed)

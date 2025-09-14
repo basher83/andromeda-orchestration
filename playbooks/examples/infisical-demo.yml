@@ -1,6 +1,5 @@
 ---
 # Example playbook demonstrating Infisical secret retrieval
-# This shows how to migrate from 1Password to Infisical
 
 - name: Infisical Integration Demo
   hosts: localhost
@@ -15,12 +14,12 @@
     proxmox_doggos_path: '/apollo-13/proxmox/doggos-homelab'
     consul_path: '/apollo-13/consul'
     nomad_path: '/apollo-13/nomad'
+    vault_path: '/apollo-13/vault'
     services_path: '/services'
 
-    # These should be set as environment variables:
+    # These should be set as environment variables in .mise.local.toml:
     # INFISICAL_UNIVERSAL_AUTH_CLIENT_ID
     # INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET
-    # Or passed directly (not recommended for production)
 
   tasks:
     - name: Retrieve shared Proxmox secrets

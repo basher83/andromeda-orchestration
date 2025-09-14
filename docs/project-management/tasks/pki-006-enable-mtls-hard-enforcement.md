@@ -24,6 +24,15 @@ Create an Ansible playbook that enables strict mTLS verification across all Hash
 - Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
 - Similar task: PKI-005 (soft enforcement implementation)
 
+## Execution Environment
+
+- Target cluster: doggos-homelab (for Nomad/Consul services)
+- Inventory: inventory/environments/doggos-homelab/proxmox.yml
+- Required secrets (via Infisical):
+  - CONSUL_MASTER_TOKEN (path: /apollo-13/consul)
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-005: Created soft enforcement configuration with logging that this task needs to analyze for non-TLS connections

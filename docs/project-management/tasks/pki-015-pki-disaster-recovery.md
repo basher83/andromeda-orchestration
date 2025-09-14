@@ -37,6 +37,15 @@ Create Ansible playbooks and scripts that establish comprehensive disaster recov
 - Validation pattern: playbooks/assessment/infrastructure-readiness.yml
 - Similar task: No direct equivalent, but PKI-001 through PKI-006 provide the foundation infrastructure
 
+## Execution Environment
+
+- Target cluster: doggos-homelab (primary), vault-cluster (PKI infrastructure)
+- Inventory: inventory/environments/doggos-homelab/proxmox.yml (primary)
+- Required secrets (via Infisical):
+  - CONSUL_MASTER_TOKEN (path: /apollo-13/consul)
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-001 through PKI-006: Provides the complete PKI infrastructure (root CA, intermediate CAs, roles, policies, agents, monitoring) that requires disaster recovery protection

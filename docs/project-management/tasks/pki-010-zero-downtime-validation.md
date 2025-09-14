@@ -26,6 +26,15 @@ Create an Ansible playbook that implements comprehensive validation to ensure ce
 - Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
 - Similar task: playbooks/infrastructure/vault/service-reload-handlers.yml
 
+## Execution Environment
+
+- Target cluster: doggos-homelab (for Nomad/Consul services)
+- Inventory: inventory/environments/doggos-homelab/proxmox.yml
+- Required secrets (via Infisical):
+  - CONSUL_MASTER_TOKEN (path: /apollo-13/consul)
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-007, PKI-008, PKI-009: Provide certificate monitoring, renewal automation, and service reload handlers that this validation task needs to test

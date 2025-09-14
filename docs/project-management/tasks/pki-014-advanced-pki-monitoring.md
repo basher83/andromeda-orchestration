@@ -34,6 +34,15 @@ Create Ansible playbooks that implement comprehensive PKI monitoring beyond basi
 - Validation pattern: playbooks/assessment/infrastructure-readiness.yml
 - Similar task: PKI-007 (Basic certificate monitoring provides foundation)
 
+## Execution Environment
+
+- Target cluster: doggos-homelab (primary), vault-cluster (PKI infrastructure)
+- Inventory: inventory/environments/doggos-homelab/proxmox.yml (primary)
+- Required secrets (via Infisical):
+  - CONSUL_MASTER_TOKEN (path: /apollo-13/consul)
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-007: Provides the basic certificate monitoring infrastructure that this task extends with advanced metrics and anomaly detection

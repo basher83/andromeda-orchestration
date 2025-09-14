@@ -24,6 +24,14 @@ Create an Ansible playbook that enables Consul auto-encrypt to automatically dis
 - Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
 - Service restart pattern: Rolling restart implementation in setup-pki-intermediate-ca.yml
 
+## Execution Environment
+
+- Target cluster: vault-cluster (for Vault PKI configuration)
+- Inventory: inventory/environments/vault-cluster/proxmox.yml
+- Required secrets (via Infisical):
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-001: Created PKI roles for certificate issuance (consul-agent role required)

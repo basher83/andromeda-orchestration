@@ -33,6 +33,15 @@ Create Ansible playbooks that deploy a comprehensive certificate revocation infr
 - Validation pattern: playbooks/infrastructure/vault/validate-pki-basic.yml
 - Similar task: PKI-007 (Certificate monitoring provides foundation for revocation alerts)
 
+## Execution Environment
+
+- Target cluster: doggos-homelab (for Nomad/Consul services)
+- Inventory: inventory/environments/doggos-homelab/proxmox.yml
+- Required secrets (via Infisical):
+  - CONSUL_MASTER_TOKEN (path: /apollo-13/consul)
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-001: Provides the root and intermediate PKI infrastructure required for CRL generation and OCSP response signing

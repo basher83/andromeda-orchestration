@@ -24,6 +24,14 @@ Create an Ansible playbook that enables client certificate authentication for Va
 - Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
 - Auth method configuration: Similar patterns for enabling auth methods in existing playbooks
 
+## Execution Environment
+
+- Target cluster: vault-cluster (for Vault PKI configuration)
+- Inventory: inventory/environments/vault-cluster/proxmox.yml
+- Required secrets (via Infisical):
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-001: Created PKI roles for certificate issuance (client-auth role required)

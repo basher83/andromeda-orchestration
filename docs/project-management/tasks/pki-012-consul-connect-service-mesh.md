@@ -32,6 +32,15 @@ Create an Ansible playbook that configures Consul Connect service mesh to use Va
 - Validation pattern: playbooks/infrastructure/consul/validate-consul-cluster.yml
 - Similar task: PKI-002 (Consul TLS configuration provides foundation for Connect)
 
+## Execution Environment
+
+- Target cluster: doggos-homelab (for Nomad/Consul services)
+- Inventory: inventory/environments/doggos-homelab/proxmox.yml
+- Required secrets (via Infisical):
+  - CONSUL_MASTER_TOKEN (path: /apollo-13/consul)
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-001: Provides the PKI root and intermediate CA infrastructure required for Connect CA provider configuration

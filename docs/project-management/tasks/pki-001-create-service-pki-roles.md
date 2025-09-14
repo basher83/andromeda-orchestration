@@ -23,6 +23,14 @@ Create an Ansible playbook that configures dedicated PKI roles in Vault for each
 - Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
 - Similar configuration: PKI role creation in setup-pki-intermediate-ca.yml (lines 218-244)
 
+## Execution Environment
+
+- Target cluster: vault-cluster (for Vault PKI configuration)
+- Inventory: inventory/environments/vault-cluster/proxmox.yml
+- Required secrets (via Infisical):
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - Root CA and Intermediate CA must be configured in Vault

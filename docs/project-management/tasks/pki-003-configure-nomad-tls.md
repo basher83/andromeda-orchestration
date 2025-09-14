@@ -25,6 +25,14 @@ Create an Ansible playbook that enables TLS encryption and authentication for al
 - Validation pattern: playbooks/infrastructure/vault/smoke-test.yml
 - Certificate generation: Similar pattern in setup-pki-intermediate-ca.yml (lines 246-256)
 
+## Execution Environment
+
+- Target cluster: vault-cluster (for Vault PKI configuration)
+- Inventory: inventory/environments/vault-cluster/proxmox.yml
+- Required secrets (via Infisical):
+  - VAULT_PROD_ROOT_TOKEN (path: /apollo-13/vault)
+- Service addresses: Defined in inventory group_vars
+
 ## Dependencies
 
 - PKI-001: Created PKI roles for certificate issuance (nomad-agent role required)
