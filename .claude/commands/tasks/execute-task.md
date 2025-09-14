@@ -11,6 +11,22 @@ Implement a feature using using the task file.
 
 - @$ARGUMENTS
 
+## Project Context
+
+You are working in an Ansible project with the following structure:
+
+- Playbooks: playbooks/infrastructure/<service>/
+- Inventory: inventory/environments/<cluster>/
+- Target clusters: vault-cluster (production), doggos-homelab (nomad-consul cluster)
+- Execution pattern: Always use `uv run ansible-playbook`
+- Naming: Use kebab-case for files, follow existing patterns in the directory
+
+## Current Infrastructure State
+
+- Vault is deployed with PKI enabled at pki-int/
+- Nomad/Consul cluster has TLS enabled
+- Consul provides service discovery at \*.service.consul
+
 ## Specialized Sub-agents
 
 `.claude/agents/ansible-research.md`
@@ -40,7 +56,8 @@ Implement a feature using using the task file.
 
 3. **Execute the plan**
 
-   - Update the task status to In Progress in `docs/project-management/tasks/README.md`
+   - Update the task status to <In Progress> in `docs/project-management/tasks/README.md`
+   - Update the task status to <In Progress> in `docs/project-management/tasks/<Task ID>.md`
    - Execute the task @$ARGUMENTS
    - Implement all the code
 
@@ -57,6 +74,7 @@ Implement a feature using using the task file.
    - Report completion status
    - Read the task again to ensure you have implemented everything
    - Update the task status to <Blocked/Complete/Failed> in `docs/project-management/tasks/README.md`
+   - Update the task status to <Blocked/Complete/Failed> in `docs/project-management/tasks/<Task ID>.md`
 
 6. **Reference the Task**
    - You can always reference the task again if needed
