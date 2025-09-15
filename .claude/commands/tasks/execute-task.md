@@ -149,9 +149,9 @@ vars:
    - Execute the task @$ARGUMENTS
    - Implement all the code following these CRITICAL patterns:
 
-   ## 🚨 CRITICAL: Dynamic Inventory Pattern (MANDATORY)
+   ## 🚨 CRITICAL Dynamic Inventory Pattern (MANDATORY)
 
-   ### ❌ NEVER DO THIS (Anti-Pattern):
+   ### ❌ NEVER DO THIS (Anti-Pattern)
 
    ```yaml
    # WRONG: Hardcoded IPs/addresses in playbooks
@@ -164,7 +164,7 @@ vars:
        leader: "https://192.168.10.31:8200" # BAD: Hardcoded address
    ```
 
-   ### ✅ ALWAYS DO THIS (Correct Pattern):
+   ### ✅ ALWAYS DO THIS (Correct Pattern)
 
    ```yaml
    # RIGHT: Dynamic discovery from inventory
@@ -185,7 +185,7 @@ vars:
              {{ nodes }}
    ```
 
-   **Why this matters:**
+   **Why this matters**
 
    - Inventory is the single source of truth
    - Playbooks work across all environments (dev/staging/prod)
