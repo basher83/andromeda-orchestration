@@ -138,12 +138,55 @@ jobs:
           ) &&
           env.APPLY_FIXES_MODE == 'commit' &&
           github.ref != 'refs/heads/main' &&
-          (
-            github.event_name == 'push' ||
-            github.event.pull_request.head.repo.full_name == github.repository
-          ) &&
           !contains(github.event.head_commit.message, 'skip fix')
         run: sudo chown -Rc $UID .git/
+
+      - name: Validate and set environment for auto-commit
+        if: >-
+          steps.ml.outputs.has_updated_sources == 1 &&
+          (
+            env.APPLY_FIXES_EVENT == 'all' ||
+            env.APPLY_FIXES_EVENT == github.event_name
+          ) &&
+          env.APPLY_FIXES_MODE == 'commit' &&
+          github.ref != 'refs/heads/main' &&
+          !contains(github.event.head_commit.message, 'skip fix')
+        id: validate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REF_NAME: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          # Validate event name
+          if [[ "${EVENT_NAME}" != "push" && "${EVENT_NAME}" != "pull_request" ]]; then
+            echo "::error::Unexpected event type: ${EVENT_NAME}"
+            exit 1
+          fi
+
+          # For PRs, validate it's not from a fork
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
+            if [[ "${PR_HEAD_REPO}" != "${REPOSITORY}" ]]; then
+              echo "::notice::Skipping auto-commit for forked PR"
+              echo "skip_commit=true" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            # Validate PR head ref is not empty
+            if [[ -z "${PR_HEAD_REF}" ]]; then
+              echo "::error::PR head ref is empty"
+              exit 1
+            fi
+            echo "target_ref=${PR_HEAD_REF}" >> $GITHUB_OUTPUT
+          else
+            # For push events, validate ref name
+            if [[ -z "${REF_NAME}" ]]; then
+              echo "::error::Ref name is empty"
+              exit 1
+            fi
+            echo "target_ref=${REF_NAME}" >> $GITHUB_OUTPUT
+          fi
+          echo "skip_commit=false" >> $GITHUB_OUTPUT
 
       - name: Pull latest changes before auto-commit
         if: >-
@@ -154,22 +197,16 @@ jobs:
           ) &&
           env.APPLY_FIXES_MODE == 'commit' &&
           github.ref != 'refs/heads/main' &&
-          (
-            github.event_name == 'push' ||
-            github.event.pull_request.head.repo.full_name == github.repository
-          ) &&
-          !contains(github.event.head_commit.message, 'skip fix')
+          !contains(github.event.head_commit.message, 'skip fix') &&
+          steps.validate.outputs.skip_commit != 'true'
+        env:
+          TARGET_REF: ${{ steps.validate.outputs.target_ref }}
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # For pull requests, use the head ref; for pushes, use the ref name
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            git fetch origin ${{ github.event.pull_request.head.ref }}
-            git rebase origin/${{ github.event.pull_request.head.ref }}
-          else
-            git fetch origin ${{ github.ref_name }}
-            git rebase origin/${{ github.ref_name }}
-          fi
+          # Use validated target ref
+          git fetch origin "${TARGET_REF}"
+          git rebase "origin/${TARGET_REF}"
 
       - name: Commit and push applied linter fixes
         uses: stefanzweifel/git-auto-commit-action@v6
@@ -181,11 +218,8 @@ jobs:
           ) &&
           env.APPLY_FIXES_MODE == 'commit' &&
           github.ref != 'refs/heads/main' &&
-          (
-            github.event_name == 'push' ||
-            github.event.pull_request.head.repo.full_name == github.repository
-          ) &&
-          !contains(github.event.head_commit.message, 'skip fix')
+          !contains(github.event.head_commit.message, 'skip fix') &&
+          steps.validate.outputs.skip_commit != 'true'
         with:
           branch: >-
             ${{
