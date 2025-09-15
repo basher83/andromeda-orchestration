@@ -27,6 +27,7 @@
     # Configuration
     test_recovery_keys: false
     verbose_output: false
+    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Default to false for self-signed certs in lab
 
     # Test that we can retrieve secrets from Infisical
     vault_token_test: >-
@@ -132,7 +133,7 @@
         url: '{{ item.address }}'
         path: sys/health
         auth_method: none  # Health endpoint doesn't require auth
-        validate_certs: no
+        validate_certs: "{{ vault_validate_certs }}"
         timeout: 5
       loop: '{{ vault_nodes }}'
       loop_control:
@@ -158,7 +159,7 @@
         url: '{{ vault_leader_addr }}'
         path: auth/token/lookup-self
         token: '{{ vault_token_test }}'
-        validate_certs: no
+        validate_certs: "{{ vault_validate_certs }}"
         timeout: 5
       register: token_lookup
       when: vault_token_test != 'FAILED'
@@ -183,7 +184,7 @@
         url: '{{ vault_leader_addr }}'
         path: sys/storage/raft/configuration
         token: '{{ vault_token_test }}'
-        validate_certs: no
+        validate_certs: "{{ vault_validate_certs }}"
         timeout: 5
       register: raft_peers
       when:
@@ -217,7 +218,7 @@
         url: '{{ item.0.address }}'
         path: sys/seal-status
         auth_method: none  # Seal status doesn't require auth
-        validate_certs: no
+        validate_certs: "{{ vault_validate_certs }}"
         timeout: 5
       loop: '{{ vault_nodes | zip(health_checks.results) | list }}'
       loop_control:
@@ -245,7 +246,7 @@
         url: '{{ vault_leader_addr }}'
         path: sys/capabilities-self
         token: '{{ vault_token_test }}'
-        validate_certs: no
+        validate_certs: "{{ vault_validate_certs }}"
         timeout: 5
         data:
           paths:
@@ -366,7 +367,7 @@
             path: '{{ test_path }}'
             mount_point: secret
             token: '{{ vault_token_test }}'
-            validate_certs: no
+            validate_certs: "{{ vault_validate_certs }}"
             timeout: 5
             data:
               test: 'smoke-test'
@@ -382,7 +383,7 @@
             path: '{{ test_path }}'
             mount_point: secret
             token: '{{ vault_token_test }}'
-            validate_certs: no
+            validate_certs: "{{ vault_validate_certs }}"
             timeout: 5
           register: read_test
           check_mode: no
@@ -410,7 +411,7 @@
             path: '{{ test_path }}'
             mount_point: secret
             token: '{{ vault_token_test }}'
-            validate_certs: no
+            validate_certs: "{{ vault_validate_certs }}"
             timeout: 5
           check_mode: no
           failed_when: false  # Cleanup is best-effort

@@ -26,6 +26,10 @@
     # Set to 'prod' for production security settings, 'dev' for development flexibility
     pki_profile: "{{ pki_profile | default('prod') }}"
 
+    # TLS Certificate Validation
+    # Default to true for production security, can be overridden for self-signed certs
+    vault_validate_certs: "{{ vault_validate_certs | default(true) }}"
+
     # Retrieve Vault token from Infisical
     vault_token: >-
       {{ (lookup('infisical.vault.read_secrets',
@@ -36,8 +40,13 @@
                  path='/apollo-13/vault',
                  secret_name='VAULT_PROD_ROOT_TOKEN')).value }}
 
-    # Vault configuration
-    vault_addr: "https://192.168.10.33:8200"
+    # Vault configuration - derived from inventory
+    vault_addr: >-
+      {%- if groups['vault'] is defined and groups['vault'] | length > 0 -%}
+        https://{{ hostvars[groups['vault'][0]]['ansible_host'] }}:8200
+      {%- else -%}
+        {{ lookup('env', 'VAULT_ADDR') | default('https://vault.service.consul:8200', true) }}
+      {%- endif -%}
     pki_int_path: "pki-int"
 
     # PKI role definitions for HashiCorp services
@@ -166,6 +175,14 @@
         fail_msg: "pki_profile must be either 'prod' or 'dev', got: {{ pki_profile }}"
         success_msg: "PKI profile '{{ pki_profile }}' validated"
 
+    - name: Validate no hardcoded IPs
+      ansible.builtin.include_tasks: ../../../tasks/validate-no-hardcoded-ips.yml
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []  # No exceptions allowed
+      tags: [preflight]
+
     - name: Display PKI profile security settings
       ansible.builtin.debug:
         msg:
@@ -173,10 +190,13 @@
           - ""
           - "Security Settings:"
           - "  - Allow localhost: {{ pki_profile == 'dev' }}"
-          - "  - Domain restrictions: {{ 'Relaxed (wildcards allowed)' if pki_profile == 'dev' else 'Strict (explicit FQDNs only)' }}"
+          - "  - Domain restrictions: {{ 'Relaxed (wildcards)' if pki_profile == 'dev' else 'Strict (FQDNs only)' }}"
           - "  - Certificate validation: {{ 'Standard' if pki_profile == 'dev' else 'Enhanced' }}"
           - ""
-          - "{% if pki_profile == 'prod' %}⚠️  Production mode: Strict security settings enforced{% else %}🛠️  Development mode: Relaxed settings for testing{% endif %}"
+          - >-
+            {%- if pki_profile == 'prod' -%}
+            ⚠️  Production mode: Strict security settings enforced{%- else -%}
+            🛠️  Development mode: Relaxed settings for testing{%- endif -%}
 
     - name: Verify required environment variables
       ansible.builtin.assert:
@@ -202,7 +222,7 @@
         auth_method: token
         token: "{{ vault_token }}"
         path: "sys/health"
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
       register: vault_health
       failed_when: false
       no_log: true
@@ -221,7 +241,7 @@
         auth_method: token
         token: "{{ vault_token }}"
         path: "sys/mounts/{{ pki_int_path }}"
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
       register: pki_int_check
       failed_when: false
       no_log: true
@@ -240,7 +260,7 @@
         auth_method: token
         token: "{{ vault_token }}"
         path: "{{ pki_int_path }}/roles/{{ item.name }}"
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
         data:
           allowed_domains: "{{ item.allowed_domains }}"
           allow_subdomains: "{{ item.allow_subdomains }}"
@@ -278,7 +298,7 @@
         auth_method: token
         token: "{{ vault_token }}"
         path: "{{ pki_int_path }}/roles/{{ item.name }}"
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
       loop: "{{ pki_service_roles }}"
       loop_control:
         label: "{{ item.name }}"
@@ -311,7 +331,7 @@
         role_name: "{{ item.name }}"
         common_name: "test-{{ item.name }}.{{ item.allowed_domains[0] }}"
         ttl: "24h"
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
       loop: "{{ pki_service_roles }}"
       loop_control:
         label: "{{ item.name }}"
@@ -350,15 +370,14 @@
           - "   - Localhost allowed: {{ 'Yes (dev mode)' if pki_profile == 'dev' else 'No (prod mode)' }}"
           - ""
           - "🌐 Allowed Domains ({{ pki_profile | upper }} profile):"
-          - "{% if pki_profile == 'prod' %}"
-          - "   - consul-agent: consul.service.consul, consul.spaceships.work, server.dc1.consul, client.dc1.consul"
-          - "   - nomad-agent: nomad.service.consul, nomad.spaceships.work, server.global.nomad, client.global.nomad"
-          - "   - vault-agent: vault.service.consul, vault.spaceships.work, active.vault.service.consul, standby.vault.service.consul"
-          - "{% else %}"
-          - "   - consul-agent: *.consul, consul.spaceships.work (wildcards allowed)"
-          - "   - nomad-agent: *.nomad, nomad.spaceships.work (wildcards allowed)"
-          - "   - vault-agent: *.vault, vault.spaceships.work (wildcards allowed)"
-          - "{% endif %}"
+          - >-
+            {%- if pki_profile == 'prod' -%}
+               - consul-agent: consul.service.consul, consul.spaceships.work, server.dc1.consul
+               - nomad-agent: nomad.service.consul, nomad.spaceships.work, server.global.nomad
+               - vault-agent: vault.service.consul, vault.spaceships.work, active.vault.service.consul{%- else -%}
+               - consul-agent: *.consul, consul.spaceships.work (wildcards allowed)
+               - nomad-agent: *.nomad, nomad.spaceships.work (wildcards allowed)
+               - vault-agent: *.vault, vault.spaceships.work (wildcards allowed){%- endif -%}
           - "   - client-auth: *.client.spaceships.work"
           - ""
           - "⏰ Certificate Validity:"
@@ -376,10 +395,9 @@
           - "   - Subdomain matching controlled per role"
           - "   - Organization fields set for certificate identification"
           - "   - TTL limits prevent excessive certificate lifetimes"
-          - "{% if pki_profile == 'prod' %}"
-          - "   - Production security: No localhost access, explicit FQDN patterns only"
-          - "   - Reduced attack surface with strict domain constraints"
-          - "{% else %}"
-          - "   - Development flexibility: Localhost access enabled, wildcard patterns allowed"
-          - "   - Note: Use 'prod' profile for production deployments"
-          - "{% endif %}"
+          - >-
+            {%- if pki_profile == 'prod' -%}
+               - Production security: No localhost access, explicit FQDN patterns only
+               - Reduced attack surface with strict domain constraints{%- else -%}
+               - Development flexibility: Localhost access enabled, wildcard patterns allowed
+               - Note: Use 'prod' profile for production deployments{%- endif -%}
