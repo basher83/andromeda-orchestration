@@ -27,7 +27,7 @@
     # Configuration
     test_recovery_keys: false
     verbose_output: false
-    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Default to false for self-signed certs in lab
+    vault_validate_certs: "{{ vault_validate_certs | default(true) }}"  # Default to true for production security
 
     # Test that we can retrieve secrets from Infisical
     vault_token_test: >-
@@ -67,9 +67,15 @@
         vault_nodes: |-
           {%- set nodes = [] -%}
           {%- for host in groups.get('vault_cluster', []) -%}
+            {%- set ip = hostvars[host]['ansible_host'] -%}
+            {%- if ip | ansible.utils.ipaddr('ipv6') and not ip.startswith('[') -%}
+              {%- set formatted_address = 'https://[' + ip + ']:8200' -%}
+            {%- else -%}
+              {%- set formatted_address = 'https://' + ip + ':8200' -%}
+            {%- endif -%}
             {%- set node = {
               'name': host,
-              'address': 'https://' + hostvars[host]['ansible_host'] + ':8200',
+              'address': formatted_address,
               'role': hostvars[host].get('vault_role', 'unknown'),
               'expected_mode': 'prod' if hostvars[host].get('vault_role') == 'master' else 'dev'
             } -%}
@@ -80,7 +86,12 @@
     - name: Set vault leader address from first production node
       ansible.builtin.set_fact:
         vault_leader_addr: >-
-          https://{{ hostvars[groups['vault_production'][0]]['ansible_host'] }}:8200
+          {%- set ip = hostvars[groups['vault_production'][0]]['ansible_host'] -%}
+          {%- if ip | ansible.utils.ipaddr('ipv6') and not ip.startswith('[') -%}
+            https://[{{ ip }}]:8200
+          {%- else -%}
+            https://{{ ip }}:8200
+          {%- endif -%}
       when:
         - groups.get('vault_production', []) | length > 0
 
@@ -417,9 +428,13 @@
           failed_when: false  # Cleanup is best-effort
           no_log: true
 
+    - name: Extract hostname from vault_leader_addr
+      ansible.builtin.set_fact:
+        vault_leader_host: "{{ vault_leader_addr | urlsplit('hostname') }}"
+
     - name: 'SMOKE TEST 11: Check critical ports accessibility'
       ansible.builtin.wait_for:
-        host: "{{ vault_leader_addr | regex_replace('https?://([^:]+):.*', '\\1') }}"
+        host: "{{ vault_leader_host }}"
         port: '{{ item.port }}'
         timeout: 5
         state: started
@@ -444,7 +459,7 @@
       ansible.builtin.command: df -h /opt/vault
       register: disk_space
       delegate_to: '{{ item }}'
-      loop: "{{ groups['vault_prod'] }}"
+      loop: "{{ groups.get('vault_production', []) }}"
       changed_when: false  # Read-only operation
       failed_when: false  # Best effort - nodes might be unreachable
 

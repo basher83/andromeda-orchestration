@@ -26,7 +26,18 @@
                  secret_name='VAULT_PROD_ROOT_TOKEN')).value }}
 
     # Vault configuration - dynamically discovered from inventory
-    vault_addr: "https://{{ hostvars[groups['vault'][0]]['ansible_host'] }}:8200"
+    vault_addr: >-
+      {%- if groups.get('vault', []) | length > 0 -%}
+        {%- set vault_host = groups['vault'] | first -%}
+        {%- set vault_ip = hostvars[vault_host]['ansible_host'] -%}
+        {%- if vault_ip | ansible.utils.ipaddr('ipv6') and not vault_ip.startswith('[') -%}
+          https://[{{ vault_ip }}]:8200
+        {%- else -%}
+          https://{{ vault_ip }}:8200
+        {%- endif -%}
+      {%- else -%}
+        {{ lookup('env', 'VAULT_ADDR') | default('https://vault.service.consul:8200', true) }}
+      {%- endif -%}
     pki_int_path: "pki-int"
 
     # Expected PKI roles for validation
@@ -82,19 +93,35 @@
         default_ttl_hours: 168
 
   pre_tasks:
-    - name: Validate no hardcoded IPs in vault_addr
+    - name: Validate no hardcoded IPs
+      ansible.builtin.include_tasks: ../../../tasks/validate-no-hardcoded-ips.yml
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []  # No exceptions allowed
+      tags: [preflight]
+
+    - name: Check OpenSSL availability
+      ansible.builtin.command: which openssl
+      register: openssl_check
+      changed_when: false
+      failed_when: false
+      tags: [preflight]
+
+    - name: Verify OpenSSL is installed
       ansible.builtin.assert:
         that:
-          - vault_addr is defined
-          - not (vault_addr | regex_search('https?://[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+'))
+          - openssl_check.rc == 0
         fail_msg: |
-          ❌ HARDCODED IP DETECTED in vault_addr: {{ vault_addr }}
+          ❌ OpenSSL is not installed or not in PATH
 
-          This violates the dynamic inventory pattern!
-
-          REQUIRED FIX: Use dynamic inventory variable:
-          vault_addr: "https://{{ '{{' }} hostvars[groups['vault'][0]]['ansible_host'] {{ '}}' }}:8200"
-        success_msg: "✅ vault_addr uses dynamic inventory (no hardcoded IPs)"
+          This playbook requires OpenSSL for certificate analysis.
+          Please install OpenSSL:
+          - macOS: brew install openssl
+          - Ubuntu/Debian: apt-get install openssl
+          - RHEL/CentOS: yum install openssl
+        success_msg: "✅ OpenSSL found at: {{ openssl_check.stdout }}"
+      tags: [preflight]
 
     - name: Verify required environment variables
       ansible.builtin.assert:
