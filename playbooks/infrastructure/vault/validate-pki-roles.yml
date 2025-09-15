@@ -25,8 +25,8 @@
                  path='/apollo-13/vault',
                  secret_name='VAULT_PROD_ROOT_TOKEN')).value }}
 
-    # Vault configuration
-    vault_addr: "https://192.168.10.33:8200"
+    # Vault configuration - dynamically discovered from inventory
+    vault_addr: "https://{{ hostvars[groups['vault'][0]]['ansible_host'] }}:8200"
     pki_int_path: "pki-int"
 
     # Expected PKI roles for validation
@@ -82,6 +82,20 @@
         default_ttl_hours: 168
 
   pre_tasks:
+    - name: Validate no hardcoded IPs in vault_addr
+      ansible.builtin.assert:
+        that:
+          - vault_addr is defined
+          - not (vault_addr | regex_search('https?://[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+'))
+        fail_msg: |
+          ❌ HARDCODED IP DETECTED in vault_addr: {{ vault_addr }}
+
+          This violates the dynamic inventory pattern!
+
+          REQUIRED FIX: Use dynamic inventory variable:
+          vault_addr: "https://{{ '{{' }} hostvars[groups['vault'][0]]['ansible_host'] {{ '}}' }}:8200"
+        success_msg: "✅ vault_addr uses dynamic inventory (no hardcoded IPs)"
+
     - name: Verify required environment variables
       ansible.builtin.assert:
         that:
@@ -106,8 +120,9 @@
         auth_method: token
         token: "{{ vault_token }}"
         path: "sys/health"
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs | default(true) }}"
       register: vault_health
+      no_log: true
 
     - name: Verify Vault accessibility
       ansible.builtin.assert:
@@ -123,8 +138,9 @@
         auth_method: token
         token: "{{ vault_token }}"
         path: "{{ pki_int_path }}/roles"
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs | default(true) }}"
       register: existing_roles
+      no_log: true
 
     - name: Verify all expected roles exist
       ansible.builtin.assert:
@@ -140,9 +156,10 @@
         auth_method: token
         token: "{{ vault_token }}"
         path: "{{ pki_int_path }}/roles/{{ item }}"
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs | default(true) }}"
       loop: "{{ expected_roles }}"
       register: role_configs
+      no_log: true
 
     - name: Validate role configurations
       block:
@@ -211,11 +228,12 @@
         common_name: "{{ item.common_name }}"
         alt_names: "{{ item.alt_names }}"
         ttl: "24h"
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs | default(true) }}"
       loop: "{{ test_certificates }}"
       loop_control:
         label: "{{ item.role }}"
       register: test_cert_generation
+      no_log: true
 
     - name: Verify test certificate generation success
       ansible.builtin.assert:
@@ -286,9 +304,10 @@
             role_name: "consul-agent"
             common_name: "invalid.nomad.service.consul"  # Should fail - wrong service
             ttl: "24h"
-            validate_certs: false
+            validate_certs: "{{ vault_validate_certs | default(true) }}"
           register: invalid_cert_test
           failed_when: false
+          no_log: true
 
         - name: Verify invalid certificate generation failed as expected
           ansible.builtin.assert:
@@ -308,9 +327,10 @@
             role_name: "client-auth"
             common_name: "test.client.spaceships.work"
             ttl: "720h"  # Should fail - exceeds 168h max for client-auth
-            validate_certs: false
+            validate_certs: "{{ vault_validate_certs | default(true) }}"
           register: excessive_ttl_test
           failed_when: false
+          no_log: true
 
         - name: Verify excessive TTL was rejected
           ansible.builtin.assert:

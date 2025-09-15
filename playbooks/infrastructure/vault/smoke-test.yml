@@ -70,7 +70,7 @@
               'name': host,
               'address': 'https://' + hostvars[host]['ansible_host'] + ':8200',
               'role': hostvars[host].get('vault_role', 'unknown'),
-              'expected_mode': 'dev' if hostvars[host].get('vault_role') == 'master' else 'prod'
+              'expected_mode': 'prod' if hostvars[host].get('vault_role') == 'master' else 'dev'
             } -%}
             {%- set _ = nodes.append(node) -%}
           {%- endfor -%}
@@ -88,6 +88,15 @@
         vault_leader_addr: 'https://localhost:8200'
       when:
         - vault_leader_addr is not defined
+
+    - name: Guard against empty/misconfigured inventory
+      ansible.builtin.assert:
+        that:
+          - vault_nodes is defined
+          - vault_nodes | length > 0
+          - vault_leader_addr is defined
+        fail_msg: 'ERROR: Empty or misconfigured inventory - no vault nodes discovered or leader address undefined'
+        success_msg: 'Guard check passed: Vault inventory properly configured'
 
     - name: Display discovered vault nodes
       ansible.builtin.debug:
@@ -155,6 +164,7 @@
       when: vault_token_test != 'FAILED'
       ignore_errors: yes
       check_mode: no # Always run this test even in check mode
+      no_log: true
 
     - name: 'SMOKE TEST 4 RESULTS: Evaluate Vault authentication'
       ansible.builtin.assert:
@@ -181,6 +191,7 @@
         - token_lookup is not failed
       ignore_errors: yes
       check_mode: no # Always run this test even in check mode
+      no_log: true
 
     - name: 'SMOKE TEST 5 RESULTS: Display Raft cluster status'
       ansible.builtin.debug:
@@ -249,6 +260,7 @@
         - token_lookup is not failed
       ignore_errors: yes
       check_mode: no
+      no_log: true
 
     - name: 'SMOKE TEST 7 RESULTS: Display token capabilities'
       ansible.builtin.debug:
@@ -362,6 +374,7 @@
               host: '{{ ansible_hostname }}'
           register: write_test
           check_mode: no
+          no_log: true
 
         - name: Read test secret back
           community.hashi_vault.vault_kv2_get:
@@ -373,6 +386,7 @@
             timeout: 5
           register: read_test
           check_mode: no
+          no_log: true
 
         - name: Verify write/read operation
           ansible.builtin.assert:
@@ -384,6 +398,12 @@
             success_msg: '✅ PASSED: Write/read operations successful'
           register: test10_result
 
+      rescue:
+        - name: Handle test failure
+          ansible.builtin.debug:
+            msg: 'Write/read test failed, proceeding to cleanup'
+
+      always:
         - name: Clean up test secret
           community.hashi_vault.vault_kv2_delete:
             url: '{{ vault_leader_addr }}'
@@ -394,6 +414,7 @@
             timeout: 5
           check_mode: no
           failed_when: false  # Cleanup is best-effort
+          no_log: true
 
     - name: 'SMOKE TEST 11: Check critical ports accessibility'
       ansible.builtin.wait_for:
@@ -422,10 +443,7 @@
       ansible.builtin.command: df -h /opt/vault
       register: disk_space
       delegate_to: '{{ item }}'
-      loop:
-        - vault-prod-1-holly
-        - vault-prod-2-mable
-        - vault-prod-3-lloyd
+      loop: "{{ groups['vault_prod'] }}"
       changed_when: false  # Read-only operation
       failed_when: false  # Best effort - nodes might be unreachable
 

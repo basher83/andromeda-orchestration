@@ -5,7 +5,7 @@ argument-hint: [Task file]
 
 # Execute Task
 
-Implement a feature using using the task file.
+Implement a feature using the task file.
 
 ## Task File
 
@@ -44,7 +44,7 @@ You are working in an Ansible project with the following structure:
 **IMPORTANT**: Before implementing any task, verify Infisical is working:
 
 1. **Test the integration**: Run `uv run ansible-playbook playbooks/examples/infisical-test.yml`
-2. **Verify success**: You should see "INFISICAL_SECRET_RETRIVAL_WORKS!!"
+2. **Verify success**: You should see "INFISICAL_SECRET_RETRIEVAL_WORKS!!"
 
 If the test fails, see troubleshooting below.
 
@@ -60,7 +60,7 @@ For comprehensive documentation and patterns, see:
 
 - `docs/implementation/infisical/infisical-complete-guide.md` - Complete setup and usage guide
 - `docs/implementation/infisical/infisical-patterns.md` - Real-world implementation patterns
-- `docs/implementation/infisical/infisical-offical.md` - Official documentation reference
+- `docs/implementation/infisical/infisical-official.md` - Official documentation reference
 
 ### Required Setup
 
@@ -115,7 +115,7 @@ vars:
 
    - Run `uv sync` to ensure all dependencies are installed
    - Verify Infisical integration: `uv run ansible-playbook playbooks/examples/infisical-test.yml`
-   - Confirm you see "INFISICAL_SECRET_RETRIVAL_WORKS!!"
+   - Confirm you see "INFISICAL_SECRET_RETRIEVAL_WORKS!!"
    - If it fails, stop and troubleshoot using the Secrets Management section
    - Check target inventory: `uv run ansible-inventory -i inventory/environments/<target-cluster>/ --list`
      - This shows available hosts, groups, and variables configured for the environment

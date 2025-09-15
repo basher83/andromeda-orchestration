@@ -17,12 +17,19 @@
 #         database_host: "{{ database_host | default('') }}"
 #       validate_allowlist: []
 
+- name: validate-no-hardcoded-ips | Get installed collections information
+  ansible.builtin.setup:
+    gather_subset:
+      - '!all'
+      - '!min'
+      - ansible_collections
+  delegate_to: localhost
+  run_once: true
+
 - name: validate-no-hardcoded-ips | Check for ansible.utils collection availability
   ansible.builtin.assert:
     that:
-      - >-
-        'ansible.utils' in ansible_facts.collections | default([]) or
-        lookup('pipe', 'ansible-galaxy collection list | grep ansible.utils', errors='ignore') != ''
+      - "'ansible.utils' in ansible_facts.ansible_collections | default({})"
     fail_msg: |
       ❌ ansible.utils collection not installed!
 
@@ -69,7 +76,8 @@
       pre_tasks:
         - name: Discover {{ item.key }} from inventory
           ansible.builtin.set_fact:
-            {{ item.key }}: "{{ '{{' }} hostvars[groups['service_group'][0]]['ansible_host'] {{ '}}' }}"
+            {{ item.key }}: |
+              {{ hostvars[groups['service_group'][0]]['ansible_host'] }}
     success_msg: "✅ {{ item.key }}: not an IP literal"
     quiet: true
   loop: "{{ _candidates }}"

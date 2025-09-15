@@ -258,7 +258,7 @@ ansible-playbook playbooks/infrastructure/netbox-playbook.yml
    ```yaml
    collections:
      - name: infisical.vault
-       version: ">=1.1.2"
+       version: ">=1.1.3"
    ```
 
 3. **Environment Variables** (managed by mise):

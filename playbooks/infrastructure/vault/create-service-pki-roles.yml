@@ -8,14 +8,24 @@
 # constraints and parameters.
 #
 # Usage:
+# Production (secure settings):
 # uv run ansible-playbook playbooks/infrastructure/vault/create-service-pki-roles.yml \
 #   -i inventory/environments/vault-cluster/production.yaml
+#
+# Development (relaxed settings for testing):
+# uv run ansible-playbook playbooks/infrastructure/vault/create-service-pki-roles.yml \
+#   -i inventory/environments/vault-cluster/production.yaml \
+#   -e pki_profile=dev
 
 - name: Create Service PKI Roles for mTLS Implementation
   hosts: localhost
   gather_facts: false
 
   vars:
+    # PKI Profile Configuration
+    # Set to 'prod' for production security settings, 'dev' for development flexibility
+    pki_profile: "{{ pki_profile | default('prod') }}"
+
     # Retrieve Vault token from Infisical
     vault_token: >-
       {{ (lookup('infisical.vault.read_secrets',
@@ -31,17 +41,29 @@
     pki_int_path: "pki-int"
 
     # PKI role definitions for HashiCorp services
+    # Security settings are controlled by pki_profile variable
     pki_service_roles:
       - name: "consul-agent"
         description: "Consul Agent Certificates for mTLS Communication"
-        allowed_domains:
-          - "consul.service.consul"
-          - "consul.spaceships.work"
-          - "*.consul"
-          - "*.consul.spaceships.work"
+        allowed_domains: >
+          {%- if pki_profile == 'prod' -%}
+          [
+            "consul.service.consul",
+            "consul.spaceships.work",
+            "server.dc1.consul",
+            "client.dc1.consul"
+          ]
+          {%- else -%}
+          [
+            "consul.service.consul",
+            "consul.spaceships.work",
+            "*.consul",
+            "*.consul.spaceships.work"
+          ]
+          {%- endif -%}
         allow_subdomains: true
         allow_bare_domains: true
-        allow_localhost: true
+        allow_localhost: "{{ pki_profile == 'dev' }}"
         client_flag: true
         server_flag: true
         max_ttl: "8760h"  # 1 year maximum
@@ -55,14 +77,25 @@
 
       - name: "nomad-agent"
         description: "Nomad Agent Certificates for mTLS Communication"
-        allowed_domains:
-          - "nomad.service.consul"
-          - "nomad.spaceships.work"
-          - "*.nomad"
-          - "*.nomad.spaceships.work"
+        allowed_domains: >
+          {%- if pki_profile == 'prod' -%}
+          [
+            "nomad.service.consul",
+            "nomad.spaceships.work",
+            "server.global.nomad",
+            "client.global.nomad"
+          ]
+          {%- else -%}
+          [
+            "nomad.service.consul",
+            "nomad.spaceships.work",
+            "*.nomad",
+            "*.nomad.spaceships.work"
+          ]
+          {%- endif -%}
         allow_subdomains: true
         allow_bare_domains: true
-        allow_localhost: true
+        allow_localhost: "{{ pki_profile == 'dev' }}"
         client_flag: true
         server_flag: true
         max_ttl: "8760h"  # 1 year maximum
@@ -76,14 +109,25 @@
 
       - name: "vault-agent"
         description: "Vault Agent Certificates for mTLS Communication"
-        allowed_domains:
-          - "vault.service.consul"
-          - "vault.spaceships.work"
-          - "*.vault"
-          - "*.vault.spaceships.work"
+        allowed_domains: >
+          {%- if pki_profile == 'prod' -%}
+          [
+            "vault.service.consul",
+            "vault.spaceships.work",
+            "active.vault.service.consul",
+            "standby.vault.service.consul"
+          ]
+          {%- else -%}
+          [
+            "vault.service.consul",
+            "vault.spaceships.work",
+            "*.vault",
+            "*.vault.spaceships.work"
+          ]
+          {%- endif -%}
         allow_subdomains: true
         allow_bare_domains: true
-        allow_localhost: true
+        allow_localhost: "{{ pki_profile == 'dev' }}"
         client_flag: true
         server_flag: true
         max_ttl: "8760h"  # 1 year maximum
@@ -115,6 +159,25 @@
         organization: "HomeLab Infrastructure"
 
   pre_tasks:
+    - name: Validate PKI profile configuration
+      ansible.builtin.assert:
+        that:
+          - pki_profile in ['prod', 'dev']
+        fail_msg: "pki_profile must be either 'prod' or 'dev', got: {{ pki_profile }}"
+        success_msg: "PKI profile '{{ pki_profile }}' validated"
+
+    - name: Display PKI profile security settings
+      ansible.builtin.debug:
+        msg:
+          - "🔒 PKI Profile: {{ pki_profile | upper }}"
+          - ""
+          - "Security Settings:"
+          - "  - Allow localhost: {{ pki_profile == 'dev' }}"
+          - "  - Domain restrictions: {{ 'Relaxed (wildcards allowed)' if pki_profile == 'dev' else 'Strict (explicit FQDNs only)' }}"
+          - "  - Certificate validation: {{ 'Standard' if pki_profile == 'dev' else 'Enhanced' }}"
+          - ""
+          - "{% if pki_profile == 'prod' %}⚠️  Production mode: Strict security settings enforced{% else %}🛠️  Development mode: Relaxed settings for testing{% endif %}"
+
     - name: Verify required environment variables
       ansible.builtin.assert:
         that:
@@ -142,6 +205,7 @@
         validate_certs: false
       register: vault_health
       failed_when: false
+      no_log: true
 
     - name: Verify Vault is accessible
       ansible.builtin.assert:
@@ -160,6 +224,7 @@
         validate_certs: false
       register: pki_int_check
       failed_when: false
+      no_log: true
 
     - name: Ensure intermediate PKI engine is available
       ansible.builtin.assert:
@@ -197,12 +262,13 @@
       loop_control:
         label: "{{ item.name }}"
       register: role_creation_results
+      no_log: true
 
     - name: Verify PKI role creation
       ansible.builtin.assert:
         that:
           - role_creation_results is not failed
-          - role_creation_results.results | length == pki_service_roles | length
+          - (role_creation_results.results | length) == (pki_service_roles | length)
         fail_msg: "Failed to create one or more PKI roles"
         success_msg: "All {{ pki_service_roles | length }} PKI roles created successfully"
 
@@ -217,6 +283,7 @@
       loop_control:
         label: "{{ item.name }}"
       register: role_verification
+      no_log: true
 
     - name: Verify role configurations match specifications
       ansible.builtin.assert:
@@ -249,6 +316,7 @@
       loop_control:
         label: "{{ item.name }}"
       register: cert_generation_tests
+      no_log: true
 
     - name: Verify test certificate generation
       ansible.builtin.assert:
@@ -267,6 +335,7 @@
         msg:
           - "✅ Service PKI Roles Configuration Complete!"
           - ""
+          - "🔐 PKI Profile: {{ pki_profile | upper }}"
           - "🔐 PKI Roles Created:"
           - "   - consul-agent: For Consul mTLS communication (30-day TTL)"
           - "   - nomad-agent: For Nomad mTLS communication (30-day TTL)"
@@ -278,12 +347,18 @@
           - "   - Client-auth role limited to client certificates only"
           - "   - RSA 2048-bit keys for optimal performance"
           - "   - IP SANs allowed for service roles, not for client-auth"
-          - "   - Localhost allowed for service roles for development"
+          - "   - Localhost allowed: {{ 'Yes (dev mode)' if pki_profile == 'dev' else 'No (prod mode)' }}"
           - ""
-          - "🌐 Allowed Domains:"
-          - "   - consul-agent: *.consul, consul.spaceships.work"
-          - "   - nomad-agent: *.nomad, nomad.spaceships.work"
-          - "   - vault-agent: *.vault, vault.spaceships.work"
+          - "🌐 Allowed Domains ({{ pki_profile | upper }} profile):"
+          - "{% if pki_profile == 'prod' %}"
+          - "   - consul-agent: consul.service.consul, consul.spaceships.work, server.dc1.consul, client.dc1.consul"
+          - "   - nomad-agent: nomad.service.consul, nomad.spaceships.work, server.global.nomad, client.global.nomad"
+          - "   - vault-agent: vault.service.consul, vault.spaceships.work, active.vault.service.consul, standby.vault.service.consul"
+          - "{% else %}"
+          - "   - consul-agent: *.consul, consul.spaceships.work (wildcards allowed)"
+          - "   - nomad-agent: *.nomad, nomad.spaceships.work (wildcards allowed)"
+          - "   - vault-agent: *.vault, vault.spaceships.work (wildcards allowed)"
+          - "{% endif %}"
           - "   - client-auth: *.client.spaceships.work"
           - ""
           - "⏰ Certificate Validity:"
@@ -296,8 +371,15 @@
           - "   3. Configure Nomad TLS (PKI-003)"
           - "   4. Set up Vault client certificates (PKI-004)"
           - ""
-          - "🔒 Security Features:"
+          - "🔒 Security Features ({{ pki_profile | upper }} profile):"
           - "   - Hostname enforcement enabled"
           - "   - Subdomain matching controlled per role"
           - "   - Organization fields set for certificate identification"
           - "   - TTL limits prevent excessive certificate lifetimes"
+          - "{% if pki_profile == 'prod' %}"
+          - "   - Production security: No localhost access, explicit FQDN patterns only"
+          - "   - Reduced attack surface with strict domain constraints"
+          - "{% else %}"
+          - "   - Development flexibility: Localhost access enabled, wildcard patterns allowed"
+          - "   - Note: Use 'prod' profile for production deployments"
+          - "{% endif %}"

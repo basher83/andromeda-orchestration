@@ -51,6 +51,7 @@ Pull a scoped set of secrets once and reuse as vars and environment for tasks/mo
           env_slug=infisical_env_slug,
           path=infisical_path,
           url=infisical_url) }}"
+      no_log: true
   tasks:
     - name: Render config with secrets
       ansible.builtin.template:
@@ -64,6 +65,7 @@ Pull a scoped set of secrets once and reuse as vars and environment for tasks/mo
         image: ghcr.io/org/myapp:latest
         env: "{{ secrets }}"
         restart_policy: unless-stopped
+      no_log: true
 ```
 
 Notes
@@ -101,6 +103,7 @@ For minimal exposure, pull individual secrets and pass them to modules or templa
                     secret_name='DB_PASSWORD',
                     path='/db',
                     url=url).value }}
+      no_log: true
 
     - name: Ensure database user with secret password
       community.postgresql.postgresql_user:
@@ -108,6 +111,7 @@ For minimal exposure, pull individual secrets and pass them to modules or templa
         password: "{{ db_password }}"
         db: appdb
         state: present
+      no_log: true
 ```
 
 ### Pattern 3: Use Universal Auth explicitly in playbooks
@@ -130,6 +134,7 @@ If environment variables are not preferred, pass Universal Auth parameters direc
           project_id='proj_xxx',
           env_slug='staging',
           path='/api') }}"
+      no_log: true
 ```
 
 ### Pattern 4: OIDC example (machine identity)
@@ -150,6 +155,7 @@ Use identity_id and a signed JWT from an OIDC provider to authenticate, which is
           project_id='proj_xxx',
           env_slug='dev',
           path='/build') }}"
+      no_log: true
 ```
 
 ### Pattern 5: Group vars for team reuse
@@ -181,17 +187,20 @@ Usage in a role:
     name: backend
     image: ghcr.io/org/backend:stable
     env: "{{ backend_secrets }}"
+  no_log: true
 ```
 
-### Troubleshooting macOS “\_\_NSCFConstantString initialize”
+### Troubleshooting macOS "\_\_NSCFConstantString initialize"
 
-On macOS controllers, Ansible can crash with “+[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called,” which is an Objective‑C fork safety issue in Apple’s runtime.[8][9]
+On macOS controllers, Ansible can crash with "+[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called," which is an Objective‑C fork safety issue in Apple's runtime.[8][9]
 
-**ALREADY SET VIA .mise.local.toml. DO NOT MODIFY THIS FILE**
+Only set this if not already managed by mise.
 
 ```bash
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 ```
+
+If your environment already sets this via .mise.local.toml, do not modify that file.
 
 - Workaround: export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES for the session or add it to the shell profile; this is a common fix used by Ansible users on macOS.[10][8]
 - The message is seen across languages (Ruby/Python) on macOS; setting the variable avoids the crash during forked operations typical in Ansible.[11][9]
