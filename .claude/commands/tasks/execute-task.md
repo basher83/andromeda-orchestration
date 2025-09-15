@@ -65,7 +65,6 @@ For comprehensive documentation and patterns, see:
 ### Required Setup
 
 - Python dependencies installed: `uv sync` (includes infisicalsdk)
-- Infisical credentials must be configured in `.mise.local.toml` (see `.mise.local.toml.example` for template)
 - macOS users: Special configuration required (documented in infisical-complete-guide.md)
 
 ### Common Secret Paths and Names
@@ -81,7 +80,7 @@ If `playbooks/examples/infisical-test.yml` fails:
 1. **Check dependencies**: Run `uv pip list | grep infisical`
 2. **Verify collection**: Run `ansible-galaxy collection list | grep infisical`
 3. **Check env vars**: Run `mise env | grep INFISICAL`
-4. **macOS users**: Ensure `OBJC_DISABLE_INITIALIZE_FORK_SAFETY = "YES"` is in `.mise.local.toml`
+4. **macOS users**: Ensure `OBJC_DISABLE_INITIALIZE_FORK_SAFETY = "YES"` is set in the environment
 
 ### Fallback Pattern (Last Resort)
 
@@ -148,19 +147,100 @@ vars:
    - Update the task status to <In Progress> in `docs/project-management/tasks/README.md`
    - Update the task status to <In Progress> in `docs/project-management/tasks/<Task ID>.md`
    - Execute the task @$ARGUMENTS
-   - Implement all the code
+   - Implement all the code following these CRITICAL patterns:
+
+   ## 🚨 CRITICAL: Dynamic Inventory Pattern (MANDATORY)
+
+   ### ❌ NEVER DO THIS (Anti-Pattern):
+
+   ```yaml
+   # WRONG: Hardcoded IPs/addresses in playbooks
+   - name: Configure service
+     hosts: localhost
+     vars:
+       service_endpoints:
+         - address: "192.168.10.30:8200" # BAD: Hardcoded IP
+         - address: "192.168.10.31:8200" # BAD: Hardcoded IP
+       leader: "https://192.168.10.31:8200" # BAD: Hardcoded address
+   ```
+
+   ### ✅ ALWAYS DO THIS (Correct Pattern):
+
+   ```yaml
+   # RIGHT: Dynamic discovery from inventory
+   - name: Configure service
+     hosts: localhost
+     pre_tasks:
+       - name: Discover nodes from inventory
+         ansible.builtin.set_fact:
+           service_endpoints: |-
+             {%- set nodes = [] -%}
+             {%- for host in groups.get('service_group', []) -%}
+               {%- set endpoint = {
+                 'name': host,
+                 'address': hostvars[host]['ansible_host'] + ':' + hostvars[host].get('service_port', '8200')
+               } -%}
+               {%- set _ = nodes.append(endpoint) -%}
+             {%- endfor -%}
+             {{ nodes }}
+   ```
+
+   **Why this matters:**
+
+   - Inventory is the single source of truth
+   - Playbooks work across all environments (dev/staging/prod)
+   - No maintenance when infrastructure changes
+   - Prevents IP mismatches and errors
+
    - For playbooks that use domain variables, include domain assertions:
+
      ```yaml
      pre_tasks:
-       - include_tasks: ../../tasks/domain-assertions.yml
+       - name: Include domain validation
+         ansible.builtin.include_tasks: ../../tasks/domain-assertions.yml
      ```
+
      This prevents `.local` domain usage (macOS mDNS conflict)
 
 5. **Validate**
 
+   - **MANDATORY: Include IP validation in all playbooks**:
+
+     Every playbook MUST include this validation in pre_tasks:
+
+     ```yaml
+     - name: Your Playbook Name
+       hosts: all
+       any_errors_fatal: true # Critical - stop on validation failure
+       pre_tasks:
+         # This MUST be the first pre_task
+         - name: Validate no hardcoded IPs
+           ansible.builtin.include_tasks: ../../tasks/validate-no-hardcoded-ips.yml
+           vars:
+             validate_hostlike_vars:
+               # List ALL variables that reference hosts/endpoints
+               service_endpoint: "{{ service_endpoint | default('') }}"
+               database_host: "{{ database_host | default('') }}"
+               api_url: "{{ api_url | default('') }}"
+               leader_addr: "{{ leader_addr | default('') }}"
+             validate_allowlist: [] # Only add exceptions if absolutely necessary
+
+         # Then build from inventory...
+         - name: Discover service endpoints from inventory
+           ansible.builtin.set_fact:
+             service_endpoint: "{{ hostvars[groups['services'][0]]['ansible_host'] }}"
+     ```
+
+     This validation will:
+
+     - Use ansible.utils.ipaddr filter to detect IPv4/IPv6 addresses
+     - Fail immediately with clear remediation instructions
+     - Ensure inventory is the single source of truth
+     - Prevent deployment of hardcoded infrastructure
+
    - Run applicable checks based on files created:
      - `uv run ansible-playbook --syntax-check -i inventory/environments/doggos-homelab/static-test.yml playbooks/infrastructure/vault/<task-name>.yml` (where <task-name> matches the task ID, e.g., pki-001-create-roles)
-     - `uv run ansible-lint playbooks/infrastructure/vault/<task-name>.yml` (where <task-name> matches the task ID, e.g., pki-001-create-roles)
+     - `uv run ansible-lint --profile production playbooks/infrastructure/vault/<task-name>.yml` (where <task-name> matches the task ID, e.g., pki-001-create-roles)
      - `shellcheck scripts/<task-name>.sh` (where <task-name> matches the task ID, e.g., find-todos.sh)
      - `markdownlint-cli2 <document-name>.md` (where <document-name> matches the document name, e.g., README.md)
    - Run syntax checks after each major change, full validation after implementation
