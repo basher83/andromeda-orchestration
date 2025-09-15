@@ -15,7 +15,7 @@ This directory contains the detailed task breakdown for implementing the Vault P
 
 | Task ID | Title                                                                          | Priority | Duration | Dependencies    | Status     |
 | ------- | ------------------------------------------------------------------------------ | -------- | -------- | --------------- | ---------- |
-| PKI-001 | [Create Service PKI Roles](pki-001-create-service-pki-roles.md)                | P0       | 2h       | None            | 🔄 Ready   |
+| PKI-001 | [Create Service PKI Roles](pki-001-create-service-pki-roles.md)                | P0       | 2h       | None            | ✅ Complete |
 | PKI-002 | [Configure Consul Auto-Encrypt](pki-002-configure-consul-auto-encrypt.md)      | P0       | 4h       | PKI-001         | 🔄 Ready   |
 | PKI-003 | [Configure Nomad TLS](pki-003-configure-nomad-tls.md)                          | P0       | 3h       | PKI-001         | 🔄 Ready   |
 | PKI-004 | [Configure Vault Client Certificates](pki-004-configure-vault-client-certs.md) | P1       | 2h       | PKI-001         | 🔄 Ready   |
