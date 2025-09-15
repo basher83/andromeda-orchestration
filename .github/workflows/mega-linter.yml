@@ -204,9 +204,17 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # Use validated target ref
+
+          # Stash any changes made by MegaLinter
+          git add -A
+          git stash
+
+          # Fetch and rebase with the validated target ref
           git fetch origin "${TARGET_REF}"
           git rebase "origin/${TARGET_REF}"
+
+          # Apply stashed changes back
+          git stash pop || true
 
       - name: Commit and push applied linter fixes
         uses: stefanzweifel/git-auto-commit-action@v6
