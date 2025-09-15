@@ -54,7 +54,7 @@
   pre_tasks:
     # MANDATORY: Validate no hardcoded IPs before proceeding
     - name: Validate dynamic inventory compliance
-      ansible.builtin.include_tasks: ../../tasks/validate-no-hardcoded-ips.yml
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/validate-no-hardcoded-ips.yml"
       vars:
         validate_hostlike_vars:
           # Check any pre-existing vars that might have IPs

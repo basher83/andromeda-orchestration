@@ -167,7 +167,7 @@ vars:
    ### ✅ ALWAYS DO THIS (Correct Pattern)
 
    ```yaml
-   # RIGHT: Dynamic discovery from inventory
+   # RIGHT: Dynamic discovery from inventory with IPv6 support
    - name: Configure service
      hosts: localhost
      pre_tasks:
@@ -176,9 +176,13 @@ vars:
            service_endpoints: |-
              {%- set nodes = [] -%}
              {%- for host in groups.get('service_group', []) -%}
+               {%- set host_addr = hostvars[host]['ansible_host'] -%}
+               {%- if ':' in host_addr -%}
+                 {%- set host_addr = '[' + host_addr + ']' -%}
+               {%- endif -%}
                {%- set endpoint = {
                  'name': host,
-                 'address': hostvars[host]['ansible_host'] + ':' + hostvars[host].get('service_port', '8200')
+                 'address': host_addr + ':' + hostvars[host].get('service_port', '8200')
                } -%}
                {%- set _ = nodes.append(endpoint) -%}
              {%- endfor -%}

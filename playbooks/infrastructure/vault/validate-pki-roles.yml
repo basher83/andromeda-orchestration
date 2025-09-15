@@ -94,33 +94,35 @@
 
   pre_tasks:
     - name: Validate no hardcoded IPs
-      ansible.builtin.include_tasks: ../../../tasks/validate-no-hardcoded-ips.yml
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
       vars:
         validate_hostlike_vars:
           vault_addr: "{{ vault_addr | default('') }}"
         validate_allowlist: []  # No exceptions allowed
       tags: [preflight]
 
-    - name: Check OpenSSL availability
-      ansible.builtin.command: which openssl
-      register: openssl_check
-      changed_when: false
-      failed_when: false
+    - name: Gather minimal facts for collection detection
+      ansible.builtin.setup:
+        gather_subset:
+          - '!all'
+          - '!min'
+          - ansible_collections
+      delegate_to: localhost
+      run_once: true
       tags: [preflight]
 
-    - name: Verify OpenSSL is installed
+    - name: Verify community.crypto collection is available
       ansible.builtin.assert:
         that:
-          - openssl_check.rc == 0
+          - "'community.crypto' in ansible_facts.ansible_collections | default({})"
         fail_msg: |
-          ❌ OpenSSL is not installed or not in PATH
+          ❌ community.crypto collection not installed!
 
-          This playbook requires OpenSSL for certificate analysis.
-          Please install OpenSSL:
-          - macOS: brew install openssl
-          - Ubuntu/Debian: apt-get install openssl
-          - RHEL/CentOS: yum install openssl
-        success_msg: "✅ OpenSSL found at: {{ openssl_check.stdout }}"
+          This playbook requires the community.crypto collection for certificate analysis.
+          Please install it:
+          - Run: ansible-galaxy collection install community.crypto
+          - Or add to requirements.yml and run: ansible-galaxy collection install -r requirements.yml
+        success_msg: "✅ community.crypto collection available"
       tags: [preflight]
 
     - name: Verify required environment variables
@@ -286,22 +288,28 @@
           loop_control:
             label: "{{ item.item.role }}"
 
-        - name: Analyze certificate details with OpenSSL
-          ansible.builtin.shell: |
-            set -euo pipefail
-            openssl x509 -in /tmp/test-cert-{{ item.role }}.pem -text -noout |
-              grep -E "(Subject:|DNS:|IP Address:|Not After)"
+        - name: Analyze certificate details with crypto module
+          community.crypto.x509_certificate_info:
+            path: "/tmp/test-cert-{{ item.role }}.pem"
           loop: "{{ test_certificates }}"
           loop_control:
             label: "{{ item.role }}"
           register: cert_analysis
-          changed_when: false
 
         - name: Display certificate analysis results
           ansible.builtin.debug:
             msg:
               - "Certificate Analysis for {{ item.item.role }}:"
-              - "{{ item.stdout_lines }}"
+              - "  Subject: CN={{ item.subject.commonName | default('N/A') }}"
+              - "  Organization: {{ item.subject.organizationName | default('N/A') }}"
+              - "  OU: {{ item.subject.organizationalUnitName | default('N/A') }}"
+              - "  Valid Until: {{ item.not_after }}"
+              - "  DNS SANs: {{ item.subject_alt_name | select('match', '^DNS:') |
+                  map('regex_replace', '^DNS:', '') | list | join(', ') }}"
+              - "  IP SANs: {{ item.subject_alt_name | select('match', '^IP:') |
+                  map('regex_replace', '^IP:', '') | list | join(', ') }}"
+              - "  Key Usage: {{ item.key_usage | default([]) | join(', ') }}"
+              - "  Extended Key Usage: {{ item.extended_key_usage | default([]) | join(', ') }}"
           loop: "{{ cert_analysis.results }}"
           loop_control:
             label: "{{ item.item.role }}"
@@ -309,16 +317,15 @@
         - name: Verify certificate contains expected common name
           ansible.builtin.assert:
             that:
-              - test_cert.item.common_name in cert_detail.stdout
-            fail_msg: "Certificate for {{ test_cert.item.role }} does not
-              contain expected CN {{ test_cert.item.common_name }}"
-            success_msg: "Certificate for {{ test_cert.item.role }} contains correct CN"
+              - cert_info.subject.commonName == test_spec.common_name
+            fail_msg: "Certificate for {{ test_spec.role }} does not contain expected CN {{ test_spec.common_name }}"
+            success_msg: "Certificate for {{ test_spec.role }} contains correct CN"
           loop: "{{ test_certificates | zip(cert_analysis.results) | list }}"
           loop_control:
             label: "{{ item.0.role }}"
           vars:
-            test_cert: "{{ item.0 }}"
-            cert_detail: "{{ item.1 }}"
+            test_spec: "{{ item.0 }}"
+            cert_info: "{{ item.1 }}"
 
     - name: Test certificate generation with invalid domains (should fail)
       block:

@@ -1,9 +1,9 @@
 ---
 # Common assertions to prevent configuration regressions
 # Include this in playbooks with:
-- name: domain-assertions | Include domain validation
-  ansible.builtin.include_tasks: ../../tasks/domain-assertions.yml
-  tags: [preflight]
+#   - name: domain-assertions | Include domain validation
+#     ansible.builtin.include_tasks: ../../tasks/domain-assertions.yml
+#     tags: [preflight]
 
 - name: domain-assertions | Assert homelab_domain does not use .local
   ansible.builtin.assert:
