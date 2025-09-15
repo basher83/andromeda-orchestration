@@ -74,10 +74,9 @@
 
       Example fix:
       pre_tasks:
-        - name: Discover {{ item.key }} from inventory
+        - name: Discover vault_addr from inventory
           ansible.builtin.set_fact:
-            {{ item.key }}: |
-              {{ hostvars[groups['service_group'][0]]['ansible_host'] }}
+            vault_addr: {% raw %}"https://{{ hostvars[groups['vault'][0]]['ansible_host'] }}:8200"{% endraw %}
     success_msg: "✅ {{ item.key }}: not an IP literal"
     quiet: true
   loop: "{{ _candidates }}"

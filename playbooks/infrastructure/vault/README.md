@@ -96,7 +96,7 @@ The playbook provides a comprehensive summary showing:
 
 ### The Anti-Pattern (NEVER DO THIS)
 
-**❌ WRONG: Hardcoding infrastructure details in playbooks**
+#### ❌ WRONG: Hardcoding infrastructure details in playbooks
 
 ```yaml
 # This is BAD - hardcoded IPs defeat the purpose of inventory
@@ -115,6 +115,7 @@ The playbook provides a comprehensive summary showing:
 ```
 
 **Why this is wrong:**
+
 - **Violates DRY**: Duplicates information already in inventory
 - **Maintenance nightmare**: Must update multiple files when IPs change
 - **Environment coupling**: Playbook only works for one specific environment
@@ -123,7 +124,7 @@ The playbook provides a comprehensive summary showing:
 
 ### The Correct Pattern (ALWAYS DO THIS)
 
-**✅ RIGHT: Dynamically discover from inventory**
+#### ✅ RIGHT: Dynamically discover from inventory
 
 ```yaml
 # This is GOOD - uses inventory as single source of truth
@@ -166,6 +167,7 @@ The playbook provides a comprehensive summary showing:
 ```
 
 **Why this is correct:**
+
 - **Single source of truth**: Inventory defines all infrastructure
 - **Environment agnostic**: Same playbook works with dev/staging/prod inventories
 - **IPv6 compatible**: Automatically wraps IPv6 addresses in square brackets for URLs
@@ -174,12 +176,14 @@ The playbook provides a comprehensive summary showing:
 - **Testable**: Can use different inventories for testing
 
 **Requirements:**
+
 - `ansible.utils` collection must be installed for the `ipaddr` filter
 - The `ipaddr('ipv6')` filter detects IPv6 addresses and enables proper URL formatting
 
 ### Implementation Checklist
 
 When writing playbooks, ensure:
+
 - [ ] NO hardcoded IP addresses
 - [ ] NO hardcoded hostnames (use inventory names)
 - [ ] NO hardcoded ports (get from hostvars or defaults)
@@ -206,7 +210,7 @@ To enforce the no-hardcoded-IPs convention in your playbooks, add this validatio
   pre_tasks:
     # Validate no hardcoded IPs before proceeding
     - name: Validate no hardcoded IP addresses
-      include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
       vars:
         validate_hostlike_vars:
           service_endpoint: "{{ service_endpoint }}"
@@ -235,6 +239,7 @@ To enforce the no-hardcoded-IPs convention in your playbooks, add this validatio
 ```
 
 **Key points:**
+
 - **Path resolution**: Uses `{{ playbook_dir }}/../../../tasks/` to reach the shared validation task
 - **Variable specification**: Use `validate_hostlike_vars` to declare which variables to check
 - **Default allowlist**: Set `validate_allowlist: []` to enforce zero hardcoded IPs
