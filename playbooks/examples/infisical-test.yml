@@ -1,41 +1,97 @@
 ---
-# Minimal test for Infisical integration
-- name: Test Infisical Lookup
+# 1) Minimal test for Infisical integration (single secret)
+- name: Test Infisical Lookup (single secret)
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
+  vars:
+    infisical_url: "https://app.infisical.com"
+    test_secret: >-
+      {{ lookup('infisical.vault.read_secrets',
+                auth_method='universal_auth',
+                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                env_slug='prod',
+                path='/apollo-13',
+                secret_name='TEST_SECRET',
+                url=infisical_url).value }}
+  tasks:
+    - name: Confirm secret retrieval without printing it
+      no_log: true
+      ansible.builtin.debug:
+        msg: "TEST_SECRET length = {{ test_secret | length }}"
+
+# 2) Universal Auth inline usage (retrieve multiple secrets as dict)
+- name: Universal Auth inline usage (dict)
+  hosts: localhost
+  gather_facts: false
+  vars:
+    infisical_url: "https://app.infisical.com"
+    client_id: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+    client_secret: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+  tasks:
+    - name: Pull secrets with explicit UA into a dict
+      no_log: true
+      ansible.builtin.set_fact:
+        secrets: "{{ lookup('infisical.vault.read_secrets',
+                            auth_method='universal_auth',
+                            universal_auth_client_id=client_id,
+                            universal_auth_client_secret=client_secret,
+                            as_dict=True,
+                            project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                            env_slug='prod',
+                            path='/apollo-13',
+                            url=infisical_url) }}"
+
+# 3) Minimal secret retrieval and usage in a module
+- name: Minimal secret retrieval
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    pid: "7b832220-24c0-45bc-a5f1-ce9794a31259"
+    env: "prod"
+    url: "https://app.infisical.com"
 
   tasks:
-    - name: Debug environment variables
-      debug:
-        msg: |
-          CLIENT_ID length: {{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') | length }}
-          SECRET length: {{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') | length }}
+    - name: Read a single secret by name (do not log secret)
+      no_log: true
+      ansible.builtin.set_fact:
+        test_secret: >-
+          {{ lookup('infisical.vault.read_secrets',
+                    auth_method='universal_auth',
+                    universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                    universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                    project_id=pid,
+                    env_slug=env,
+                    secret_name='TEST_SECRET',
+                    path='/apollo-13',
+                    url=url).value }}
 
-    - name: Test Infisical CLI directly
-      command: infisical secrets get CONSUL_MASTER_TOKEN --env=prod --path="/apollo-13/consul/" --plain
-      register: cli_result
+    - name: Confirm retrieval without printing the secret
+      ansible.builtin.debug:
+        msg: "TEST_SECRET length = {{ test_secret | length }}"
       changed_when: false
-      no_log: true
 
-    - name: Show CLI works
-      debug:
-        msg: 'CLI returned token starting with: {{ cli_result.stdout[:10] }}...'
+    - name: Write secret to a local .env file (demo only)
       no_log: true
+      ansible.builtin.copy:
+        dest: /tmp/apollo-13.env
+        mode: "0600"
+        content: |
+          TEST_SECRET={{ test_secret }}
 
-    - name: Test Infisical lookup with explicit parameters
-      set_fact:
-        consul_token: "{{ lookup('infisical.vault.read_secrets',
-          auth_method='universal_auth',
-          universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-          universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-          project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-          env_slug='prod',
-          path='/apollo-13/consul',
-          secret_name='CONSUL_MASTER_TOKEN',
-          url='https://app.infisical.com') }}"
-      no_log: true
+    - name: Display the test secret file contents
+      ansible.builtin.command: cat /tmp/apollo-13.env
+      register: cat_output
+      changed_when: false
 
-    - name: Show lookup works
-      debug:
-        msg: 'Lookup successful - token retrieved'
-      when: consul_token is defined
+    - name: Show the file contents
+      ansible.builtin.debug:
+        msg: "{{ cat_output.stdout }}"
+      changed_when: false
+
+    - name: Clean up test secret file
+      ansible.builtin.file:
+        path: /tmp/apollo-13.env
+        state: absent

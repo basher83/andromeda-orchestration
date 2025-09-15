@@ -13,7 +13,7 @@ vault_datacenter: 'doggos-cluster'
 
 # Auto-unseal configuration (points to master)
 vault_auto_unseal_enabled: true
-vault_transit_address: 'http://vault-master-lloyd.tailfb3ea.ts.net:8200'
+vault_transit_address: 'http://192.168.10.11:8200'
 vault_transit_key_name: 'autounseal'
 vault_transit_mount_path: 'transit'
 

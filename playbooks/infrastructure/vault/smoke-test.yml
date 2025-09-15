@@ -43,7 +43,7 @@
       - name: vault-master-lloyd
         address: 'https://192.168.10.30:8200'
         role: transit-master
-        expected_mode: dev # Currently in dev, will be prod after migration
+        expected_mode: dev # Dev mode, transit master
       - name: vault-prod-1-holly
         address: 'https://192.168.10.33:8200'
         role: production

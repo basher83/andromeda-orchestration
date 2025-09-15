@@ -39,50 +39,65 @@ You are working in an Ansible project with the following structure:
 
 ## Secrets Management
 
-Secrets are retrieved using Infisical lookups. Pattern example:
+### Before Starting: Verify Infisical Integration
 
-```yaml
-vars:
-  consul_token: >-
-    {{ lookup('infisical.vault.read_secrets',
-              universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-              universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-              project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-              env_slug='prod',
-              path='/apollo-13/consul',
-              secret_name='CONSUL_MASTER_TOKEN').value }}
-```
+**IMPORTANT**: Before implementing any task, verify Infisical is working:
 
-Note:
+1. **Test the integration**: Run `uv run ansible-playbook playbooks/examples/infisical-test.yml`
+2. **Verify success**: You should see "INFISICAL_SECRET_RETRIVAL_WORKS!!"
 
-- The Infisical client credentials must be set in your environment via .mise.local.toml
-- All Python dependencies must be installed: `uv sync` (includes infisicalsdk, hvac for Vault, python-nomad, etc.)
-- Dependencies are defined in pyproject.toml
+If the test fails, see troubleshooting below.
 
-Common secret paths:
+### Infisical Integration Patterns
 
-- Consul tokens: `/apollo-13/consul`
-- Vault tokens: `/apollo-13/vault`
-- Service credentials: `/apollo-13/services/<service-name>`
+Three patterns are demonstrated in `playbooks/examples/infisical-test.yml`:
 
-For more examples, see: `playbooks/examples/infisical-demo.yml`
+1. **Single Secret Retrieval**: Use `.value` accessor for individual secrets
+2. **Multiple Secrets as Dict**: Use `as_dict=True` for all secrets from a path
+3. **Complete Workflow**: Retrieve → Use → Cleanup pattern
 
-### Fallback Pattern (if Infisical lookup fails)
+For comprehensive documentation and patterns, see:
 
-If you encounter "worker was found in a dead state" or other Infisical lookup errors, use the CLI wrapper:
+- `docs/implementation/infisical/infisical-complete-guide.md` - Complete setup and usage guide
+- `docs/implementation/infisical/infisical-patterns.md` - Real-world implementation patterns
+- `docs/implementation/infisical/infisical-offical.md` - Official documentation reference
+
+### Required Setup
+
+- Python dependencies installed: `uv sync` (includes infisicalsdk)
+- Infisical credentials must be configured in `.mise.local.toml` (see `.mise.local.toml.example` for template)
+- macOS users: Special configuration required (documented in infisical-complete-guide.md)
+
+### Common Secret Paths and Names
+
+- Consul: `/apollo-13/consul` → `CONSUL_MASTER_TOKEN`
+- Vault: `/apollo-13/vault` → `VAULT_PROD_ROOT_TOKEN`
+- Service credentials: `/apollo-13/services/<service-name>` → (varies by service)
+
+### Troubleshooting
+
+If `playbooks/examples/infisical-test.yml` fails:
+
+1. **Check dependencies**: Run `uv pip list | grep infisical`
+2. **Verify collection**: Run `ansible-galaxy collection list | grep infisical`
+3. **Check env vars**: Run `mise env | grep INFISICAL`
+4. **macOS users**: Ensure `OBJC_DISABLE_INITIALIZE_FORK_SAFETY = "YES"` is in `.mise.local.toml`
+
+### Fallback Pattern (Last Resort)
+
+If SDK integration continues to fail, use the Infisical CLI wrapper:
 
 ```bash
 infisical run --env=prod --path="/apollo-13/vault" -- \
   uv run ansible-playbook playbooks/infrastructure/vault/<task-name>.yml \
-  -i inventory/environments/doggos-homelab/proxmox.yml
+  -i inventory/environments/vault-cluster/production.yaml
 ```
 
-This exports secrets as environment variables, then reference them in playbooks:
+Then modify your playbook to use environment lookups:
 
 ```yaml
 vars:
-  vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
-  consul_token: "{{ lookup('env', 'CONSUL_MASTER_TOKEN') }}"
+  vault_token: "{{ lookup('env', 'VAULT_PROD_ROOT_TOKEN') }}"
 ```
 
 ## Specialized Sub-agents
@@ -97,31 +112,51 @@ vars:
 
 ## Execution Process
 
-1. **Load Task**
+1. **Pre-flight Check**
+
+   - Run `uv sync` to ensure all dependencies are installed
+   - Verify Infisical integration: `uv run ansible-playbook playbooks/examples/infisical-test.yml`
+   - Confirm you see "INFISICAL_SECRET_RETRIVAL_WORKS!!"
+   - If it fails, stop and troubleshoot using the Secrets Management section
+   - Check target inventory: `uv run ansible-inventory -i inventory/environments/<target-cluster>/ --list`
+     - This shows available hosts, groups, and variables configured for the environment
+     - Pay attention to vars like `vault_addr`, `consul_http_addr`, etc.
+
+2. **Load Task**
 
    - Read the specified task file @$ARGUMENTS
    - Understand all context and requirements
    - Follow all instructions in the task file and extend the research if needed
    - Ensure you have all needed context to implement the task fully
+   - Review relevant role documentation if task involves those services:
+     - `roles/vault/README.md` - Vault deployment and configuration patterns
+     - `roles/consul/README.md` - Consul setup and ACL management
+     - `roles/nomad/README.md` - Nomad cluster configuration
    - Do more web searches and codebase exploration as needed
    - Use ansible-research when task requires a new pattern not found in the codebase
    - Use github-implementation-research when task requires a integration strategy not found in the codebase
 
-2. **ULTRATHINK**
+3. **ULTRATHINK**
 
    - Think hard before you execute the plan. Create a comprehensive plan addressing all requirements.
    - Break down complex tasks into smaller, manageable steps using your todos tools.
    - Use the TodoWrite tool to create and track your implementation plan.
    - Identify implementation patterns from existing code to follow.
 
-3. **Execute the plan**
+4. **Execute the plan**
 
    - Update the task status to <In Progress> in `docs/project-management/tasks/README.md`
    - Update the task status to <In Progress> in `docs/project-management/tasks/<Task ID>.md`
    - Execute the task @$ARGUMENTS
    - Implement all the code
+   - For playbooks that use domain variables, include domain assertions:
+     ```yaml
+     pre_tasks:
+       - include_tasks: ../../tasks/domain-assertions.yml
+     ```
+     This prevents `.local` domain usage (macOS mDNS conflict)
 
-4. **Validate**
+5. **Validate**
 
    - Run applicable checks based on files created:
      - `uv run ansible-playbook --syntax-check -i inventory/environments/doggos-homelab/static-test.yml playbooks/infrastructure/vault/<task-name>.yml` (where <task-name> matches the task ID, e.g., pki-001-create-roles)
@@ -145,7 +180,7 @@ vars:
      - Missing dependencies: verify task prerequisites are completed
    - Re-run until all pass
 
-5. **Complete**
+6. **Complete**
 
    - Ensure all checklist items done
    - Run final validation suite
@@ -154,7 +189,7 @@ vars:
    - Update the task status to <Blocked/Complete/Failed> in `docs/project-management/tasks/README.md`
    - Update the task status to <Blocked/Complete/Failed> in `docs/project-management/tasks/<Task ID>.md`
 
-6. **Reference the Task**
+7. **Reference the Task**
    - You can always reference the task again if needed
 
 Note: If validation fails, use error patterns in task to fix and retry.

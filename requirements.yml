@@ -14,12 +14,8 @@ collections:
   - name: netbox.netbox
     version: ">=3.13.0"
 
-  # 1Password Connect (deprecated - for onepassword.connect modules)
-  # 1Password Connect (optional - for onepassword.connect modules)
-  # - name: onepassword.connect
-  #  version: ">=2.3.0"
-
   # Infisical secrets management
+  # Requires Python package 'infisicalsdk' on the controller/Execution Environment
   - name: infisical.vault
     version: ">=1.1.3"
 
