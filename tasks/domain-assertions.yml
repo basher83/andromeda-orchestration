@@ -2,7 +2,8 @@
 # Common assertions to prevent configuration regressions
 # Include this in playbooks with:
 #   pre_tasks:
-#     - include_tasks: ../../tasks/domain-assertions.yml
+#     - name: Include domain validation
+#       ansible.builtin.include_tasks: ../../tasks/domain-assertions.yml
 
 - name: domain-assertions | Assert homelab_domain does not use .local
   ansible.builtin.assert:
