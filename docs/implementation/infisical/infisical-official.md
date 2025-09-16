@@ -34,13 +34,20 @@ ansible-galaxy collection install -r requirements.yml
 You can install the Infisical collection with the Ansible Galaxy CLI:
 
 ```bash
-ansible-galaxy collection install infisical.vault
+ansible-galaxy collection install 'infisical.vault:>=1.1.3'
 ```
 
-The python module dependencies are not installed by ansible-galaxy. They can be manually installed using pip:
+The python module dependencies are not installed by ansible-galaxy. They can be manually installed using uv (recommended for this project):
 
 ```bash
-pip install infisicalsdk
+# Option 1: Install from project dependencies (recommended for consistency)
+uv pip install -e .
+
+# Option 2: Install specific version matching project constraints
+uv pip install "infisicalsdk>=1.0.11"
+
+# Option 3: Install only the secrets dependencies
+uv pip install -e ".[secrets]"
 ```
 
 ## Security Best Practices
@@ -68,16 +75,16 @@ vars:
 
   # { "SECRET_KEY_1": "secret-value-1", "SECRET_KEY_2": "secret-value-2" } -> Can be accessed as secrets.SECRET_KEY_1
 
-  read_secret_by_name_within_scope: "{{ lookup('infisical.vault.read_secrets', project_id='<>', path='/', env_slug='dev', secret_name='HOST', url='https://app.infisical.com') }}"
-# { "key": "HOST", "value": "google.com" }
+  read_secret_by_name_within_scope: "{{ (lookup('infisical.vault.read_secrets', project_id='<>', path='/', env_slug='dev', secret_name='HOST', url='https://app.infisical.com')).value }}"
+# "google.com"
 
 tasks:
   - name: Example task using secrets
     debug:
       msg: "Secret retrieved successfully"
     vars:
-      my_secret: "{{ lookup('infisical.vault.read_secrets', project_id='<project-id>', path='/', env_slug='dev', secret_name='API_KEY') }}"
-    no_log: true  # SECURITY: Prevent secrets from appearing in logs
+      my_secret: "{{ (lookup('infisical.vault.read_secrets', project_id='<project-id>', path='/', env_slug='dev', secret_name='API_KEY')).value }}"
+    no_log: true # SECURITY: Prevent secrets from appearing in logs
 ```
 
 **Security Note**: The examples above use environment variables for authentication (`INFISICAL_UNIVERSAL_AUTH_CLIENT_ID` and `INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET`). Always use `no_log: true` for tasks handling sensitive data to prevent secrets from appearing in Ansible logs.
@@ -95,10 +102,10 @@ lookup('infisical.vault.read_secrets', auth_method="universal-auth", project_id=
 
 **RECOMMENDED APPROACH**: Provide the auth_method, universal_auth_client_id, and universal_auth_client_secret parameters through environment variables:
 
-| Parameter Name | Environment Variable Name |
-|---|---|
-| auth_method | INFISICAL_AUTH_METHOD |
-| universal_auth_client_id | INFISICAL_UNIVERSAL_AUTH_CLIENT_ID |
+| Parameter Name               | Environment Variable Name              |
+| ---------------------------- | -------------------------------------- |
+| auth_method                  | INFISICAL_AUTH_METHOD                  |
+| universal_auth_client_id     | INFISICAL_UNIVERSAL_AUTH_CLIENT_ID     |
 | universal_auth_client_secret | INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET |
 
 **Security Best Practices for Universal Auth**:
@@ -114,5 +121,5 @@ lookup('infisical.vault.read_secrets', auth_method="universal-auth", project_id=
 - name: Retrieve application configuration
   set_fact:
     app_config: "{{ lookup('infisical.vault.read_secrets', as_dict=True, project_id='proj123', path='/app', env_slug='prod') }}"
-  no_log: true  # Prevents secrets from appearing in logs
+  no_log: true # Prevents secrets from appearing in logs
 ```

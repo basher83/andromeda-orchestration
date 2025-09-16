@@ -12,9 +12,18 @@ All playbooks must include `tasks/validate-no-hardcoded-ips.yml` in pre_tasks **
 
 ### Collections and Libraries
 
+For reproducible installs, add collections to `requirements.yml` and install using `ansible-galaxy collection install -r requirements.yml`:
+
+```yaml
+# requirements.yml
+collections:
+  - name: ansible.utils
+    version: "2.10.0"
+```
+
 ```bash
-# Install required collection
-ansible-galaxy collection install ansible.utils:==2.10.0
+# Install collections from requirements file
+ansible-galaxy collection install -r requirements.yml
 
 # Install Python dependency (choose method based on your setup)
 # With uv (recommended for this project):
@@ -22,11 +31,6 @@ uv pip install netaddr==0.9.0
 
 # With standard pip:
 pip install netaddr==0.9.0
-
-# Or add to requirements.yml:
-collections:
-  - name: ansible.utils
-    version: "2.10.0"
 ```
 
 ## Implementation Pattern
@@ -39,12 +43,12 @@ collections:
   hosts: localhost
   vars:
     # ALL of these are violations:
-    database_host: "192.168.1.50"           # IPv4 literal
-    api_endpoint: "10.0.0.10:8080"          # IPv4 with port
-    backup_server: "172.16.0.100"           # Private range
-    ipv6_host: "2001:db8::1"                # IPv6 literal
-    service_url: "https://192.168.1.10"     # IP in URL
-    ipv6_url: "https://[2001:db8::1]:8200"  # IPv6 in brackets with port - FAILS validation
+    database_host: "192.168.1.50" # IPv4 literal
+    api_endpoint: "10.0.0.10:8080" # IPv4 with port
+    backup_server: "172.16.0.100" # Private range
+    ipv6_host: "2001:db8::1" # IPv6 literal
+    service_url: "https://192.168.1.10" # IP in URL
+    ipv6_url: "https://[2001:db8::1]:8200" # IPv6 in brackets with port - FAILS validation
 ```
 
 ### ❌ VIOLATION: Validation After Variable Definition
@@ -54,20 +58,20 @@ collections:
 - name: Configure service
   hosts: localhost
   vars:
-    database_host: "192.168.1.50"           # Hardcoded IP - will be missed!
+    database_host: "192.168.1.50" # Hardcoded IP - will be missed!
   pre_tasks:
     # BAD: Setting variables before validation
     - name: Set API endpoint
       ansible.builtin.set_fact:
-        api_endpoint: "10.0.0.10:8080"      # Hardcoded IP - will be missed!
+        api_endpoint: "10.0.0.10:8080" # Hardcoded IP - will be missed!
 
     # TOO LATE: Validation runs after variables are already set
     - name: Validate no hardcoded IPs
-      ansible.builtin.include_tasks: ../../tasks/validate-no-hardcoded-ips.yml
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
       vars:
         validate_hostlike_vars:
-          database_host: "{{ database_host | default('') }}"  # Now contains hardcoded IP
-          api_endpoint: "{{ api_endpoint | default('') }}"    # Now contains hardcoded IP
+          database_host: "{{ database_host | default('') }}" # Now contains hardcoded IP
+          api_endpoint: "{{ api_endpoint | default('') }}" # Now contains hardcoded IP
 ```
 
 ### ✅ CORRECT: Dynamic Discovery from Inventory
@@ -79,7 +83,7 @@ collections:
   pre_tasks:
     # CRITICAL: Run validation BEFORE setting any host-like vars to catch hardcoded values
     - name: Validate no hardcoded IPs
-      ansible.builtin.include_tasks: ../../tasks/validate-no-hardcoded-ips.yml
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
       vars:
         validate_hostlike_vars:
           # Check any vars that might contain IPs - these should be empty/undefined at this point
@@ -91,11 +95,11 @@ collections:
     # After validation passes, discover from inventory
     - name: Set database host from inventory
       ansible.builtin.set_fact:
-        database_host: "{{ hostvars[groups['databases'][0]]['ansible_host'] }}"
+        database_host: "{{ hostvars[(groups.get('databases', []) + [inventory_hostname])[0]]['ansible_host'] }}"
 
     - name: Set API endpoint from inventory
       ansible.builtin.set_fact:
-        api_endpoint: "{{ hostvars[groups['api_servers'][0]]['ansible_host'] }}:8080"
+        api_endpoint: "{{ hostvars[(groups.get('api_servers', []) + [inventory_hostname])[0]]['ansible_host'] }}:8080"
 
     - name: Build service list from group
       ansible.builtin.set_fact:
@@ -107,11 +111,11 @@ collections:
 ### Single Host Discovery
 
 ```yaml
-# Get IP of first host in group
-leader_ip: "{{ hostvars[groups['leaders'][0]]['ansible_host'] }}"
+# Get IP of first host in group (safe with fallback to current host)
+leader_ip: "{{ hostvars[(groups.get('leaders', []) + [inventory_hostname])[0]]['ansible_host'] }}"
 
-# Get IP with port
-service_url: "https://{{ hostvars[groups['services'][0]]['ansible_host'] }}:{{ hostvars[groups['services'][0]].get('service_port', '8443') }}"
+# Get IP with port (safe with fallback to current host)
+service_url: "https://{{ hostvars[(groups.get('services', []) + [inventory_hostname])[0]]['ansible_host'] }}:{{ hostvars[(groups.get('services', []) + [inventory_hostname])[0]].get('service_port', '8443') }}"
 ```
 
 ### Multiple Host Discovery
@@ -142,8 +146,8 @@ all_nodes: "{{ groups['cluster'] | map('extract', hostvars, 'ansible_host') | li
 ```yaml
 # Preferred when possible - use DNS names
 vars:
-  database_host: "db.example.com"        # DNS name - passes validation
-  api_endpoint: "api.service.consul"     # Service discovery - passes validation
+  database_host: "db.example.com" # DNS name - passes validation
+  api_endpoint: "api.service.consul" # Service discovery - passes validation
 ```
 
 ## Validation Task Usage
@@ -154,10 +158,10 @@ vars:
 pre_tasks:
   # FIRST TASK: Validate before setting any host-like vars
   - name: Validate no hardcoded IPs
-    ansible.builtin.include_tasks: ../../tasks/validate-no-hardcoded-ips.yml
+    ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
     vars:
       validate_hostlike_vars:
-        my_host: "{{ my_host | default('') }}"        # Should be empty at this point
+        my_host: "{{ my_host | default('') }}" # Should be empty at this point
         my_endpoint: "{{ my_endpoint | default('') }}" # Should be empty at this point
 
   # AFTER validation: Set variables from inventory
@@ -171,13 +175,13 @@ pre_tasks:
 ```yaml
 pre_tasks:
   - name: Validate no hardcoded IPs
-    ansible.builtin.include_tasks: ../../tasks/validate-no-hardcoded-ips.yml
+    ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
     vars:
       validate_hostlike_vars:
         my_host: "{{ my_host | default('') }}"
         monitoring_ip: "{{ monitoring_ip | default('') }}"
       validate_allowlist:
-        - monitoring_ip  # Exception: External monitoring service
+        - monitoring_ip # Exception: External monitoring service
 ```
 
 ### Verbose Mode for Debugging
@@ -185,18 +189,18 @@ pre_tasks:
 ```yaml
 pre_tasks:
   - name: Validate no hardcoded IPs
-    ansible.builtin.include_tasks: ../../tasks/validate-no-hardcoded-ips.yml
+    ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
     vars:
       validate_hostlike_vars:
         my_host: "{{ my_host | default('') }}"
-      validate_verbose: true  # Show detailed validation info
+      validate_verbose: true # Show detailed validation info
 ```
 
 ## Error Messages and Remediation
 
 When a hardcoded IP is detected, the validation provides clear guidance:
 
-```
+```text
 ❌ HARDCODED IP DETECTED: Variable 'database_host' = '192.168.1.50'
 
 This violates the dynamic inventory pattern!
@@ -213,7 +217,7 @@ Example fix:
 pre_tasks:
   # FIRST: Validate before setting any variables
   - name: Validate no hardcoded IPs
-    ansible.builtin.include_tasks: ../../tasks/validate-no-hardcoded-ips.yml
+    ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
     vars:
       validate_hostlike_vars:
         database_host: "{{ database_host | default('') }}"
