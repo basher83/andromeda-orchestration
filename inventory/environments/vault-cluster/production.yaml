@@ -47,6 +47,8 @@ all:
       vars:
         vault_datacenter: 'doggos-cluster'
         vault_domain: 'vault.spaceships.work'
+        homelab_domain: 'spaceships.work'
+        cluster_subdomain: 'vault'
         vault_port: 8200
         vault_cluster_port: 8201
         vault_data_dir: '/opt/vault/data'
