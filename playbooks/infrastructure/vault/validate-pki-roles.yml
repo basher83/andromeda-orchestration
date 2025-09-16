@@ -169,12 +169,23 @@
         path: "{{ pki_int_path }}/roles"
         validate_certs: "{{ vault_validate_certs | default(true) }}"
       register: existing_roles
+      failed_when: false
       no_log: true
+
+    - name: Verify PKI roles were retrieved successfully
+      ansible.builtin.assert:
+        that:
+          - existing_roles is not failed
+          - existing_roles.data is defined
+          - existing_roles.data.data is defined
+          - existing_roles.data.data.keys is defined
+        fail_msg: "Failed to retrieve PKI roles from Vault. Ensure the PKI engine is mounted at {{ pki_int_path }}"
+        success_msg: "Successfully retrieved PKI roles list"
 
     - name: Verify all expected roles exist
       ansible.builtin.assert:
         that:
-          - item in existing_roles.data.data.keys
+          - item in (existing_roles.data.data.keys | default([]))
         fail_msg: "Required PKI role '{{ item }}' not found"
         success_msg: "PKI role '{{ item }}' exists"
       loop: "{{ expected_roles }}"
