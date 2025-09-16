@@ -38,8 +38,8 @@ This project provides a framework for managing network infrastructure using Ansi
 
 ## Prerequisites
 
+- **Python** 3.9+ with **uv** package manager
 - **Ansible** 2.15+ with ansible-core
-- **Python** 3.9+
 - **Ansible Galaxy Collections** (see `requirements.yml`):
   - `infisical.vault` - Secrets management
   - `community.general` - General purpose modules
@@ -48,6 +48,14 @@ This project provides a framework for managing network infrastructure using Ansi
 - **Infisical** account and machine identity
 - **macOS** users: Local Network permissions for Python (see [Troubleshooting](docs/getting-started/troubleshooting.md))
 - Docker (optional, for execution environments)
+
+### Python Dependencies
+
+The project uses **uv** for dependency management. Available dependency groups:
+
+- **Core dependencies**: Basic runtime requirements
+- **Dev dependencies**: Development tools (`ansible-lint`, `pytest`, `ruff`, `mypy`, etc.)
+- **Secrets dependencies**: Infisical SDK for secrets management
 
 ## Quick Start
 
@@ -58,14 +66,30 @@ This project provides a framework for managing network infrastructure using Ansi
    cd andromeda-orchestration
    ```
 
-2. **Install Ansible Galaxy collections**
+2. **Install Python dependencies**
+
+   ```bash
+   # Install core Python dependencies
+   uv sync
+
+   # For development (optional - includes ansible-lint, pytest, ruff, etc.)
+   uv sync --extra dev
+
+   # For secrets management (optional - includes infisical SDK)
+   uv sync --extra secrets
+
+   # For both development and secrets (combine extras)
+   uv sync --extra dev --extra secrets
+   ```
+
+3. **Install Ansible Galaxy collections**
 
    ```bash
    # Install required Ansible collections (community.general, infisical.vault, etc.)
-   ansible-galaxy collection install -r requirements.yml
+   uv run ansible-galaxy collection install -r requirements.yml
    ```
 
-3. **Run the setup script**
+4. **Run the setup script**
 
    ```bash
    ./scripts/setup.sh
@@ -216,6 +240,21 @@ See [docs/implementation/secrets-management/infisical-setup.md](docs/implementat
 - Configured for local plugin directories
 - Inventory path set to `./inventory`
 - Host key checking disabled for development
+
+### Service Endpoints (`inventory/environments/all/service-endpoints.yml`)
+
+Centralized service endpoint configuration to avoid hardcoded IPs:
+
+- **Consul**: `{{ service_endpoints.consul.addr }}`
+- **Nomad**: `{{ service_endpoints.nomad.addr }}`
+- **Vault**: `{{ service_endpoints.vault.addr }}`
+
+Override via environment variables:
+- `CONSUL_HTTP_ADDR`
+- `NOMAD_ADDR`
+- `VAULT_ADDR`
+
+Defaults to service discovery addresses with direct IP fallbacks.
 
 ## Contributing
 
