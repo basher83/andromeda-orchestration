@@ -3,6 +3,8 @@
 - name: Test Infisical Lookup (single secret)
   hosts: localhost
   gather_facts: false
+  collections:
+    - infisical.vault
   vars:
     infisical_url: "https://app.infisical.com"
     test_secret: >-
@@ -25,6 +27,8 @@
 - name: Universal Auth inline usage (dict)
   hosts: localhost
   gather_facts: false
+  collections:
+    - infisical.vault
   vars:
     infisical_url: "https://app.infisical.com"
     client_id: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
@@ -47,6 +51,8 @@
 - name: Minimal secret retrieval
   hosts: localhost
   gather_facts: false
+  collections:
+    - infisical.vault
 
   vars:
     pid: "7b832220-24c0-45bc-a5f1-ce9794a31259"
