@@ -179,6 +179,12 @@ backend_secrets: >-
             url=infisical_url) }}
 ```
 
+> **⚠️ Security Warning**: Variables containing centralized secrets like `backend_secrets` can be rendered into Ansible logs, CI/CD output, or debug messages. Always:
+> - Mark tasks consuming these variables with `no_log: true`
+> - Avoid printing or debugging these variables directly
+> - Use verbose output sparingly: `ansible-playbook -v` (not `-vvv`) when troubleshooting
+> - Never log interpolated values: `debug: msg="{{ backend_secrets }}"` ❌
+
 Usage in a role:
 
 ```yaml
