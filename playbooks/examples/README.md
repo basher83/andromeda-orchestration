@@ -44,6 +44,7 @@ Service endpoints are centrally defined in `inventory/environments/all/service-e
 - **Vault**: `{{ service_endpoints.vault.addr }}`
 
 These can be overridden via environment variables:
+
 - `CONSUL_HTTP_ADDR`
 - `NOMAD_ADDR`
 - `VAULT_ADDR`
@@ -51,6 +52,7 @@ These can be overridden via environment variables:
 ## Contributing
 
 When adding new examples:
+
 - Include clear documentation in playbook comments
 - Add appropriate tags for selective execution
 - Follow the project's Ansible coding standards

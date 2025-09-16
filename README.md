@@ -250,6 +250,7 @@ Centralized service endpoint configuration to avoid hardcoded IPs:
 - **Vault**: `{{ service_endpoints.vault.addr }}`
 
 Override via environment variables:
+
 - `CONSUL_HTTP_ADDR`
 - `NOMAD_ADDR`
 - `VAULT_ADDR`
