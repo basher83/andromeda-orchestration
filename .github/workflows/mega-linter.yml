@@ -19,6 +19,7 @@ env:
   APPLY_FIXES: all
   APPLY_FIXES_EVENT: pull_request
   APPLY_FIXES_MODE: commit
+
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
@@ -38,15 +39,14 @@ jobs:
     steps:
       # Git Checkout
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-          ref: ${{ github.head_ref || github.ref }}
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # If you use VALIDATE_ALL_CODEBASE = true, you can remove this line to improve performance
 
       # MegaLinter
       - name: MegaLinter
-        uses: oxsecurity/megalinter/flavors/cupcake@beta
+        uses: oxsecurity/megalinter/flavors/cupcake@v8  # You can override MegaLinter flavor used to have faster performances
         id: ml
         # All available variables are described in documentation
         # https://megalinter.io/latest/config-file/
@@ -61,7 +61,7 @@ jobs:
           # VALIDATE_ALL_CODEBASE: >-
           #   ${{
           #     github.event_name == 'push' &&
-          #     github.ref == 'refs/heads/main'
+          #     contains(fromJSON('["refs/heads/main", "refs/heads/master"]'), github.ref)
           #   }}
           VALIDATE_ALL_CODEBASE: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -75,7 +75,7 @@ jobs:
         if: success() || failure()
         with:
           name: MegaLinter reports
-          include-hidden-files: 'true'
+          include-hidden-files: true
           path: |
             megalinter-reports
             mega-linter.log
@@ -105,7 +105,7 @@ jobs:
           ) &&
           !contains(github.event.head_commit.message, 'skip fix')
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           commit-message: '[MegaLinter] Apply linters automatic fixes'
           title: '[MegaLinter] Apply linters automatic fixes'
           labels: bot
@@ -138,86 +138,15 @@ jobs:
           ) &&
           env.APPLY_FIXES_MODE == 'commit' &&
           github.ref != 'refs/heads/main' &&
+          (
+            github.event_name == 'push' ||
+            github.event.pull_request.head.repo.full_name == github.repository
+          ) &&
           !contains(github.event.head_commit.message, 'skip fix')
         run: sudo chown -Rc $UID .git/
 
-      - name: Validate and set environment for auto-commit
-        if: >-
-          steps.ml.outputs.has_updated_sources == 1 &&
-          (
-            env.APPLY_FIXES_EVENT == 'all' ||
-            env.APPLY_FIXES_EVENT == github.event_name
-          ) &&
-          env.APPLY_FIXES_MODE == 'commit' &&
-          github.ref != 'refs/heads/main' &&
-          !contains(github.event.head_commit.message, 'skip fix')
-        id: validate
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
-          REF_NAME: ${{ github.ref_name }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          # Validate event name
-          if [[ "${EVENT_NAME}" != "push" && "${EVENT_NAME}" != "pull_request" ]]; then
-            echo "::error::Unexpected event type: ${EVENT_NAME}"
-            exit 1
-          fi
-
-          # For PRs, validate it's not from a fork
-          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
-            if [[ "${PR_HEAD_REPO}" != "${REPOSITORY}" ]]; then
-              echo "::notice::Skipping auto-commit for forked PR"
-              echo "skip_commit=true" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-            # Validate PR head ref is not empty
-            if [[ -z "${PR_HEAD_REF}" ]]; then
-              echo "::error::PR head ref is empty"
-              exit 1
-            fi
-            echo "target_ref=${PR_HEAD_REF}" >> $GITHUB_OUTPUT
-          else
-            # For push events, validate ref name
-            if [[ -z "${REF_NAME}" ]]; then
-              echo "::error::Ref name is empty"
-              exit 1
-            fi
-            echo "target_ref=${REF_NAME}" >> $GITHUB_OUTPUT
-          fi
-          echo "skip_commit=false" >> $GITHUB_OUTPUT
-
-      - name: Pull latest changes before auto-commit
-        if: >-
-          steps.ml.outputs.has_updated_sources == 1 &&
-          (
-            env.APPLY_FIXES_EVENT == 'all' ||
-            env.APPLY_FIXES_EVENT == github.event_name
-          ) &&
-          env.APPLY_FIXES_MODE == 'commit' &&
-          github.ref != 'refs/heads/main' &&
-          !contains(github.event.head_commit.message, 'skip fix') &&
-          steps.validate.outputs.skip_commit != 'true'
-        env:
-          TARGET_REF: ${{ steps.validate.outputs.target_ref }}
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-          # Stash any changes made by MegaLinter
-          git add -A
-          git stash
-
-          # Fetch and rebase with the validated target ref
-          git fetch origin "${TARGET_REF}"
-          git rebase "origin/${TARGET_REF}"
-
-          # Apply stashed changes back
-          git stash pop || true
-
       - name: Commit and push applied linter fixes
-        uses: stefanzweifel/git-auto-commit-action@v6
+        uses: stefanzweifel/git-auto-commit-action@v5
         if: >-
           steps.ml.outputs.has_updated_sources == 1 &&
           (
@@ -226,8 +155,11 @@ jobs:
           ) &&
           env.APPLY_FIXES_MODE == 'commit' &&
           github.ref != 'refs/heads/main' &&
-          !contains(github.event.head_commit.message, 'skip fix') &&
-          steps.validate.outputs.skip_commit != 'true'
+          (
+            github.event_name == 'push' ||
+            github.event.pull_request.head.repo.full_name == github.repository
+          ) &&
+          !contains(github.event.head_commit.message, 'skip fix')
         with:
           branch: >-
             ${{
