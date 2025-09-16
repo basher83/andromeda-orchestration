@@ -46,6 +46,7 @@ pip install infisicalsdk
 ## Security Best Practices
 
 **CRITICAL SECURITY NOTES**:
+
 - **Never hardcode secrets** directly in playbooks or inventory files
 - **Always prefer environment variables** for authentication credentials instead of inline values
 - **Use `no_log: true`** on any Ansible tasks that handle tokens, secrets, or sensitive data
@@ -101,6 +102,7 @@ lookup('infisical.vault.read_secrets', auth_method="universal-auth", project_id=
 | universal_auth_client_secret | INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET |
 
 **Security Best Practices for Universal Auth**:
+
 - **Always use environment variables** for Client ID and Client Secret
 - **Never commit credentials** to version control
 - **Use `no_log: true`** on tasks that retrieve or handle secrets
