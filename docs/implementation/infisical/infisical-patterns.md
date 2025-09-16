@@ -1,3 +1,4 @@
+# Infisical Ansible Patterns
 Here are real‑world Ansible patterns showing how to pull secrets from Infisical via the lookup plugin and inject them into modules, environments, and templates using **Universal Auth** or **OIDC**.[1][2]
 
 ### Setup
