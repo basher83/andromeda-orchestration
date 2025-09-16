@@ -261,6 +261,7 @@ Note: To comply with the no-hardcoded-IP policy, avoid committing private IP
 defaults in shared inventory. If direct access is required, provide values via
 environment variables or in environment-specific inventory only, and update the
 IP-validation allowlist accordingly.
+
 ## Contributing
 
 1. Follow the existing directory structure
