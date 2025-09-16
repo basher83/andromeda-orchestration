@@ -17,15 +17,6 @@
 #         database_host: "{{ database_host | default('') }}"
 #       validate_allowlist: []
 
-- name: validate-no-hardcoded-ips | Get installed collections information
-  ansible.builtin.setup:
-    gather_subset:
-      - '!all'
-      - '!min'
-      - ansible_collections
-  delegate_to: localhost
-  run_once: true
-
 - name: validate-no-hardcoded-ips | Check for ansible.utils collection availability
   ansible.builtin.assert:
     that:
@@ -34,11 +25,12 @@
       ❌ ansible.utils collection not installed!
 
       To fix this:
-      1. Run: ansible-galaxy collection install ansible.utils
+      1. Run: uv run ansible-galaxy collection install 'ansible.utils:>=2.10'
       2. Ensure netaddr is installed: uv pip install netaddr
-      3. Or add to requirements.yml and run: ansible-galaxy collection install -r requirements.yml
+      3. Or add to requirements.yml and run: uv run ansible-galaxy collection install -r requirements.yml
     success_msg: "✅ ansible.utils collection available"
   ignore_errors: "{{ validate_skip_prereq_check | default(false) }}"
+  when: not validate_skip_prereq_check | default(false)
 
 - name: validate-no-hardcoded-ips | Set defaults for validator inputs
   ansible.builtin.set_fact:
