@@ -1,4 +1,10 @@
 ---
+# TODO: This needs to be refactored into a role.
+# Fix DNS resolution loop issues between systemd-resolved and Consul DNS
+# Usage:
+#   uv run ansible-playbook playbooks/examples/fix-dns-resolution-loop.yml \
+#     -i inventory/doggos-homelab/infisical.proxmox.yml
+
 # Fix DNS resolution loop issues between systemd-resolved and Consul DNS
 # This playbook addresses the "server misbehaving" errors from 127.0.0.53:53
 - name: Fix DNS Resolution Loop Configuration

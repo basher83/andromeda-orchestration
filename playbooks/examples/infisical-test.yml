@@ -9,7 +9,7 @@
     infisical_url: "https://app.infisical.com"
     test_secret: >-
       {{ lookup('infisical.vault.read_secrets',
-                auth_method='universal-auth',
+                auth_method='universal_auth',
                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
@@ -38,7 +38,7 @@
       no_log: true
       ansible.builtin.set_fact:
         secrets: "{{ lookup('infisical.vault.read_secrets',
-                            auth_method='universal-auth',
+                            auth_method='universal_auth',
                             universal_auth_client_id=client_id,
                             universal_auth_client_secret=client_secret,
                             as_dict=True,
@@ -65,7 +65,7 @@
       ansible.builtin.set_fact:
         test_secret: >-
           {{ lookup('infisical.vault.read_secrets',
-                    auth_method='universal-auth',
+                    auth_method='universal_auth',
                     universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
                     universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
                     project_id=pid,

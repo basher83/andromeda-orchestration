@@ -1,0 +1,120 @@
+---
+description: Ansible automation rules and best practices for the Andromeda orchestration project
+globs: ["*.yml", "*.yaml", "playbooks/**", "inventory/**", "roles/**"]
+alwaysApply: true
+---
+
+# Ansible Automation Rules
+
+## 🔧 Command Execution
+**Always use `uv run` prefix** for all Ansible commands to ensure correct Python environment and dependencies:
+
+```bash
+# ✅ Correct
+uv run ansible-playbook playbooks/infrastructure/vault/init-vault-cluster.yml
+
+# ❌ Incorrect
+ansible-playbook playbooks/infrastructure/vault/init-vault-cluster.yml
+```
+
+## 📦 Dependency Management
+**Always ensure dependencies are synced** before running playbooks:
+
+```bash
+# Install all dependencies
+uv sync --extra dev --extra secrets
+```
+
+## 🔗 Ansible Galaxy Collections
+**Always ensure Galaxy collections are installed** before running playbooks:
+
+```bash
+# Install required collections
+uv run ansible-galaxy collection install -r requirements.yml
+```
+
+Required collections include:
+- `infisical.vault` - Secrets management
+- `community.general` - General purpose modules
+- `community.hashi_vault` - HashiCorp Vault modules
+- `ansible.utils` - Utility modules and filters
+
+## 🚀 Playbook Best Practices
+
+### 🔒 Security & Reliability Rules
+- **Always define defaults** for variables like `vault_initialized` to prevent evaluation errors
+- **Use bounded health checks** with retry logic instead of blind sleep for deterministic readiness
+- **Replace blind sleep** with retry logic for auto-unseal and other waiting scenarios
+- **Use `no_log: true`** for sensitive operations and avoid hardcoded IPs in saved files
+- **Use configurable variables** for TLS verification instead of hardcoded `validate_certs: no`
+- **Add `no_log: true`** to sensitive debug output and limit transit token TTL to 30 days or less
+- **Implement configurable certificate validation** and follow enhanced security patterns
+- **Add `cacheable: no`** to set_fact tasks containing secrets to prevent fact cache persistence
+- **Add safety guards** and proper error handling for PKI role list validation
+
+### ⚙️ Infrastructure & Configuration Standards
+- **Always enable fact gathering** for required Ansible variables (`ansible_default_ipv4`, `ansible_hostname`, `ansible_date_time`)
+- **Add IP literal validation** in preflight checks to prevent hardcoded IPs
+- **Follow proper key order** in task definitions: `name` → `when` → `block`
+- **Use FQCN** (fully qualified collection names) like `ansible.builtin.*` instead of short names
+- **Use dynamic inventory references** and environment variables instead of hardcoded IPs
+- **Implement dynamic inventory patterns** with proper IPv6 support using bracket notation
+- **Separate deployment and initialization concerns** for better maintainability and idempotent operations
+- **Use case-insensitive domain validation** and avoid `.local` domains (macOS mDNS conflicts)
+- **Use `playbook_dir`** for reliable path resolution in all `include_tasks` statements
+
+### 🛠️ Code Quality & Standards Compliance
+- **Use `community.crypto.x509_certificate_info`** instead of grep-based certificate parsing for security
+- **Use proper YAML lists** for Vault API compatibility instead of folded scalars for `allowed_domains`
+- **Follow ansible-lint compliance** rules for task structure and validation patterns
+- **Use `ansible.builtin.include_tasks`** instead of short-form `include_tasks` for FQCN compliance
+- **Keep task structures simple** and remove redundant comments for better readability
+- **Follow consistent task naming conventions** with descriptive, clear labels
+- **Use proper Jinja2 raw syntax** (`{% raw %}`) in validation error messages to prevent parsing conflicts
+- **Add preflight checks** and domain validation before playbook execution
+- **Avoid self-include patterns** to prevent infinite recursion in task files
+
+## 🔍 Linting & Validation
+Run comprehensive checks before committing:
+
+```bash
+# Ansible syntax check
+uv run ansible-playbook --syntax-check playbooks/infrastructure/vault/init-vault-cluster.yml
+
+# Production linting
+uv run ansible-lint --profile=production playbooks/infrastructure/vault/init-vault-cluster.yml
+```
+
+## 📚 Documentation Standards
+- Include comprehensive task comments
+- Document required variables and their purposes
+- Add appropriate tags for selective execution (`--tags`, `--skip-tags`)
+- Use consistent naming conventions
+- Document playbook prerequisites and dependencies
+
+## 🐛 Troubleshooting
+Common issues and solutions:
+
+- **"command not found"**: Use `uv run` prefix
+- **Collection errors**: Run `uv run ansible-galaxy collection install -r requirements.yml`
+- **Import errors**: Install dev dependencies with `uv sync --extra dev`
+- **Secrets errors**: Install secrets dependencies with `uv sync --extra secrets`
+
+## 📝 Commit Guidelines
+When committing Ansible changes:
+
+- Use conventional commit format
+- Group related changes atomically
+- Test playbooks before committing
+- Include playbook name and purpose in commit message
+- Reference issue numbers when applicable
+
+Example commit messages:
+
+```text
+feat(infra/vault): enhance vault playbooks with enterprise patterns
+fix(ansible): add safety guards for PKI role list validation
+refactor(inventory/vault-cluster): add group variables and domain configuration
+docs(roles/vault): enhance README with implementation lessons and examples
+fix(tasks): improve domain assertions and validation tasks
+```

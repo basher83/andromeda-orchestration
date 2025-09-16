@@ -1,0 +1,11 @@
+---
+- name: Test domain assertions
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # Test case 1: Domain without trailing dot that should pass
+    homelab_domain: "example.work"
+    cluster_subdomain: "test"
+  tasks:
+    - name: Include domain assertions
+      ansible.builtin.include_tasks: tasks/domain-assertions.yml
