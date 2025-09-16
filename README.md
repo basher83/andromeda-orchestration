@@ -40,6 +40,11 @@ This project provides a framework for managing network infrastructure using Ansi
 
 - **Ansible** 2.15+ with ansible-core
 - **Python** 3.9+
+- **Ansible Galaxy Collections** (see `requirements.yml`):
+  - `infisical.vault` - Secrets management
+  - `community.general` - General purpose modules
+  - `community.hashi_vault` - HashiCorp Vault modules
+  - `ansible.utils` - Utility modules and filters
 - **Infisical** account and machine identity
 - **macOS** users: Local Network permissions for Python (see [Troubleshooting](docs/getting-started/troubleshooting.md))
 - Docker (optional, for execution environments)
@@ -53,7 +58,14 @@ This project provides a framework for managing network infrastructure using Ansi
    cd andromeda-orchestration
    ```
 
-2. **Run the setup script**
+2. **Install Ansible Galaxy collections**
+
+   ```bash
+   # Install required Ansible collections (community.general, infisical.vault, etc.)
+   ansible-galaxy collection install -r requirements.yml
+   ```
+
+3. **Run the setup script**
 
    ```bash
    ./scripts/setup.sh
@@ -61,7 +73,13 @@ This project provides a framework for managing network infrastructure using Ansi
    mise run setup
    ```
 
-3. **Configure secrets and authentication**
+   The setup script will:
+   - Verify prerequisites (Ansible, Python)
+   - Install Ansible Galaxy collections (if not already done)
+   - Set up Python virtual environment with uv
+   - Create necessary directory structure
+
+4. **Configure secrets and authentication**
 
 ## SECURITY: Never commit .mise.local.toml; it is gitignored and must stay local
 
@@ -76,7 +94,7 @@ $EDITOR .mise.local.toml
 # Mise will automatically load these environment variables
 ```
 
-1. **Test the setup**
+5. **Test the setup**
 
    ```bash
    uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
@@ -147,8 +165,6 @@ See [docs/implementation/dns-ipam/testing-strategy.md](docs/implementation/dns-i
 ## Directory Structure
 
 ```text
-├── bin/                    # Executable wrapper scripts
-│   └── ansible-connect     # Legacy 1Password wrapper (deprecated)
 ├── docs/                   # Documentation
 │   ├── infisical-setup-and-migration.md
 │   ├── dns-ipam-implementation-plan.md
