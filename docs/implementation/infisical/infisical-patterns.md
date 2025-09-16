@@ -2,7 +2,9 @@
 
 Here are real‑world Ansible patterns showing how to pull secrets from Infisical via the lookup plugin and inject them into modules, environments, and templates using **Universal Auth** or **OIDC**.[1][2]
 
-### Setup
+These patterns assume dynamic inventory usage to enforce the [no-hardcoded-IP policy](docs/standards/dynamic-inventory-pattern.md), ensuring infrastructure details come from Ansible inventory as the single source of truth.
+
+## Setup
 
 Install the Infisical Ansible collection and Python SDK, then choose an authentication mode (Universal Auth or OIDC); the OIDC flow requires infisicalsdk version 1.0.10 or newer.[3][1]
 
@@ -24,14 +26,14 @@ Example bootstrap task:
         name: infisicalsdk
 ```
 
-### Auth via environment
+## Auth via environment
 
 Set these variables in shell, CI, or AWX credentials so playbooks can omit auth parameters in lookups.[5][1]
 
 - Universal Auth: INFISICAL_AUTH_METHOD=universal-auth, INFISICAL_UNIVERSAL_AUTH_CLIENT_ID, INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET.[4][1]
 - OIDC: INFISICAL_AUTH_METHOD=oidc-auth, INFISICAL_IDENTITY_ID, INFISICAL_JWT (requires infisicalsdk ≥ 1.0.10).[1][3]
 
-### Pattern 1: Load all secrets as a dict
+## Pattern 1: Load all secrets as a dict
 
 Pull a scoped set of secrets once and reuse as vars and environment for tasks/modules; this minimizes repeated API calls and centralizes access control by project, env_slug, and path.[6][1]
 
@@ -54,6 +56,7 @@ Pull a scoped set of secrets once and reuse as vars and environment for tasks/mo
           path=infisical_path,
           url=infisical_url) }}"
       no_log: true
+      cacheable: no
   tasks:
     - name: Render config with secrets
       ansible.builtin.template:
@@ -70,7 +73,7 @@ Pull a scoped set of secrets once and reuse as vars and environment for tasks/mo
       no_log: true
 ```
 
-Notes
+### Notes
 
 - lookup('infisical.vault.read_secrets', as_dict=True, ...) returns a dict, so secrets.MY_KEY is directly addressable in templates and env.[2][1]
 - Scope by project_id, env_slug, and path to align with Infisical access control boundaries.[6][1]
@@ -83,7 +86,7 @@ DB_USER={{ secrets.DB_USER }}
 DB_PASS={{ secrets.DB_PASS }}
 ```
 
-### Pattern 2: Fetch only what is needed
+## Pattern 2: Fetch only what is needed
 
 For minimal exposure, pull individual secrets and pass them to modules or templates.[1][2]
 
@@ -106,6 +109,7 @@ For minimal exposure, pull individual secrets and pass them to modules or templa
                     path='/db',
                     url=url).value }}
       no_log: true
+      cacheable: no
 
     - name: Ensure database user with secret password
       community.postgresql.postgresql_user:
@@ -116,7 +120,7 @@ For minimal exposure, pull individual secrets and pass them to modules or templa
       no_log: true
 ```
 
-### Pattern 3: Use Universal Auth explicitly in playbooks
+## Pattern 3: Use Universal Auth explicitly in playbooks
 
 If environment variables are not preferred, pass Universal Auth parameters directly to the lookup.[4][1]
 
@@ -137,9 +141,10 @@ If environment variables are not preferred, pass Universal Auth parameters direc
           env_slug='staging',
           path='/api') }}"
       no_log: true
+      cacheable: no
 ```
 
-### Pattern 4: OIDC example (machine identity)
+## Pattern 4: OIDC example (machine identity)
 
 Use identity_id and a signed JWT from an OIDC provider to authenticate, which is ideal in CI environments and conforms to Infisical’s identity model.[7][1]
 
@@ -158,9 +163,10 @@ Use identity_id and a signed JWT from an OIDC provider to authenticate, which is
           env_slug='dev',
           path='/build') }}"
       no_log: true
+      cacheable: no
 ```
 
-### Pattern 5: Group vars for team reuse
+## Pattern 5: Group vars for team reuse
 
 Centralize lookups in group_vars/all.yml so roles and playbooks just consume normalized variables without worrying about auth details.[1][2]
 
@@ -182,6 +188,7 @@ backend_secrets: >-
 ```
 
 > **⚠️ Security Warning**: Variables containing centralized secrets like `backend_secrets` can be rendered into Ansible logs, CI/CD output, or debug messages. Always:
+>
 > - Mark tasks consuming these variables with `no_log: true`
 > - Avoid printing or debugging these variables directly
 > - Use verbose output sparingly: `ansible-playbook -v` (not `-vvv`) when troubleshooting
@@ -198,7 +205,7 @@ Usage in a role:
   no_log: true
 ```
 
-### Troubleshooting macOS "\_\_NSCFConstantString initialize"
+## Troubleshooting macOS "\_\_NSCFConstantString initialize"
 
 On macOS controllers, Ansible can crash with "+[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called," which is an Objective‑C fork safety issue in Apple's runtime.[8][9]
 
@@ -213,29 +220,21 @@ If your environment already sets this via .mise.local.toml, do not modify that f
 - Workaround: export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES for the session or add it to the shell profile; this is a common fix used by Ansible users on macOS.[10][8]
 - The message is seen across languages (Ruby/Python) on macOS; setting the variable avoids the crash during forked operations typical in Ansible.[11][9]
 
-### References worth noting
+## References worth noting
 
 - The read_secrets lookup supports returning an array of key/value or a dict via as_dict, and can target a specific secret_name.[1][2]
 
 - Universal Auth is designed for non‑interactive environments and exchanges client ID/secret for a short‑lived access token to query Infisical.[12][4]
 
-[1](https://infisical.com/docs/integrations/platforms/ansible)
-[2](https://galaxy.ansible.com/ui/repo/published/infisical/vault/content/lookup/read_secrets/)
-[3](https://galaxy.ansible.com/ui/repo/published/infisical/vault/content/)
-[4](https://infisical.com/docs/documentation/platform/identities/universal-auth)
-[5](https://infisical.com/docs/cli/commands/login)
-[6](https://infisical.com/docs/documentation/platform/secrets-mgmt/concepts/access-control)
-[7](https://infisical.com/docs/api-reference/overview/authentication)
-[8](https://www.ansiblepilot.com/articles/macos-fork-error-ansible-troubleshooting/)
-[9](https://github.com/ansible/ansible/issues/76631)
-[10](https://forum.ansible.com/t/url-lookup-fails-on-my-apple-m1/34863)
-[11](https://www.jdeen.com/blog/fix-ruby-macos-nscfconstantstring-initialize-error)
-[12](https://infisical.com/docs/api-reference/endpoints/universal-auth/login)
-[13](https://www.everythingdevops.dev/blog/managing-ansible-secrets-with-infisical)
-[14](https://infisical.com/blog/infisical-update-december-2023)
-[15](https://forum.ansible.com/t/dynamically-give-ansible-a-private-key-from-an-infisical-vault-terraform/40682)
-[16](https://galaxy.ansible.com/ui/repo/published/infisical/vault/docs/)
-[17](https://github.com/Infisical/ansible-collection/issues)
-[18](https://stackoverflow.com/questions/52671926/rails-may-have-been-in-progress-in-another-thread-when-fork-was-called)
-[19](https://infisical.com/blog/introducing-machine-identities)
-[20](https://github.com/Infisical/infisical/issues/2044)
+[1]: https://infisical.com/docs/integrations/platforms/ansible
+[2]: https://galaxy.ansible.com/ui/repo/published/infisical/vault/content/lookup/read_secrets/
+[3]: https://galaxy.ansible.com/ui/repo/published/infisical/vault/content/
+[4]: https://infisical.com/docs/documentation/platform/identities/universal-auth
+[5]: https://infisical.com/docs/cli/commands/login
+[6]: https://infisical.com/docs/documentation/platform/secrets-mgmt/concepts/access-control
+[7]: https://infisical.com/docs/api-reference/overview/authentication
+[8]: https://www.ansiblepilot.com/articles/macos-fork-error-ansible-troubleshooting/
+[9]: https://github.com/ansible/ansible/issues/76631
+[10]: https://forum.ansible.com/t/url-lookup-fails-on-my-apple-m1/34863
+[11]: https://www.jdeen.com/blog/fix-ruby-macos-nscfconstantstring-initialize-error
+[12]: https://infisical.com/docs/api-reference/endpoints/universal-auth/login
