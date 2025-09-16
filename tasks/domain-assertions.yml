@@ -9,7 +9,7 @@
   ansible.builtin.assert:
     that:
       - homelab_domain is defined
-      - "'.local' not in homelab_domain"
+      - "'.local' not in homelab_domain | lower"
     fail_msg: "homelab_domain must not use .local (macOS mDNS conflict). Found: {{ homelab_domain }}"
     success_msg: "Domain validation passed: {{ homelab_domain }}"
 
