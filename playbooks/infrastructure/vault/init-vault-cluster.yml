@@ -1,0 +1,186 @@
+---
+# Initialize Vault Production Cluster
+#
+# This playbook initializes the first Vault node in the production cluster.
+# Only run this once after deploying all nodes.
+#
+# Usage:
+#   uv run ansible-playbook playbooks/infrastructure/vault/init-vault-cluster.yml \
+#     -i inventory/environments/vault-cluster/production.yaml \
+#     -e target_hosts=vault_production \
+#     -e vault_root_token_target=/path/to/secure/location
+#
+# Prerequisites:
+# - All production nodes deployed and running
+# - Master vault with transit engine configured
+# - Auto-unseal working
+#
+# Tags:
+# - vault-init: Initialize the cluster (first node only)
+# - vault-verify: Verify initialization and auto-unseal
+
+- name: Initialize Vault Production Cluster
+  hosts: "{{ target_hosts | default('vault_production') }}"
+  become: true
+  gather_facts: false
+  serial: 1 # Initialize one node at a time
+  any_errors_fatal: true
+
+  pre_tasks:
+    - name: Verify we have exactly one target host for initialization
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts | length == 1
+        fail_msg: 'Initialization must target exactly one host. Use -e target_hosts=<single_host>'
+        success_msg: 'Targeting single host for initialization'
+      run_once: true
+      tags: [validate, preflight]
+
+    - name: Include domain validation
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/domain-assertions.yml"
+      tags: [validate, preflight]
+
+    - name: Verify target host is production vault
+      ansible.builtin.assert:
+        that:
+          - vault_role is defined and vault_role == "production"
+          - vault_mode is defined and vault_mode == "production"
+        fail_msg: 'Target host must be a production vault node'
+        success_msg: 'Target host validated as production vault node'
+      tags: [validate, preflight]
+
+  vars:
+    # Use recovery shares for auto-unseal setup
+    vault_recovery_shares: 5
+    vault_recovery_threshold: 3
+    vault_secret_shares: 0  # No secret shares when using auto-unseal
+
+  tasks:
+    - name: Check Vault initialization status
+      ansible.builtin.uri:
+        url: 'http://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/init'
+        method: GET
+        validate_certs: false
+      register: vault_init_status
+      tags: [vault-init, vault-verify]
+
+    - name: Initialize Vault cluster
+      when: not vault_init_status.json.initialized
+      block:
+        - name: Initialize Vault with recovery shares for auto-unseal
+          ansible.builtin.uri:
+            url: 'http://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/init'
+            method: POST
+            validate_certs: false
+            body_format: json
+            body:
+              secret_shares: "{{ vault_secret_shares }}"
+              secret_threshold: 0
+              stored_shares: 0
+              recovery_shares: "{{ vault_recovery_shares }}"
+              recovery_threshold: "{{ vault_recovery_threshold }}"
+            status_code: [200]
+          register: vault_init_result
+          no_log: true
+          tags: [vault-init]
+
+        - name: Save initialization data securely
+          ansible.builtin.copy:
+            content: |
+              VAULT INITIALIZATION DATA - STORE SECURELY AND DELETE THIS FILE
+              ===================================================================
+
+              Initialized at: {{ ansible_date_time.iso8601 }}
+              Node: {{ ansible_hostname }}
+              Cluster: Production Vault Cluster
+
+              Root Token: {{ vault_init_result.json.root_token }}
+
+              Recovery Keys ({{ vault_recovery_shares }} total, {{ vault_recovery_threshold }} required):
+              {% for key in vault_init_result.json.recovery_keys %}
+              Recovery Key {{ loop.index }}: {{ key }}
+              {% endfor %}
+
+              SECURITY NOTES:
+              =================
+              - Store recovery keys in separate secure locations
+              - Never store all keys together
+              - Delete this file after securing the keys
+              - Root token should be revoked after initial setup
+              - Recovery keys are for disaster recovery only
+
+              Auto-Unseal Configuration:
+              - Master Vault: 192.168.10.30 (lloyd)
+              - Transit Engine: enabled
+              - Key Name: autounseal
+
+              Next Steps:
+              1. Verify auto-unseal is working on all nodes
+              2. Configure PKI roles and policies
+              3. Set up authentication methods
+              4. Enable audit logging
+              5. Configure monitoring
+            dest: '{{ vault_root_token_target | default("/root") }}/vault-init-{{ ansible_date_time.epoch }}.txt'
+            owner: root
+            group: root
+            mode: '0600'
+
+        - name: Display initialization summary
+          ansible.builtin.debug:
+            msg:
+              - '🎉 Vault cluster initialized successfully!'
+              - 'Root token and recovery keys saved to: {{ vault_root_token_target | default("/root") }}/vault-init-{{ ansible_date_time.epoch }}.txt'
+              - 'IMPORTANT: Secure these credentials immediately!'
+
+      rescue:
+        - name: Initialization failed
+          ansible.builtin.debug:
+            msg:
+              - '❌ Vault initialization failed!'
+              - 'Check vault service status and logs'
+              - 'Verify auto-unseal configuration'
+            tags: [vault-init]
+
+    - name: Skip initialization (already initialized)
+      when: vault_init_status.json.initialized
+      ansible.builtin.debug:
+        msg: 'ℹ️  Vault cluster is already initialized - skipping initialization'
+      tags: [vault-init]
+
+  post_tasks:
+    - name: Wait for auto-unseal to complete
+      ansible.builtin.pause:
+        seconds: 10
+        prompt: 'Waiting for auto-unseal to complete...'
+      when: not vault_init_status.json.initialized
+      tags: [vault-verify]
+
+    - name: Verify Vault is unsealed after initialization
+      ansible.builtin.uri:
+        url: 'http://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/seal-status'
+        method: GET
+        validate_certs: false
+      register: final_seal_status
+      tags: [vault-verify]
+
+    - name: Display final cluster status
+      ansible.builtin.debug:
+        msg:
+          - '=========================================='
+          - '🚀 Vault Cluster Initialization Complete'
+          - '=========================================='
+          - ''
+          - 'Node: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})'
+          - 'Initialized: ✅ {{ vault_init_status.json.initialized }}'
+          - 'Sealed: {{ "❌ Yes" if final_seal_status.json.sealed | default(true) else "✅ No (Auto-unsealed)" }}'
+          - 'Recovery Shares: {{ vault_recovery_shares }} ({{ vault_recovery_threshold }} required)'
+          - 'Auto-unseal: ✅ Enabled (Transit from master)'
+          - ''
+          - '🎯 Next Steps:'
+          - '1. Verify all cluster nodes are unsealed'
+          - '2. Run unseal-vault.yml --tags report to check cluster status'
+          - '3. Configure PKI roles: validate-pki-roles.yml'
+          - '4. Set up authentication methods'
+          - '5. Enable TLS (Phase 2)'
+          - '=========================================='
+      tags: [vault-verify, summary]
