@@ -13,7 +13,7 @@
     - name: Enforce dynamic-inventory pattern (no hardcoded IPs)
       ansible.builtin.import_tasks: ../../../tasks/validate-no-hardcoded-ips.yml
       vars:
-        allowlist:
+        validate_allowlist:
           - '127.0.0.1'
       tags: ['validate']
 
