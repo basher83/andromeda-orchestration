@@ -41,12 +41,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # If you use VALIDATE_ALL_CODEBASE = true, you can remove this line to improve performance
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # If you use VALIDATE_ALL_CODEBASE = true, you can remove this line to improve performance
 
       # MegaLinter
       - name: MegaLinter
-        uses: oxsecurity/megalinter/flavors/cupcake@v8  # You can override MegaLinter flavor used to have faster performances
+        uses: oxsecurity/megalinter/flavors/cupcake@v8 # You can override MegaLinter flavor used to have faster performances
         id: ml
         # All available variables are described in documentation
         # https://megalinter.io/latest/config-file/
@@ -105,7 +105,7 @@ jobs:
           ) &&
           !contains(github.event.head_commit.message, 'skip fix')
         with:
-          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: '[MegaLinter] Apply linters automatic fixes'
           title: '[MegaLinter] Apply linters automatic fixes'
           labels: bot
