@@ -59,14 +59,12 @@
     - vault_installed_version.rc == 0
     - vault_installed_version.stdout != ""
 
-- name: install | Download Vault binary
+- name: install | Download and extract Vault binary
   ansible.builtin.unarchive:
     src: '{{ vault_download_url }}'
     dest: /tmp
     remote_src: true
-    owner: root
-    group: root
-    mode: '0755'
+    creates: /tmp/vault
   when: >
     not vault_binary.stat.exists or
     (vault_installed_version_parsed is defined and vault_installed_version_parsed != vault_version)
