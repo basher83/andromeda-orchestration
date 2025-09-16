@@ -54,7 +54,7 @@
   pre_tasks:
     # MANDATORY: Validate no hardcoded IPs before proceeding
     - name: Validate dynamic inventory compliance
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/validate-no-hardcoded-ips.yml"
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
       vars:
         validate_hostlike_vars:
           # Check any pre-existing vars that might have IPs
@@ -290,25 +290,28 @@
 
     - name: 'SMOKE TEST 8: Verify operational secrets availability'
       block:
-        - name: Test retrieval of each operational secret
+        - name: Retrieve operational secrets into a dict
           ansible.builtin.set_fact:
-            secret_test_{{ item }}: >-
-              {{ (lookup('infisical.vault.read_secrets',
-                         universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                         universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                         project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                         env_slug='prod',
-                         path='/apollo-13/vault',
-                         secret_name=item)).value | default('FAILED') }}
+            operational_secret_values: >-
+              {{ (operational_secret_values | default({})) | combine(
+                 { item: (lookup('infisical.vault.read_secrets',
+                                 universal_auth_client_id=lookup('env','INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                                 universal_auth_client_secret=lookup('env','INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                                 env_slug='prod',
+                                 path='/apollo-13/vault',
+                                 secret_name=item)).value | default('') }
+              ) }}
           loop: '{{ operational_secrets }}'
-          no_log: '{{ not verbose_output }}'
-          register: operational_secrets_check
+          no_log: true
 
         - name: Evaluate operational secrets availability
           ansible.builtin.assert:
             that:
-              - operational_secrets_check is not failed
-            fail_msg: '❌ FAILED: Cannot retrieve all operational secrets from Infisical'
+              - (operational_secret_values | dict2items | map(attribute='value') | select('length') | list | length) == operational_secrets|length
+            fail_msg: >-
+              ❌ FAILED: Missing or empty operational secrets:
+              {{ (operational_secret_values | dict2items | selectattr('value','equalto','') | map(attribute='key') | list) }}
             success_msg: '✅ PASSED: All {{ operational_secrets | length }} operational secrets are retrievable'
           register: test8_result
 

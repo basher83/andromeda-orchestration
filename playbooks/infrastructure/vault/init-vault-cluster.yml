@@ -54,13 +54,14 @@
     vault_recovery_shares: 5
     vault_recovery_threshold: 3
     vault_secret_shares: 0  # No secret shares when using auto-unseal
+    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Default false during init (HTTP)
 
   tasks:
     - name: Check Vault initialization status
       ansible.builtin.uri:
         url: 'http://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/init'
         method: GET
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
       register: vault_init_status
       tags: [vault-init, vault-verify]
 
@@ -71,7 +72,7 @@
           ansible.builtin.uri:
             url: 'http://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/init'
             method: POST
-            validate_certs: false
+            validate_certs: "{{ vault_validate_certs }}"
             body_format: json
             body:
               secret_shares: "{{ vault_secret_shares }}"

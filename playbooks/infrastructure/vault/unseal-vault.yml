@@ -32,6 +32,7 @@
   vars:
     # Vault unsealing requires 3 out of 5 keys
     vault_unseal_threshold: 3
+    vault_validate_certs: "{{ vault_validate_certs | default(true) }}"  # Default to secure
 
   pre_tasks:
     - name: Validate required variables
@@ -64,7 +65,7 @@
       ansible.builtin.uri:
         url: 'https://{{ ansible_default_ipv4.address }}:8200/v1/sys/seal-status'
         method: GET
-        validate_certs: false  # Allow self-signed certificates
+        validate_certs: "{{ vault_validate_certs }}"
       register: seal_status
       failed_when: seal_status.status not in [200, 400, 501, 503, -1]  # Allow various service states including connection refused
       tags: [unseal, report]
@@ -89,42 +90,20 @@
       block:
         - name: Retrieve unseal keys from Infisical
           ansible.builtin.set_fact:
-            vault_unseal_keys:
-              - "{{ (lookup('infisical.vault.read_secrets',
-                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                env_slug='prod',
-                path='/apollo-13/vault/unseal-keys',
-                secret_name='UNSEAL_KEY_1')).value }}"
-              - "{{ (lookup('infisical.vault.read_secrets',
-                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                env_slug='prod',
-                path='/apollo-13/vault/unseal-keys',
-                secret_name='UNSEAL_KEY_2')).value }}"
-              - "{{ (lookup('infisical.vault.read_secrets',
-                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                env_slug='prod',
-                path='/apollo-13/vault/unseal-keys',
-                secret_name='UNSEAL_KEY_3')).value }}"
-              - "{{ (lookup('infisical.vault.read_secrets',
-                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                env_slug='prod',
-                path='/apollo-13/vault/unseal-keys',
-                secret_name='UNSEAL_KEY_4')).value }}"
-              - "{{ (lookup('infisical.vault.read_secrets',
-                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                env_slug='prod',
-                path='/apollo-13/vault/unseal-keys',
-                secret_name='UNSEAL_KEY_5')).value }}"
+            vault_unseal_keys: >-
+              {{ range(1,6)
+                   | map('regex_replace','^(.*)$','UNSEAL_KEY_\\1')
+                   | map('community.general.dict_kv', 'secret_name')
+                   | map('combine', {
+                        'universal_auth_client_id': lookup('env','INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                        'universal_auth_client_secret': lookup('env','INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                        'project_id': '7b832220-24c0-45bc-a5f1-ce9794a31259',
+                        'env_slug': 'prod',
+                        'path': '/apollo-13/vault/unseal-keys'
+                      })
+                   | map('lookup', 'infisical.vault.read_secrets')
+                   | map(attribute='value')
+                   | list }}
           no_log: true
           tags: [unseal]
 
@@ -146,7 +125,7 @@
             body:
               key: '{{ item }}'
             status_code: [200]
-            validate_certs: false  # Allow self-signed certificates
+            validate_certs: "{{ vault_validate_certs }}"
           loop: '{{ vault_unseal_keys[:3] }}' # Only use first 3 keys to meet threshold
           register: unseal_results
           failed_when: unseal_results.failed | default(false)  # Allow individual key failures
@@ -162,7 +141,7 @@
           ansible.builtin.uri:
             url: 'https://{{ ansible_default_ipv4.address }}:8200/v1/sys/seal-status'
             method: GET
-            validate_certs: false  # Allow self-signed certificates
+            validate_certs: "{{ vault_validate_certs }}"
           register: final_seal_status
           tags: [unseal]
 
@@ -195,7 +174,7 @@
       ansible.builtin.uri:
         url: 'https://{{ ansible_default_ipv4.address }}:8200/v1/sys/leader'
         method: GET
-        validate_certs: false  # Allow self-signed certificates
+        validate_certs: "{{ vault_validate_certs }}"
       register: leader_status
       failed_when: leader_status.status not in [200, 400, 501, 503, -1]  # Allow various service states including connection refused
       tags: [report]
