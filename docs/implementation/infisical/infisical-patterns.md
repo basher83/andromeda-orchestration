@@ -4,7 +4,7 @@ Here are real‑world Ansible patterns showing how to pull secrets from Infisica
 
 Install the Infisical Ansible collection and Python SDK, then choose an authentication mode (Universal Auth or OIDC); the OIDC flow requires infisicalsdk version 1.0.10 or newer.[3][1]
 
-- Collection install: ansible-galaxy collection install infisical.vault; SDK: pip install infisicalsdk.[1][3]
+- Collection install: ansible-galaxy collection install 'infisical.vault:>=1.1.3'; SDK: pip install infisicalsdk.[1][3]
 - Universal Auth uses a client ID/secret; OIDC uses identity_id + JWT; both can be provided via environment variables for non-interactive runs.[4][1]
 
 Example bootstrap task:
@@ -15,7 +15,7 @@ Example bootstrap task:
   gather_facts: false
   tasks:
     - name: Install Infisical collection
-      ansible.builtin.command: ansible-galaxy collection install infisical.vault
+      ansible.builtin.command: ansible-galaxy collection install 'infisical.vault:>=1.1.3'
 
     - name: Ensure infisicalsdk is present
       ansible.builtin.pip:

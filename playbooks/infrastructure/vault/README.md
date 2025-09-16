@@ -227,7 +227,12 @@ To enforce the no-hardcoded-IPs convention in your playbooks, add this validatio
           {%- for host in groups.get('vault_cluster', []) -%}
             {%- set ip = hostvars[host]['ansible_host'] -%}
             {%- set port = hostvars[host].get('vault_api_port', '8200') -%}
-            {%- set _ = nodes.append({'name': host, 'address': 'https://' + ip + ':' + port}) -%}
+            {%- if ip | ansible.utils.ipaddr('ipv6') and not ip.startswith('[') -%}
+              {%- set address = 'https://[' + ip + ']:' + port -%}
+            {%- else -%}
+              {%- set address = 'https://' + ip + ':' + port -%}
+            {%- endif -%}
+            {%- set _ = nodes.append({'name': host, 'address': address}) -%}
           {%- endfor -%}
           {{ nodes }}
 

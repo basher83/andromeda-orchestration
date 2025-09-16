@@ -29,6 +29,7 @@ collections:
 
   - name: ansible.utils
     version: ">=2.10.0"
+    # Requires Python package 'netaddr' on the controller/Execution Environment for ipaddr filter
 
   # HashiCorp Vault modules (for community.hashi_vault.vault_write/read)
   # Requires Python package 'hvac' on the controller/Execution Environment
