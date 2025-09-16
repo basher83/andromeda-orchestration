@@ -28,19 +28,19 @@
 
   tasks:
     - name: Check Vault service status
-      systemd:
+      ansible.builtin.systemd:
         name: vault
       register: vault_service
 
     - name: Verify Vault is running
-      assert:
+      ansible.builtin.assert:
         that:
           - vault_service.status.ActiveState == "active"
         fail_msg: 'Vault service is not running. Please start Vault first.'
         success_msg: 'Vault service is active'
 
     - name: Check Vault initialization status
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/sys/init'
         method: GET
         validate_certs: "{{ vault_validate_certs }}"
@@ -49,14 +49,15 @@
       delegate_to: localhost
 
     - name: Share initialization status with target host
-      set_fact:
-        vault_initialized: '{{ init_status.json.initialized }}'
-      when: init_status.json is defined
+      ansible.builtin.set_fact:
+        vault_initialized: "{{ init_status.json.initialized | default(false) | bool }}"
+      when: not (vault_initialized | default(false) | bool)
 
     - name: Initialize Vault if needed
+      when: not (vault_initialized | default(false) | bool)
       block:
         - name: Initialize Vault cluster
-          uri:
+          ansible.builtin.uri:
             url: '{{ vault_addr }}/v1/sys/init'
             method: POST
             body_format: json
@@ -71,7 +72,7 @@
           delegate_to: localhost
 
         - name: Save initialization response
-          copy:
+          ansible.builtin.copy:
             content: '{{ init_response.json | to_nice_json }}'
             dest: '/opt/vault/init-keys-{{ ansible_date_time.epoch }}.json'
             mode: '0600'
@@ -79,7 +80,7 @@
             group: vault
 
         - name: Store root token in Infisical
-          debug:
+          ansible.builtin.debug:
             msg: |
               IMPORTANT: Manually store the following in Infisical:
 
@@ -100,12 +101,11 @@
           no_log: true
 
         - name: Set root token for immediate use
-          set_fact:
+          ansible.builtin.set_fact:
             vault_root_token: '{{ init_response.json.root_token }}'
-      when: not vault_initialized
 
     - name: Check if Vault is sealed
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/sys/seal-status'
         method: GET
         validate_certs: "{{ vault_validate_certs }}"
@@ -114,7 +114,7 @@
       delegate_to: localhost
 
     - name: Unseal Vault if sealed
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/sys/unseal'
         method: POST
         body_format: json
@@ -201,7 +201,7 @@
       when: vault_root_token != ''
 
     - name: Display auto-unseal token information
-      debug:
+      ansible.builtin.debug:
         msg: |
           Transit engine configured successfully!
 
@@ -237,7 +237,7 @@
       when: vault_root_token != ''
 
     - name: Display transit key information
-      debug:
+      ansible.builtin.debug:
         msg: |
           Transit Key Status:
           - Name: {{ key_verify.data.data.name | default('N/A') }}
@@ -260,7 +260,7 @@
       when: vault_root_token != ''
 
     - name: Verify encryption works
-      debug:
+      ansible.builtin.debug:
         msg: |
           Transit encryption test successful!
           Ciphertext sample: [REDACTED]...

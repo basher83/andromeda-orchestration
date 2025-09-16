@@ -22,11 +22,19 @@
 - name: Initialize Vault Production Cluster
   hosts: "{{ target_hosts | default('vault_production') }}"
   become: true
-  gather_facts: false
+  gather_facts: true
   serial: 1 # Initialize one node at a time
   any_errors_fatal: true
 
   pre_tasks:
+    - name: "Enforce dynamic inventory: block hardcoded IP literals"
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_api_url: "http://{{ ansible_default_ipv4.address | default('') }}:{{ vault_port | default(8200) }}"
+        validate_allowlist: []
+      tags: [validate, preflight]
+
     - name: Verify we have exactly one target host for initialization
       ansible.builtin.assert:
         that:
@@ -111,7 +119,7 @@
               - Recovery keys are for disaster recovery only
 
               Auto-Unseal Configuration:
-              - Master Vault: 192.168.10.30 (lloyd)
+              - Master Vault: {{ vault_master_addr | default('https://vault-transit.service.consul:8200') }}
               - Transit Engine: enabled
               - Key Name: autounseal
 
@@ -125,12 +133,14 @@
             owner: root
             group: root
             mode: '0600'
+          no_log: true
 
         - name: Display initialization summary
           ansible.builtin.debug:
             msg:
               - '🎉 Vault cluster initialized successfully!'
-              - 'Root token and recovery keys saved to: {{ vault_root_token_target | default("/root") }}/vault-init-{{ ansible_date_time.epoch }}.txt'
+              - 'Root token and recovery keys saved to: {{ vault_root_token_target | default("/root") }}/'
+              - '  vault-init-{{ ansible_date_time.epoch }}.txt'
               - 'IMPORTANT: Secure these credentials immediately!'
 
       rescue:
@@ -150,9 +160,17 @@
 
   post_tasks:
     - name: Wait for auto-unseal to complete
-      ansible.builtin.pause:
-        seconds: 10
-        prompt: 'Waiting for auto-unseal to complete...'
+      ansible.builtin.uri:
+        url: "{{ vault_scheme }}://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/
+          seal-status"
+        method: GET
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path | default(omit) }}"
+        status_code: [200, 503]
+      register: wait_seal
+      until: wait_seal.json is defined and (wait_seal.json.sealed | default(true)) == false
+      retries: 30
+      delay: 10
       when: not vault_init_status.json.initialized
       tags: [vault-verify]
 
