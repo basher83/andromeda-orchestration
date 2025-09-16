@@ -16,7 +16,7 @@ vault_raft_retry_join: []
 vault_auto_unseal_enabled: true
 vault_auto_unseal_type: 'transit'
 vault_auto_unseal_config:
-  address: 'http://192.168.10.11:8200' # Master Vault on lloyd
+  address: 'http://{{ hostvars["vault-master-lloyd"]["ansible_host"] }}:8200' # Master Vault (derived from inventory)
   token: "{{ lookup('infisical.vault.read_secrets',
     universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
     universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),

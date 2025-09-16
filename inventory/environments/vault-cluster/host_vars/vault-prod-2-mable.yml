@@ -15,7 +15,7 @@ vault_datacenter: 'doggos-cluster'
 vault_auto_unseal_enabled: true
 vault_auto_unseal_type: 'transit'
 vault_auto_unseal_config:
-  address: 'http://192.168.10.30:8200'  # Master vault on lloyd
+  address: 'http://{{ hostvars["vault-master-lloyd"]["ansible_host"] }}:8200'  # Master vault (derived from inventory)
   token: "{{ lookup('infisical.vault.read_secrets',
     universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
     universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
@@ -43,7 +43,7 @@ vault_api_addr: 'http://{{ ansible_default_ipv4.address }}:8200'
 vault_storage_backend: 'raft'
 vault_raft_node_id: 'vault-prod-2'
 vault_raft_retry_join:
-  - 'http://192.168.10.31:8200'  # Join vault-prod-1-holly (leader)
+  - 'http://{{ hostvars["vault-prod-1-holly"]["ansible_host"] }}:8200'  # Join leader (derived from inventory)
 
 # Storage configuration
 vault_data_dir: '/opt/vault/data'
