@@ -31,6 +31,17 @@
     color_red: "\033[31m"
     color_reset: "\033[0m"
 
+  pre_tasks:
+    - name: Validate service_endpoints are defined
+      ansible.builtin.assert:
+        that:
+          - service_endpoints is defined
+          - service_endpoints.consul.addr is defined
+          - service_endpoints.nomad.addr is defined
+          - service_endpoints.vault.addr is defined
+        fail_msg: "service_endpoints.*.addr must be defined (see inventory/environments/all/service-endpoints.yml)"
+        success_msg: "Service endpoints found"
+
   tasks:
     # ========================================
     # Header

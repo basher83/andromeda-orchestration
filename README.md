@@ -261,6 +261,9 @@ Note: To comply with the no-hardcoded-IP policy, avoid committing private IP
 defaults in shared inventory. If direct access is required, provide values via
 environment variables or in environment-specific inventory only, and update the
 IP-validation allowlist accordingly.
+
+All example playbooks should include the project's preflight validators in pre_tasks (e.g., no-hardcoded-IPs and domain assertions) to mirror production usage.
+
 ## Contributing
 
 1. Follow the existing directory structure
