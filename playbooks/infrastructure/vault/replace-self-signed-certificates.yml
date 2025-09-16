@@ -249,13 +249,13 @@
   vars:
     vault_nodes:
       - name: 'vault-master-lloyd'
-        host: '192.168.10.30'
+        host: "{{ hostvars['vault-master-lloyd'].ansible_host }}"
       - name: 'vault-prod-1-holly'
-        host: '192.168.10.31'
+        host: "{{ hostvars['vault-prod-1-holly'].ansible_host }}"
       - name: 'vault-prod-2-mable'
-        host: '192.168.10.32'
+        host: "{{ hostvars['vault-prod-2-mable'].ansible_host }}"
       - name: 'vault-prod-3-lloyd'
-        host: '192.168.10.33'
+        host: "{{ hostvars['vault-prod-3-lloyd'].ansible_host }}"
 
   tasks:
     - name: Test TLS connections to all Vault nodes
