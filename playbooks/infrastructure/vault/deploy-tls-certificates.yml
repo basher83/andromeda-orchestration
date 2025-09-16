@@ -14,7 +14,7 @@
     vault_backup_dir: /opt/vault/tls/backup-{{ ansible_date_time.epoch }}
 
     # Active Vault leader for PKI operations
-    vault_leader_addr: 'https://192.168.10.33:8200'
+    vault_leader_addr: "{{ ansible_env.VAULT_ADDR | default('https://192.168.10.30:8200') }}"  # Vault master default
 
     # Retrieve Vault token from Infisical
     vault_token: >-
