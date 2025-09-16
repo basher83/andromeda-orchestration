@@ -47,6 +47,11 @@
       register: init_status
       delegate_to: localhost
 
+    - name: Share initialization status with target host
+      set_fact:
+        vault_initialized: '{{ init_status.json.initialized }}'
+      when: init_status.json is defined
+
     - name: Initialize Vault if needed
       block:
         - name: Initialize Vault cluster
@@ -95,7 +100,7 @@
         - name: Set root token for immediate use
           set_fact:
             vault_root_token: '{{ init_response.json.root_token }}'
-      when: not init_status.json.initialized
+      when: not vault_initialized
 
     - name: Check if Vault is sealed
       uri:

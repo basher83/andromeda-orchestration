@@ -1,37 +1,119 @@
 ---
 # Test connectivity to Vault cluster VMs
+#
+# This playbook performs basic connectivity and health checks on Vault cluster nodes,
+# verifying network reachability, cloud-init completion, Vault installation, and service status.
+#
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/test-connectivity.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
+#
+# Prerequisites:
+# - Dynamic inventory configured for vault cluster
+# - SSH access to vault nodes with ansible user
+# - Proxmox variables (proxmox_node, vm_id) defined in inventory
+#
+# Tags:
+# - connectivity: Basic network and system checks
+# - vault: Vault-specific validation
+# - services: Service status checks
+# - report: Display results (default)
+
 - name: Test Vault Cluster Connectivity
   hosts: vault_cluster
   gather_facts: true
+  any_errors_fatal: true
+
+  pre_tasks:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - vault_role is defined
+          - proxmox_node is defined
+          - vm_id is defined
+        fail_msg: "Required variables missing: vault_role, proxmox_node, vm_id"
+        success_msg: "Required variables validated"
+      tags: [validate, preflight]
+
   tasks:
     - name: Ping all Vault nodes
       ansible.builtin.ping:
       register: ping_result
+      tags: [connectivity]
 
     - name: Check cloud-init completion
       ansible.builtin.stat:
         path: /var/lib/cloud/instance/boot-finished
       register: cloud_init_status
+      tags: [connectivity]
 
     - name: Verify Vault installation
       ansible.builtin.command:
         cmd: vault version
       register: vault_version
-      failed_when: false
+      failed_when: vault_version.rc not in [0, 127]  # Allow "not found" (127)
+      changed_when: false
+      tags: [vault]
 
     - name: Check Vault service status
       ansible.builtin.systemd:
         name: vault
       register: vault_service
+      failed_when: false  # Allow service to not exist during initial setup
+      tags: [services, vault]
 
-    - name: Display node status
+    - name: Verify connectivity results
+      ansible.builtin.assert:
+        that:
+          - ping_result is succeeded
+        fail_msg: "Node {{ inventory_hostname }} is not reachable"
+        success_msg: "Node {{ inventory_hostname }} connectivity verified"
+      tags: [connectivity]
+
+    - name: Verify cloud-init completion
+      ansible.builtin.assert:
+        that:
+          - cloud_init_status.stat.exists
+        fail_msg: "Cloud-init has not completed on {{ inventory_hostname }}"
+        success_msg: "Cloud-init completed on {{ inventory_hostname }}"
+      when: cloud_init_status.stat is defined
+      tags: [connectivity]
+
+    - name: Display node status summary
       ansible.builtin.debug:
         msg: |
-          Node: {{ inventory_hostname }}
-          IP: {{ ansible_host }}
-          Proxmox Node: {{ proxmox_node }}
-          Role: {{ vault_role }}
-          Cloud-init Complete: {{ cloud_init_status.stat.exists | default('unknown') }}
-          Vault Installed: {{ vault_version.rc == 0 }}
-          Vault Version: {{ vault_version.stdout | default('not installed') }}
-          Vault Service State: {{ vault_service.status.ActiveState | default('unknown') }}
+          🔍 Node Status: {{ inventory_hostname }}
+          📍 Location: {{ proxmox_node | default('unknown') }} (VM ID: {{ vm_id | default('unknown') }})
+          🎭 Role: {{ vault_role | default('unknown') }}
+          🌐 Connectivity: {{ '✅ Online' if (ping_result | default({'failed': true})).failed | default(true) == false else '❌ Offline' }}
+          ☁️  Cloud-init: {{ '✅ Complete' if (cloud_init_status | default({'stat': {'exists': false}})).stat.exists | default(false) else '⏳ Pending' }}
+          🔐 Vault Binary: {{ '✅ Installed' if (vault_version | default({'rc': 1})).rc | default(1) == 0 else '❌ Missing' }}
+          ⚙️  Vault Service: {{ (vault_service | default({'status': {'ActiveState': 'unknown'}})).status.ActiveState | default('unknown') | title }}
+          📊 Vault Version: {{ (vault_version | default({'stdout': 'Not available'})).stdout | default('Not available') | trim }}
+        verbosity: 1
+      tags: [report]
+
+    - name: Display comprehensive health report
+      ansible.builtin.debug:
+        msg: |
+          📋 Vault Cluster Health Report
+          ================================
+
+          {% for host in ansible_play_hosts %}
+          Node: {{ hostvars[host].inventory_hostname }}
+            • Role: {{ hostvars[host].vault_role | default('unknown') }}
+            • Status: {{ '✅ Healthy' if ((hostvars[host].ping_result | default({'failed': true})).failed | default(true) == false and
+              (hostvars[host].cloud_init_status | default({'stat': {'exists': false}})).stat.exists | default(false)) else '⚠️ Issues' }}
+            • Vault: {{ '✅ Ready' if ((hostvars[host].vault_version | default({'rc': 1})).rc | default(1) == 0 and
+              (hostvars[host].vault_service | default({'status': {'ActiveState': 'unknown'}})).status.ActiveState | default('unknown') == 'active') else '❌ Not Ready' }}
+          {% endfor %}
+
+          🎯 Next Steps:
+            • Run full connectivity test: --tags connectivity
+            • Check failed nodes for connectivity issues
+            • Verify cloud-init logs if initialization incomplete
+            • Ensure Vault service is properly configured
+            • Run PKI validation: validate-pki-roles.yml
+        verbosity: 0
+      run_once: true
+      tags: [report, summary]
