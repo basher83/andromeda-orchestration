@@ -15,20 +15,28 @@
       vars:
         validate_allowlist:
           - '127.0.0.1'
+          - '::1'
+      tags: ['validate']
+
+    - name: Assert VAULT_ADDR or inventory leader is available
+      ansible.builtin.assert:
+        that:
+          - (ansible_env.VAULT_ADDR | default('')) != '' or (_leader_host is defined)
+        fail_msg: "Set VAULT_ADDR or define group 'vault_production' with ansible_host."
       tags: ['validate']
 
   vars:
     # Vault connection for certificate generation (pointing to leader)
     _leader_host: >-
-      {{ (groups.get('vault_production', []) | first) | default(omit) |
-         ternary(hostvars[groups['vault_production'][0]].ansible_host, omit) }}
+      {{ hostvars.get((groups.get('vault_production') | default([]) | first) | default(''), {})
+           .get('ansible_host') | default(omit) }}
     vault_addr: >-
       {{ ansible_env.VAULT_ADDR |
          default(
-           ('https://[' ~ _leader_host ~ ']:8200')
-           if (_leader_host is defined and (_leader_host | ansible.utils.ipaddr('ipv6')))
-           else ('https://' ~ _leader_host ~ ':8200'),
-           true) }}
+           ((_leader_host | ansible.utils.ipaddr('ipv6'))
+             | ternary('https://[' ~ _leader_host ~ ']:8200', 'https://' ~ _leader_host ~ ':8200')),
+           true)
+         if (_leader_host is defined) else omit }}
 
     # PKI Configuration
     pki_mount: 'pki_int'
@@ -186,35 +194,41 @@
         group: root
         mode: '0644'
       become: true
+      register: ca_copy_debian
+      changed_when: ca_copy_debian.changed
       when: ansible_facts['os_family'] == 'Debian'
 
     - name: Copy CA bundle to system trust store (RedHat/CentOS)
       ansible.builtin.copy:
         src: '{{ ca_bundle_path }}'
-        dest: '/etc/pki/ca-trust/source/anchors/vault-ca-chain.crt'
+        dest: '{{ system_ca_path }}/vault-ca-chain.crt'
         remote_src: yes
         owner: root
         group: root
         mode: '0644'
       become: true
+      register: ca_copy_redhat
+      changed_when: ca_copy_redhat.changed
       when: ansible_facts['os_family'] == 'RedHat'
 
     - name: Update system CA certificates (Debian/Ubuntu)
       ansible.builtin.command: update-ca-certificates
       become: true
-      changed_when: true
+      changed_when: ca_copy_debian.changed
       when: ansible_facts['os_family'] == 'Debian'
 
     - name: Update system CA certificates (RedHat/CentOS)
       ansible.builtin.command: update-ca-trust
       become: true
-      changed_when: true
+      changed_when: ca_copy_redhat.changed
       when: ansible_facts['os_family'] == 'RedHat'
 
     - name: Verify new certificate
-      ansible.builtin.shell: |
-        set -o pipefail
-        openssl x509 -in {{ tls_dir }}/tls.crt -text -noout | grep -E "(Subject:|Issuer:)"
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          openssl x509 -in {{ tls_dir }}/tls.crt -text -noout | grep -E "(Subject:|Issuer:)"
+        executable: /bin/bash
       register: cert_info
       become: true
       changed_when: false
@@ -224,8 +238,10 @@
         msg: '{{ cert_info.stdout_lines }}'
 
     - name: Test certificate chain validation
-      ansible.builtin.shell: |
-        openssl verify -CAfile {{ ca_bundle_path }} {{ tls_dir }}/tls.crt
+      ansible.builtin.shell:
+        cmd: |
+          openssl verify -CAfile {{ ca_bundle_path }} {{ tls_dir }}/tls.crt
+        executable: /bin/bash
       register: cert_validation
       become: true
       changed_when: false
@@ -296,8 +312,12 @@
   gather_facts: no
 
   vars:
-    vault_domain: "{{ hostvars[groups['vault_production'][0]].vault_domain }}"
-    vault_nodes: "{{ groups['vault_production'] | map('extract', hostvars) | list }}"
+    vault_domain: >-
+      {{ hostvars.get((groups.get('vault_production') | default([]) | first) | default(''), {})
+           .get('vault_domain') | default('localhost') }}
+    vault_nodes: >-
+      {{ (groups.get('vault_production') | default([]) | map('extract', hostvars) | list)
+         if groups.get('vault_production') | default([]) | length > 0 else [] }}
 
   tasks:
     - name: Test TLS connections to all Vault nodes
@@ -306,16 +326,19 @@
           {{ '[' ~ item.ansible_host ~ ']' if (item.ansible_host | ansible.utils.ipaddr('ipv6'))
           else item.ansible_host }}
         sni_name: "{{ item.inventory_hostname }}.{{ vault_domain }}"
-      ansible.builtin.shell: |
-        set -o pipefail
-        echo | openssl s_client -connect {{ connect_host }}:8200 -servername {{ sni_name }} 2>/dev/null | \
-          openssl x509 -noout -text | grep -E "(Subject|Issuer):" | head -4
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          echo | openssl s_client -connect {{ connect_host }}:8200 -servername {{ sni_name }} 2>/dev/null | \
+            openssl x509 -noout -text | grep -E "(Subject|Issuer):" | head -4
+        executable: /bin/bash
       loop: '{{ vault_nodes }}'
       loop_control:
         label: '{{ item.inventory_hostname }}'
       register: tls_tests
       delegate_to: localhost
       changed_when: false
+      when: vault_nodes | length > 0
 
     - name: Display TLS test results
       ansible.builtin.debug:
@@ -323,6 +346,12 @@
       loop: '{{ tls_tests.results }}'
       loop_control:
         label: '{{ item.item.inventory_hostname }}'
+      when: vault_nodes | length > 0
+
+    - name: Skip TLS tests (no vault nodes found)
+      ansible.builtin.debug:
+        msg: 'ℹ️  Skipping TLS connection tests - no vault_production nodes found in inventory'
+      when: vault_nodes | length == 0
 
     - name: Summary report
       ansible.builtin.debug:
