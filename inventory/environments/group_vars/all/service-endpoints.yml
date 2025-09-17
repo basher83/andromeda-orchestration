@@ -22,13 +22,13 @@ service_endpoints:
 
   # Alternative: Direct IP-based endpoints (for environments without service discovery)
   consul_direct:
-    addr: "{{ lookup('env', 'CONSUL_HTTP_ADDR') | default('http://192.168.11.11:8500') }}"
+    addr: "{{ lookup('env', 'CONSUL_HTTP_ADDR') | default(omit) }}"
     description: "Consul direct IP endpoint (fallback)"
 
   nomad_direct:
-    addr: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646') }}"
+    addr: "{{ lookup('env', 'NOMAD_ADDR') | default(omit) }}"
     description: "Nomad direct IP endpoint (fallback)"
 
   vault_direct:
-    addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://192.168.10.31:8200') }}"
+    addr: "{{ lookup('env', 'VAULT_ADDR') | default(omit) }}"
     description: "Vault direct IP endpoint (fallback)"
