@@ -63,13 +63,15 @@
     vault_recovery_threshold: 3
     vault_secret_shares: 0  # No secret shares when using auto-unseal
     vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Default false during init (HTTP)
+    vault_scheme: "{{ vault_scheme | default('https') }}"  # Default to HTTPS for production
 
   tasks:
     - name: Check Vault initialization status
       ansible.builtin.uri:
-        url: 'http://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/init'
+        url: "{{ vault_scheme }}://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/init"
         method: GET
         validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path | default(omit) }}"
       register: vault_init_status
       tags: [vault-init, vault-verify]
 
@@ -78,9 +80,10 @@
       block:
         - name: Initialize Vault with recovery shares for auto-unseal
           ansible.builtin.uri:
-            url: 'http://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/init'
+            url: "{{ vault_scheme }}://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/init"
             method: POST
             validate_certs: "{{ vault_validate_certs }}"
+            ca_path: "{{ vault_ca_path | default(omit) }}"
             body_format: json
             body:
               secret_shares: "{{ vault_secret_shares }}"
@@ -161,8 +164,8 @@
   post_tasks:
     - name: Wait for auto-unseal to complete
       ansible.builtin.uri:
-        url: "{{ vault_scheme }}://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/
-          seal-status"
+        url: >-
+          {{ vault_scheme }}://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/seal-status
         method: GET
         validate_certs: "{{ vault_validate_certs }}"
         ca_path: "{{ vault_ca_path | default(omit) }}"
@@ -176,9 +179,11 @@
 
     - name: Verify Vault is unsealed after initialization
       ansible.builtin.uri:
-        url: 'http://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/seal-status'
+        url: >-
+          {{ vault_scheme }}://{{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}/v1/sys/seal-status
         method: GET
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path | default(omit) }}"
       register: final_seal_status
       tags: [vault-verify]
 
@@ -189,7 +194,7 @@
           - '🚀 Vault Cluster Initialization Complete'
           - '=========================================='
           - ''
-          - 'Node: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})'
+          - 'Node: {{ ansible_hostname }} ({{ ansible_host | default(ansible_default_ipv4.address) }})'
           - 'Initialized: ✅ {{ vault_init_status.json.initialized }}'
           - 'Sealed: {{ "❌ Yes" if final_seal_status.json.sealed | default(true) else "✅ No (Auto-unsealed)" }}'
           - 'Recovery Shares: {{ vault_recovery_shares }} ({{ vault_recovery_threshold }} required)'
