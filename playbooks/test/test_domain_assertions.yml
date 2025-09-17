@@ -9,7 +9,8 @@
     homelab_domain: "example.work"
     cluster_subdomain: "test"
   tasks:
-    - name: Include domain assertions
+    - name: domain-assertions | Include domain validation
+      tags: [preflight]
       ansible.builtin.include_tasks:
         file: "{{ playbook_dir }}/../../tasks/domain-assertions.yml"
         apply:
