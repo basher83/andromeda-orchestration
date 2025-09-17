@@ -2,7 +2,7 @@
 # TODO: This needs to be refactored into a role.
 # Fix DNS resolution loop issues between systemd-resolved and Consul DNS
 # Usage:
-#   uv run ansible-playbook playbooks/examples/fix-dns-resolution-loop.yml \
+#   uv run ansible-playbook playbooks/fix/fix-dns-resolution-loop.yml \
 #     -i inventory/doggos-homelab/infisical.proxmox.yml
 
 # Fix DNS resolution loop issues between systemd-resolved and Consul DNS
@@ -11,6 +11,13 @@
   hosts: nomad-client*:nomad-server*
   become: true
   gather_facts: true
+
+  pre_tasks:
+    - name: Enforce dynamic-inventory pattern (no hardcoded IPs)
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_allowlist: "{{ external_dns_servers }}"
+      tags: ['preflight']
 
   vars:
     # External DNS servers to use as fallback
@@ -167,6 +174,7 @@
     - name: apply netplan
       ansible.builtin.command: netplan apply
       become: true
+      changed_when: false
 
   post_tasks:
     - name: Summary of changes
