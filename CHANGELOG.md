@@ -70,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- **MegaLinter Implementation Guide**
+- **MegaLinter Implementation Guide** (`./docs/getting-started/megalinter-implementation.md`)
 
   - Created comprehensive setup and usage documentation
   - Added performance optimization details and troubleshooting guides

@@ -41,6 +41,7 @@
     # PKI Configuration
     pki_mount: 'pki_int'
     pki_role: 'infrastructure'
+    vault_validate_certs: false  # Set to true for production with proper CA
     cert_ttl: '720h' # 30 days
 
     # Certificate paths on target nodes
@@ -69,6 +70,7 @@
           env_slug='prod',
           path='/apollo-13/vault',
           secret_name='VAULT_PROD_ROOT_TOKEN')).value, true) }}"
+        cacheable: no
       no_log: true
       run_once: true
       delegate_to: localhost
@@ -125,7 +127,7 @@
           - '{{ ansible_host }}'
           - '127.0.0.1'
         ttl: '{{ cert_ttl }}'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs | default(false) }}"
       delegate_to: localhost
       register: new_cert
       no_log: true

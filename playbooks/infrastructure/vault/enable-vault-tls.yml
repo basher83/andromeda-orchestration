@@ -7,13 +7,15 @@
 # 4. Update Consul health checks
 #
 # Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/enable-vault-tls.yml -i inventory/environments/vault-cluster/production.yaml
+# uv run ansible-playbook playbooks/infrastructure/vault/enable-vault-tls.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
 
 - name: Enable TLS for Vault Cluster
   hosts: vault_cluster
   gather_facts: true
 
   vars:
+    vault_validate_certs: false  # Set to true for production with proper CA
     vault_tls_dir: '/opt/vault/tls'
     cert_country: 'US'
     cert_state: 'HomeLabState'
@@ -47,7 +49,7 @@
       become: true
 
     - name: Generate private key
-      ansible.builtin.openssl_privatekey:
+      community.crypto.openssl_privatekey:
         path: '{{ vault_tls_dir }}/tls.key'
         size: 4096
         type: RSA
@@ -58,7 +60,7 @@
       when: not cert_exists.stat.exists
 
     - name: Generate CSR
-      ansible.builtin.openssl_csr:
+      community.crypto.openssl_csr:
         path: '{{ vault_tls_dir }}/tls.csr'
         privatekey_path: '{{ vault_tls_dir }}/tls.key'
         country_name: '{{ cert_country }}'
@@ -75,7 +77,7 @@
       when: not cert_exists.stat.exists
 
     - name: Generate self-signed certificate (temporary)
-      ansible.builtin.openssl_certificate:
+      community.crypto.x509_certificate:
         path: '{{ vault_tls_dir }}/tls.crt'
         csr_path: '{{ vault_tls_dir }}/tls.csr'
         privatekey_path: '{{ vault_tls_dir }}/tls.key'
@@ -113,7 +115,10 @@
       ansible.builtin.replace:
         path: /etc/vault.d/vault.hcl
         regexp: 'tls_disable = true'
-        replace: 'tls_disable = false\n  tls_cert_file = "{{ vault_tls_dir }}/tls.crt"\n  tls_key_file = "{{ vault_tls_dir }}/tls.key"'
+        replace: |
+          tls_disable = false
+            tls_cert_file = "{{ vault_tls_dir }}/tls.crt"
+            tls_key_file = "{{ vault_tls_dir }}/tls.key"
       become: true
       when: vault_role == "production"
       notify: restart vault
@@ -171,7 +176,7 @@
       ansible.builtin.uri:
         url: 'https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health'
         method: GET
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs | default(false) }}"
         status_code: [200, 429, 473, 501, 503]
       register: https_test
       when: vault_role == "production"
@@ -180,7 +185,9 @@
     - name: Display TLS verification results
       ansible.builtin.debug:
         msg:
-          - "{{ inventory_hostname }}: {{ 'HTTPS ENABLED ✅' if https_test.status is defined and https_test.status in [200, 501, 503] else 'Still on HTTP (DEV mode)' if vault_role == 'master' else 'HTTPS FAILED ❌' }}"
+          - "{{ inventory_hostname }}: {{ 'HTTPS ENABLED ✅' if https_test.status is defined and \
+              https_test.status in [200, 501, 503] else 'Still on HTTP (DEV mode)' if vault_role == 'master' \
+              else 'HTTPS FAILED ❌' }}"
 
 - name: Update Consul Health Checks to Use HTTPS
   hosts: vault_cluster
@@ -188,7 +195,7 @@
 
   tasks:
     - name: Get node-specific token from Infisical
-      set_fact:
+      ansible.builtin.set_fact:
         node_token_name: "CONSUL_TOKEN_{{ inventory_hostname | upper | replace('-', '_') }}"
       when: vault_role == "production"
 
@@ -224,7 +231,8 @@
           Check:
             CheckID: 'vault-health'
             Name: 'Vault Health Check'
-            HTTP: "{{ 'https' if vault_role == 'production' else 'http' }}://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
+            HTTP: "{{ 'https' if vault_role == 'production' else 'http' }}://\
+              {{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
             TLSSkipVerify: true
             Interval: '10s'
             Timeout: '5s'

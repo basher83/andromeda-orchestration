@@ -1,208 +1,99 @@
-## Commands
+# CLAUDE.md
 
-### Running Playbooks with Infisical
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-```bash
-# Run playbooks using uv with Infisical secrets
-# First, install optional dependencies: uv sync --extra secrets
-uv run ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
+## Project Overview
+
+Andromeda Orchestration - Ansible automation project for comprehensive homelab infrastructure management using NetBox as network source-of-truth and Infisical for secure credential management.
+
+### Tech Stack
+
+- **Languages**: Python 3.10+, HCL (Nomad), YAML (Ansible)
+- **Frameworks**: Ansible Core 2.15+, Nomad, Consul, Vault
+- **Tools**: uv (package manager), MegaLinter, pre-commit hooks
+- **Infrastructure**: Proxmox, NetBox, PowerDNS, Tailscale
+
+### Code Style & Conventions
+
+- **Ansible**: FQCN usage, dynamic inventory patterns, no hardcoded IPs
+- **Security**: Infisical lookups for secrets, TLS validation, PKI certificates
+- **Domains**: Configurable domains only (no .local due to macOS conflicts)
+- **Linting**: MegaLinter with ansible-lint, yamllint, ruff, mypy, markdownlint-cli2, shellcheck, and more.
+
+### Development Workflow
+
+- **Commands**: Always use `uv run` prefix for Ansible operations
+- **Commits**:
+  - Use conventional commit format:
+  - Group related changes atomically
+  - Test playbooks before committing
+  - Include playbook name and purpose in commit message
+  - Reference issue numbers when applicable
+
+Example commit messages:
+
+```text
+feat(infra/vault): enhance vault playbooks with enterprise patterns
+fix(ansible): add safety guards for PKI role list validation
+refactor(inventory/vault-cluster): add group variables and domain configuration
+docs(roles/vault): enhance README with implementation lessons and examples
+fix(tasks): improve domain assertions and validation tasks
 ```
 
-**CRITICAL**: When working with NetBox or any playbooks that need Infisical secrets:
+- **Testing**: Smoke tests mandatory, multi-layer validation (infra/platform/app)
+- **PR Requirements**: All linters pass, secrets scanned, documentation updated
 
-- ALWAYS use `uv run ansible-playbook` (not `ansible-playbook` directly)
-- If you encounter "worker was found in a dead state" errors with Infisical lookups this indicates an error authenticating with the infisical API. You must verify the environment variables are set correctly via .mise.local.toml. The variables needed are INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET.
+### Testing Strategy
 
-- As a last resort, you can get the token via the CLI and use the environment variable:
+- **Infrastructure**: Dynamic inventory validation, service connectivity tests
+- **Platform**: Consul DNS resolution, Vault unsealing, Nomad job deployment
+- **Application**: End-to-end service communication, certificate validation
+- **Security**: Infisical secrets scanning, KICS IaC security, pre-commit hooks
 
-  ```bash
-  # Get token via CLI and use environment variable
-  export NETBOX_TOKEN=$(infisical secrets get NETBOX_API_KEY --env=staging --path="/apollo-13/services/netbox" --plain)
-  ansible-playbook playbooks/infrastructure/netbox-playbook.yml
-  ```
+### Environment Setup
 
-  For detailed Infisical configuration and paths, see `docs/implementation/infisical/infisical-complete-guide.md`
+- **Python**: uv sync (core), uv sync --extra dev (linting), uv sync --extra secrets (Infisical)
+- **Collections**: uv run ansible-galaxy collection install -r requirements.yml
+- **Secrets**: ansible - infisical integration (see `docs/getting-started/infisical-complete-guide.md`)
+- **Validation**: uv run ansible-inventory --list (test inventory connectivity)
 
-- For localhost-only playbooks (like NetBox API operations), you can skip inventory:
+### Key References
 
-  ```bash
-  uv run ansible-playbook playbooks/infrastructure/netbox-dns-discover.yml
-  ```
+- **Architecture**: `docs/project-management/decisions/` (ADRs for design decisions)
+- **Setup**: `docs/getting-started/` (environment and development setup)
+- **Standards**: `docs/standards/` (Ansible, infrastructure, and code quality rules)
+- **Operations**: `docs/operations/` (deployment and maintenance procedures)
 
-### Working with Dynamic Inventory
+### Review Process
 
-```bash
-# Test inventory with Infisical (recommended)
-uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
-uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --list
+Before submitting code:
 
-# Graph inventory structure
-uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --graph
-uv run ansible-inventory -i inventory/doggos-homelab/infisical.proxmox.yml --graph
-```
+1. Run comprehensive linting: `mise run lint` (includes MegaLinter)
+2. Execute smoke tests: `mise run test:smoke`
+3. Validate security: `mise run security` (Infisical + KICS)
+4. Test playbooks: `uv run ansible-playbook --syntax-check --list-tasks`
+5. Lint playbooks: `uv run ansible-lint`
+6. Update documentation per `docs/standards/documentation-standards.md`
+7. Confirm compliance with dynamic inventory and no-hardcoded-IP policies
 
-### Running Assessment Playbooks
+### Essential References
 
-```bash
-# Infrastructure assessment playbooks (primarily built for doggos-homelab cluster)
-uv run ansible-playbook playbooks/assessment/consul-health-check.yml -i inventory/doggos-homelab/infisical.proxmox.yml
-uv run ansible-playbook playbooks/assessment/dns-ipam-audit.yml -i inventory/doggos-homelab/infisical.proxmox.yml
-uv run ansible-playbook playbooks/assessment/infrastructure-readiness.yml -i inventory/doggos-homelab/infisical.proxmox.yml
+- **[ROADMAP.md](ROADMAP.md)** - Current phase and project direction
+- **[docs/standards/](docs/standards/)** - Code quality and development rules
+- **[docs/getting-started/](docs/getting-started/)** - Environment setup guides
+- **[docs/troubleshooting/](docs/troubleshooting/)** - Troubleshooting guides
+- **[docs/operations/infrastructure-state.md](docs/operations/infrastructure-state.md)** - Current deployment status
+- **[.cursor/rules/ansible-rules.mdc](.cursor/rules/ansible-rules.mdc)** - Ansible integration rules
 
-# Note: Most playbooks are designed for doggos-homelab. Test carefully before running against og-homelab.
-```
-
-### Deploying Nomad Jobs
-
-```bash
-# Deploy any Nomad job
-uv run ansible-playbook playbooks/infrastructure/nomad/deploy-job.yml \
-  -i inventory/doggos-homelab/infisical.proxmox.yml \
-  -e job=nomad-jobs/core-infrastructure/traefik.nomad.hcl
-
-# Deploy Traefik with validation
-uv run ansible-playbook playbooks/infrastructure/nomad/deploy-traefik.yml \
-  -i inventory/doggos-homelab/infisical.proxmox.yml
-```
-
-## Architecture
-
-### Inventory Management
-
-**Directory**: `inventory/` contains all dynamic and static inventory configurations
-
-See [`inventory/README.md`](inventory/README.md) for comprehensive inventory documentation including:
-
-- Current implementation details for Proxmox, Tailscale, Vault, and NetBox inventories
-- Environment-specific configurations and host details
-- Authentication setup and usage examples
-- DNS & IPAM integration status and roadmap
-
-### Nomad Job Management
-
-**Directory**: `nomad-jobs/` contains all Nomad job specifications
-
-See [`nomad-jobs/README.md`](nomad-jobs/README.md) for comprehensive Nomad job documentation including:
-
-- Directory structure and organizational policy for job specifications
-- Currently deployed services (Traefik, PowerDNS, PostgreSQL, Vault PKI services)
-- Deployment procedures using Ansible playbooks and direct Nomad commands
-- Job requirements including Consul service identity and port allocation strategy
-- Service categories (core infrastructure, platform services, applications)
-- Best practices for secrets management, volumes, and service discovery
-- Troubleshooting guides for common deployment issues
-
-### Python Environment
-
-- Uses `uv` for Python virtual environment management
-- All Ansible commands run through `uv run` for consistency
-- Dependencies managed in `pyproject.toml`
-
-### Documentation Structure
-
-- `docs/implementation/dns-ipam/implementation-plan.md`: Master plan for DNS & IPAM overhaul:
-
-  - 5-phase implementation approach
-  - Detailed task checklists
-  - Risk assessments and mitigation strategies
-  - Success criteria for each phase
-
-- `docs/implementation/dns-ipam/netbox-integration-patterns.md`: Comprehensive NetBox integration patterns including:
-
-  - Dynamic inventory configuration
-  - State management with NetBox modules
-  - Runtime data queries with `netbox.netbox.nb_lookup`
-  - Event-driven automation patterns
-
-- `docs/implementation/infisical/infisical-complete-guide.md`: Complete Infisical configuration guide:
-
-  - Project setup and authentication
-  - Current secret organization at `/apollo-13/` and `/services/`
-  - Ansible collection usage patterns and examples
-  - Troubleshooting and best practices
-
-### Key Integration Patterns
-
-1. **NetBox as Source of Truth**
-
-   - All network device information should be queried from NetBox
-   - Device configurations should be generated based on NetBox data
-   - State changes should be reflected back in NetBox
-
-2. **Dynamic Inventory Grouping**
-
-   - Devices grouped by NetBox attributes (site, role, platform, tags)
-   - Custom grouping via `keyed_groups` and `compose` directives
-   - Ansible variables composed from NetBox custom fields
-
-3. **Secret Management**
-   - Never hardcode credentials
-   - **Repository Secrets**: Use Infisical for Ansible playbook secrets and credentials
-   - **Service Secrets**: Use Vault for lab services and application secrets going forward
-   - Environment variables for authentication
-   - **Known Issue**: Infisical Ansible collection may fail in virtual environments
-   - **Workaround**: Use Infisical CLI to export secrets as environment variables
-
-## Current Infrastructure State
-
-For the current infrastructure deployment state and service configurations, see:
-**[docs/operations/infrastructure-state.md](docs/operations/infrastructure-state.md)**
-
-This includes detailed information about:
-
-- Cluster configurations (og-homelab, doggos-homelab)
-- Service deployments (Consul, Nomad, Vault, DNS, IPAM)
-- Network topology and port allocations
-- Version information and operational status
-
-## Important Considerations
-
-- The project is actively implementing DNS & IPAM infrastructure changes
-- Follow the implementation plan in `docs/implementation/dns-ipam/implementation-plan.md`
-- Ensure Infisical environment variables are set before running commands (see `docs/implementation/infisical/infisical-complete-guide.md`)
-- Use the execution environment for consistency across different systems
-- Always test inventory plugins with `ansible-inventory` before running playbooks
-- NetBox integration should follow the patterns in `docs/implementation/dns-ipam/netbox-integration-patterns.md`
-- **ALWAYS use `uv run` prefix for Ansible commands** to ensure proper Python environment
-- NetBox DNS plugin is installed and operational
-
-## Recommended Tools
-
-- For enhanced searching via bash commands use eza, fd, and rg
-
-## Working with Specialized Agents
+### Working with Specialized Agents
 
 When working on tasks in this project, follow these guidelines:
 
-### 1. Always Check for Specialized Agents First
-
-Before starting any task, review available agents to see if one matches the work:
-
-**Linting & Code Quality:**
-
-- **lint-master**: Comprehensive linting coordinator for multiple file types
-- **ansible-linter**: Ansible playbook and role linting
-- **python-linter**: Python code linting and formatting (ruff, mypy, pylint)
-- **yaml-linter**: YAML file validation and formatting
-- **shell-linter**: Shell script validation with shellcheck
-- **hcl-linter**: HCL/Nomad job file validation and formatting
-- **markdown-linter**: Markdown documentation formatting and standards
-
-**Project Management & Documentation:**
-
-- **project-orchestrator**: Sprint planning, phase tracking, project management
-- **documentation-specialist**: Creating, updating, and organizing documentation
-- **commit-craft**: Creating clean, logical commits following conventional standards
-
-**Meta:**
-
-- **meta-agent**: Generates new sub-agent configurations
-
-### 2. Use Specialized Agents Proactively
+#### Use Specialized Agents Proactively
 
 Don't wait to be asked - if a task matches an agent's description, use it immediately. The agents are designed to handle specific domains more effectively than general-purpose approaches.
 
-### 3. Avoid Defaulting to Direct Implementation
+#### Avoid Defaulting to Direct Implementation
 
 Resist the urge to jump straight into implementation. Take a moment to:
 

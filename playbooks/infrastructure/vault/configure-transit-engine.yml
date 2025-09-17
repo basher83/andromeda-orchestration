@@ -17,14 +17,23 @@
     # Retrieve root token from Infisical (will be set after initialization)
     # For new initialization, this will be empty and we'll generate it
     # For existing setup, we can use the transit token
-    vault_root_token: >-
-      {{ (lookup('infisical.vault.read_secrets',
-                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                 env_slug='prod',
-                 path='/apollo-13/vault',
-                 secret_name='VAULT_TRANSIT_TOKEN')).value | default('') }}
+# vault_root_token will be retrieved via secure task
+
+  pre_tasks:
+    - name: Preflight | Validate no hardcoded IPs in play vars
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []
+      tags: [preflight]
+
+    - name: Retrieve Vault transit token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_TRANSIT_TOKEN'
+        secret_var_name: 'vault_root_token'
+      tags: [secrets]
 
   tasks:
     - name: Check Vault service status
@@ -62,10 +71,11 @@
             method: POST
             body_format: json
             body:
-              secret_shares: 5
-              secret_threshold: 3
+              secret_shares: 1
+              secret_threshold: 1
               stored_shares: 0
-              recovery_shares: 0
+              recovery_shares: 5
+              recovery_threshold: 3
             validate_certs: "{{ vault_validate_certs }}"
             status_code: [200]
           register: init_response
@@ -103,6 +113,7 @@
         - name: Set root token for immediate use
           ansible.builtin.set_fact:
             vault_root_token: '{{ init_response.json.root_token }}'
+            cacheable: no
 
     - name: Check if Vault is sealed
       ansible.builtin.uri:

@@ -8,4 +8,4 @@
     cluster_subdomain: "test"
   tasks:
     - name: Include domain assertions
-      ansible.builtin.include_tasks: tasks/domain-assertions.yml
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/domain-assertions.yml"

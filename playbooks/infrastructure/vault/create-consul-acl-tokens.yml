@@ -1,7 +1,8 @@
 ---
 # Create and configure Consul ACL tokens for Vault cluster agents
 # Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/create-consul-acl-tokens.yml -i inventory/environments/doggos-homelab/proxmox.yml
+# uv run ansible-playbook playbooks/infrastructure/vault/create-consul-acl-tokens.yml \
+#   -i inventory/environments/doggos-homelab/proxmox.yml
 
 - name: Create Consul ACL Policy and Tokens for Vault Agents
   hosts: nomad-server-1-lloyd
@@ -19,16 +20,16 @@
     policy_name: 'vault-client-policy'
     consul_addr: 'http://127.0.0.1:8500'
 
-    # Vault nodes that need tokens
-    vault_nodes:
-      - name: 'vault-master-lloyd'
-        ip: '192.168.10.30'
-      - name: 'vault-prod-1-holly'
-        ip: '192.168.10.31'
-      - name: 'vault-prod-2-mable'
-        ip: '192.168.10.32'
-      - name: 'vault-prod-3-lloyd'
-        ip: '192.168.10.33'
+    # Vault nodes that need tokens - derive from inventory
+    vault_nodes: >-
+      {%- set nodes = [] -%}
+      {%- for host in (groups.get('vault_production', []) + groups.get('vault_master', [])) -%}
+        {%- set _ = nodes.append({
+              'name': host,
+              'ip': hostvars[host]['ansible_host']
+            }) -%}
+      {%- endfor -%}
+      {{ nodes }}
 
   tasks:
     - name: Verify master token is set
@@ -64,6 +65,7 @@
           -token="{{ consul_master_token }}"
       when: policy_check.rc != 0
       register: policy_create
+      changed_when: false
       become: true
 
     - name: Update policy if it already exists
@@ -75,10 +77,12 @@
           -token="{{ consul_master_token }}"
       when: policy_check.rc == 0
       register: policy_update
+      changed_when: false
       become: true
 
     - name: Create ACL tokens for each Vault node
       ansible.builtin.shell: |
+        set -o pipefail
         # Check if token already exists for this node
         existing_token=$(consul acl token list -token="{{ consul_master_token }}" -format=json | \
           jq -r '.[] | select(.Description == "Consul agent token for {{ item.name }}") | .SecretID')
@@ -100,8 +104,10 @@
       become: true
 
     - name: Store tokens in local variables
-      set_fact:
-        vault_tokens: "{{ vault_tokens | default({}) | combine({item.item.name: item.stdout_lines[-1] | regex_replace('EXISTS:', '') }) }}"
+      ansible.builtin.set_fact:
+        vault_tokens: "{{ vault_tokens | default({}) | \
+          combine({item.item.name: item.stdout_lines[-1] | regex_replace('EXISTS:', '')}) }}"
+        cacheable: no
       loop: '{{ token_results.results }}'
       when: item.stdout is defined
 
@@ -157,8 +163,9 @@
 
   tasks:
     - name: Get node-specific token from Infisical
-      set_fact:
+      ansible.builtin.set_fact:
         node_token_name: "CONSUL_TOKEN_{{ inventory_hostname | upper | replace('-', '_') }}"
+        cacheable: no
 
     - name: Retrieve token from Infisical
       ansible.builtin.shell: |

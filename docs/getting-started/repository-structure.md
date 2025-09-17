@@ -54,17 +54,9 @@ andromeda-orchestration/
 - **CLAUDE.md** - AI assistant guidance for code changes
 - **.gitignore** - Git ignore patterns for secrets and temp files
 
-### `/bin/` (Archived)
-
-This directory has been archived to `docs/archive/bin/` as it contained only deprecated scripts:
-
-- **ansible-connect** - Legacy 1Password wrapper replaced by direct `uv run` commands with Infisical
-
 ### `/docs/`
 
 - **infisical-setup-and-migration.md** - Primary secrets management guide (Infisical)
-- **1password-integration.md** - Legacy 1Password setup (deprecated)
-- **infisical/comparison.md** - Comparison of 1Password vs Infisical
 - **troubleshooting.md** - Common issues and solutions
 - **repository-structure.md** - This file
 - **archive/** - Original documentation preserved for reference
@@ -85,8 +77,7 @@ Organized by environment:
 ### `/playbooks/`
 
 - **examples/** - Reference implementations
-  - `create-proxmox-secret.yml` - How to store secrets in 1Password
-  - `1password-connect-example.yml` - Direct API usage examples
+
 - **infrastructure/** - Production playbooks (to be added)
 
 ### `/plugins/`
@@ -147,19 +138,6 @@ Organized by environment:
    # Legacy 1Password method (deprecated - script archived)
    # ./bin/ansible-connect playbook playbooks/site.yml
    ```
-
-### Direct Ansible Usage
-
-For direct ansible commands without uv:
-
-```bash
-# Set up Infisical credentials
-export INFISICAL_MACHINE_IDENTITY_CLIENT_ID="your-client-id"
-export INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET="your-client-secret"
-
-# Run ansible directly
-ansible-playbook playbooks/site.yml -i inventory/og-homelab/infisical.proxmox.yml
-```
 
 ## Security Considerations
 

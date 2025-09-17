@@ -1,11 +1,15 @@
 ---
 # Check current Vault TLS configuration status
 # Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/check-vault-tls-status.yml -i inventory/environments/vault-cluster/production.yaml
+# uv run ansible-playbook playbooks/infrastructure/vault/check-vault-tls-status.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
 
 - name: Check Vault TLS Configuration Status
   hosts: vault_cluster
   gather_facts: true
+
+  vars:
+    vault_validate_certs: false  # Set to true for production with proper CA
 
   tasks:
     - name: Check Vault configuration file
@@ -15,20 +19,21 @@
       become: true
 
     - name: Parse Vault configuration
-      set_fact:
+      ansible.builtin.set_fact:
         vault_config_content: '{{ vault_config.content | b64decode }}'
 
     - name: Check if TLS is disabled in config
-      set_fact:
+      ansible.builtin.set_fact:
         tls_disabled: "{{ 'tls_disable = true' in vault_config_content or 'tls_disable=true' in vault_config_content }}"
 
     - name: Check for TLS certificate paths in config
-      set_fact:
+      ansible.builtin.set_fact:
         has_tls_cert: "{{ 'tls_cert_file' in vault_config_content }}"
         has_tls_key: "{{ 'tls_key_file' in vault_config_content }}"
 
     - name: Check listening ports
       ansible.builtin.shell: |
+        set -o pipefail
         ss -tlnp | grep -E ':(8200|8201)' | grep -v grep || echo "No Vault listeners found"
       register: listening_ports
       become: true
@@ -48,7 +53,7 @@
       ansible.builtin.uri:
         url: 'https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health'
         method: GET
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs | default(false) }}"
         status_code: [200, 429, 473, 501, 503, -1]
       register: https_test
       failed_when: false
