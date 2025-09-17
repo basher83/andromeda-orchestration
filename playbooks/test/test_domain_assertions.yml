@@ -8,6 +8,13 @@
     # Test case 1: Domain without trailing dot that should pass
     homelab_domain: "example.work"
     cluster_subdomain: "test"
+  pre_tasks:
+    - name: validate-no-hardcoded-ips | Include IP literal validation
+      tags: [preflight]
+      ansible.builtin.include_tasks:
+        file: "{{ playbook_dir }}/../../tasks/validate-no-hardcoded-ips.yml"
+        apply:
+          tags: [preflight]
   tasks:
     - name: domain-assertions | Include domain validation
       tags: [preflight]
