@@ -9,3 +9,4 @@
   tasks:
     - name: Include domain assertions
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/domain-assertions.yml"
+      tags: [preflight]
