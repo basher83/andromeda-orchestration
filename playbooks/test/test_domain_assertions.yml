@@ -2,6 +2,7 @@
 - name: Test domain assertions
   hosts: localhost
   gather_facts: false
+  connection: local
   vars:
     # Test case 1: Domain without trailing dot that should pass
     homelab_domain: "example.work"
