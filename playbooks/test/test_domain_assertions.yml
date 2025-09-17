@@ -4,6 +4,7 @@
   gather_facts: false
   become: false
   connection: local
+  any_errors_fatal: true
   vars:
     # Test case 1: Domain without trailing dot that should pass
     homelab_domain: "example.work"
