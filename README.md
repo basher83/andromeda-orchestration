@@ -289,29 +289,3 @@ Note: To comply with the no-hardcoded-IP policy, avoid committing private IP
 defaults in shared inventory. If direct access is required, provide values via
 environment variables or in environment-specific inventory only, and update the
 IP-validation allowlist accordingly.
-
-All example playbooks should include the project's preflight validators in pre_tasks (e.g., no-hardcoded-IPs and domain assertions) to mirror production usage.
-
-## Contributing
-
-1. Follow the existing directory structure
-2. Use Infisical for all credential management
-3. Document any new patterns or integrations
-4. Test changes using `uv run` commands
-
-## Troubleshooting
-
-### General Issues
-
-See [docs/getting-started/troubleshooting.md](docs/getting-started/troubleshooting.md) for common issues and solutions.
-
-### Ansible-Nomad Playbooks
-
-For issues with Nomad job deployment and management:
-
-- [Ansible-Nomad Playbook Troubleshooting](docs/troubleshooting/ansible-nomad-playbooks.md)
-- [Domain Migration Troubleshooting](docs/troubleshooting/domain-migration.md)
-
-## License
-
-![GitHub License](https://img.shields.io/github/license/basher83/andromeda-orchestration?style=plastic)
