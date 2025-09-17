@@ -261,7 +261,8 @@ Centralized service endpoint configuration to avoid hardcoded IPs:
 All playbooks must include the pre_tasks validator to enforce no hardcoded IPv4/IPv6 literals:
 
 pre_tasks:
-  - name: Enforce dynamic-inventory pattern (no hardcoded IPs)
+
+- name: Enforce dynamic-inventory pattern (no hardcoded IPs)
     ansible.builtin.import_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
     vars:
       validate_allowlist:
