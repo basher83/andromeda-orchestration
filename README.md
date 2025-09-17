@@ -45,6 +45,8 @@ This project provides a framework for managing network infrastructure using Ansi
   - `community.general` - General purpose modules
   - `community.hashi_vault` - HashiCorp Vault modules
   - `ansible.utils` - Utility modules and filters
+- **Python Packages** (required for Ansible collections):
+  - `netaddr` (python3-netaddr) - Required for `ansible.utils.ipaddr` filter
 - **Infisical** account and machine identity
 - **macOS** users: Local Network permissions for Python (see [Troubleshooting](docs/getting-started/troubleshooting.md))
 - Docker (optional, for execution environments)
@@ -54,6 +56,7 @@ This project provides a framework for managing network infrastructure using Ansi
 The project uses **uv** for dependency management. Available dependency groups:
 
 - **Core dependencies**: Basic runtime requirements
+  - `netaddr` - Required for IP address validation and `ansible.utils.ipaddr` filter
 - **Dev dependencies**: Development tools (`ansible-lint`, `pytest`, `ruff`, `mypy`, etc.)
 - **Secrets dependencies**: Infisical SDK for secrets management
 
@@ -66,7 +69,7 @@ The project uses **uv** for dependency management. Available dependency groups:
    cd andromeda-orchestration
    ```
 
-2. **Install Python dependencies**
+1. **Install Python dependencies**
 
    ```bash
    # Install core Python dependencies
@@ -82,14 +85,18 @@ The project uses **uv** for dependency management. Available dependency groups:
    uv sync --extra dev --extra secrets
    ```
 
-3. **Install Ansible Galaxy collections**
+1. **Install Ansible Galaxy collections**
 
    ```bash
    # Install required Ansible collections (community.general, infisical.vault, etc.)
    uv run ansible-galaxy collection install -r requirements.yml
+
+   # Note: This command is idempotent and uses local caching.
+   # Re-running will skip already-installed collections and only download missing/updated ones.
+   # Use --force to re-download all collections if needed.
    ```
 
-4. **Run the setup script**
+1. **Run the setup script**
 
    ```bash
    ./scripts/setup.sh
@@ -103,7 +110,7 @@ The project uses **uv** for dependency management. Available dependency groups:
    - Set up Python virtual environment with uv
    - Create necessary directory structure
 
-4. **Configure secrets and authentication**
+1. **Configure secrets and authentication**
 
 ## SECURITY: Never commit .mise.local.toml; it is gitignored and must stay local
 
@@ -118,7 +125,7 @@ $EDITOR .mise.local.toml
 # Mise will automatically load these environment variables
 ```
 
-5. **Test the setup**
+1. **Test the setup**
 
    ```bash
    uv run ansible-inventory -i inventory/og-homelab/infisical.proxmox.yml --list
@@ -249,11 +256,32 @@ Centralized service endpoint configuration to avoid hardcoded IPs:
 - **Nomad**: `{{ service_endpoints.nomad.addr }}`
 - **Vault**: `{{ service_endpoints.vault.addr }}`
 
+#### Mandatory IP Validation
+
+All playbooks must include the pre_tasks validator to enforce no hardcoded IPv4/IPv6 literals:
+
+```yaml
+pre_tasks:
+  - name: Enforce dynamic-inventory pattern (no hardcoded IPs)
+    ansible.builtin.import_tasks: ../../../tasks/validate-no-hardcoded-ips.yml
+    vars:
+      validate_allowlist:
+        - '127.0.0.1'
+        - '::1'
+    tags: ['validate']
+```
+
 Override via environment variables:
 
-- `CONSUL_HTTP_ADDR`
-- `NOMAD_ADDR`
-- `VAULT_ADDR`
+```bash
+# Export examples (add to ~/.bashrc or run before ansible commands)
+export CONSUL_HTTP_ADDR="http://consul.service.consul:8500"
+export NOMAD_ADDR="http://nomad.service.consul:4646"
+export VAULT_ADDR="https://vault.service.consul:8200"
+
+# One-off command example (sets VAULT_ADDR for single command)
+VAULT_ADDR="https://vault.service.consul:8200" uv run ansible-playbook playbook.yml
+```
 
 Defaults to service discovery addresses with direct IP fallbacks.
 
