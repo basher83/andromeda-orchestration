@@ -154,6 +154,7 @@ Comprehensive PR template following the established repository style from PR #11
 - Risk assessment framework
 
 **Note**: The template has been moved to `.github/` for automatic GitHub integration while maintaining documentation here for reference.
+
 ## 🎯 Purpose
 
 These standards exist to:
