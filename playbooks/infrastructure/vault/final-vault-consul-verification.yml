@@ -1,7 +1,7 @@
 ---
 # Final verification of Vault service registration in Consul
-# Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/final-vault-consul-verification.yml -i inventory/environments/doggos-homelab/proxmox.yml
+# Usage: uv run ansible-playbook playbooks/infrastructure/vault/final-vault-consul-verification.yml
+#        -i inventory/environments/doggos-homelab/proxmox.yml
 
 - name: Final Verification of Vault Service Registration
   hosts: nomad-server-1-lloyd
@@ -26,18 +26,24 @@
         success_msg: 'Master token verified'
 
     - name: Check all services in catalog
-      ansible.builtin.shell: |
-        consul catalog services -token="{{ consul_token }}"
+      ansible.builtin.command:
+        argv: ["consul", "catalog", "services"]
+      environment:
+        CONSUL_HTTP_TOKEN: "{{ consul_token }}"
       register: all_services
       changed_when: false
       become: true
+      no_log: true
 
     - name: Check Vault service nodes
-      ansible.builtin.shell: |
-        consul catalog nodes -service=vault -token="{{ consul_token }}"
+      ansible.builtin.command:
+        argv: ["consul", "catalog", "nodes", "-service=vault"]
+      environment:
+        CONSUL_HTTP_TOKEN: "{{ consul_token }}"
       register: vault_nodes
       changed_when: false
       become: true
+      no_log: true
 
     - name: Check Vault service health via API
       ansible.builtin.uri:
@@ -50,7 +56,7 @@
       become: true
 
     - name: Parse health check status
-      set_fact:
+      ansible.builtin.set_fact:
         health_summary: |
           {% set ns = namespace(passing=0, warning=0, critical=0) %}
           {% for node in vault_health.json %}
@@ -82,6 +88,7 @@
           - ''
           - '============================================================================='
           - ''
-          - '🎉 SUCCESS: All 4 Vault nodes are registered in Consul!'
+          - "🎉 SUCCESS: All {{ (vault_nodes.stdout_lines | default([])) | length }}
+            Vault nodes are registered in Consul!"
           - 'Note: Health checks may show as critical if Vault services are not running.'
           - 'This is expected in a development/testing environment.'
