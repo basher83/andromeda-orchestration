@@ -1,7 +1,7 @@
 ---
 # Clean up test services from Consul
-# Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/cleanup-test-services.yml -i inventory/environments/vault-cluster/production.yaml
+# Usage: uv run ansible-playbook playbooks/infrastructure/vault/cleanup-test-services.yml
+#        -i inventory/environments/vault-cluster/production.yaml
 
 - name: Clean Up Test Services from Consul
   hosts: vault_cluster
@@ -12,33 +12,35 @@
       ansible.builtin.set_fact:
         node_token_name: "CONSUL_TOKEN_{{ inventory_hostname | upper | replace('-', '_') }}"
         cacheable: no
-        no_log: true
+        token_logging_disabled: true
 
-    - name: Retrieve token from Infisical
-      ansible.builtin.shell: |
-        infisical secrets get {{ node_token_name }} --env=prod --path=/apollo-13/vault --plain
-      delegate_to: localhost
-      become: false
-      register: consul_token_result
+    - name: Retrieve node Consul token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: "{{ node_token_name }}"
+        secret_var_name: "consul_token_result"
+        fallback_env_var: "{{ node_token_name }}"
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
       no_log: true
-      environment:
-        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
-        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
-      changed_when: false
 
     - name: List local services to find test services
       ansible.builtin.uri:
         url: 'http://127.0.0.1:8500/v1/agent/services'
         method: GET
         headers:
-          X-Consul-Token: '{{ consul_token_result.stdout }}'
+          X-Consul-Token: '{{ consul_token_result }}'
         status_code: 200
       register: local_services
       become: true
 
     - name: Find test services
-      set_fact:
-        test_services: "{{ local_services.json | dict2items | selectattr('key', 'match', '^test-.*') | map(attribute='key') | list }}"
+      ansible.builtin.set_fact:
+        test_services: "{{
+          local_services.json | dict2items |
+          selectattr('key', 'match', '^test-.*') |
+          map(attribute='key') | list
+        }}"
 
     - name: Display test services found
       ansible.builtin.debug:
@@ -50,7 +52,7 @@
         url: 'http://127.0.0.1:8500/v1/agent/service/deregister/{{ item }}'
         method: PUT
         headers:
-          X-Consul-Token: '{{ consul_token_result.stdout }}'
+          X-Consul-Token: '{{ consul_token_result }}'
         status_code: 200
       loop: '{{ test_services }}'
       become: true
@@ -77,33 +79,36 @@
 
   tasks:
     - name: Set master token from Infisical lookup
-      set_fact:
+      ansible.builtin.set_fact:
         master_token: '{{ consul_token }}'
       delegate_to: localhost
       become: false
 
     - name: Retrieve master token if not already set
-      ansible.builtin.shell: |
-        infisical secrets get CONSUL_MASTER_TOKEN --env=prod --path=/apollo-13/consul --plain
-      delegate_to: localhost
-      become: false
-      register: consul_token_result
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'CONSUL_MASTER_TOKEN'
+        secret_var_name: 'consul_token_result'
+        fallback_env_var: 'CONSUL_MASTER_TOKEN'
+        infisical_path: '/apollo-13/consul'
       when: master_token == ""
-      environment:
-        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
-        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      tags: [secrets]
+      no_log: true
 
     - name: Set token from retrieval
-      set_fact:
-        consul_token: '{{ consul_token_result.stdout }}'
-      when: consul_token_result.stdout is defined
+      ansible.builtin.set_fact:
+        consul_token: '{{ consul_token_result }}'
+      when: consul_token_result is defined
 
     - name: Check remaining services
-      ansible.builtin.shell: |
-        consul catalog services -token="{{ consul_token | default(master_token) }}" | grep -E "(test-|vault)" || echo "No test services found"
+      ansible.builtin.command:
+        argv: ["bash", "-lc", "consul catalog services | grep -E '(test-|vault)' || echo 'No test services found'"]
+      environment:
+        CONSUL_HTTP_TOKEN: "{{ consul_token | default(master_token) }}"
       register: remaining_services
       become: true
       changed_when: false
+      no_log: true
 
     - name: Display final status
       ansible.builtin.debug:
