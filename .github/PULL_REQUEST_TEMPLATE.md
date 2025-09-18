@@ -98,9 +98,26 @@
 - [ ] **Testing**: All tests pass and new functionality is validated
 - [ ] **Documentation**: README/docs updated with changes
 - [ ] **Security**: No secrets or sensitive data exposed
+- [ ] **Secrets Hygiene (Ansible)**: All sensitive tasks use `no_log: true`; no secrets in logs/artifacts
+- [ ] **Secret Retrieval**: Centralized lookup tasks used; fallbacks validated; no inline lookups added
 - [ ] **Performance**: Changes don't negatively impact performance
 - [ ] **Breaking Changes**: Migration path documented if applicable
 
+---
+
+## Operational Impact & Risk
+
+- Blast radius:
+- Failure modes and mitigations:
+- Change window/maintenance notice:
+
+## Rollback Plan
+
+- Trigger conditions:
+- Rollback steps:
+- Data/config implications:
+
+---
 ---
 
 ## Dependencies
