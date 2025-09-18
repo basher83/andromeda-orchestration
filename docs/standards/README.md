@@ -141,6 +141,19 @@ PR template for domain migration changes.
 - Rollback procedures
 - Validation criteria
 
+### [Pull Request Template](../../.github/PULL_REQUEST_TEMPLATE.md)
+
+Comprehensive PR template following the established repository style from PR #119.
+
+- **Location**: `.github/PULL_REQUEST_TEMPLATE.md` (automatically used by GitHub)
+- Structured scope definition (What's In/Out of Scope)
+- Testing evidence requirements
+- Breaking change documentation
+- Reviewer checklists
+- Dependency tracking
+- Risk assessment framework
+
+**Note**: The template has been moved to `.github/` for automatic GitHub integration while maintaining documentation here for reference.
 ## 🎯 Purpose
 
 These standards exist to:
@@ -176,49 +189,59 @@ Standards evolve. When updating:
 # [Standard Name]
 
 ## Purpose
+
 Why this standard exists and what problem it solves.
 
 ## Background
+
 Context and history leading to this decision.
 
 ## Standard
+
 The actual standard or procedure.
 
 ## Rationale
+
 Why we chose this approach over alternatives.
 
 ## Examples
+
 ### Good Example
+
 [Show correct implementation]
 
 ### Bad Example
+
 [Show what to avoid]
 
 ## Exceptions
+
 When this standard doesn't apply.
 
 ## Migration
+
 How to update existing code/docs to meet this standard.
 
 ## References
+
 Related standards, external documentation, or decisions.
 ```
 
 ## 🔗 Quick Reference
 
-| Standard | Purpose | Key Decision | Status |
-|----------|---------|--------------|--------|
-| Documentation | Organized knowledge | Everything documented, logically placed | ✅ Complete |
-| Ansible | Consistent automation | Dynamic inventory, modular playbooks | ✅ Complete |
-| Nomad | Clean job management | Production/testing/archive separation | ✅ Complete |
-| Infrastructure | Scalable architecture | Service discovery, dynamic configuration | ✅ Complete |
-| Security | Protect sensitive data | Multi-layer scanning, strict gitignore | ✅ Complete |
-| Git | Clean version control | Conventional commits, clear branches | 📝 TODO |
-| Testing | Quality assurance | Mandatory smoke tests, fail fast | ✅ Complete |
-| Development | Efficient workflow | Automated checks, clear process | 📝 TODO |
-| Monitoring | System visibility | Metrics, logs, alerts | 📝 TODO |
-| Linting | Code consistency | Automated enforcement | 📝 TODO |
-| Project Mgmt | Delivery tracking | Visible progress, clear accountability | 📝 TODO |
+| Standard       | Purpose                | Key Decision                             | Status      |
+| -------------- | ---------------------- | ---------------------------------------- | ----------- |
+| Documentation  | Organized knowledge    | Everything documented, logically placed  | ✅ Complete |
+| Ansible        | Consistent automation  | Dynamic inventory, modular playbooks     | ✅ Complete |
+| Nomad          | Clean job management   | Production/testing/archive separation    | ✅ Complete |
+| Infrastructure | Scalable architecture  | Service discovery, dynamic configuration | ✅ Complete |
+| Security       | Protect sensitive data | Multi-layer scanning, strict gitignore   | ✅ Complete |
+| Git            | Clean version control  | Conventional commits, clear branches     | 📝 TODO     |
+| Testing        | Quality assurance      | Mandatory smoke tests, fail fast         | ✅ Complete |
+| Development    | Efficient workflow     | Automated checks, clear process          | 📝 TODO     |
+| Monitoring     | System visibility      | Metrics, logs, alerts                    | 📝 TODO     |
+| Linting        | Code consistency       | Automated enforcement                    | 📝 TODO     |
+| Project Mgmt   | Delivery tracking      | Visible progress, clear accountability   | 📝 TODO     |
 
 ## 🌐 Relationship with Mission Control
 

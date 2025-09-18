@@ -8,23 +8,24 @@
 - name: Export Transit Keys from Development Vault
   hosts: vault-master-lloyd
   gather_facts: true
+
+  pre_tasks:
+    - name: Retrieve Vault transit token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_TRANSIT_TOKEN'
+        secret_var_name: 'vault_token'
+        fallback_env_var: 'VAULT_TRANSIT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+
   vars:
     vault_addr: 'http://{{ ansible_default_ipv4.address }}:8200'
     backup_dir: '/opt/vault/backup/transit-export-{{ ansible_date_time.epoch }}'
 
-    # Retrieve Vault token from Infisical
-    vault_token: >-
-      {{ (lookup('infisical.vault.read_secrets',
-                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                 env_slug='prod',
-                 path='/apollo-13/vault',
-                 secret_name='VAULT_TRANSIT_TOKEN')).value }}
-
   tasks:
     - name: Create backup directory
-      file:
+      ansible.builtin.file:
         path: '{{ backup_dir }}'
         state: directory
         mode: '0700'
@@ -32,7 +33,7 @@
         group: vault
 
     - name: Check if transit engine is enabled
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/sys/mounts'
         method: GET
         headers:
@@ -41,14 +42,14 @@
       register: mounts_response
 
     - name: Verify transit engine exists
-      assert:
+      ansible.builtin.assert:
         that:
           - "'transit/' in mounts_response.json"
         fail_msg: 'Transit engine not found on development instance'
         success_msg: 'Transit engine found, proceeding with export'
 
     - name: List all transit keys
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/transit/keys?list=true'
         method: GET
         headers:
@@ -57,17 +58,17 @@
       register: transit_keys_list
 
     - name: Set transit keys fact
-      set_fact:
+      ansible.builtin.set_fact:
         transit_keys: '{{ transit_keys_list.json.data.keys | default([]) }}'
       when: transit_keys_list.status == 200
 
     - name: Display found transit keys
-      debug:
+      ansible.builtin.debug:
         msg: "Found {{ transit_keys | length }} transit keys: {{ transit_keys | join(', ') }}"
       when: transit_keys is defined
 
     - name: Export each transit key
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/transit/export/encryption-key/{{ item }}'
         method: GET
         headers:
@@ -78,7 +79,7 @@
       when: transit_keys is defined
 
     - name: Save exported keys to files
-      copy:
+      ansible.builtin.copy:
         content: '{{ item.json | to_nice_json }}'
         dest: '{{ backup_dir }}/transit-key-{{ item.item }}.json'
         mode: '0600'
@@ -92,7 +93,7 @@
         label: '{{ item.item }}'
 
     - name: Export transit policies
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/transit/keys/{{ item }}'
         method: GET
         headers:
@@ -103,7 +104,7 @@
       when: transit_keys is defined
 
     - name: Save key policies
-      copy:
+      ansible.builtin.copy:
         content: '{{ item.json | to_nice_json }}'
         dest: '{{ backup_dir }}/transit-policy-{{ item.item }}.json'
         mode: '0600'
@@ -117,7 +118,7 @@
         label: '{{ item.item }}'
 
     - name: Create backup manifest
-      copy:
+      ansible.builtin.copy:
         content: |
           Transit Keys Export Manifest
           =============================
@@ -146,7 +147,7 @@
         group: vault
 
     - name: Create tarball of exported keys
-      archive:
+      community.general.archive:
         path: '{{ backup_dir }}'
         dest: '/opt/vault/backup/transit-export-{{ ansible_date_time.epoch }}.tar.gz'
         mode: '0600'
@@ -155,7 +156,7 @@
         format: gz
 
     - name: Display backup location
-      debug:
+      ansible.builtin.debug:
         msg: |
           Transit keys exported successfully!
 

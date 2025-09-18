@@ -6,15 +6,16 @@
   hosts: vault_production
   gather_facts: true
 
-  vars:
-    # Use Infisical lookup for transit token - NO HARDCODED SECRETS
-    vault_transit_token: "{{ lookup('infisical.vault.read_secrets',
-      env='prod',
-      path='/apollo-13/vault',
-      secret_name='VAULT_TRANSIT_TOKEN') }}"
-    vault_master_addr: 'http://vault-master-lloyd.tailfb3ea.ts.net:8200'
-
   pre_tasks:
+    - name: Retrieve Vault transit token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_TRANSIT_TOKEN'
+        secret_var_name: 'vault_transit_token'
+        fallback_env_var: 'VAULT_TRANSIT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+
     - name: Validate Infisical transit token is available
       ansible.builtin.fail:
         msg: 'VAULT_TRANSIT_TOKEN not found in Infisical at /apollo-13/vault'
@@ -50,6 +51,9 @@
       ansible.builtin.fail:
         msg: 'Transit engine test failed - check token permissions'
       when: transit_test.status not in [200, 204]
+
+  vars:
+    vault_master_addr: 'http://vault-master-lloyd.tailfb3ea.ts.net:8200'
 
   tasks:
     - name: Generate Vault configuration with auto-unseal
