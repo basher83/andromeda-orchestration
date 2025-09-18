@@ -4,7 +4,7 @@
 
 - name: Generate PowerDNS secrets
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   connection: local
 
   vars:

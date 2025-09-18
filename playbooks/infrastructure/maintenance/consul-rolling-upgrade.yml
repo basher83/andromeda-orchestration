@@ -417,7 +417,7 @@
 
 - name: Consul Rolling Upgrade - Post-Upgrade Validation
   hosts: consul_servers
-  gather_facts: no
+  gather_facts: false
   run_once: true
 
   vars:

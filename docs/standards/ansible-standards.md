@@ -317,7 +317,7 @@ Always test collection updates in development before production deployment.
 ---
 - name: Deploy Nomad job from file
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
 
   vars:
     nomad_host: "{{ lookup('env', 'NOMAD_ADDR') }}"

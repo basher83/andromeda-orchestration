@@ -136,7 +136,7 @@
 
 - name: Certificate Renewal Recommendations
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
 
   tasks:
     - name: Display renewal recommendations

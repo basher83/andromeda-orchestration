@@ -280,7 +280,7 @@
 
 - name: Update Consul Health Checks for Vault Service
   hosts: vault_production
-  gather_facts: no
+  gather_facts: false
 
   vars:
     consul_config_dir: '/etc/consul.d'
@@ -313,7 +313,7 @@
 
 - name: Verify Certificate Deployment Success
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
 
   vars:
     vault_domain: >-
