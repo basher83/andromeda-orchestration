@@ -41,7 +41,8 @@
     # PKI Configuration
     pki_mount: 'pki_int'
     pki_role: 'infrastructure'
-    vault_validate_certs: false  # Set to true for production with proper CA
+    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Set to true for production with proper CA
+    vault_ca_path: "{{ vault_ca_path | default(omit) }}"  # Optional CA certificate path
     cert_ttl: '720h' # 30 days
 
     # Certificate paths on target nodes
@@ -127,7 +128,8 @@
           - '{{ ansible_host }}'
           - '127.0.0.1'
         ttl: '{{ cert_ttl }}'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       delegate_to: localhost
       register: new_cert
       no_log: true

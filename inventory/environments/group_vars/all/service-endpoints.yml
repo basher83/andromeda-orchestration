@@ -7,17 +7,17 @@
 service_endpoints:
   # Consul service endpoint
   consul:
-    addr: "{{ lookup('env', 'CONSUL_HTTP_ADDR') | default('http://consul.service.consul:8500') }}"
+    addr: "{{ lookup('env', 'CONSUL_HTTP_ADDR') | default('http://consul.service.consul:8500', true) }}"
     description: "Consul HTTP API endpoint"
 
   # Nomad service endpoint
   nomad:
-    addr: "{{ lookup('env', 'NOMAD_ADDR') | default('http://nomad.service.consul:4646') }}"
+    addr: "{{ lookup('env', 'NOMAD_ADDR') | default('http://nomad.service.consul:4646', true) }}"
     description: "Nomad HTTP API endpoint"
 
   # Vault service endpoint
   vault:
-    addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://vault.service.consul:8200') }}"
+    addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://vault.service.consul:8200', true) }}"
     description: "Vault HTTP API endpoint"
 
   # Alternative: Direct IP-based endpoints (for environments without service discovery)

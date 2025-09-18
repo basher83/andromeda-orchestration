@@ -32,6 +32,12 @@
     color_reset: "\033[0m"
 
   pre_tasks:
+    - name: Enforce dynamic-inventory pattern (no hardcoded IPs)
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_allowlist: []
+      tags: ['preflight', 'validate']
+
     - name: Validate service_endpoints are defined
       ansible.builtin.assert:
         that:

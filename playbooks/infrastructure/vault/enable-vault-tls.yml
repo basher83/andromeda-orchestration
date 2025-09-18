@@ -15,7 +15,8 @@
   gather_facts: true
 
   vars:
-    vault_validate_certs: false  # Set to true for production with proper CA
+    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Set to true for production with proper CA
+    vault_ca_path: "{{ vault_ca_path | default(omit) }}"  # Optional CA certificate path
     vault_tls_dir: '/opt/vault/tls'
     cert_country: 'US'
     cert_state: 'HomeLabState'
@@ -31,6 +32,16 @@
       DNS:localhost,
       IP:{{ ansible_default_ipv4.address }},
       IP:127.0.0.1
+
+  pre_tasks:
+    - name: Preflight | Validate no hardcoded IPs in play vars
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars: {}
+        validate_allowlist:
+          - '127.0.0.1'
+          - '::1'
+      tags: [preflight]
 
   tasks:
     - name: Create TLS directory
@@ -176,7 +187,8 @@
       ansible.builtin.uri:
         url: 'https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health'
         method: GET
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         status_code: [200, 429, 473, 501, 503]
       register: https_test
       when: vault_role == "production"
@@ -205,6 +217,7 @@
       delegate_to: localhost
       become: false
       register: consul_token_result
+      no_log: true
       environment:
         INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
         INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
@@ -218,12 +231,15 @@
         headers:
           X-Consul-Token: '{{ consul_token_result.stdout }}'
         body_format: json
+        no_log: true
         body:
           ID: 'vault-{{ inventory_hostname }}'
           Name: 'vault'
+          HTTP: >-
+            {{ 'https' if vault_role == 'production' else 'http' }}://
+            {{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true
+          TLSSkipVerify: "{{ (not vault_validate_certs) | bool }}"
           Tags:
-            - 'vault-cluster'
-            - '{{ vault_role }}'
             - "{{ 'transit' if vault_role == 'master' else 'raft' }}"
             - "{{ 'https' if vault_role == 'production' else 'http' }}"
           Port: 8200
@@ -231,8 +247,9 @@
           Check:
             CheckID: 'vault-health'
             Name: 'Vault Health Check'
-            HTTP: "{{ 'https' if vault_role == 'production' else 'http' }}://\
-              {{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
+            HTTP: >-
+              {{ 'https' if vault_role == 'production' else 'http' }}://
+              {{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true
             TLSSkipVerify: true
             Interval: '10s'
             Timeout: '5s'

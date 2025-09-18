@@ -26,7 +26,7 @@
       {%- for host in (groups.get('vault_production', []) + groups.get('vault_master', [])) -%}
         {%- set _ = nodes.append({
               'name': host,
-              'ip': hostvars[host]['ansible_host']
+              'ip': hostvars.get(host, {}).get('ansible_host', '')
             }) -%}
       {%- endfor -%}
       {{ nodes }}
@@ -166,6 +166,7 @@
       ansible.builtin.set_fact:
         node_token_name: "CONSUL_TOKEN_{{ inventory_hostname | upper | replace('-', '_') }}"
         cacheable: no
+        no_log: true
 
     - name: Retrieve token from Infisical
       ansible.builtin.shell: |
@@ -173,6 +174,7 @@
       delegate_to: localhost
       become: false
       register: consul_token_result
+      no_log: true
       environment:
         INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
         INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"

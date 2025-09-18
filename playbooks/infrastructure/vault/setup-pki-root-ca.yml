@@ -12,7 +12,8 @@
   vars:
     vault_addr: "{{ lookup('env', 'VAULT_ADDR') }}"
     vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
-    vault_validate_certs: false  # Set to true for production with proper CA
+    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Set to true for production with proper CA
+    vault_ca_path: "{{ vault_ca_path | default(omit) }}"  # Optional CA certificate path
 
     # PKI Configuration
     pki_path: 'pki'
@@ -73,7 +74,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: 'sys/health'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         # This is a status check endpoint
       register: vault_health
       failed_when: false
@@ -91,7 +93,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: 'sys/mounts/{{ pki_path }}'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       register: pki_mount_check
       failed_when: false
 
@@ -101,7 +104,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: 'sys/mounts/{{ pki_path }}'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           type: 'pki'
           description: 'Root Certificate Authority'
@@ -116,7 +120,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: 'sys/mounts/{{ pki_path }}/tune'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           max_lease_ttl: '{{ pki_max_lease_ttl }}'
       when: pki_mount_check.data is defined
@@ -127,7 +132,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_path }}/ca/pem'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       register: existing_ca
       failed_when: false
 
@@ -137,7 +143,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_path }}/root/generate/internal'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           common_name: '{{ root_ca_common_name }}'
           issuer_name: '{{ root_ca_issuer_name }}'
@@ -165,7 +172,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_path }}/config/urls'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           issuing_certificates: '{{ vault_public_url }}/v1/{{ pki_path }}/ca'
           crl_distribution_points: '{{ vault_public_url }}/v1/{{ pki_path }}/crl'
@@ -177,7 +185,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_path }}/config/crl'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           expiry: '72h'
           disable: false
@@ -188,7 +197,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_path }}/roles/{{ item.name }}'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           allowed_domains: '{{ item.allowed_domains }}'
           allow_subdomains: '{{ item.allow_subdomains }}'
@@ -219,7 +229,8 @@
         role_name: 'infrastructure'
         common_name: 'test.vault.spaceships.work'
         ttl: '24h'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       register: test_cert
 
     - name: Verify test certificate generation

@@ -19,7 +19,8 @@
            true
          ) }}
 # vault_token will be retrieved via secure task
-    vault_validate_certs: false  # Set to true for production with proper CA
+    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Set to true for production with proper CA
+    vault_ca_path: "{{ vault_ca_path | default(omit) }}"  # Optional CA certificate path
     pki_mount: 'pki_int'
     warning_days: 7
     critical_days: 3
@@ -48,7 +49,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_mount }}/certs'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       register: cert_list
       ignore_errors: true
       no_log: true
@@ -65,7 +67,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_mount }}/cert/{{ item }}'
-        validate_certs: "{{ vault_validate_certs | default(false) }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       loop: '{{ cert_list.data.data.keys[:10] if cert_list is succeeded else [] }}'
       register: cert_details
       when: cert_list is succeeded
