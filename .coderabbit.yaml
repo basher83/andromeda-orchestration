@@ -23,7 +23,7 @@ reviews:
   fail_commit_status: false
   collapse_walkthrough: false
   changed_files_summary: true
-  sequence_diagrams: true
+  sequence_diagrams: false
   estimate_code_review_effort: true
   assess_linked_issues: true
   related_issues: true
@@ -34,6 +34,15 @@ reviews:
   auto_assign_reviewers: true
   abort_on_close: true
   disable_cache: false
+
+  pre_merge_checks:
+    title:
+      mode: "warning"
+      requirements: "Title should be concise and descriptive, ideally under 50 characters."
+    description:
+      mode: "warning"
+    issue_assessment:
+      mode: "warning"
 
   # Auto-review configuration
   auto_review:
@@ -78,7 +87,7 @@ reviews:
     # GitHub integration - ENHANCED for infrastructure automation
     github-checks:
       enabled: true
-      timeout_ms: 300000  # Increased timeout for complex Ansible/infrastructure pipelines
+      timeout_ms: 90000
 
     # Secret detection already covered by multiple tools; disable redundant ones
     gitleaks:
@@ -155,6 +164,8 @@ reviews:
     - "!**/.terraform.lock.hcl"
     - "!docs/archive/**"
     - "!playbooks/.archive/**"
+    - "!nomad-jobs/**/.archive"
+    - "!nomad-jobs/**/.testing"
     - "!**/*.log"
     - "!**/*.tmp"
     - "!.venv/**"
@@ -163,135 +174,95 @@ reviews:
 
   # Review instructions specific to this infrastructure automation repository
   path_instructions:
-    - path: "**/*.yml"
+    - path: "nomad-jobs/**/*"
       instructions: |
-        Review Ansible playbook syntax and YAML structure for best practices.
-        Ensure proper task naming, idempotency, and error handling.
-        Verify variables are properly templated and not hardcoded.
-        Check for correct use of handlers, conditionals, and loops.
-        Validate that all secrets use Ansible Vault, environment variables, or approved lookup plugins
-        (e.g., Infisical).
-
-    - path: "**/*.yaml"
-      instructions: |
-        Review YAML syntax and structure for consistency with project standards.
-        For Nomad job files, ensure proper resource allocation and health checks.
-        For Docker Compose files, verify service dependencies and networking.
-        Check for proper indentation and YAML best practices.
-
-    - path: "**/*.hcl"
-      instructions: |
-        Review Nomad job specifications for HashiCorp best practices.
-        Ensure proper resource constraints (CPU, memory, disk).
-        Verify service definitions include health checks and proper networking.
-        Check for appropriate restart policies and update strategies.
-        Validate template stanzas use proper escaping and variable references.
-
-    - path: "**/*.nomad"
-      instructions: |
-        Focus on Nomad-specific syntax and job deployment patterns.
-        Ensure proper constraint definitions for node placement.
-        Verify volume mounts and persistent storage configurations.
-        Check for appropriate service registration with Consul.
-        Validate network modes and port allocations follow project standards.
-
-    - path: "**/*.tf"
-      instructions: |
-        Review Terraform configurations for best practices and security.
-        Ensure proper resource naming conventions and tagging.
-        Verify state management and backend configurations.
-        Check for appropriate use of variables, outputs, and modules.
-        Validate that sensitive values use proper variable types.
+        Validate Nomad jobs against the following project standards for container
+        orchestration, consul integration, vault integration, and
+        storage configuration:
+        - Standards Reference: [Nomad Job Standards](../../docs/standards/nomad-job-standards.md)
+        - Service identity and ACL integration (mandatory for all jobs)
+        - Resource allocation (CPU, memory, disk) following project guidelines
+        - Health checks and service registration patterns
+        - Storage configuration and volume management
+        - Network configuration and port allocation strategy
+        - Directory organization
+        - Dynamic ports vs static allocation decisions
+        - Service identity requirements for security
+        - Volume naming conventions and storage patterns
+        - Critical Checks:
+          - Identity blocks present for Consul ACL integration
+          - No hardcoded secrets in environment variables
+          - Proper resource limits set (never omit)
+          - Health checks configured with appropriate timing.
 
     - path: "**/*.py"
       instructions: |
-        Review Python code for PEP 8 compliance and best practices.
-        Ensure proper error handling and logging.
-        Verify API integrations use proper authentication and retries.
-        Check for appropriate use of type hints and docstrings.
-        Validate that scripts work with 'uv run' execution as per CLAUDE.md.
+        - Review Python code for PEP 8 compliance and best practices.
+        - Ensure proper error handling and logging.
+        - Verify API integrations use proper authentication and retries.
+        - Check for appropriate use of type hints and docstrings.
+        - Validate that scripts work with 'uv run' execution as per CLAUDE.md.
 
     - path: "**/*.j2"
       instructions: |
-        Review Jinja2 templates for proper syntax and security.
-        Ensure variables are properly escaped to prevent injection.
-        Verify template logic is clear and maintainable.
-        Check for appropriate use of filters and functions.
+        - Review Jinja2 templates for proper syntax and security.
+        - Ensure variables are properly escaped to prevent injection.
+        - Verify template logic is clear and maintainable.
+        - Check for appropriate use of filters and functions.
 
     - path: "**/*.sh"
       instructions: |
-        Review shell scripts for POSIX compliance and best practices.
-        Ensure proper error handling with set -euo pipefail.
-        Verify variables are properly quoted and escaped.
-        Check for appropriate use of functions and error checking.
-        Validate that scripts handle edge cases and provide useful output.
+        - Review shell scripts for POSIX compliance and best practices.
+        - Ensure proper error handling with set -euo pipefail.
+        - Verify variables are properly quoted and escaped.
+        - Check for appropriate use of functions and error checking.
+        - Validate that scripts handle edge cases and provide useful output.
 
     - path: "playbooks/**/*"
       instructions: |
-        Focus on Ansible playbook structure and operational safety.
-        Ensure playbooks are idempotent and can be run multiple times safely.
-        Verify proper use of tags for selective execution.
-        Prefer dynamic inventory plugins for inventory references; allow static inventory only with
+        - Standards Reference: [Ansible Standards](../../docs/standards/ansible-standards.md)
+        - Focus on Ansible playbook structure and operational safety.
+        - Ensure playbooks are idempotent and can be run multiple times safely.
+        - Verify proper use of tags for selective execution.
+        - Prefer dynamic inventory plugins for inventory references; allow static inventory only with
         documented justification.
-        Require no_log: true for tasks handling secrets/credentials (or use vault/encrypted vars).
-        Recommend check_mode/dry-run validation with --check before production changes.
-        Validate that sensitive operations include confirmation prompts or approval steps.
-        Document exceptions where secret output visibility is required for troubleshooting.
-
-    - path: "playbooks/postgresql/**/*"
-      instructions: |
-        Use FQCN for community.postgresql modules (e.g., community.postgresql.postgresql_ping).
-        Avoid hardcoding credentials; source via env vars or Ansible Vault/lookup plugins.
-        Prefer become_user: postgres for admin tasks; ensure least-privilege for application users.
-        Validate connectivity using postgresql_ping before running schema changes.
-        Ensure tasks are idempotent (e.g., state=present/absent) and safe in --check mode.
-
-    - path: "nomad-jobs/**/*"
-      instructions: |
-        Review Nomad job configurations for production readiness.
-        Ensure proper resource allocation and scaling policies.
-        Verify service mesh integration and networking configurations.
-        Check for appropriate logging and monitoring configurations.
-        Validate that persistent storage is configured correctly.
+        - Require no_log: true for tasks handling secrets/credentials.
+        - Recommend check_mode/dry-run validation with --check before production changes.
+        - Validate that sensitive operations include confirmation prompts or approval steps.
+        - Document exceptions where secret output visibility is required for troubleshooting.
 
     - path: "docs/**/*"
       instructions: |
-        Review documentation for clarity, accuracy, and completeness.
-        Ensure operational procedures are well-documented.
-        Verify that architectural decisions are properly explained.
-        Check for proper markdown formatting and link validity.
-        Validate that examples and commands are current and functional.
+        - Standards Reference: [Documentation Standards](../../docs/standards/documentation-standards.md)
+        - Review documentation for clarity, accuracy, and completeness.
+        - Ensure operational procedures are well-documented.
+        - Verify that architectural decisions are properly explained.
+        - Check for proper markdown formatting and link validity with markdownlint-cli2.
+        - Validate that examples and commands are current and functional.
 
     - path: "inventory/**/*"
       instructions: |
-        Review inventory configurations for accuracy and security.
-        Ensure dynamic inventory plugins are properly configured.
-        Verify group variables and host variables are appropriately scoped.
-        Check that sensitive inventory data uses proper encryption.
+        - Standards Reference: [Ansible Standards](../../docs/standards/ansible-standards.md)
+        - Review inventory configurations for accuracy and security.
+        - Ensure dynamic inventory plugins are properly configured.
+        - Verify group variables and host variables are appropriately scoped.
+        - Check that sensitive inventory data uses proper encryption.
 
     - path: ".github/**/*"
       instructions: |
-        Review CI/CD workflow configurations for efficiency and security.
-        Ensure proper secret management in workflows.
-        Verify that workflows follow infrastructure deployment best practices.
-        Check for appropriate use of caching and artifact management.
-        Validate that security scanning and linting steps are included.
+        - Review CI/CD workflow configurations for efficiency and security.
+        - Ensure proper secret management in workflows.
+        - Verify that workflows follow infrastructure deployment best practices.
+        - Check for appropriate use of caching and artifact management.
+        - Validate that security scanning and linting steps are included.
 
     - path: "**/.env*"
       instructions: |
-        Review environment files for security and best practices.
-        Ensure no sensitive values are hardcoded in committed .env files.
-        Verify that .env files contain only example or template values.
-        Check that production secrets use proper secret management (Infisical, Ansible Vault).
-        Validate that .env files follow standard KEY=value format with proper escaping.
-
-    - path: "**/*.env"
-      instructions: |
-        Review environment files (including app.env, prod.env, etc.) for security and best practices.
-        Ensure no sensitive values are hardcoded in committed environment files.
-        Verify that files contain only example or template values for committed code.
-        Check that production secrets use proper secret management (Infisical, Ansible Vault).
-        Validate that environment files follow standard KEY=value format with proper escaping.
+        - Review environment files for security and best practices.
+        - Ensure no sensitive values are hardcoded in committed .env files.
+        - Verify that .env files contain only example or template values.
+        - Check that production secrets use proper secret management (Infisical, Ansible Vault).
+        - Validate that .env files follow standard KEY=value format with proper escaping.
 
   # Automatic labeling instructions for PRs
   labeling_instructions:
@@ -431,6 +402,9 @@ knowledge_base:
     enabled: true
   code_guidelines:
     enabled: true
+    filePatterns:
+      - ".cursorrules/**"
+      - "docs/standards/**"
   learnings:
     scope: auto
   issues:
