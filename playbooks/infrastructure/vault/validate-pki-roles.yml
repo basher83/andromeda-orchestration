@@ -121,9 +121,17 @@
 
   tasks:
     - name: Verify community.crypto collection is available
+      community.crypto.x509_certificate_info:
+        path: "/dev/null"
+      register: _crypto_probe
+      failed_when: false
+      changed_when: false
+      tags: [preflight]
+
+    - name: Assert community.crypto availability
       ansible.builtin.assert:
         that:
-          - "'community.crypto' in ansible_facts.ansible_collections | default({})"
+          - _crypto_probe is not failed
         fail_msg: |
           ❌ community.crypto collection not installed!
 
