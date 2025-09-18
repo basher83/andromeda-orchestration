@@ -2,7 +2,7 @@
 
 This directory contains the standards, conventions, and operating procedures that govern this repository. These documents explain not just _what_ we do, but more importantly _why_ we do it this way.
 
-📚 **Note**: These standards complement and extend the central standards defined in [Mission Control](https://github.com/basher83/docs/tree/main/mission-control/README.md). When in doubt, defer to Mission Control for organization-wide standards.
+📚 **Note**: These standards complement and extend the central standards defined in [Mission Control](../README.md). When in doubt, defer to Mission Control for organization-wide standards.
 
 ## 📋 Standards Documents
 
@@ -250,7 +250,7 @@ This repository's standards are part of a larger ecosystem:
 
 ### Hierarchy
 
-1. **[Mission Control](https://github.com/basher83/docs/tree/main/mission-control/README.md)** - Organization-wide standards and policies
+1. **[Mission Control](../README.md)** - Organization-wide standards and policies
 2. **Repository Standards** (this directory) - Project-specific implementations
 3. **Service Standards** - Individual service requirements
 

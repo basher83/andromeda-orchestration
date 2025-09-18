@@ -25,6 +25,7 @@
         secret_var_name: 'vault_token'
         fallback_env_var: 'VAULT_TOKEN'
         infisical_path: '/apollo-13/vault'
+      no_log: true
       tags: [secrets]
 
     - name: Assert VAULT_ADDR or inventory leader is available
@@ -222,19 +223,36 @@
       changed_when: ca_copy_redhat.changed
       when: ansible_facts['os_family'] == 'RedHat'
 
-    - name: Analyze installed certificate
-      community.crypto.x509_certificate_info:
-        path: "{{ tls_dir }}/tls.crt"
+    - name: Verify new certificate
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          openssl x509 -in {{ tls_dir }}/tls.crt -text -noout | grep -E "(Subject:|Issuer:|Not After:)"
+        executable: /bin/bash
       register: cert_info
       become: true
       changed_when: false
 
     - name: Display certificate information
       ansible.builtin.debug:
+        msg: '{{ cert_info.stdout_lines }}'
+
+    - name: Parse certificate expiry and calculate days remaining
+      ansible.builtin.set_fact:
+        cert_expiry_date: >-
+          {{ (cert_info.stdout_lines | select('match', 'Not After : .*') | first
+              | regex_replace('Not After : ', '')) | strptime('%b %d %H:%M:%S %Y %Z') }}
+      when: "cert_info.stdout_lines | select('match', 'Not After : .*') | length > 0"
+
+    - name: Display certificate expiry information
+      ansible.builtin.debug:
         msg:
-          - "Subject: {{ cert_info.subject.commonName | default('N/A') }}"
-          - "Issuer:  {{ cert_info.issuer.commonName | default('N/A') }}"
-          - "Valid To: {{ cert_info.not_after }}"
+          - '📅 Certificate Expiry Information:'
+          - '   Not After: {{ cert_expiry_date | strftime("%Y-%m-%d %H:%M:%S %Z") }}'
+          - >-
+            Days remaining: {{ ((cert_expiry_date | to_datetime)
+            - (ansible_date_time.iso8601 | to_datetime)).days }}
+      when: "cert_expiry_date is defined"
 
     - name: Test certificate chain validation
       ansible.builtin.shell:

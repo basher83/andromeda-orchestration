@@ -23,7 +23,6 @@
   vars:
     consul_addr: 'http://127.0.0.1:8500'
     vault_addr: 'https://{{ ansible_default_ipv4.address }}:8200'
-    consul_zip_sha256: 'a9f4e8b2c8e4f6b8d2e4f6b8c8e4f6b8d2e4f6b8c8e4f6b8d2e4f6b8c8e4f6b8'
 
   tasks:
     - name: Check if Consul agent is running
@@ -33,14 +32,16 @@
       ignore_errors: yes
 
     - name: Install Consul agent if not present
-      when: consul_service.status.ActiveState is not defined or consul_service.status.ActiveState != "active"
+      when: not consul_binary.stat.exists
       block:
         - name: Download Consul binary
           ansible.builtin.get_url:
-            url: 'https://releases.hashicorp.com/consul/1.21.4/consul_1.21.4_linux_amd64.zip'
+            url: >-
+              https://releases.hashicorp.com/consul/{{ consul_version }}/
+              consul_{{ consul_version }}_{{ consul_arch }}.zip
             dest: /tmp/consul.zip
-            mode: '0644'
             checksum: "sha256:{{ consul_zip_sha256 }}"
+            mode: '0644'
 
         - name: Unzip Consul
           ansible.builtin.unarchive:
@@ -80,11 +81,7 @@
                 "server": false,
                 "client_addr": "127.0.0.1",
                 "bind_addr": "{{ ansible_default_ipv4.address }}",
-                "retry_join": {{
-                  (groups.get('consul_servers', []) |
-                   map('extract', hostvars, 'ansible_default_ipv4') |
-                   map(attribute='address') | list) | to_json
-                }},
+                "retry_join": ["192.168.11.11", "192.168.11.12", "192.168.11.13"],
                 "services": []
               }
             dest: /etc/consul.d/consul.json
@@ -123,6 +120,7 @@
             state: started
             enabled: yes
             daemon_reload: yes
+          when: consul_service.status.ActiveState is not defined or consul_service.status.ActiveState != "active"
 
     - name: Create Vault service definition
       ansible.builtin.copy:

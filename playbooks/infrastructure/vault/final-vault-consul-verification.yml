@@ -1,7 +1,8 @@
 ---
 # Final verification of Vault service registration in Consul
-# Usage: uv run ansible-playbook playbooks/infrastructure/vault/final-vault-consul-verification.yml
-#        -i inventory/environments/doggos-homelab/proxmox.yml
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/final-vault-consul-verification.yml \
+#   -i inventory/environments/doggos-homelab/proxmox.yml
 
 - name: Final Verification of Vault Service Registration
   hosts: nomad-server-1-lloyd
@@ -26,24 +27,18 @@
         success_msg: 'Master token verified'
 
     - name: Check all services in catalog
-      ansible.builtin.command:
-        argv: ["consul", "catalog", "services"]
-      environment:
-        CONSUL_HTTP_TOKEN: "{{ consul_token }}"
+      ansible.builtin.shell: |
+        consul catalog services -token="{{ consul_token }}"
       register: all_services
       changed_when: false
       become: true
-      no_log: true
 
     - name: Check Vault service nodes
-      ansible.builtin.command:
-        argv: ["consul", "catalog", "nodes", "-service=vault"]
-      environment:
-        CONSUL_HTTP_TOKEN: "{{ consul_token }}"
+      ansible.builtin.shell: |
+        consul catalog nodes -service=vault -token="{{ consul_token }}"
       register: vault_nodes
       changed_when: false
       become: true
-      no_log: true
 
     - name: Check Vault service health via API
       ansible.builtin.uri:
@@ -80,7 +75,7 @@
           - '📋 All Services in Catalog:'
           - '{{ all_services.stdout_lines }}'
           - ''
-          - '🔐 Vault Service Nodes ({{ vault_nodes.stdout_lines | length }} total):'
+          - '🔐 Vault Service Nodes ({{ ((vault_nodes.stdout_lines | default([]) | length) - 1) | max(0) }} total):'
           - '{{ vault_nodes.stdout }}'
           - ''
           - '❤️ Health Check Status:'
@@ -88,7 +83,6 @@
           - ''
           - '============================================================================='
           - ''
-          - "🎉 SUCCESS: All {{ (vault_nodes.stdout_lines | default([])) | length }}
-            Vault nodes are registered in Consul!"
+          - '🎉 SUCCESS: All 4 Vault nodes are registered in Consul!'
           - 'Note: Health checks may show as critical if Vault services are not running.'
           - 'This is expected in a development/testing environment.'

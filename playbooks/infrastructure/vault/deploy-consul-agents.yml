@@ -16,7 +16,7 @@
         secret_var_name: 'consul_encrypt_value'
         fallback_env_var: 'CONSUL_ENCRYPT'
         infisical_path: '/apollo-13/consul'
-        allow_empty: true
+        allow_empty: false
       tags: [secrets]
 
     - name: Compute Consul retry join from inventory
@@ -44,6 +44,14 @@
     consul_acl_token: "{{ consul_token_value | default('') }}"
 
   tasks:
+    - name: Compute consul retry join IPs dynamically
+      ansible.builtin.set_fact:
+        consul_retry_join: >-
+          {{ groups['nomad_servers'] | default(groups['consul_server'] | default([]))
+             | map('extract', hostvars) | select | list | default([])
+             | map(attribute='ansible_host') | select | list | default([])
+             | unique | reject('none') | reject('equalto', '') | list }}
+
     - name: Create consul user and group
       block:
         - name: Create consul group
@@ -100,9 +108,10 @@
             owner: root
             group: root
             mode: '0755'
+            checksum: "sha256:{{ consul_zip_sha256 }}"
           when: >-
             not consul_binary.stat.exists or
-            (consul_version_output.stdout | default('') | from_json).version | default('') != consul_version
+            (consul_version_output.stdout | default('') | from_json).Version | default('') != consul_version
 
     - name: Generate Consul client configuration
       ansible.builtin.template:
@@ -219,7 +228,7 @@
         secret_var_name: 'consul_master_token'
         fallback_env_var: 'CONSUL_MASTER_TOKEN'
         infisical_path: '/apollo-13/consul'
-        allow_empty: true
+        allow_empty: false
       tags: [secrets]
 
   vars:
