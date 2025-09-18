@@ -230,19 +230,19 @@ Related standards, external documentation, or decisions.
 
 ## 🔗 Quick Reference
 
-| Standard       | Purpose                | Key Decision                             | Status      |
-| -------------- | ---------------------- | ---------------------------------------- | ----------- |
-| Documentation  | Organized knowledge    | Everything documented, logically placed  | ✅ Complete |
-| Ansible        | Consistent automation  | Dynamic inventory, modular playbooks     | ✅ Complete |
-| Nomad          | Clean job management   | Production/testing/archive separation    | ✅ Complete |
-| Infrastructure | Scalable architecture  | Service discovery, dynamic configuration | ✅ Complete |
-| Security       | Protect sensitive data | Multi-layer scanning, strict gitignore   | ✅ Complete |
-| Git            | Clean version control  | Conventional commits, clear branches     | 📝 TODO     |
-| Testing        | Quality assurance      | Mandatory smoke tests, fail fast         | ✅ Complete |
-| Development    | Efficient workflow     | Automated checks, clear process          | 📝 TODO     |
-| Monitoring     | System visibility      | Metrics, logs, alerts                    | 📝 TODO     |
-| Linting        | Code consistency       | Automated enforcement                    | 📝 TODO     |
-| Project Mgmt   | Delivery tracking      | Visible progress, clear accountability   | 📝 TODO     |
+| Standard                          | Purpose                | Key Decision                             | Status      |
+| --------------------------------- | ---------------------- | ---------------------------------------- | ----------- |
+| [Documentation](documentation-standards.md) | Organized knowledge    | Everything documented, logically placed  | ✅ Complete |
+| [Ansible](ansible-standards.md)   | Consistent automation  | Dynamic inventory, modular playbooks     | ✅ Complete |
+| [Nomad](nomad-job-standards.md)   | Clean job management   | Production/testing/archive separation    | ✅ Complete |
+| [Infrastructure](infrastructure-standards.md) | Scalable architecture  | Service discovery, dynamic configuration | ✅ Complete |
+| [Security](security-standards.md) | Protect sensitive data | Multi-layer scanning, strict gitignore   | ✅ Complete |
+| [Git](git-standards.md)           | Clean version control  | Conventional commits, clear branches     | 📝 TODO     |
+| [Testing](testing-standards.md)   | Quality assurance      | Mandatory smoke tests, fail fast         | ✅ Complete |
+| [Development](development-workflow.md) | Efficient workflow     | Automated checks, clear process          | 📝 TODO     |
+| [Monitoring](monitoring-observability-standards.md) | System visibility      | Metrics, logs, alerts                    | 📝 TODO     |
+| [Linting](linting-standards.md)   | Code consistency       | Automated enforcement                    | 📝 TODO     |
+| [Project Mgmt](project-management-standards.md) | Delivery tracking      | Visible progress, clear accountability   | 📝 TODO     |
 
 ## 🌐 Relationship with Mission Control
 
