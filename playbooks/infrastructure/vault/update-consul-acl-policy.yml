@@ -42,13 +42,14 @@
       register: policy_rules
       become: true
 
-    - name: Upsert Vault client ACL policy (HTTP)
+    - name: Upsert Vault client ACL policy
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8500/v1/acl/policy"
+        url: "{{ (consul_use_tls | default(false)) | ternary('https://127.0.0.1:8501', 'http://127.0.0.1:8500') }}/v1/acl/policy"
         method: PUT
         headers:
           X-Consul-Token: "{{ consul_master_token }}"
         body_format: json
+        validate_certs: "{{ consul_validate_certs | default(true) }}"
         body:
           Name: "{{ policy_name }}"
           Description: "Policy for Vault Consul client agents (updated)"
@@ -57,7 +58,6 @@
       register: policy_update
       become: true
       no_log: true
-
     - name: Display policy update result
       ansible.builtin.debug:
         msg:
