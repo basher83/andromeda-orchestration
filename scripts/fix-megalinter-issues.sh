@@ -75,7 +75,7 @@ show_changes() {
     if [ -d "$BACKUP_PATH" ]; then
         # Compare backed up files with current state
         find "$BACKUP_PATH" -type f | while read -r backup_file; do
-            original_file="${backup_file#$BACKUP_PATH/}"
+            original_file="${backup_file#"${BACKUP_PATH}/"}"
             if [ -f "$original_file" ]; then
                 if ! diff -q "$backup_file" "$original_file" >/dev/null 2>&1; then
                     echo "  Modified: $original_file"
@@ -92,10 +92,34 @@ cleanup_old_backups() {
     echo "🧹 Cleaning up old backups..."
 
     # Keep only last 10 backups
-    ls -t "$BACKUP_DIR" | tail -n +11 | while read -r old_backup; do
-        rm -rf "${BACKUP_DIR:?}/$old_backup"
-        echo "  Removed: $old_backup"
-    done
+    if [ -d "$BACKUP_DIR" ]; then
+        local -a backups=()
+        local -a stat_command
+
+        if stat -f '%m' "$BACKUP_DIR" >/dev/null 2>&1; then
+            stat_command=(stat -f '%m')
+        else
+            stat_command=(stat -c '%Y')
+        fi
+
+        mapfile -t backups < <(
+            find "$BACKUP_DIR" -mindepth 1 -maxdepth 1 -type d -print0 | \
+            while IFS= read -r -d '' path; do
+                local mtime
+                if ! mtime="$("${stat_command[@]}" "$path" 2>/dev/null)"; then
+                    continue
+                fi
+                printf '%s\t%s\n' "$mtime" "$path"
+            done | sort -rn | cut -f2
+        )
+
+        if (( ${#backups[@]} > 10 )); then
+            for old_path in "${backups[@]:10}"; do
+                rm -rf "$old_path"
+                echo "  Removed: $(basename "$old_path")"
+            done
+        fi
+    fi
 
     echo "✅ Cleanup completed"
     echo

@@ -170,7 +170,7 @@ fi
 echo "Command: timeout ${TIMEOUT}s $DOCKER_CMD"
 echo
 
-timeout $TIMEOUT bash -c "$DOCKER_CMD"
+timeout "$TIMEOUT" bash -c "$DOCKER_CMD"
 
 echo
 echo "✅ MegaLinter completed successfully!"

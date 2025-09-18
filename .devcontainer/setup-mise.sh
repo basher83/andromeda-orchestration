@@ -306,14 +306,14 @@ ensure_line() {
 
 # Bash setup
 BASHRC="$HOME/.bashrc"
-ensure_line "$BASHRC" 'export PATH="$HOME/.local/bin:$PATH"'
+ensure_line "$BASHRC" "export PATH=\"\$HOME/.local/bin:\$PATH\""
 ensure_line "$BASHRC" "eval \"\$($INSTALL_PATH activate bash)\""
 
 # Zsh setup
 ZSHRC="${ZDOTDIR:-$HOME}/.zshrc"
 # create zshrc if missing
 [ -f "$ZSHRC" ] || : >"$ZSHRC"
-ensure_line "$ZSHRC" 'export PATH="$HOME/.local/bin:$PATH"'
+ensure_line "$ZSHRC" "export PATH=\"\$HOME/.local/bin:\$PATH\""
 ensure_line "$ZSHRC" "eval \"\$($INSTALL_PATH activate zsh)\""
 
 # Activate mise for the *current* shell (no restart needed)

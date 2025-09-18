@@ -9,33 +9,29 @@ function write_error(){ >&2 echo "$@"; }
 # 'https://', '.', and ':' from the passed address (Vault address environment
 # by default) because jq has trouble with special characeters in JSON field
 # names
-function createHashKey {
-  
-  local key=""
+createHashKey() {
 
-  if [[ -z "${1}" ]] ; then key="${VAULT_ADDR}" 
-  else                      key="${1}"
-  fi
-  
+  local address="${1:-${VAULT_ADDR:-}}"
+
   # We index the token according to the Vault server address by default so
   # return an error if the address is empty
-  if [[ -z "${key}" ]] ; then
+  if [[ -z "${address}" ]] ; then
     write_error "Error: VAULT_ADDR environment variable unset."
     exit 100
   fi
 
   # Handle both http and https protocols
-  key=${key//"https://"/""}
-  key=${key//"http://"/""}
-  key=${key//"."/"_"}
-  key=${key//":"/"_"}
+  address=${address#https://}
+  address=${address#http://}
+  address=${address//./_}
+  address=${address//:/_}
 
-  echo "addr-${key}"
+  printf 'addr-%s\n' "${address}"
 }
 
 # Use .vault_tokens (plural) to avoid conflicts with default .vault-token
 TOKEN_FILE="${HOME}/.vault_tokens"
-KEY=$(createHashKey)
+KEY=$(createHashKey "${VAULT_ADDR:-}")
 TOKEN="null"
 
 # If the token file does not exist, create it with restricted permissions
@@ -49,8 +45,8 @@ case "${1}" in
 
       # Read the current JSON data and pull the token associated with ${KEY}
       TOKEN=$(jq --arg key "${KEY}" -r '.[$key]' < "${TOKEN_FILE}")
-      
-      # If the token != to the string "null", print the token to stdout 
+
+      # If the token != to the string "null", print the token to stdout
       # jq returns "null" if the key was not found in the JSON data
       if [ ! "${TOKEN}" == "null" ] ; then
         echo "${TOKEN}"
@@ -59,18 +55,18 @@ case "${1}" in
     ;;
 
     "store")
-      
+
       # Get the token from stdin
-      read TOKEN
+      read -r TOKEN
 
       # Read the current JSON data and add a new entry
       JSON=$(
         jq                      \
         --arg key "${KEY}"      \
         --arg token "${TOKEN}"  \
-        '.[$key] = $token' ${TOKEN_FILE}
+        '.[$key] = $token' "${TOKEN_FILE}"
       )
-      
+
     ;;
 
     "erase")
@@ -79,9 +75,9 @@ case "${1}" in
         jq                      \
         --arg key "${KEY}"      \
         --arg token "${TOKEN}"  \
-        'del(.[$key])' ${TOKEN_FILE}
+        'del(.[$key])' "${TOKEN_FILE}"
       )
-    
+
     ;;
 
     *)
