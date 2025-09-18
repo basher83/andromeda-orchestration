@@ -1,11 +1,33 @@
 ---
 # Deploy Consul client agents to Vault cluster VMs
-# Usage: uv run ansible-playbook playbooks/infrastructure/vault/deploy-consul-agents.yml -i inventory/environments/vault-cluster/production.yaml
+# Usage: uv run ansible-playbook deploy-consul-agents.yml
+#        -i inventory/environments/vault-cluster/production.yaml
 
 - name: Deploy Consul Client Agents to Vault Cluster
   hosts: vault_cluster
   become: true
   gather_facts: true
+
+  pre_tasks:
+    - name: Retrieve Consul gossip encryption key securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'GOSSIP_ENCRYPTION_KEY'
+        secret_var_name: 'consul_encrypt_value'
+        fallback_env_var: 'CONSUL_ENCRYPT'
+        infisical_path: '/apollo-13/consul'
+        allow_empty: true
+      tags: [secrets]
+
+    - name: Retrieve Consul token for Vault securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'CONSUL_TOKEN_FOR_VAULT'
+        secret_var_name: 'consul_token_value'
+        fallback_env_var: 'CONSUL_TOKEN_FOR_VAULT'
+        infisical_path: '/apollo-13/consul'
+        allow_empty: true
+      tags: [secrets]
 
   vars:
     consul_version: '1.20.5'
@@ -22,27 +44,9 @@
       - '192.168.11.12' # nomad-server-2-holly
       - '192.168.11.13' # nomad-server-3-mable
 
-    # Gossip encryption key from Infisical with environment variable fallback
-    consul_encrypt: >-
-      {{ (lookup('infisical.vault.read_secrets',
-                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                 env_slug='prod',
-                 path='/apollo-13/consul',
-                 secret_name='GOSSIP_ENCRYPTION_KEY',
-                 errors='ignore') | default({'value': lookup('env', 'CONSUL_ENCRYPT')}, true)).value }}
-
-    # Get ACL token from Infisical (will be created and stored later in the playbook)
-    consul_acl_token: >-
-      {{ (lookup('infisical.vault.read_secrets',
-                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                 env_slug='prod',
-                 path='/apollo-13/consul',
-                 secret_name='CONSUL_TOKEN_FOR_VAULT',
-                 errors='ignore') | default({'value': lookup('env', 'CONSUL_TOKEN_FOR_VAULT', '')}, true)).value }}
+    # Secrets retrieved via centralized task (see pre_tasks)
+    consul_encrypt: "{{ consul_encrypt_value | default('') }}"
+    consul_acl_token: "{{ consul_token_value | default('') }}"
 
   tasks:
     - name: Create consul user and group
@@ -93,13 +97,17 @@
 
         - name: Download Consul binary
           ansible.builtin.unarchive:
-            src: 'https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip'
+            src: >-
+              https://releases.hashicorp.com/consul/{{ consul_version }}/
+              consul_{{ consul_version }}_linux_amd64.zip
             dest: /usr/local/bin
             remote_src: true
             owner: root
             group: root
             mode: '0755'
-          when: not consul_binary.stat.exists or (consul_version_output.stdout | default('') | from_json).version | default('') != consul_version
+          when: >-
+            not consul_binary.stat.exists or
+            (consul_version_output.stdout | default('') | from_json).version | default('') != consul_version
 
     - name: Generate Consul client configuration
       ansible.builtin.template:
@@ -244,6 +252,7 @@
           -rules=@/tmp/vault-client-policy.hcl \
           -token="{{ consul_master_token }}"
       when: policy_create.rc != 0
+      changed_when: false
 
     - name: Create ACL token for Vault agents
       ansible.builtin.shell: |
@@ -253,9 +262,10 @@
           -token="{{ consul_master_token }}" \
           -format=json
       register: token_result
+      changed_when: false
 
     - name: Extract token SecretID
-      set_fact:
+      ansible.builtin.set_fact:
         vault_client_token: '{{ (token_result.stdout | from_json).SecretID }}'
 
     - name: Store token in Infisical using infisical CLI
@@ -264,6 +274,7 @@
           --env=prod \
           --path="/apollo-13/consul" \
           --projectId="7b832220-24c0-45bc-a5f1-ce9794a31259"
+      changed_when: false
       delegate_to: localhost
       environment:
         INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
