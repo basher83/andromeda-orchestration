@@ -222,19 +222,19 @@
       changed_when: ca_copy_redhat.changed
       when: ansible_facts['os_family'] == 'RedHat'
 
-    - name: Verify new certificate
-      ansible.builtin.shell:
-        cmd: |
-          set -o pipefail
-          openssl x509 -in {{ tls_dir }}/tls.crt -text -noout | grep -E "(Subject:|Issuer:)"
-        executable: /bin/bash
+    - name: Analyze installed certificate
+      community.crypto.x509_certificate_info:
+        path: "{{ tls_dir }}/tls.crt"
       register: cert_info
       become: true
       changed_when: false
 
     - name: Display certificate information
       ansible.builtin.debug:
-        msg: '{{ cert_info.stdout_lines }}'
+        msg:
+          - "Subject: {{ cert_info.subject.commonName | default('N/A') }}"
+          - "Issuer:  {{ cert_info.issuer.commonName | default('N/A') }}"
+          - "Valid To: {{ cert_info.not_after }}"
 
     - name: Test certificate chain validation
       ansible.builtin.shell:
