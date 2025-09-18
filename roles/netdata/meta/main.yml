@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  author: basher8383
+  author: basher83
   description: Netdata monitoring agent deployment and configuration
   company: Homelab
   license: MIT
