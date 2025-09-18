@@ -23,4 +23,8 @@ RUN rm -f /lib/systemd/system/multi-user.target.wants/* \
 
 VOLUME [ "/sys/fs/cgroup" ]
 
+# NOTE: systemd requires root privileges to manage system services and cgroups
+# This is required for Molecule testing of Ansible roles that interact with systemd
+# Security: This container is only used for testing and should not run in production
+# semgrep: disable[container/missing-user] - systemd requires root to function properly
 CMD ["/lib/systemd/systemd"]
