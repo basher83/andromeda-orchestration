@@ -30,6 +30,7 @@
   "MD050": {
     "style": "asterisk"
   },
+  "MD053": false,
   "default": true,
   "line-length": false
 }

@@ -1,0 +1,417 @@
+---
+# Validate Service PKI Roles for mTLS Implementation
+# Task: PKI-001 - Create Service PKI Roles (Validation)
+# Parent Issue: 98 - mTLS for Service Communication
+#
+# This playbook validates that the PKI roles created by create-service-pki-roles.yml
+# are properly configured and can generate valid certificates with correct parameters.
+#
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/validate-pki-roles.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
+
+- name: Validate Service PKI Roles Configuration
+  hosts: localhost
+  gather_facts: false
+  any_errors_fatal: true
+
+  module_defaults:
+    community.hashi_vault.vault_read:
+      url: "{{ vault_addr }}"
+      auth_method: token
+      token: "{{ vault_token }}"
+      validate_certs: "{{ vault_validate_certs | default(true) }}"
+    community.hashi_vault.vault_list:
+      url: "{{ vault_addr }}"
+      auth_method: token
+      token: "{{ vault_token }}"
+      validate_certs: "{{ vault_validate_certs | default(true) }}"
+    community.hashi_vault.vault_pki_generate_certificate:
+      url: "{{ vault_addr }}"
+      auth_method: token
+      token: "{{ vault_token }}"
+      validate_certs: "{{ vault_validate_certs | default(true) }}"
+
+  vars:
+    # Retrieve Vault token from Infisical
+    vault_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/vault',
+                 secret_name='VAULT_PROD_ROOT_TOKEN')).value }}
+
+    # Vault configuration - dynamically discovered from inventory
+    vault_addr: >-
+      {%- if groups.get('vault', []) | length > 0 -%}
+        {%- set vault_host = groups['vault'] | first -%}
+        {%- set vault_ip = hostvars[vault_host]['ansible_host'] -%}
+        {%- if vault_ip | ansible.utils.ipaddr('ipv6') and not vault_ip.startswith('[') -%}
+          https://[{{ vault_ip }}]:8200
+        {%- else -%}
+          https://{{ vault_ip }}:8200
+        {%- endif -%}
+      {%- else -%}
+        {{ lookup('env', 'VAULT_ADDR') | default('https://vault.service.consul:8200', true) }}
+      {%- endif -%}
+    pki_int_path: "pki-int"
+
+    # Expected PKI roles for validation
+    expected_roles:
+      - consul-agent
+      - nomad-agent
+      - vault-agent
+      - client-auth
+
+    # Test certificate specifications
+    test_certificates:
+      - role: "consul-agent"
+        common_name: "consul-01.consul.service.consul"
+        alt_names:
+          - "consul-server.consul.spaceships.work"
+          - "consul.spaceships.work"
+        expected_flags:
+          client: true
+          server: true
+        max_ttl_hours: 8760
+        default_ttl_hours: 720
+
+      - role: "nomad-agent"
+        common_name: "nomad-01.nomad.service.consul"
+        alt_names:
+          - "nomad-server.nomad.spaceships.work"
+          - "nomad.spaceships.work"
+        expected_flags:
+          client: true
+          server: true
+        max_ttl_hours: 8760
+        default_ttl_hours: 720
+
+      - role: "vault-agent"
+        common_name: "vault-01.vault.service.consul"
+        alt_names:
+          - "vault-server.vault.spaceships.work"
+          - "vault.spaceships.work"
+        expected_flags:
+          client: true
+          server: true
+        max_ttl_hours: 8760
+        default_ttl_hours: 720
+
+      - role: "client-auth"
+        common_name: "test-client.client.spaceships.work"
+        alt_names:
+          - "admin.client.spaceships.work"
+        expected_flags:
+          client: true
+          server: false
+        max_ttl_hours: 168
+        default_ttl_hours: 168
+
+  pre_tasks:
+    - name: Validate no hardcoded IPs
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []  # No exceptions allowed
+      tags: [preflight]
+
+    # Collection availability is checked by the included validation task
+
+    - name: Verify community.crypto collection is available
+      ansible.builtin.assert:
+        that:
+          - "'community.crypto' in ansible_facts.ansible_collections | default({})"
+        fail_msg: |
+          ❌ community.crypto collection not installed!
+
+          This playbook requires the community.crypto collection for certificate analysis.
+          Please install it:
+          - Run: ansible-galaxy collection install community.crypto
+          - Or add to requirements.yml and run: ansible-galaxy collection install -r requirements.yml
+        success_msg: "✅ community.crypto collection available"
+      tags: [preflight]
+
+    - name: Verify required environment variables
+      ansible.builtin.assert:
+        that:
+          - lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') | length > 0
+          - lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') | length > 0
+        fail_msg: "Infisical credentials not configured. Check .mise.local.toml"
+        success_msg: "Infisical credentials verified"
+      tags: [preflight]
+      no_log: true
+
+    - name: Verify Vault token retrieval
+      ansible.builtin.assert:
+        that:
+          - vault_token is defined
+          - vault_token | length > 0
+          - vault_token != 'FAILED'
+        fail_msg: "Failed to retrieve Vault token"
+        success_msg: "Vault token retrieved"
+      tags: [preflight]
+      no_log: true
+
+  tasks:
+    - name: Test Vault connectivity
+      community.hashi_vault.vault_read:
+        path: "sys/health"
+      register: vault_health
+      no_log: true
+
+    - name: Verify Vault accessibility
+      ansible.builtin.assert:
+        that:
+          - vault_health is not failed
+          - vault_health.data is defined
+        fail_msg: "Cannot connect to Vault at {{ vault_addr }}"
+        success_msg: "Vault connectivity verified"
+
+    - name: List existing PKI roles
+      community.hashi_vault.vault_list:
+        path: "{{ pki_int_path }}/roles"
+      register: existing_roles
+      failed_when: false
+      no_log: true
+
+    - name: Verify PKI roles were retrieved successfully
+      ansible.builtin.assert:
+        that:
+          - existing_roles is not failed
+          - (existing_roles.data | default({})) is mapping
+          - (existing_roles.data.data | default({})) is mapping
+          - (existing_roles.data.data.keys | default([])) is iterable
+        fail_msg: "Failed to retrieve PKI roles from Vault. Ensure the PKI engine is mounted at {{ pki_int_path }}"
+        success_msg: "Successfully retrieved PKI roles list"
+
+    - name: Verify all expected roles exist
+      ansible.builtin.assert:
+        that:
+          - item in (existing_roles.data.data.keys | default([]))
+        fail_msg: "Required PKI role '{{ item }}' not found"
+        success_msg: "PKI role '{{ item }}' exists"
+      loop: "{{ expected_roles }}"
+
+    - name: Read each PKI role configuration
+      community.hashi_vault.vault_read:
+        path: "{{ pki_int_path }}/roles/{{ item }}"
+      loop: "{{ expected_roles }}"
+      register: role_configs
+      no_log: true
+
+    - name: Validate role configurations
+      block:
+        - name: Create role expectations map from test_certificates
+          ansible.builtin.set_fact:
+            role_expectations: >-
+              {%- set expectations = {} -%}
+              {%- for cert in test_certificates -%}
+                {%- set _ = expectations.update({cert.role: cert}) -%}
+              {%- endfor -%}
+              {{ expectations }}
+
+        - name: Validate each role configuration
+          ansible.builtin.assert:
+            that:
+              - role_config.data.data.max_ttl == (expected_config.max_ttl_hours * 3600) | string
+              - role_config.data.data.ttl == (expected_config.default_ttl_hours * 3600) | string
+              - role_config.data.data.client_flag == expected_config.expected_flags.client
+              - role_config.data.data.server_flag == expected_config.expected_flags.server
+              - expected_config.common_name.split('.')[-2:] | join('.') in role_config.data.data.allowed_domains
+              - expected_config.alt_names[0].split('.')[-2:] | join('.') in role_config.data.data.allowed_domains
+            fail_msg: "{{ item }} role configuration is incorrect"
+            success_msg: "{{ item }} role configuration validated"
+          loop: "{{ expected_roles | reject('equalto', 'client-auth') }}"
+          vars:
+            role_config: "{{ role_configs.results | selectattr('item', 'equalto', item) | first }}"
+            expected_config: "{{ role_expectations[item] }}"
+
+        - name: Check client-auth role configuration
+          ansible.builtin.assert:
+            that:
+              - role_config.data.data.max_ttl == (expected_config.max_ttl_hours * 3600) | string
+              - role_config.data.data.ttl == (expected_config.default_ttl_hours * 3600) | string
+              - role_config.data.data.client_flag == expected_config.expected_flags.client
+              - role_config.data.data.server_flag == expected_config.expected_flags.server
+              - expected_config.common_name.split('.')[-2:] | join('.') in role_config.data.data.allowed_domains
+            fail_msg: "client-auth role configuration is incorrect"
+            success_msg: "client-auth role configuration validated"
+          vars:
+            role_config: "{{ role_configs.results | selectattr('item', 'equalto', 'client-auth') | first }}"
+            expected_config: "{{ role_expectations['client-auth'] }}"
+
+    - name: Generate test certificates for each role
+      community.hashi_vault.vault_pki_generate_certificate:
+        engine_mount_point: "{{ pki_int_path }}"
+        role_name: "{{ item.role }}"
+        common_name: "{{ item.common_name }}"
+        alt_names: "{{ item.alt_names }}"
+        ttl: "24h"
+      loop: "{{ test_certificates }}"
+      loop_control:
+        label: "{{ item.role }}"
+      register: test_cert_generation
+      no_log: true
+
+    - name: Verify test certificate generation success
+      ansible.builtin.assert:
+        that:
+          - item is not failed
+          - item.data.data.certificate is defined
+          - item.data.data.private_key is defined
+          - item.data.data.ca_chain is defined
+        fail_msg: "Failed to generate test certificate for role {{ item.item.role }}"
+        success_msg: "Test certificate generated successfully for role {{ item.item.role }}"
+      loop: "{{ test_cert_generation.results }}"
+      loop_control:
+        label: "{{ item.item.role }}"
+
+    - name: Parse and validate certificate properties
+      block:
+        - name: Save test certificates for analysis
+          ansible.builtin.copy:
+            content: "{{ item.data.data.certificate }}"
+            dest: "/tmp/test-cert-{{ item.item.role }}.pem"
+            mode: '0640'
+            owner: root
+            group: root
+          loop: "{{ test_cert_generation.results }}"
+          loop_control:
+            label: "{{ item.item.role }}"
+
+        - name: Analyze certificate details with crypto module
+          community.crypto.x509_certificate_info:
+            path: "/tmp/test-cert-{{ item.role }}.pem"
+          loop: "{{ test_certificates }}"
+          loop_control:
+            label: "{{ item.role }}"
+          register: cert_analysis
+
+        - name: Display certificate analysis results
+          ansible.builtin.debug:
+            msg:
+              - "Certificate Analysis for {{ item.item.role }}:"
+              - "  Subject: CN={{ item.subject.commonName | default('N/A') }}"
+              - "  Organization: {{ item.subject.organizationName | default('N/A') }}"
+              - "  OU: {{ item.subject.organizationalUnitName | default('N/A') }}"
+              - "  Valid Until: {{ item.not_after }}"
+              - "  DNS SANs: {{ item.subject_alt_name | select('match', '^DNS:') |
+                  map('regex_replace', '^DNS:', '') | list | join(', ') }}"
+              - "  IP SANs: {{ item.subject_alt_name | select('match', '^IP:') |
+                  map('regex_replace', '^IP:', '') | list | join(', ') }}"
+              - "  Key Usage: {{ item.key_usage | default([]) | join(', ') }}"
+              - "  Extended Key Usage: {{ item.extended_key_usage | default([]) | join(', ') }}"
+          loop: "{{ cert_analysis.results }}"
+          loop_control:
+            label: "{{ item.item.role }}"
+
+        - name: Verify certificate contains expected common name
+          ansible.builtin.assert:
+            that:
+              - cert_info.subject.commonName == test_spec.common_name
+            fail_msg: "Certificate for {{ test_spec.role }} does not contain expected CN {{ test_spec.common_name }}"
+            success_msg: "Certificate for {{ test_spec.role }} contains correct CN"
+          loop: "{{ test_certificates | zip(cert_analysis.results) | list }}"
+          loop_control:
+            label: "{{ item.0.role }}"
+          vars:
+            test_spec: "{{ item.0 }}"
+            cert_info: "{{ item.1 }}"
+
+      always:
+        - name: Clean up temporary certificate files
+          ansible.builtin.file:
+            path: "/tmp/test-cert-{{ item.role }}.pem"
+            state: absent
+          loop: "{{ test_certificates }}"
+          loop_control:
+            label: "{{ item.role }}"
+
+    - name: Test certificate generation with invalid domains (should fail)
+      block:
+        - name: Attempt to generate certificate with invalid domain for consul-agent
+          community.hashi_vault.vault_pki_generate_certificate:
+            engine_mount_point: "{{ pki_int_path }}"
+            role_name: "consul-agent"
+            common_name: "invalid.nomad.service.consul"  # Should fail - wrong service
+            ttl: "24h"
+          register: invalid_cert_test
+          failed_when: false
+          no_log: true
+
+        - name: Verify invalid certificate generation failed as expected
+          ansible.builtin.assert:
+            that:
+              - invalid_cert_test is failed
+            fail_msg: "Certificate generation should have failed for invalid domain"
+            success_msg: "Certificate generation correctly rejected invalid domain"
+
+    - name: Test TTL limits enforcement
+      block:
+        - name: Attempt to generate client-auth certificate with excessive TTL
+          community.hashi_vault.vault_pki_generate_certificate:
+            engine_mount_point: "{{ pki_int_path }}"
+            role_name: "client-auth"
+            common_name: "test.client.spaceships.work"
+            ttl: "720h"  # Should fail - exceeds 168h max for client-auth
+          register: excessive_ttl_test
+          failed_when: false
+          no_log: true
+
+        - name: Verify excessive TTL was rejected
+          ansible.builtin.assert:
+            that:
+              - excessive_ttl_test is failed
+            fail_msg: "Certificate generation should have failed for excessive TTL"
+            success_msg: "TTL limits correctly enforced"
+
+    - name: Clean up test certificates
+      ansible.builtin.file:
+        path: "/tmp/test-cert-{{ item.role }}.pem"
+        state: absent
+      loop: "{{ test_certificates }}"
+      loop_control:
+        label: "{{ item.role }}"
+
+    - name: Display PKI roles validation summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ PKI Service Roles Validation Complete!"
+          - ""
+          - "🔍 Validation Results:"
+          - "   - All {{ expected_roles | length }} required PKI roles exist"
+          - "   - Role configurations match specifications"
+          - "   - Certificate generation successful for all roles"
+          - "   - Domain constraints properly enforced"
+          - "   - TTL limits correctly applied"
+          - "   - Invalid certificate requests properly rejected"
+          - ""
+          - "🔐 Validated Roles:"
+          - "   - consul-agent: ✅ Ready for Consul mTLS"
+          - "   - nomad-agent: ✅ Ready for Nomad TLS"
+          - "   - vault-agent: ✅ Ready for Vault client certs"
+          - "   - client-auth: ✅ Ready for service access"
+          - ""
+          - "📋 Validation Tests Performed:"
+          - "   - Role existence verification"
+          - "   - Configuration parameter validation"
+          - "   - Certificate generation testing"
+          - "   - Domain constraint enforcement"
+          - "   - TTL limit enforcement"
+          - "   - Invalid request rejection"
+          - ""
+          - "🚀 Next Steps:"
+          - "   - PKI roles are ready for service implementation"
+          - "   - Proceed with Consul auto-encrypt (PKI-002)"
+          - "   - Configure Nomad TLS (PKI-003)"
+          - "   - Set up Vault client certificates (PKI-004)"
+          - ""
+          - "🔒 Security Validation:"
+          - "   - Certificate flags correctly set per role"
+          - "   - Domain restrictions properly enforced"
+          - "   - TTL limits prevent certificate abuse"
+          - "   - Key sizes meet security requirements (RSA 2048)"

@@ -15,10 +15,11 @@
   hosts: localhost
   gather_facts: false
   vars:
-    # Service endpoints (can be overridden via extra vars)
-    consul_addr: "{{ lookup('env', 'CONSUL_HTTP_ADDR') | default('http://192.168.11.11:8500') }}"
-    nomad_addr: "{{ lookup('env', 'NOMAD_ADDR') | default('http://192.168.11.11:4646') }}"
-    vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://192.168.10.31:8200') }}"
+    # Service endpoints (defined in inventory/environments/all/service-endpoints.yml)
+    # These can be overridden via environment variables or extra vars
+    consul_addr: "{{ service_endpoints.consul.addr }}"
+    nomad_addr: "{{ service_endpoints.nomad.addr }}"
+    vault_addr: "{{ service_endpoints.vault.addr }}"
 
     # Infisical configuration
     infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'
@@ -29,6 +30,23 @@
     color_yellow: "\033[33m"
     color_red: "\033[31m"
     color_reset: "\033[0m"
+
+  pre_tasks:
+    - name: Enforce dynamic-inventory pattern (no hardcoded IPs)
+      ansible.builtin.import_tasks: "{{ playbook_dir }}/../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_allowlist: []
+      tags: ['preflight', 'validate']
+
+    - name: Validate service_endpoints are defined
+      ansible.builtin.assert:
+        that:
+          - service_endpoints is defined
+          - service_endpoints.consul.addr is defined
+          - service_endpoints.nomad.addr is defined
+          - service_endpoints.vault.addr is defined
+        fail_msg: "service_endpoints.*.addr must be defined (see inventory/environments/all/service-endpoints.yml)"
+        success_msg: "Service endpoints found"
 
   tasks:
     # ========================================
@@ -82,7 +100,9 @@
               {{ color_green if consul_result.status == 200 else color_red }}🏥 Consul Status:{{ color_reset }}
               ├─ Address: {{ consul_addr }}
               ├─ Connectivity: {{ '✅ Connected' if consul_result.status is defined else '❌ Cannot connect' }}
-              ├─ Authentication: {{ '✅ Valid token' if consul_result.status == 200 else '⚠️ Invalid token or no ACL' if consul_result.status == 403 else '❌ Failed' }}
+              ├─ Authentication: {{ '✅ Valid token' if consul_result.status == 200
+                else '⚠️ Invalid token or no ACL' if consul_result.status == 403
+                else '❌ Failed' }}
               └─ Leader: {{ consul_leader.json | default('Unknown') }}
 
       rescue:
@@ -141,10 +161,14 @@
         - name: Report Nomad status
           ansible.builtin.debug:
             msg: |
-              {{ color_green if nomad_result.status == 200 else color_yellow if nomad_result.status == 403 else color_red }}🚀 Nomad Status:{{ color_reset }}
+              {{ color_green if nomad_result.status == 200
+                else color_yellow if nomad_result.status == 403
+                else color_red }}🚀 Nomad Status:{{ color_reset }}
               ├─ Address: {{ nomad_addr }}
               ├─ Connectivity: {{ '✅ Connected' if nomad_result.status is defined else '❌ Cannot connect' }}
-              ├─ Authentication: {{ '✅ Valid token' if nomad_result.status == 200 else '⚠️ ACLs may be disabled' if nomad_result.status == 403 else '❌ Failed' }}
+              ├─ Authentication: {{ '✅ Valid token' if nomad_result.status == 200
+                else '⚠️ ACLs may be disabled' if nomad_result.status == 403
+                else '❌ Failed' }}
               ├─ Leader: {{ nomad_leader.json | default('Unknown') }}
               └─ Jobs: {{ nomad_jobs.json | length if nomad_jobs.json is defined else 'Unable to query' }}
 
@@ -197,12 +221,20 @@
         - name: Report Vault status
           ansible.builtin.debug:
             msg: |
-              {{ color_green if vault_health.status == 200 and vault_auth.status == 200 else color_yellow if vault_health.status == 503 else color_red }}🔐 Vault Status:{{ color_reset }}
+              {{ color_green if vault_health.status == 200 and vault_auth.status == 200
+                else color_yellow if vault_health.status == 503
+                else color_red }}🔐 Vault Status:{{ color_reset }}
               ├─ Address: {{ vault_addr }}
               ├─ Connectivity: {{ '✅ Connected' if vault_health.status is defined else '❌ Cannot connect' }}
-              ├─ Seal Status: {{ '✅ Unsealed' if vault_health.status == 200 else '⚠️ SEALED' if vault_health.status == 503 else '❌ Error' }}
-              ├─ Authentication: {{ '✅ Valid token' if vault_auth.status == 200 else '⚠️ Invalid/No token' if vault_auth.status == 403 else 'N/A (sealed)' if vault_health.status == 503 else '❌ Failed' }}
-              └─ Version: {{ vault_health.json.version | default('Unknown') if vault_health.json is defined else 'Unknown' }}
+              ├─ Seal Status: {{ '✅ Unsealed' if vault_health.status == 200
+                else '⚠️ SEALED' if vault_health.status == 503
+                else '❌ Error' }}
+              ├─ Authentication: {{ '✅ Valid token' if vault_auth.status == 200
+                else '⚠️ Invalid/No token' if vault_auth.status == 403
+                else 'N/A (sealed)' if vault_health.status == 503
+                else '❌ Failed' }}
+              └─ Version: {{ vault_health.json.version | default('Unknown')
+                if vault_health.json is defined else 'Unknown' }}
 
       rescue:
         - name: Report Vault connection failure

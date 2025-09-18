@@ -46,8 +46,10 @@
         # Check each Nomad client for processes using ports 80/443
         nomad node status -json | jq -r '.[].Address' | while read node_ip; do
           echo "Checking $node_ip..."
-          timeout 5 nc -zv $node_ip 80 2>&1 | grep -q "succeeded" && echo "WARNING: Port 80 in use on $node_ip" && exit 1
-          timeout 5 nc -zv $node_ip 443 2>&1 | grep -q "succeeded" && echo "WARNING: Port 443 in use on $node_ip" && exit 1
+          timeout 5 nc -zv $node_ip 80 2>&1 | grep -q "succeeded" && \
+            echo "WARNING: Port 80 in use on $node_ip" && exit 1
+          timeout 5 nc -zv $node_ip 443 2>&1 | grep -q "succeeded" && \
+            echo "WARNING: Port 443 in use on $node_ip" && exit 1
         done
       register: port_check
       failed_when: port_check.rc != 0
@@ -60,7 +62,7 @@
 
   tasks:
     - name: Deploy Traefik using common job deployment
-      ansible.builtin.include_tasks: deploy-job.yml
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/deploy-job.yml"
       vars:
         job: '{{ traefik_job }}'
         force: false

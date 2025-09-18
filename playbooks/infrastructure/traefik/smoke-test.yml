@@ -10,7 +10,7 @@
 
 - name: Traefik Smoke Tests [PLACEHOLDER]
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   vars:
     component_name: 'Traefik'
     # TODO: Add component-specific variables

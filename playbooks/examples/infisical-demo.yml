@@ -3,7 +3,7 @@
 
 - name: Infisical Integration Demo
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   vars:
     # Infisical configuration
     infisical_project_id: '7b832220-24c0-45bc-a5f1-ce9794a31259'

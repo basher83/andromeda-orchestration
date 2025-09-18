@@ -29,7 +29,7 @@
 
 - name: Consul Rolling Upgrade - Pre-flight Checks
   hosts: consul_servers
-  gather_facts: yes
+  gather_facts: true
   any_errors_fatal: true
   vars:
     target_consul_version: '{{ consul_version | mandatory }}'
@@ -165,7 +165,7 @@
   hosts: consul_servers
   serial: 1 # Process one server at a time
   max_fail_percentage: 0 # Stop on any failure
-  gather_facts: yes
+  gather_facts: true
   any_errors_fatal: true
 
   vars:
@@ -417,7 +417,7 @@
 
 - name: Consul Rolling Upgrade - Post-Upgrade Validation
   hosts: consul_servers
-  gather_facts: no
+  gather_facts: false
   run_once: true
 
   vars:

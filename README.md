@@ -38,11 +38,27 @@ This project provides a framework for managing network infrastructure using Ansi
 
 ## Prerequisites
 
+- **Python** 3.9+ with **uv** package manager
 - **Ansible** 2.15+ with ansible-core
-- **Python** 3.9+
+- **Ansible Galaxy Collections** (see `requirements.yml`):
+  - `infisical.vault` - Secrets management
+  - `community.general` - General purpose modules
+  - `community.hashi_vault` - HashiCorp Vault modules
+  - `ansible.utils` - Utility modules and filters
+- **Python Packages** (required for Ansible collections):
+  - `netaddr` (python3-netaddr) - Required for `ansible.utils.ipaddr` filter
 - **Infisical** account and machine identity
 - **macOS** users: Local Network permissions for Python (see [Troubleshooting](docs/getting-started/troubleshooting.md))
 - Docker (optional, for execution environments)
+
+### Python Dependencies
+
+The project uses **uv** for dependency management. Available dependency groups:
+
+- **Core dependencies**: Basic runtime requirements
+  - `netaddr` - Required for IP address validation and `ansible.utils.ipaddr` filter
+- **Dev dependencies**: Development tools (`ansible-lint`, `pytest`, `ruff`, `mypy`, etc.)
+- **Secrets dependencies**: Infisical SDK for secrets management
 
 ## Quick Start
 
@@ -53,7 +69,34 @@ This project provides a framework for managing network infrastructure using Ansi
    cd andromeda-orchestration
    ```
 
-2. **Run the setup script**
+1. **Install Python dependencies**
+
+   ```bash
+   # Install core Python dependencies
+   uv sync
+
+   # For development (optional - includes ansible-lint, pytest, ruff, etc.)
+   uv sync --extra dev
+
+   # For secrets management (optional - includes infisical SDK)
+   uv sync --extra secrets
+
+   # For both development and secrets (combine extras)
+   uv sync --extra dev --extra secrets
+   ```
+
+1. **Install Ansible Galaxy collections**
+
+   ```bash
+   # Install required Ansible collections (community.general, infisical.vault, etc.)
+   uv run ansible-galaxy collection install -r requirements.yml
+
+   # Note: This command is idempotent and uses local caching.
+   # Re-running will skip already-installed collections and only download missing/updated ones.
+   # Use --force to re-download all collections if needed.
+   ```
+
+1. **Run the setup script**
 
    ```bash
    ./scripts/setup.sh
@@ -61,7 +104,13 @@ This project provides a framework for managing network infrastructure using Ansi
    mise run setup
    ```
 
-3. **Configure secrets and authentication**
+   The setup script will:
+   - Verify prerequisites (Ansible, Python)
+   - Install Ansible Galaxy collections (if not already done)
+   - Set up Python virtual environment with uv
+   - Create necessary directory structure
+
+1. **Configure secrets and authentication**
 
 ## SECURITY: Never commit .mise.local.toml; it is gitignored and must stay local
 
@@ -147,8 +196,6 @@ See [docs/implementation/dns-ipam/testing-strategy.md](docs/implementation/dns-i
 ## Directory Structure
 
 ```text
-├── bin/                    # Executable wrapper scripts
-│   └── ansible-connect     # Legacy 1Password wrapper (deprecated)
 ├── docs/                   # Documentation
 │   ├── infisical-setup-and-migration.md
 │   ├── dns-ipam-implementation-plan.md
@@ -201,26 +248,43 @@ See [docs/implementation/secrets-management/infisical-setup.md](docs/implementat
 - Inventory path set to `./inventory`
 - Host key checking disabled for development
 
-## Contributing
+### Service Endpoints (`inventory/environments/all/service-endpoints.yml`)
 
-1. Follow the existing directory structure
-2. Use Infisical for all credential management
-3. Document any new patterns or integrations
-4. Test changes using `uv run` commands
+Centralized service endpoint configuration to avoid hardcoded IPs:
 
-## Troubleshooting
+- **Consul**: `{{ service_endpoints.consul.addr }}`
+- **Nomad**: `{{ service_endpoints.nomad.addr }}`
+- **Vault**: `{{ service_endpoints.vault.addr }}`
 
-### General Issues
+#### Mandatory IP Validation
 
-See [docs/getting-started/troubleshooting.md](docs/getting-started/troubleshooting.md) for common issues and solutions.
+All playbooks must include the pre_tasks validator to enforce no hardcoded IPv4/IPv6 literals:
 
-### Ansible-Nomad Playbooks
+pre_tasks:
 
-For issues with Nomad job deployment and management:
+- name: Enforce dynamic-inventory pattern (no hardcoded IPs)
+    ansible.builtin.import_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+    vars:
+      validate_allowlist:
+        - '127.0.0.1'
+        - '::1'
+    tags: ['validate']
 
-- [Ansible-Nomad Playbook Troubleshooting](docs/troubleshooting/ansible-nomad-playbooks.md)
-- [Domain Migration Troubleshooting](docs/troubleshooting/domain-migration.md)
+Override via environment variables:
 
-## License
+```bash
+# Export examples (add to ~/.bashrc or run before ansible commands)
+export CONSUL_HTTP_ADDR="http://consul.service.consul:8500"
+export NOMAD_ADDR="http://nomad.service.consul:4646"
+export VAULT_ADDR="https://vault.service.consul:8200"
 
-![GitHub License](https://img.shields.io/github/license/basher83/andromeda-orchestration?style=plastic)
+# One-off command example (sets VAULT_ADDR for single command)
+VAULT_ADDR="https://vault.service.consul:8200" uv run ansible-playbook playbook.yml
+```
+
+Defaults to service discovery addresses with direct IP fallbacks.
+
+Note: To comply with the no-hardcoded-IP policy, avoid committing private IP
+defaults in shared inventory. If direct access is required, provide values via
+environment variables or in environment-specific inventory only, and update the
+IP-validation allowlist accordingly.

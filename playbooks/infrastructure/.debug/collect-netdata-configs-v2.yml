@@ -123,7 +123,7 @@
 - name: Save collected configurations locally
   hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
   become: false
 
   vars:

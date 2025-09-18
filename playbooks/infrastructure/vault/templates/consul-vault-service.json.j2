@@ -16,7 +16,7 @@
     "check": {
       "id": "vault-health",
       "name": "Vault Health Check",
-      "http": "https://{{ ansible_host }}:8200/v1/sys/health",
+      "http": "https://{{ ('[' ~ ansible_host ~ ']') if (ansible_host | ansible.utils.ipaddr('ipv6')) else ansible_host }}:8200/v1/sys/health",
       "method": "GET",
       "interval": "10s",
       "timeout": "5s",

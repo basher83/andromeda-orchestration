@@ -1,0 +1,84 @@
+---
+# Validates that playbook variables do not contain hardcoded IP addresses
+# Requirements:
+# - Collection: ansible.utils (for ipaddr filter)
+# - Python lib: netaddr on controller
+#
+# Usage:
+#   Set `validate_hostlike_vars` to a dict of variable names to check
+#   Optionally set `validate_allowlist` for exceptions
+#
+# Example:
+#   - name: Validate no hardcoded IPs
+#     ansible.builtin.include_tasks: tasks/validate-no-hardcoded-ips.yml
+#     vars:
+#       validate_hostlike_vars:
+#         service_endpoint: "{{ service_endpoint | default('') }}"
+#         database_host: "{{ database_host | default('') }}"
+#       validate_allowlist: []
+
+- name: validate-no-hardcoded-ips | Check for ansible.utils collection availability
+  ansible.builtin.assert:
+    that:
+      - "'ansible.utils' in ansible_facts.ansible_collections | default({})"
+    fail_msg: |
+      ❌ ansible.utils collection not installed!
+
+      To fix this:
+      1. Run: uv run ansible-galaxy collection install 'ansible.utils:>=2.10'
+      2. Ensure netaddr is installed: uv pip install netaddr
+      3. Or add to requirements.yml and run: uv run ansible-galaxy collection install -r requirements.yml
+    success_msg: "✅ ansible.utils collection available"
+  ignore_errors: "{{ validate_skip_prereq_check | default(false) }}"
+  when: not validate_skip_prereq_check | default(false)
+
+- name: validate-no-hardcoded-ips | Set defaults for validator inputs
+  ansible.builtin.set_fact:
+    validate_hostlike_vars: "{{ validate_hostlike_vars | default({}) }}"
+    validate_allowlist: "{{ validate_allowlist | default([]) }}"
+
+- name: validate-no-hardcoded-ips | Build list of candidate entries
+  ansible.builtin.set_fact:
+    _candidates: "{{ validate_hostlike_vars | dict2items }}"
+
+- name: validate-no-hardcoded-ips | Display validation targets
+  ansible.builtin.debug:
+    msg: "Validating {{ _candidates | length }} variables for hardcoded IPs"
+  when: validate_verbose | default(false) | bool
+
+- name: validate-no-hardcoded-ips | Assert no hardcoded IPs in declared host-like variables
+  ansible.builtin.assert:
+    that:
+      - item.key in validate_allowlist
+        or (item.value | default('') | string | trim | length == 0)
+        or not (item.value | string | ansible.utils.ipaddr)
+    fail_msg: |
+      ❌ HARDCODED IP DETECTED: Variable '{{ item.key }}' = '{{ item.value }}'
+
+      This violates the dynamic inventory pattern!
+
+      REQUIRED FIXES:
+      1. Remove the hardcoded IP from vars section
+      2. Use pre_tasks to discover from inventory:
+         - For single host: hostvars[hostname]['ansible_host']
+         - For group: groups['groupname'] | map('extract', hostvars, 'ansible_host')
+      3. Or use DNS names instead of IP literals
+
+      Example fix:
+      pre_tasks:
+        - name: Discover vault_addr from inventory
+          ansible.builtin.set_fact:
+            vault_addr: {% raw %}"https://{{ hostvars[groups['vault'][0]]['ansible_host'] }}:8200"{% endraw %}
+    success_msg: "✅ {{ item.key }}: not an IP literal"
+    quiet: true
+  loop: "{{ _candidates }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: _candidates | length > 0
+
+- name: validate-no-hardcoded-ips | Report validation complete
+  ansible.builtin.debug:
+    msg: "✅ All {{ _candidates | length }} variables passed IP validation"
+  when:
+    - validate_verbose | default(false) | bool
+    - _candidates | length > 0

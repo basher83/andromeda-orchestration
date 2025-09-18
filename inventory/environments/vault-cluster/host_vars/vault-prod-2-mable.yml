@@ -13,9 +13,19 @@ vault_datacenter: 'doggos-cluster'
 
 # Auto-unseal configuration (points to master)
 vault_auto_unseal_enabled: true
-vault_transit_address: 'http://vault-master-lloyd.tailfb3ea.ts.net:8200'
-vault_transit_key_name: 'autounseal'
-vault_transit_mount_path: 'transit'
+vault_auto_unseal_type: 'transit'
+vault_auto_unseal_config:
+  address: 'http://{{ hostvars["vault-master-lloyd"]["ansible_host"] }}:8200'  # Master vault (derived from inventory)
+  token: "{{ lookup('infisical.vault.read_secrets',
+    universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+    universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+    project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+    env_slug='prod',
+    path='/apollo-13/vault',
+    secret_name='VAULT_TRANSIT_TOKEN').value }}"
+  disable_renewal: false
+  key_name: 'autounseal'
+  mount_path: 'transit/'
 
 # Proxmox VM configuration
 proxmox_node: mable
@@ -32,10 +42,8 @@ vault_api_addr: 'http://{{ ansible_default_ipv4.address }}:8200'
 # Raft storage configuration
 vault_storage_backend: 'raft'
 vault_raft_node_id: 'vault-prod-2'
-vault_raft_performance_multiplier: 1
-vault_raft_trailing_logs: 10000
-vault_raft_snapshot_threshold: 8192
-vault_raft_snapshot_interval: '5s'
+vault_raft_retry_join:
+  - 'http://{{ hostvars["vault-prod-1-holly"]["ansible_host"] }}:8200'  # Join leader (derived from inventory)
 
 # Storage configuration
 vault_data_dir: '/opt/vault/data'

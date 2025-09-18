@@ -2,18 +2,45 @@
 # Monitor PKI certificates issued by Vault and track expiration
 # This playbook uses Vault's PKI API to check certificate status and expiration
 # Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/monitor-pki-certificates.yml -i inventory/environments/vault-cluster/production.yaml
+# uv run ansible-playbook playbooks/infrastructure/vault/monitor-pki-certificates.yml
 
 - name: Monitor PKI Certificates from Vault
   hosts: localhost
-  gather_facts: no
+  gather_facts: true
 
   vars:
-    vault_addr: 'https://192.168.10.33:8200'
-    vault_token: "{{ lookup('env', 'VAULT_TOKEN') | default(lookup('infisical.vault.read_secrets', universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'), universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'), project_id='7b832220-24c0-45bc-a5f1-ce9794a31259', env_slug='prod', path='/apollo-13/vault', secret_name='VAULT_PROD_ROOT_TOKEN').value, true) }}"
+    # Derive vault_addr from inventory with IPv6 safety
+    _vault_leader_host: "{{ hostvars[(groups.get('vault_production', []) | first)] | default({'ansible_host': ''}) }}"
+    vault_addr: >-
+      {{ ansible_env.VAULT_ADDR | default(
+           ('https://[' ~ _vault_leader_host.ansible_host ~ ']:8200')
+           if (_vault_leader_host.ansible_host | ansible.utils.ipaddr('ipv6'))
+           else ('https://' ~ _vault_leader_host.ansible_host ~ ':8200'),
+           true
+         ) }}
+# vault_token will be retrieved via secure task
+    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Set to true for production with proper CA
+    vault_ca_path: "{{ vault_ca_path | default(omit) }}"  # Optional CA certificate path
     pki_mount: 'pki_int'
     warning_days: 7
     critical_days: 3
+
+  pre_tasks:
+    - name: Preflight | Validate no hardcoded IPs in play vars
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []
+      tags: [preflight]
+
+    - name: Retrieve Vault token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_PROD_ROOT_TOKEN'
+        secret_var_name: 'vault_token'
+        fallback_env_var: 'VAULT_TOKEN'
+      tags: [secrets]
 
   tasks:
     - name: List all certificates in PKI engine
@@ -22,9 +49,12 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_mount }}/certs'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       register: cert_list
       ignore_errors: true
+      no_log: true
+      tags: [monitoring, vault, pki]
 
     - name: Display certificate count
       ansible.builtin.debug:
@@ -37,10 +67,12 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_mount }}/cert/{{ item }}'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       loop: '{{ cert_list.data.data.keys[:10] if cert_list is succeeded else [] }}'
       register: cert_details
       when: cert_list is succeeded
+      no_log: true
 
     - name: Parse certificate expiration dates
       ansible.builtin.set_fact:
@@ -60,6 +92,7 @@
 
     - name: Check expiration for Vault node certificates
       ansible.builtin.shell: |
+        set -o pipefail
         echo "{{ item.certificate }}" | openssl x509 -noout -enddate -subject 2>/dev/null || echo "Invalid certificate"
       loop: '{{ cert_info | default([]) }}'
       register: cert_expiry_check
@@ -86,28 +119,27 @@
 
     - name: Display certificate expiration summary
       ansible.builtin.debug:
-        msg:
-          - '====================================='
-          - '📋 PKI Certificate Monitoring Report'
-          - '====================================='
-          - ''
-          - 'Certificates checked: {{ cert_info | length | default(0) }}'
-          - ''
-          - 'Certificate Details:'
-          - '{% for cert in expiring_certs | default([]) %}'
-          - '  Serial: {{ cert.serial[:20] }}...'
-          - '  Subject: {{ cert.subject }}'
-          - '  Expires: {{ cert.expiry }}'
-          - '{% endfor %}'
-          - ''
-          - 'Thresholds:'
-          - '  Warning: < {{ warning_days }} days'
-          - '  Critical: < {{ critical_days }} days'
-          - '====================================='
+        msg: |
+          =====================================
+          📋 PKI Certificate Monitoring Report
+          =====================================
+
+          Certificates checked: {{ cert_info | length | default(0) }}
+
+          Certificate Details:{%- for cert in expiring_certs | default([]) %}
+            Serial: {{ cert.serial[:20] }}...
+            Subject: {{ cert.subject }}
+            Expires: {{ cert.expiry }}
+          {%- endfor %}
+
+          Thresholds:
+            Warning: < {{ warning_days }} days
+            Critical: < {{ critical_days }} days
+          =====================================
 
 - name: Check Certificates on Vault Nodes
   hosts: vault_production
-  gather_facts: no
+  gather_facts: true
 
   vars:
     tls_dir: '/opt/vault/tls'
@@ -115,6 +147,7 @@
   tasks:
     - name: Get certificate serial number from node
       ansible.builtin.shell: |
+        set -o pipefail
         openssl x509 -in {{ tls_dir }}/tls.crt -noout -serial | cut -d= -f2
       register: node_cert_serial
       become: true
@@ -122,6 +155,7 @@
 
     - name: Get certificate expiration from node
       ansible.builtin.shell: |
+        set -o pipefail
         cert_date=$(openssl x509 -in {{ tls_dir }}/tls.crt -noout -enddate | cut -d= -f2)
         cert_epoch=$(date -d "$cert_date" +%s 2>/dev/null || date -j -f "%b %d %T %Y %Z" "$cert_date" +%s)
         now_epoch=$(date +%s)
@@ -133,13 +167,10 @@
 
     - name: Set certificate status
       ansible.builtin.set_fact:
-        cert_status: >-
-          {%- if days_remaining.stdout | int <= 3 -%}
-          CRITICAL
-          {%- elif days_remaining.stdout | int <= 7 -%}
-          WARNING
-          {%- else -%}
-          OK
+        cert_status: |
+          {%- if days_remaining.stdout | int <= 3 -%}CRITICAL
+          {%- elif days_remaining.stdout | int <= 7 -%}WARNING
+          {%- else -%}OK
           {%- endif -%}
 
     - name: Display node certificate status
@@ -152,40 +183,37 @@
 
 - name: Generate Renewal Recommendations
   hosts: localhost
-  gather_facts: no
+  gather_facts: true
 
   tasks:
     - name: Check if any certificates need renewal
       ansible.builtin.set_fact:
-        needs_renewal: "{{ hostvars | dict2items | selectattr('value.cert_status', 'defined') | selectattr('value.cert_status', 'in', ['WARNING', 'CRITICAL']) | list | length > 0 }}"
+        needs_renewal: >-
+          {{ (hostvars | dict2items | selectattr('value.cert_status', 'defined')
+              | selectattr('value.cert_status', 'in', ['WARNING', 'CRITICAL']) | list | length) > 0 }}
 
     - name: Display renewal recommendations
       ansible.builtin.debug:
-        msg:
-          - '====================================='
-          - '🔄 Certificate Renewal Recommendations'
-          - '====================================='
-          - ''
-          - '{% if needs_renewal %}'
-          - '⚠️  ATTENTION: Some certificates need renewal soon!'
-          - ''
-          - 'Certificates requiring action:'
-          - '{% for host in hostvars | dict2items %}'
-          - "{% if host.value.cert_status is defined and host.value.cert_status in ['WARNING', 'CRITICAL'] %}"
-          - '  - {{ host.key }}: {{ host.value.cert_status }} ({{ host.value.days_remaining.stdout }} days left)'
-          - '{% endif %}'
-          - '{% endfor %}'
-          - ''
-          - 'To renew certificates, run:'
-          - "  uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certificates.yml \\"
-          - '    -i inventory/environments/vault-cluster/production.yaml'
-          - '{% else %}'
-          - '✅ All certificates are healthy'
-          - '{% endif %}'
-          - ''
-          - 'Next Steps:'
-          - '1. Set up automated monitoring (cron job or Nomad periodic job)'
-          - '2. Implement automatic renewal (Issue #100)'
-          - '3. Configure alerting for expiring certificates'
-          - '====================================='
+        msg: |
+          =====================================
+          🔄 Certificate Renewal Recommendations
+          ======================================{%- if needs_renewal %}
+          ⚠️  ATTENTION: Some certificates need renewal soon!
+
+          Certificates requiring action:{%- for host in hostvars | dict2items %}
+          {%- if host.value.cert_status is defined and host.value.cert_status in ['WARNING', 'CRITICAL'] %}
+            - {{ host.key }}: {{ host.value.cert_status }} ({{ host.value.days_remaining.stdout }} days left)
+          {%- endif %}
+          {%- endfor %}
+
+          To renew certificates, run:
+            uv run ansible-playbook playbooks/infrastructure/vault/replace-self-signed-certificates.yml \
+              -i inventory/environments/vault-cluster/production.yaml{%- else %}
+          ✅ All certificates are healthy{%- endif %}
+
+          Next Steps:
+          1. Set up automated monitoring (cron job or Nomad periodic job)
+          2. Implement automatic renewal (Issue #100)
+          3. Configure alerting for expiring certificates
+          =====================================
       when: needs_renewal is defined

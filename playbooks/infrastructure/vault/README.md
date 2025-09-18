@@ -92,6 +92,166 @@ The playbook provides a comprehensive summary showing:
 - **After** infrastructure changes or restarts
 - **When** troubleshooting connectivity or authentication issues
 
+## 🚨 CRITICAL: Dynamic Inventory Pattern
+
+### The Anti-Pattern (NEVER DO THIS)
+
+#### ❌ WRONG: Hardcoding infrastructure details in playbooks
+
+```yaml
+# This is BAD - hardcoded IPs defeat the purpose of inventory
+- name: Configure services
+  hosts: localhost
+  vars:
+    # ANTI-PATTERN: Hardcoded IPs
+    service_nodes:
+      - name: service-node-1
+        address: 'https://192.168.10.30:8200'
+      - name: service-node-2
+        address: 'https://192.168.10.31:8200'
+
+    # ANTI-PATTERN: Hardcoded leader
+    leader_addr: 'https://192.168.10.31:8200'
+```
+
+**Why this is wrong:**
+
+- **Violates DRY**: Duplicates information already in inventory
+- **Maintenance nightmare**: Must update multiple files when IPs change
+- **Environment coupling**: Playbook only works for one specific environment
+- **Error prone**: Easy to have mismatches between inventory and playbook
+- **Defeats inventory purpose**: Makes inventory irrelevant
+
+### The Correct Pattern (ALWAYS DO THIS)
+
+#### ✅ RIGHT: Dynamically discover from inventory
+
+```yaml
+# This is GOOD - uses inventory as single source of truth
+- name: Configure services
+  hosts: localhost
+  pre_tasks:
+    - name: Build service nodes list from inventory
+      ansible.builtin.set_fact:
+        service_nodes: |-
+          {%- set nodes = [] -%}
+          {%- for host in groups.get('service_cluster', []) -%}
+            {%- set ip = hostvars[host]['ansible_host'] -%}
+            {%- set port = hostvars[host].get('service_port', '8200') -%}
+            {%- if ip|ansible.utils.ipaddr('ipv6') -%}
+              {%- set address = 'https://[' + ip + ']:' + port -%}
+            {%- else -%}
+              {%- set address = 'https://' + ip + ':' + port -%}
+            {%- endif -%}
+            {%- set node = {
+              'name': host,
+              'address': address,
+              'role': hostvars[host].get('service_role', 'unknown')
+            } -%}
+            {%- set _ = nodes.append(node) -%}
+          {%- endfor -%}
+          {{ nodes }}
+
+    - name: Set leader address from inventory
+      ansible.builtin.set_fact:
+        leader_addr: |-
+          {%- set leader_host = groups['service_leaders'][0] -%}
+          {%- set ip = hostvars[leader_host]['ansible_host'] -%}
+          {%- set port = hostvars[leader_host].get('service_port', '8200') -%}
+          {%- if ip|ansible.utils.ipaddr('ipv6') -%}
+            https://[{{ ip }}]:{{ port }}
+          {%- else -%}
+            https://{{ ip }}:{{ port }}
+          {%- endif -%}
+      when: groups.get('service_leaders', []) | length > 0
+```
+
+**Why this is correct:**
+
+- **Single source of truth**: Inventory defines all infrastructure
+- **Environment agnostic**: Same playbook works with dev/staging/prod inventories
+- **IPv6 compatible**: Automatically wraps IPv6 addresses in square brackets for URLs
+- **Automatic updates**: Changes to inventory automatically reflected
+- **Maintainable**: Update only the inventory when infrastructure changes
+- **Testable**: Can use different inventories for testing
+
+**Requirements:**
+
+- `ansible.utils` collection must be installed for the `ipaddr` filter
+- The `ipaddr('ipv6')` filter detects IPv6 addresses and enables proper URL formatting
+
+### Implementation Checklist
+
+When writing playbooks, ensure:
+
+- [ ] NO hardcoded IP addresses
+- [ ] NO hardcoded hostnames (use inventory names)
+- [ ] NO hardcoded ports (get from hostvars or defaults)
+- [ ] NO hardcoded service addresses
+- [ ] ALL infrastructure data comes from inventory via:
+  - `groups` dictionary for group membership
+  - `hostvars` dictionary for host variables
+  - `inventory_hostname` for current host
+  - Dynamic fact gathering with `set_fact`
+
+### Validation Enforcement Example
+
+To enforce the no-hardcoded-IPs convention in your playbooks, add this validation as a pre_task:
+
+```yaml
+- name: Example playbook with validation enforcement
+  hosts: localhost
+  vars:
+    # Define any variables that might contain host/IP information
+    service_endpoint: "{{ service_endpoint | default('') }}"
+    database_host: "{{ database_host | default('') }}"
+    api_base_url: "{{ api_base_url | default('') }}"
+
+  pre_tasks:
+    # Validate no hardcoded IPs before proceeding
+    - name: Validate no hardcoded IP addresses
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          service_endpoint: "{{ service_endpoint }}"
+          database_host: "{{ database_host }}"
+          api_base_url: "{{ api_base_url }}"
+        validate_allowlist: []  # Default: no IPs allowed. Override if needed for specific cases
+      tags: [preflight]
+
+    # Your other pre_tasks here
+    - name: Build service nodes from inventory
+      ansible.builtin.set_fact:
+        service_nodes: |-
+          {%- set nodes = [] -%}
+          {%- for host in groups.get('vault_cluster', []) -%}
+            {%- set ip = hostvars[host]['ansible_host'] -%}
+            {%- set port = hostvars[host].get('vault_api_port', '8200') -%}
+            {%- if ip | ansible.utils.ipaddr('ipv6') and not ip.startswith('[') -%}
+              {%- set address = 'https://[' + ip + ']:' + port -%}
+            {%- else -%}
+              {%- set address = 'https://' + ip + ':' + port -%}
+            {%- endif -%}
+            {%- set _ = nodes.append({'name': host, 'address': address}) -%}
+          {%- endfor -%}
+          {{ nodes }}
+
+  tasks:
+    # Your playbook tasks here
+    - name: Display service nodes
+      debug:
+        var: service_nodes
+```
+
+**Key points:**
+
+- **Path resolution**: Uses `{{ playbook_dir }}/../../../tasks/` to reach the shared validation task
+- **Variable specification**: Use `validate_hostlike_vars` to declare which variables to check
+- **Default allowlist**: Set `validate_allowlist: []` to enforce zero hardcoded IPs
+- **Override capability**: Add specific variable names to allowlist for legitimate exceptions
+- **Preflight tagging**: Use `tags: [preflight]` to run validations separately if needed
+- **Early failure**: Validation runs before any infrastructure operations
+
 ## 🔑 Vault Infisical Secrets Reference
 
 All Vault-related secrets are stored in Infisical at path `/apollo-13/vault/` in the `prod` environment.

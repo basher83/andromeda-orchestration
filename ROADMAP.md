@@ -113,5 +113,5 @@ out the rest of your IPAM in parallel.
 >
 > - Dynamic service discovery via Consul
 > - Authoritative, audited DNS/IPAM via NetBox & PowerDNS
-> - Ad-blocking upstream courtesy of Pi-hole+Unbound
+> - PowerDNS as authoritative for `*.lab.spaceships.work`
 > - Scalable, self-healing deployments managed by Nomad

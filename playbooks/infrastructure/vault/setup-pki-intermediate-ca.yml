@@ -2,7 +2,8 @@
 # Setup Vault PKI Intermediate CA for Service Certificates
 # This playbook implements Issue #96 - Create Intermediate CA for Service Certificates
 # Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/setup-pki-intermediate-ca.yml -i inventory/environments/vault-cluster/production.yaml
+# uv run ansible-playbook playbooks/infrastructure/vault/setup-pki-intermediate-ca.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
 
 - name: Setup Vault PKI Intermediate Certificate Authority
   hosts: localhost
@@ -11,6 +12,8 @@
   vars:
     vault_addr: "{{ lookup('env', 'VAULT_ADDR') }}"
     vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
+    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Set to true for production with proper CA
+    vault_ca_path: "{{ vault_ca_path | default(omit) }}"  # Optional CA certificate path
 
     # PKI Configuration
     pki_int_path: 'pki_int'
@@ -81,7 +84,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: 'sys/health'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       register: vault_health
       failed_when: false
 
@@ -98,7 +102,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: 'sys/mounts/{{ pki_int_path }}'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       register: pki_int_mount_check
       failed_when: false
 
@@ -108,7 +113,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: 'sys/mounts/{{ pki_int_path }}'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           type: 'pki'
           description: 'Intermediate Certificate Authority'
@@ -123,7 +129,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: 'sys/mounts/{{ pki_int_path }}/tune'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           max_lease_ttl: '{{ pki_int_max_lease_ttl }}'
       when: pki_int_mount_check.data is defined
@@ -134,7 +141,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_int_path }}/ca/pem'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       register: existing_int_ca
       failed_when: false
 
@@ -144,7 +152,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_int_path }}/intermediate/generate/internal'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           common_name: '{{ int_ca_common_name }}'
           issuer_name: '{{ int_ca_issuer_name }}'
@@ -162,7 +171,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_root_path }}/root/sign-intermediate'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           csr: '{{ int_csr_result.data.data.csr }}'
           format: 'pem_bundle'
@@ -178,7 +188,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_int_path }}/intermediate/set-signed'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           certificate: '{{ signed_int_cert.data.data.certificate }}'
       when: signed_int_cert is not skipped
@@ -186,7 +197,8 @@
 
     - name: Save intermediate CA certificate chain to local file
       ansible.builtin.copy:
-        content: '{{ signed_int_cert.data.data.certificate if signed_int_cert is not skipped else existing_int_ca.data.data }}'
+        content: '{{ signed_int_cert.data.data.certificate if signed_int_cert is not skipped
+          else existing_int_ca.data.data }}'
         dest: '/tmp/homelab-intermediate-ca.pem'
         mode: '0644'
       delegate_to: localhost
@@ -198,7 +210,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_int_path }}/config/urls'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           issuing_certificates: '{{ vault_public_url }}/v1/{{ pki_int_path }}/ca'
           crl_distribution_points: '{{ vault_public_url }}/v1/{{ pki_int_path }}/crl'
@@ -210,7 +223,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_int_path }}/config/crl'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           expiry: '72h'
           disable: false
@@ -221,7 +235,8 @@
         auth_method: token
         token: '{{ vault_token }}'
         path: '{{ pki_int_path }}/roles/{{ item.name }}'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
         data:
           allowed_domains: '{{ item.allowed_domains }}'
           allow_subdomains: '{{ item.allow_subdomains }}'
@@ -252,7 +267,8 @@
         role_name: 'infrastructure'
         common_name: 'test-service.consul.service.consul'
         ttl: '24h'
-        validate_certs: false
+        validate_certs: "{{ vault_validate_certs }}"
+        ca_path: "{{ vault_ca_path }}"
       register: test_int_cert
 
     - name: Verify test certificate generation
@@ -271,6 +287,7 @@
       environment:
         INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
         INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      changed_when: false
       delegate_to: localhost
       when: int_cert_imported is not skipped
 

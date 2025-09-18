@@ -2,11 +2,12 @@
 # Validate PKI certificates across Vault cluster
 # This playbook checks certificate validity, expiration, and chain validation
 # Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/validate-pki-certificates.yml -i inventory/environments/vault-cluster/production.yaml
+# uv run ansible-playbook playbooks/infrastructure/vault/validate-pki-certificates.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
 
 - name: Comprehensive PKI Certificate Validation
   hosts: vault_production
-  gather_facts: yes
+  gather_facts: true
 
   vars:
     tls_dir: '/opt/vault/tls'
@@ -36,6 +37,7 @@
 
     - name: Get certificate expiration date
       ansible.builtin.shell: |
+        set -o pipefail
         openssl x509 -in {{ tls_dir }}/tls.crt -noout -enddate | cut -d= -f2
       register: cert_expiry
       become: true
@@ -43,6 +45,7 @@
 
     - name: Calculate days until expiration
       ansible.builtin.shell: |
+        set -o pipefail
         cert_date=$(openssl x509 -in {{ tls_dir }}/tls.crt -noout -enddate | cut -d= -f2)
         cert_epoch=$(date -d "$cert_date" +%s)
         now_epoch=$(date +%s)
@@ -54,7 +57,10 @@
 
     - name: Get certificate details
       ansible.builtin.shell: |
-        openssl x509 -in {{ tls_dir }}/tls.crt -noout -text | grep -E "(Subject:|Issuer:|Serial Number:|Not Before:|Not After:)" | sed 's/^[[:space:]]*//'
+        set -o pipefail
+        openssl x509 -in {{ tls_dir }}/tls.crt -noout -text | \
+          grep -E "(Subject:|Issuer:|Serial Number:|Not Before:|Not After:)" | \
+          sed 's/^[[:space:]]*//'
       register: cert_details
       become: true
       changed_when: false
@@ -69,6 +75,7 @@
 
     - name: Check certificate and key match
       ansible.builtin.shell: |
+        set -o pipefail
         cert_modulus=$(openssl x509 -noout -modulus -in {{ tls_dir }}/tls.crt | openssl md5)
         key_modulus=$(openssl rsa -noout -modulus -in {{ tls_dir }}/tls.key | openssl md5)
         if [ "$cert_modulus" = "$key_modulus" ]; then
@@ -82,7 +89,11 @@
 
     - name: Test TLS connection locally
       ansible.builtin.shell: |
-        echo | openssl s_client -connect {{ ansible_host }}:8200 -CAfile {{ tls_dir }}/ca-bundle.pem 2>/dev/null | grep "Verify return code:" | tail -1
+        set -o pipefail
+        echo | openssl s_client -connect \
+          {{ ("[" ~ ansible_host ~ "]") if (ansible_host | ansible.utils.ipaddr("ipv6")) else ansible_host }}:8200 \
+          -CAfile {{ tls_dir }}/ca-bundle.pem 2>/dev/null | \
+          grep "Verify return code:" | tail -1
       register: tls_verify
       become: true
       changed_when: false
@@ -90,21 +101,15 @@
 
     - name: Set certificate status
       ansible.builtin.set_fact:
-        cert_status: >-
-          {%- if days_until_expiry.stdout | int <= critical_days -%}
-          CRITICAL
-          {%- elif days_until_expiry.stdout | int <= warning_days -%}
-          WARNING
-          {%- else -%}
-          OK
+        cert_status: |
+          {%- if days_until_expiry.stdout | int <= critical_days -%}CRITICAL
+          {%- elif days_until_expiry.stdout | int <= warning_days -%}WARNING
+          {%- else -%}OK
           {%- endif -%}
-        cert_emoji: >-
-          {%- if days_until_expiry.stdout | int <= critical_days -%}
-          🔴
-          {%- elif days_until_expiry.stdout | int <= warning_days -%}
-          🟡
-          {%- else -%}
-          🟢
+        cert_emoji: |
+          {%- if days_until_expiry.stdout | int <= critical_days -%}🔴
+          {%- elif days_until_expiry.stdout | int <= warning_days -%}🟡
+          {%- else -%}🟢
           {%- endif -%}
 
     - name: Display certificate validation results
@@ -123,14 +128,15 @@
           - '  Status: {{ cert_status }}'
           - ''
           - 'Validation Results:'
-          - "  Chain validation: {{ 'PASSED' if 'OK' in chain_validation.stdout else 'FAILED: ' + chain_validation.stdout }}"
+          - "  Chain validation: {{ 'PASSED' if 'OK' in chain_validation.stdout else \
+              'FAILED: ' + chain_validation.stdout }}"
           - "  Cert/Key match: {{ 'PASSED' if cert_key_match.stdout == 'MATCH' else 'FAILED' }}"
           - "  TLS verification: {{ 'PASSED' if 'Verify return code: 0' in tls_verify.stdout else 'FAILED' }}"
           - '====================================='
 
 - name: Certificate Renewal Recommendations
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
 
   tasks:
     - name: Display renewal recommendations

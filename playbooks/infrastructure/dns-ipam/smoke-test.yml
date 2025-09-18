@@ -10,7 +10,7 @@
 
 - name: DNS/IPAM Smoke Tests [PLACEHOLDER]
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   vars:
     component_name: 'DNS/IPAM'
     # TODO: Add component-specific variables

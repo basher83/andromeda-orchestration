@@ -13,14 +13,14 @@ This directory contains the detailed task breakdown for implementing the Vault P
 
 ### Phase 1: mTLS Implementation (Issue #98)
 
-| Task ID | Title                                                                          | Priority | Duration | Dependencies    | Status     |
-| ------- | ------------------------------------------------------------------------------ | -------- | -------- | --------------- | ---------- |
-| PKI-001 | [Create Service PKI Roles](pki-001-create-service-pki-roles.md)                | P0       | 2h       | None            | 🔄 Ready   |
-| PKI-002 | [Configure Consul Auto-Encrypt](pki-002-configure-consul-auto-encrypt.md)      | P0       | 4h       | PKI-001         | 🔄 Ready   |
-| PKI-003 | [Configure Nomad TLS](pki-003-configure-nomad-tls.md)                          | P0       | 3h       | PKI-001         | 🔄 Ready   |
-| PKI-004 | [Configure Vault Client Certificates](pki-004-configure-vault-client-certs.md) | P1       | 2h       | PKI-001         | 🔄 Ready   |
-| PKI-005 | [Enable mTLS Soft Enforcement](pki-005-enable-mtls-soft-enforcement.md)        | P0       | 2h       | PKI-002,003,004 | 🔄 Ready   |
-| PKI-006 | [Enable mTLS Hard Enforcement](pki-006-enable-mtls-hard-enforcement.md)        | P0       | 3h       | PKI-005 (+48h)  | ⏸️ Blocked |
+| Task ID | Title                                                                          | Priority | Duration | Dependencies    | Status      |
+| ------- | ------------------------------------------------------------------------------ | -------- | -------- | --------------- | ----------- |
+| PKI-001 | [Create Service PKI Roles](pki-001-create-service-pki-roles.md)                | P0       | 2h       | None            | ✅ Complete |
+| PKI-002 | [Configure Consul Auto-Encrypt](pki-002-configure-consul-auto-encrypt.md)      | P0       | 4h       | PKI-001         | 🔄 Ready    |
+| PKI-003 | [Configure Nomad TLS](pki-003-configure-nomad-tls.md)                          | P0       | 3h       | PKI-001         | 🔄 Ready    |
+| PKI-004 | [Configure Vault Client Certificates](pki-004-configure-vault-client-certs.md) | P1       | 2h       | PKI-001         | 🔄 Ready    |
+| PKI-005 | [Enable mTLS Soft Enforcement](pki-005-enable-mtls-soft-enforcement.md)        | P0       | 2h       | PKI-002,003,004 | 🔄 Ready    |
+| PKI-006 | [Enable mTLS Hard Enforcement](pki-006-enable-mtls-hard-enforcement.md)        | P0       | 3h       | PKI-005 (+48h)  | ⏸️ Blocked  |
 
 **Total Phase 1 Duration**: ~16 hours active work + 48 hours monitoring
 
@@ -40,7 +40,7 @@ This directory contains the detailed task breakdown for implementing the Vault P
 | Task ID | Title                                                                                         | Priority | Duration | Dependencies    | Status   |
 | ------- | --------------------------------------------------------------------------------------------- | -------- | -------- | --------------- | -------- |
 | PKI-011 | [Configure Certificate Distribution to Nomad Jobs](pki-011-certificate-distribution-nomad.md) | P0       | 4h       | PKI-001,PKI-003 | 🔄 Ready |
-| PKI-012 | [Enable Consul Connect Service Mesh](pki-012-consul-connect-service-mesh.md)                 | P0       | 4h       | PKI-001,PKI-002 | 🔄 Ready |
+| PKI-012 | [Enable Consul Connect Service Mesh](pki-012-consul-connect-service-mesh.md)                  | P0       | 4h       | PKI-001,PKI-002 | 🔄 Ready |
 | PKI-013 | [Implement Certificate Revocation](pki-013-certificate-revocation-infrastructure.md)          | P1       | 3h       | PKI-001,PKI-007 | 🔄 Ready |
 | PKI-014 | [Configure Advanced PKI Monitoring](pki-014-advanced-pki-monitoring.md)                       | P1       | 3h       | PKI-007,PKI-013 | 🔄 Ready |
 | PKI-015 | [Implement PKI Disaster Recovery](pki-015-pki-disaster-recovery.md)                           | P0       | 4h       | PKI-001-006     | 🔄 Ready |
@@ -135,7 +135,7 @@ Both paths can run in parallel after PKI-001 is complete.
 
 ```bash
 # Start with PKI role creation
-ansible-playbook playbooks/infrastructure/vault/setup-pki-roles.yml
+ansible-playbook playbooks/infrastructure/vault/create-service-pki-roles.yml
 
 # Enable certificate monitoring
 ansible-playbook playbooks/infrastructure/vault/deploy-cert-monitoring.yml

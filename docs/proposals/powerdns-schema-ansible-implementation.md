@@ -78,7 +78,7 @@ playbooks/
 ---
 - name: Deploy PowerDNS PostgreSQL Schema
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   vars_files:
     - ../../vars/powerdns/schema-config.yml
 
@@ -91,9 +91,9 @@ playbooks/
     - name: Retrieve database credentials from Infisical
       ansible.builtin.set_fact:
         db_credentials: "{{ lookup('infisical.vault.read_secrets',
-                               env_slug='production',
-                               project_id='{{ infisical_project_id }}',
-                               path='/services/powerdns/postgresql') }}"
+          env_slug='production',
+          project_id='{{ infisical_project_id }}',
+          path='/services/powerdns/postgresql') }}"
       no_log: true
 
     - name: Ensure PostgreSQL database exists
@@ -169,7 +169,7 @@ playbooks/
 ---
 - name: Validate PowerDNS PostgreSQL Schema
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   vars_files:
     - ../../vars/powerdns/schema-config.yml
 
@@ -177,9 +177,9 @@ playbooks/
     - name: Retrieve database credentials from Infisical
       ansible.builtin.set_fact:
         db_credentials: "{{ lookup('infisical.vault.read_secrets',
-                               env_slug='production',
-                               project_id='{{ infisical_project_id }}',
-                               path='/services/powerdns/postgresql') }}"
+          env_slug='production',
+          project_id='{{ infisical_project_id }}',
+          path='/services/powerdns/postgresql') }}"
       no_log: true
 
     - name: Check required tables exist
@@ -237,7 +237,7 @@ playbooks/
 ---
 - name: Migrate PowerDNS Schema
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   vars:
     target_version: "{{ schema_version | default('latest') }}"
 
@@ -343,14 +343,7 @@ CREATE INDEX IF NOT EXISTS recordorder ON records (domain_id, ordername text_pat
 
 ```yaml
 # Expected secret structure at /services/powerdns/postgresql
-{
-  "host": "192.168.11.x",
-  "port": 5432,
-  "admin_user": "postgres",
-  "admin_password": "***",
-  "pdns_user": "pdns",
-  "pdns_password": "***"
-}
+{ "host": "192.168.11.x", "port": 5432, "admin_user": "postgres", "admin_password": "***", "pdns_user": "pdns", "pdns_password": "***" }
 ```
 
 ### 3. CI/CD Pipeline Integration
@@ -415,11 +408,13 @@ ansible-playbook playbooks/infrastructure/powerdns/deploy-schema.yml \
 ## Security Considerations
 
 1. **Credential Management**
+
    - Never store credentials in playbooks
    - Use Infisical for all secrets
    - Implement least-privilege access
 
 2. **Network Security**
+
    - Use SSL/TLS for PostgreSQL connections
    - Restrict database access to Nomad clients only
 
@@ -455,15 +450,15 @@ ansible-playbook playbooks/infrastructure/powerdns/deploy-schema.yml \
 
 Based on research of the `community.postgresql` collection (v4.1.0):
 
-| Module | Purpose | Why Selected |
-|--------|---------|--------------|
-| `postgresql_script` | Execute SQL files | Ideal for complex schema deployments |
-| `postgresql_db` | Database management | Handles database creation and backup/restore |
-| `postgresql_schema` | Schema management | If using multiple schemas |
-| `postgresql_table` | Table creation | Programmatic table management |
-| `postgresql_query` | Ad-hoc queries | Validation and version tracking |
-| `postgresql_user` | User management | PowerDNS user creation |
-| `postgresql_privs` | Permission management | Fine-grained access control |
+| Module              | Purpose               | Why Selected                                 |
+| ------------------- | --------------------- | -------------------------------------------- |
+| `postgresql_script` | Execute SQL files     | Ideal for complex schema deployments         |
+| `postgresql_db`     | Database management   | Handles database creation and backup/restore |
+| `postgresql_schema` | Schema management     | If using multiple schemas                    |
+| `postgresql_table`  | Table creation        | Programmatic table management                |
+| `postgresql_query`  | Ad-hoc queries        | Validation and version tracking              |
+| `postgresql_user`   | User management       | PowerDNS user creation                       |
+| `postgresql_privs`  | Permission management | Fine-grained access control                  |
 
 The collection scores 95/100 for production readiness with:
 

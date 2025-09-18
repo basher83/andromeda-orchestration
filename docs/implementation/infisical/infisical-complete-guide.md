@@ -66,6 +66,7 @@ Using machine identity for automation and CI/CD:
 # Required environment variables (add to .mise.local.toml)
 INFISICAL_UNIVERSAL_AUTH_CLIENT_ID = "your-client-id"
 INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET = "your-client-secret"
+OBJC_DISABLE_INITIALIZE_FORK_SAFETY = "YES"  # Required on macOS
 ```
 
 These should be added to your `.mise.local.toml` file for automatic loading. See `.mise.local.toml.example` for the complete template.
@@ -233,49 +234,6 @@ export NETBOX_TOKEN=$(infisical run --env=staging --path="/services/netbox" -- p
 ansible-playbook playbooks/infrastructure/netbox-playbook.yml
 ```
 
-## Free vs Paid Features
-
-### What's Available in Free Tier
-
-The free tier is more generous than officially documented. All project types are available with most core features:
-
-#### Available Features
-
-- ✅ All project types: `secret-manager`, `cert-manager`, `ssh`, `kms`
-- ✅ Dashboard, API, CLI, SDKs
-- ✅ Kubernetes Operator & Infisical Agent
-- ✅ All integrations (AWS, GitHub, Vercel, etc.)
-- ✅ Secret references, overrides, and sharing
-- ✅ CLI-based secret scanning
-- ✅ Pre-commit hooks
-- ✅ Self-hosting option
-- ✅ Certificate management with Private CA (`cert-manager`)
-- ✅ SSH certificate issuance (`ssh`)
-- ✅ Key management and encryption (`kms`)
-
-#### Free Tier Limits
-
-- 5 users, 3 projects, 3 environments, 10 integrations
-- No secret versioning or point-in-time recovery
-- No RBAC or temporary access controls
-- No automated secret rotation
-- No continuous monitoring (CLI scanning only)
-- Community support only
-
-### What Requires Pro/Enterprise
-
-- 💰 Secret versioning & point-in-time recovery (Pro)
-- 💰 RBAC & temporary access (Pro)
-- 💰 Secret rotation (Pro)
-- 💰 SSH host groups within `ssh` project (Pro)
-- 💰 Continuous secret monitoring (Pro)
-- 💰 SAML SSO (Pro)
-- 💰 Dynamic secrets (Enterprise)
-- 💰 Approval workflows (Enterprise)
-- 💰 KMIP protocol for KMS (Enterprise)
-
-**Current Setup**: Using Free tier with `secret-manager` project type - sufficient for current homelab needs.
-
 ## Technical Implementation
 
 ### Setup Requirements
@@ -300,7 +258,7 @@ The free tier is more generous than officially documented. All project types are
    ```yaml
    collections:
      - name: infisical.vault
-       version: ">=1.1.2"
+       version: ">=1.1.3"
    ```
 
 3. **Environment Variables** (managed by mise):
@@ -311,6 +269,7 @@ The free tier is more generous than officially documented. All project types are
    [env]
    INFISICAL_UNIVERSAL_AUTH_CLIENT_ID = "your-client-id"
    INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET = "your-client-secret"
+   OBJC_DISABLE_INITIALIZE_FORK_SAFETY = "YES"  # Required on macOS
    ```
 
 ## Testing and Verification
@@ -395,38 +354,6 @@ uv run ansible localhost -m debug -a "msg={{ lookup('infisical.vault.read_secret
 - Rotate machine identity credentials periodically
 - Audit secret access regularly
 
-## Migration Guide
-
-### From 1Password or Other Solutions
-
-#### Phase 1: Parallel Implementation
-
-1. Set up Infisical alongside existing solution
-2. Configure authentication (Universal Auth recommended)
-3. Create project structure matching your needs
-4. Enable sync with existing solution if available
-
-#### Phase 2: Gradual Migration
-
-1. Start with non-critical secrets
-2. Update automation scripts to use Infisical
-3. Validate access patterns and permissions
-4. Document new procedures
-
-#### Phase 3: Full Migration
-
-1. Migrate remaining secrets
-2. Update all references
-3. Decommission old solution
-4. Archive legacy documentation
-
-### Migration Safety
-
-- Test in dev environment first
-- Keep backups of critical secrets
-- Validate each phase before proceeding
-- Don't delete old secrets until fully migrated
-
 ## Future Considerations
 
 ### Additional Project Types
@@ -461,25 +388,6 @@ As the project has deployed HashiCorp Vault in production:
 - Use Vault for application/service secrets
 - Consider sync between systems if needed
 - Document clear boundaries between systems
-
-## Migration Status
-
-### Completed
-
-- ✅ All Proxmox credentials migrated
-- ✅ Consul tokens migrated
-- ✅ Nomad tokens migrated
-- ✅ Vault dev tokens migrated
-- ✅ NetBox credentials added
-- ✅ Folder structure organized
-- ✅ Secrets replicated across environments
-- ✅ Inventory files updated to use new paths
-- ✅ 1Password Connect deprecated
-
-### Pending
-
-- ⏳ PowerDNS credentials (when fully deployed)
-- ⏳ PostgreSQL production credentials
 
 ## Related Documentation
 

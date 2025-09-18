@@ -1,0 +1,11 @@
+---
+- name: Test domain assertions - should fail
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # Test case: Domain that should fail (.local)
+    homelab_domain: "example.local."
+    cluster_subdomain: "test"
+  tasks:
+    - name: Include domain assertions
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/domain-assertions.yml"

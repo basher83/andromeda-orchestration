@@ -7,24 +7,23 @@
 
 - name: Deploy TLS Certificates for Production Vault Master
   hosts: vault-master-lloyd
-  gather_facts: yes
+  gather_facts: true
   become: yes
   vars:
     vault_tls_dir: /opt/vault/tls
     vault_backup_dir: /opt/vault/tls/backup-{{ ansible_date_time.epoch }}
 
-    # Active Vault leader for PKI operations
-    vault_leader_addr: 'https://192.168.10.33:8200'
+    # Active Vault leader for PKI operations - derive from inventory with IPv6 safety
+    _vault_leader_host: "{{ hostvars[(groups.get('vault_production', []) | first)] | default({'ansible_host': ''}) }}"
+    vault_leader_addr: >-
+      {{ ansible_env.VAULT_ADDR | default(
+           ('https://[' ~ _vault_leader_host.ansible_host ~ ']:8200')
+           if (_vault_leader_host.ansible_host | ansible.utils.ipaddr('ipv6'))
+           else ('https://' ~ _vault_leader_host.ansible_host ~ ':8200'),
+           true
+         ) }}
 
-    # Retrieve Vault token from Infisical
-    vault_token: >-
-      {{ (lookup('infisical.vault.read_secrets',
-                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                 env_slug='prod',
-                 path='/apollo-13/vault',
-                 secret_name='VAULT_PROD_ROOT_TOKEN')).value | default('') }}
+# vault_token will be retrieved via secure task
 
     # Certificate parameters
     cert_common_name: 'vault-master-lloyd.vault.spaceships.work'
@@ -38,9 +37,26 @@
       - '127.0.0.1'
     cert_ttl: '8760h' # 1 year for transit master
 
+  pre_tasks:
+    - name: Preflight | Validate no hardcoded IPs in play vars
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_leader_addr: "{{ vault_leader_addr | default('') }}"
+        validate_allowlist: []
+      tags: [preflight]
+
+    - name: Retrieve Vault token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_PROD_ROOT_TOKEN'
+        secret_var_name: 'vault_token'
+        fallback_env_var: 'VAULT_TOKEN'
+      tags: [secrets]
+
   tasks:
     - name: Create TLS directories
-      file:
+      ansible.builtin.file:
         path: '{{ item }}'
         state: directory
         owner: vault
@@ -51,12 +67,12 @@
         - '{{ vault_backup_dir }}'
 
     - name: Check for existing certificates
-      stat:
+      ansible.builtin.stat:
         path: '{{ vault_tls_dir }}/tls.crt'
       register: existing_cert
 
     - name: Backup existing certificates
-      copy:
+      ansible.builtin.copy:
         src: '{{ vault_tls_dir }}/{{ item }}'
         dest: '{{ vault_backup_dir }}/{{ item }}'
         remote_src: yes
@@ -68,7 +84,7 @@
         - tls.key
         - ca.crt
       when: existing_cert.stat.exists
-      ignore_errors: yes
+      failed_when: false
 
     - name: Generate certificate from Vault PKI
       community.hashi_vault.vault_pki_generate_certificate:
@@ -86,7 +102,7 @@
       when: vault_token != ''
 
     - name: Save certificate
-      copy:
+      ansible.builtin.copy:
         content: '{{ vault_cert.data.data.certificate }}'
         dest: '{{ vault_tls_dir }}/tls.crt'
         owner: vault
@@ -95,7 +111,7 @@
       when: vault_cert is succeeded
 
     - name: Save private key
-      copy:
+      ansible.builtin.copy:
         content: '{{ vault_cert.data.data.private_key }}'
         dest: '{{ vault_tls_dir }}/tls.key'
         owner: vault
@@ -104,7 +120,7 @@
       when: vault_cert is succeeded
 
     - name: Save CA certificate chain
-      copy:
+      ansible.builtin.copy:
         content: "{{ vault_cert.data.data.ca_chain | join('\n') }}"
         dest: '{{ vault_tls_dir }}/ca.crt'
         owner: vault
@@ -113,7 +129,7 @@
       when: vault_cert is succeeded
 
     - name: Save issuing CA certificate
-      copy:
+      ansible.builtin.copy:
         content: '{{ vault_cert.data.data.issuing_ca }}'
         dest: '{{ vault_tls_dir }}/issuing_ca.crt'
         owner: vault
@@ -122,20 +138,20 @@
       when: vault_cert is succeeded
 
     - name: Create certificate bundle
-      shell: |
+      ansible.builtin.shell: |
         cat {{ vault_tls_dir }}/tls.crt {{ vault_tls_dir }}/ca.crt > {{ vault_tls_dir }}/cert-bundle.pem
       args:
         creates: '{{ vault_tls_dir }}/cert-bundle.pem'
 
     - name: Set proper permissions on bundle
-      file:
+      ansible.builtin.file:
         path: '{{ vault_tls_dir }}/cert-bundle.pem'
         owner: vault
         group: vault
         mode: '0644'
 
     - name: Add CA to system trust store
-      copy:
+      ansible.builtin.copy:
         src: '{{ vault_tls_dir }}/ca.crt'
         dest: /usr/local/share/ca-certificates/vault-ca.crt
         remote_src: yes
@@ -143,13 +159,14 @@
       notify: update ca certificates
 
     - name: Verify certificate
-      shell: |
+      ansible.builtin.shell: |
+        set -o pipefail
         openssl x509 -in {{ vault_tls_dir }}/tls.crt -text -noout | grep -E "Subject:|Not After|DNS:|IP Address:"
       register: cert_info
       changed_when: false
 
     - name: Display certificate information
-      debug:
+      ansible.builtin.debug:
         msg: |
           Certificate deployed successfully!
 
@@ -175,7 +192,7 @@
           3. Update Consul health checks
 
     - name: Create certificate renewal script
-      copy:
+      ansible.builtin.copy:
         content: |
           #!/bin/bash
           # Vault Certificate Renewal Script
@@ -211,5 +228,6 @@
 
   handlers:
     - name: update ca certificates
-      command: update-ca-certificates
+      ansible.builtin.command: update-ca-certificates
       become: yes
+      changed_when: true

@@ -1,0 +1,376 @@
+---
+# Create Service PKI Roles for mTLS Implementation
+# Task: PKI-001 - Create Service PKI Roles
+# Parent Issue: 98 - mTLS for Service Communication
+#
+# This playbook configures dedicated PKI roles in Vault for each HashiCorp service
+# (Consul, Nomad, Vault) to enable secure certificate issuance with appropriate
+# constraints and parameters.
+#
+# Usage:
+# Production (secure settings):
+# uv run ansible-playbook playbooks/infrastructure/vault/create-service-pki-roles.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
+#
+# Development (relaxed settings for testing):
+# uv run ansible-playbook playbooks/infrastructure/vault/create-service-pki-roles.yml \
+#   -i inventory/environments/vault-cluster/production.yaml \
+#   -e pki_profile=dev
+
+- name: Create Service PKI Roles for mTLS Implementation
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    # PKI Profile Configuration
+    # Set to 'prod' for production security settings, 'dev' for development flexibility
+    pki_profile: "{{ pki_profile | default('prod') }}"
+
+    # TLS Certificate Validation
+    # Default to true for production security, can be overridden for self-signed certs
+    vault_validate_certs: "{{ vault_validate_certs | default(true) }}"
+
+    # Retrieve Vault token from Infisical
+    vault_token: >-
+      {{ (lookup('infisical.vault.read_secrets',
+                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                 env_slug='prod',
+                 path='/apollo-13/vault',
+                 secret_name='VAULT_PROD_ROOT_TOKEN')).value }}
+
+    # Vault configuration - derived from inventory with IPv6 support
+    vault_addr: >-
+      {%- if groups['vault'] is defined and groups['vault'] | length > 0 -%}
+        {%- set vault_host = hostvars[groups['vault'][0]]['ansible_host'] -%}
+        {%- if vault_host | ansible.utils.ipaddr('ipv6') -%}
+          https://[{{ vault_host }}]:8200
+        {%- else -%}
+          https://{{ vault_host }}:8200
+        {%- endif -%}
+      {%- else -%}
+        {{ lookup('env', 'VAULT_ADDR') | default('https://vault.service.consul:8200', true) }}
+      {%- endif -%}
+    pki_int_path: "pki-int"
+
+    # PKI role definitions for HashiCorp services
+    # Security settings are controlled by pki_profile variable
+    pki_service_roles:
+      - name: "consul-agent"
+        description: "Consul Agent Certificates for mTLS Communication"
+        allowed_domains: "{{
+          ['consul.service.consul', 'consul.spaceships.work', 'server.dc1.consul', 'client.dc1.consul']
+          if pki_profile == 'prod' else
+          ['consul.service.consul', 'consul.spaceships.work', '*.consul', '*.consul.spaceships.work']
+        }}"
+        allow_subdomains: true
+        allow_bare_domains: true
+        allow_localhost: "{{ pki_profile == 'dev' }}"
+        client_flag: true
+        server_flag: true
+        max_ttl: "8760h"  # 1 year maximum
+        ttl: "720h"       # 30 days default
+        key_type: "rsa"
+        key_bits: 2048
+        enforce_hostnames: true
+        allow_ip_sans: true
+        ou: "Consul Service"
+        organization: "HomeLab Infrastructure"
+
+      - name: "nomad-agent"
+        description: "Nomad Agent Certificates for mTLS Communication"
+        allowed_domains: "{{
+          ['nomad.service.consul', 'nomad.spaceships.work', 'server.global.nomad', 'client.global.nomad']
+          if pki_profile == 'prod' else
+          ['nomad.service.consul', 'nomad.spaceships.work', '*.nomad', '*.nomad.spaceships.work']
+        }}"
+        allow_subdomains: true
+        allow_bare_domains: true
+        allow_localhost: "{{ pki_profile == 'dev' }}"
+        client_flag: true
+        server_flag: true
+        max_ttl: "8760h"  # 1 year maximum
+        ttl: "720h"       # 30 days default
+        key_type: "rsa"
+        key_bits: 2048
+        enforce_hostnames: true
+        allow_ip_sans: true
+        ou: "Nomad Service"
+        organization: "HomeLab Infrastructure"
+
+      - name: "vault-agent"
+        description: "Vault Agent Certificates for mTLS Communication"
+        allowed_domains: "{{
+          ['vault.service.consul', 'vault.spaceships.work',
+           'active.vault.service.consul', 'standby.vault.service.consul']
+          if pki_profile == 'prod' else
+          ['vault.service.consul', 'vault.spaceships.work', '*.vault', '*.vault.spaceships.work']
+        }}"
+        allow_subdomains: true
+        allow_bare_domains: true
+        allow_localhost: "{{ pki_profile == 'dev' }}"
+        client_flag: true
+        server_flag: true
+        max_ttl: "8760h"  # 1 year maximum
+        ttl: "720h"       # 30 days default
+        key_type: "rsa"
+        key_bits: 2048
+        enforce_hostnames: true
+        allow_ip_sans: true
+        ou: "Vault Service"
+        organization: "HomeLab Infrastructure"
+
+      - name: "client-auth"
+        description: "Client Authentication Certificates for Service Access"
+        allowed_domains:
+          - "client.spaceships.work"
+          - "*.client.spaceships.work"
+        allow_subdomains: true
+        allow_bare_domains: false
+        allow_localhost: false
+        client_flag: true
+        server_flag: false
+        max_ttl: "168h"   # 7 days maximum for clients
+        ttl: "168h"       # 7 days default
+        key_type: "rsa"
+        key_bits: 2048
+        enforce_hostnames: true
+        allow_ip_sans: false
+        ou: "Client Authentication"
+        organization: "HomeLab Infrastructure"
+
+  pre_tasks:
+    - name: Validate PKI profile configuration
+      ansible.builtin.assert:
+        that:
+          - pki_profile in ['prod', 'dev']
+        fail_msg: "pki_profile must be either 'prod' or 'dev', got: {{ pki_profile }}"
+        success_msg: "PKI profile '{{ pki_profile }}' validated"
+
+    - name: Validate no hardcoded IPs
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []  # No exceptions allowed
+      tags: [preflight]
+
+    - name: Display PKI profile security settings
+      ansible.builtin.debug:
+        msg:
+          - "🔒 PKI Profile: {{ pki_profile | upper }}"
+          - ""
+          - "Security Settings:"
+          - "  - Allow localhost: {{ pki_profile == 'dev' }}"
+          - "  - Domain restrictions: {{ 'Relaxed (wildcards)' if pki_profile == 'dev' else 'Strict (FQDNs only)' }}"
+          - "  - Certificate validation: {{ 'Standard' if pki_profile == 'dev' else 'Enhanced' }}"
+          - ""
+          - >-
+            {%- if pki_profile == 'prod' -%}
+            ⚠️  Production mode: Strict security settings enforced{%- else -%}
+            🛠️  Development mode: Relaxed settings for testing{%- endif -%}
+
+    - name: Verify required environment variables
+      ansible.builtin.assert:
+        that:
+          - lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') | length > 0
+          - lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') | length > 0
+        fail_msg: "Infisical credentials not configured. Check .mise.local.toml"
+        success_msg: "Infisical credentials verified"
+
+    - name: Verify Vault token retrieval
+      ansible.builtin.assert:
+        that:
+          - vault_token is defined
+          - vault_token | length > 0
+          - vault_token != 'FAILED'
+        fail_msg: "Failed to retrieve Vault token from Infisical"
+        success_msg: "Vault token successfully retrieved from Infisical"
+
+  tasks:
+    - name: Test Vault connectivity
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "sys/health"
+        validate_certs: "{{ vault_validate_certs }}"
+      register: vault_health
+      failed_when: false
+      no_log: true
+
+    - name: Verify Vault is accessible
+      ansible.builtin.assert:
+        that:
+          - vault_health is not failed
+          - vault_health.data is defined
+        fail_msg: "Cannot connect to Vault at {{ vault_addr }}"
+        success_msg: "Vault is accessible and healthy"
+
+    - name: Verify intermediate PKI engine exists
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "sys/mounts/{{ pki_int_path }}"
+        validate_certs: "{{ vault_validate_certs }}"
+      register: pki_int_check
+      failed_when: false
+      no_log: true
+
+    - name: Ensure intermediate PKI engine is available
+      ansible.builtin.assert:
+        that:
+          - pki_int_check is not failed
+          - pki_int_check.data is defined
+        fail_msg: "Intermediate PKI engine not found at {{ pki_int_path }}. Run setup-pki-intermediate-ca.yml first."
+        success_msg: "Intermediate PKI engine verified at {{ pki_int_path }}"
+
+    - name: Create service PKI roles
+      community.hashi_vault.vault_write:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "{{ pki_int_path }}/roles/{{ item.name }}"
+        validate_certs: "{{ vault_validate_certs }}"
+        data:
+          allowed_domains: "{{ item.allowed_domains }}"
+          allow_subdomains: "{{ item.allow_subdomains }}"
+          allow_bare_domains: "{{ item.allow_bare_domains }}"
+          allow_localhost: "{{ item.allow_localhost }}"
+          client_flag: "{{ item.client_flag }}"
+          server_flag: "{{ item.server_flag }}"
+          code_signing_flag: false
+          email_protection_flag: false
+          key_type: "{{ item.key_type }}"
+          key_bits: "{{ item.key_bits }}"
+          max_ttl: "{{ item.max_ttl }}"
+          ttl: "{{ item.ttl }}"
+          enforce_hostnames: "{{ item.enforce_hostnames }}"
+          allow_ip_sans: "{{ item.allow_ip_sans }}"
+          ou: "{{ item.ou }}"
+          organization: "{{ item.organization }}"
+      loop: "{{ pki_service_roles }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: role_creation_results
+      no_log: true
+
+    - name: Verify PKI role creation
+      ansible.builtin.assert:
+        that:
+          - role_creation_results is not failed
+          - (role_creation_results.results | length) == (pki_service_roles | length)
+        fail_msg: "Failed to create one or more PKI roles"
+        success_msg: "All {{ pki_service_roles | length }} PKI roles created successfully"
+
+    - name: Read back created roles for verification
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "{{ pki_int_path }}/roles/{{ item.name }}"
+        validate_certs: "{{ vault_validate_certs }}"
+      loop: "{{ pki_service_roles }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: role_verification
+      no_log: true
+
+    - name: Verify role configurations match specifications
+      ansible.builtin.assert:
+        that:
+          - item.data.data.max_ttl == (pki_service_roles |
+              selectattr('name', 'equalto', item.item.name) | first).max_ttl
+          - item.data.data.ttl == (pki_service_roles |
+              selectattr('name', 'equalto', item.item.name) | first).ttl
+          - item.data.data.client_flag == (pki_service_roles |
+              selectattr('name', 'equalto', item.item.name) | first).client_flag
+          - item.data.data.server_flag == (pki_service_roles |
+              selectattr('name', 'equalto', item.item.name) | first).server_flag
+        fail_msg: "Role {{ item.item.name }} configuration does not match specification"
+        success_msg: "Role {{ item.item.name }} configuration verified"
+      loop: "{{ role_verification.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Test certificate generation from each role
+      community.hashi_vault.vault_pki_generate_certificate:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        engine_mount_point: "{{ pki_int_path }}"
+        role_name: "{{ item.name }}"
+        common_name: "test-{{ item.name }}.{{ item.allowed_domains | first }}"
+        ttl: "24h"
+        validate_certs: "{{ vault_validate_certs }}"
+      loop: "{{ pki_service_roles }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: cert_generation_tests
+      no_log: true
+
+    - name: Verify test certificate generation
+      ansible.builtin.assert:
+        that:
+          - item is not failed
+          - item.data.data.certificate is defined
+          - item.data.data.private_key is defined
+        fail_msg: "Failed to generate test certificate for role {{ item.item.name }}"
+        success_msg: "Test certificate generated successfully for role {{ item.item.name }}"
+      loop: "{{ cert_generation_tests.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Display PKI service roles creation summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ Service PKI Roles Configuration Complete!"
+          - ""
+          - "🔐 PKI Profile: {{ pki_profile | upper }}"
+          - "🔐 PKI Roles Created:"
+          - "   - consul-agent: For Consul mTLS communication (30-day TTL)"
+          - "   - nomad-agent: For Nomad mTLS communication (30-day TTL)"
+          - "   - vault-agent: For Vault mTLS communication (30-day TTL)"
+          - "   - client-auth: For client authentication (7-day TTL)"
+          - ""
+          - "📋 Role Configuration Details:"
+          - "   - All service roles support both client and server certificates"
+          - "   - Client-auth role limited to client certificates only"
+          - "   - RSA 2048-bit keys for optimal performance"
+          - "   - IP SANs allowed for service roles, not for client-auth"
+          - "   - Localhost allowed: {{ 'Yes (dev mode)' if pki_profile == 'dev' else 'No (prod mode)' }}"
+          - ""
+          - "🌐 Allowed Domains ({{ pki_profile | upper }} profile):"
+          - >-
+            {%- if pki_profile == 'prod' -%}
+               - consul-agent: consul.service.consul, consul.spaceships.work, server.dc1.consul
+               - nomad-agent: nomad.service.consul, nomad.spaceships.work, server.global.nomad
+               - vault-agent: vault.service.consul, vault.spaceships.work, active.vault.service.consul{%- else -%}
+               - consul-agent: *.consul, consul.spaceships.work (wildcards allowed)
+               - nomad-agent: *.nomad, nomad.spaceships.work (wildcards allowed)
+               - vault-agent: *.vault, vault.spaceships.work (wildcards allowed){%- endif -%}
+          - "   - client-auth: *.client.spaceships.work"
+          - ""
+          - "⏰ Certificate Validity:"
+          - "   - Service certificates: 30 days default, 1 year maximum"
+          - "   - Client certificates: 7 days default, 7 days maximum"
+          - ""
+          - "🚀 Next Steps:"
+          - "   1. Run validate-pki-roles.yml to verify configuration"
+          - "   2. Implement Consul auto-encrypt (PKI-002)"
+          - "   3. Configure Nomad TLS (PKI-003)"
+          - "   4. Set up Vault client certificates (PKI-004)"
+          - ""
+          - "🔒 Security Features ({{ pki_profile | upper }} profile):"
+          - "   - Hostname enforcement enabled"
+          - "   - Subdomain matching controlled per role"
+          - "   - Organization fields set for certificate identification"
+          - "   - TTL limits prevent excessive certificate lifetimes"
+          - >-
+            {%- if pki_profile == 'prod' -%}
+               - Production security: No localhost access, explicit FQDN patterns only
+               - Reduced attack surface with strict domain constraints{%- else -%}
+               - Development flexibility: Localhost access enabled, wildcard patterns allowed
+               - Note: Use 'prod' profile for production deployments{%- endif -%}

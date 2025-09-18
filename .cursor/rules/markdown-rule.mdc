@@ -1,0 +1,309 @@
+---
+description: Markdown and documentation linting rules using markdownlint-cli2
+globs: ["*.md", "*.markdown", "docs/**/*"]
+alwaysApply: true
+---
+
+# Markdown and Documentation Rules
+
+## 🔧 Linting Commands
+
+### Primary Linting
+```bash
+# Lint all markdown files
+mise exec markdownlint-cli2 -- markdownlint-cli2 "**/*.md" "**/*.markdown"
+
+# Lint specific file
+mise exec markdownlint-cli2 -- markdownlint-cli2 docs/implementation/infisical/infisical-patterns.md
+
+# Fix auto-fixable issues
+mise exec markdownlint-cli2 -- markdownlint-cli2 --fix "**/*.md"
+```
+
+### Configuration
+- **Rules file**: `.markdownlint.json`
+- **CLI tool**: `markdownlint-cli2` (locally available)
+- **Auto-fix**: Supports `--fix` flag for auto-correctable issues
+
+## 📋 Markdown Linting Rules (from .markdownlint.json)
+
+### ✅ Enabled Rules
+- **MD003**: Header style - Use ATX style (`# ## ###`)
+- **MD004**: Unordered list style - Use dashes (`-`)
+- **MD007**: Unordered list indentation - 2 spaces
+- **MD024**: Multiple headers with same content - Allow siblings only
+- **MD025**: Single top-level header - Allow front matter titles
+- **MD040**: Fenced code blocks language - Required
+- **MD046**: Code block style - Use fenced style
+- **MD048**: Code fence style - Use backticks
+- **MD049**: Emphasis style - Use underscores
+- **MD050**: Strong style - Use asterisks
+
+### ❌ Disabled Rules
+- **MD013**: Line length - Disabled (line-length: false)
+- **MD033**: Inline HTML - Disabled
+- **MD041**: First line heading - Disabled
+- **MD053**: Link reference definitions - Disabled (footnote references not properly detected)
+
+## 📚 Documentation Standards
+
+### 🏗️ Structure Requirements
+
+#### Document Organization
+- **Single H1**: One `#` title at document start
+- **Logical hierarchy**: H1 → H2 → H3 (avoid skipping levels)
+- **Table of contents**: For documents > 1000 lines
+- **Front matter**: Use YAML front matter for metadata
+
+#### Header Conventions
+```markdown
+# Document Title (H1 - one per file)
+
+## Major Section (H2)
+
+### Subsection (H3)
+
+#### Implementation Detail (H4 - rarely needed)
+```
+
+### 📝 Content Formatting
+
+#### Code Blocks
+```markdown
+# ✅ Good - Fenced with language
+```bash
+echo "Hello World"
+```
+
+# ❌ Bad - Indented
+    echo "Hello World"
+```
+
+#### Inline Code
+- Use backticks: `variable_name`, `command`
+- Reserve for: commands, file paths, variable names, inline snippets
+
+#### Lists
+```markdown
+# ✅ Good - Consistent dashes
+- Item 1
+- Item 2
+  - Nested item
+
+# ❌ Bad - Mixed bullets
+- Item 1
+* Item 2
+```
+
+#### Emphasis
+```markdown
+# ✅ Good
+_italic text_
+**bold text**
+`code`
+
+# ❌ Bad (inconsistent with config)
+*italic text*
+__bold text__
+```
+
+### 🔗 Link Management
+
+#### Reference Links (Preferred)
+```markdown
+# ✅ Good - Footnotes at bottom
+This references [markdownlint][1] and [documentation standards][2].
+
+[1]: https://github.com/DavidAnson/markdownlint
+[2]: docs/standards/README.md
+```
+
+#### Inline Links (Acceptable for external)
+```markdown
+# ✅ Acceptable for external links
+Read the [markdownlint documentation](https://github.com/DavidAnson/markdownlint).
+```
+
+### 📊 Tables
+
+#### Table Formatting
+```markdown
+# ✅ Good - Consistent alignment
+| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+| Data     | Data     | Data     |
+| More     | More     | More     |
+```
+
+### 🔍 Code Examples
+
+#### Ansible Playbook Examples
+```yaml
+# ✅ Good - Proper YAML formatting
+- name: Example task
+  ansible.builtin.debug:
+    msg: "Hello World"
+  when: condition_var | bool
+```
+
+#### Shell Commands
+```bash
+# ✅ Good - Clear commands with comments
+# Install dependencies
+pip install -r requirements.txt
+
+# Run linting
+mise exec markdownlint-cli2 -- markdownlint-cli2 "**/*.md"
+```
+
+## 🚨 Common Violations & Fixes
+
+### MD001 - Header levels should only increment by one
+```markdown
+# ✅ Good
+# H1
+## H2
+### H3
+
+# ❌ Bad
+# H1
+### H3 (skips H2)
+```
+
+### MD002 - First header should be H1
+```markdown
+# ✅ Good
+# Document Title
+
+Content here...
+
+# ❌ Bad
+## Document Title (starts with H2)
+```
+
+### MD005 - Inconsistent indentation for list items
+```markdown
+# ✅ Good
+- Item 1
+  - Subitem
+- Item 2
+
+# ❌ Bad
+- Item 1
+    - Subitem (inconsistent indentation)
+- Item 2
+```
+
+### MD022 - Headers should be surrounded by blank lines
+```markdown
+# ✅ Good
+## Previous Section
+
+## Next Section
+
+# ❌ Bad
+## Previous Section
+## Next Section (missing blank line)
+```
+
+### MD032 - Lists should be surrounded by blank lines
+```markdown
+# ✅ Good
+Some text.
+
+- Item 1
+- Item 2
+
+More text.
+
+# ❌ Bad
+Some text.
+- Item 1
+- Item 2
+More text. (missing blank lines)
+```
+
+### MD034 - Bare URL used
+```markdown
+# ✅ Good
+Read the [documentation](https://example.com/docs).
+
+# ❌ Bad
+Read the documentation at https://example.com/docs.
+```
+
+### MD036 - Emphasis used instead of header
+```markdown
+# ✅ Good
+## Section Header
+
+# ❌ Bad
+**Section Header** (should be ##)
+```
+
+## 🛠️ Auto-Fixable Issues
+
+Many markdownlint issues can be auto-fixed:
+
+```bash
+# Fix all auto-fixable issues
+mise exec markdownlint-cli2 -- markdownlint-cli2 --fix "**/*.md"
+
+# Check what would be fixed (dry run)
+mise exec markdownlint-cli2 -- markdownlint-cli2 --fix --dry-run "**/*.md"
+```
+
+Common auto-fixable issues:
+- MD007: List indentation
+- MD014: Dollar signs in code blocks
+- MD027: Multiple spaces after blockquote symbol
+- MD028: Blank line inside blockquote
+- MD030: Spaces after list markers
+- MD034: Bare URLs (converts to reference links)
+
+## 📈 Best Practices
+
+### Documentation Quality
+1. **Consistency**: Use same formatting throughout project
+2. **Accessibility**: Clear language, proper heading hierarchy
+3. **Maintenance**: Keep links working, update outdated info
+4. **Structure**: Logical organization with TOC for long docs
+
+### Tool Integration
+- **Pre-commit hooks**: Run markdownlint in CI/CD
+- **Editor integration**: Use extensions for real-time feedback
+- **GitHub Actions**: Automate linting on PRs
+
+### File Organization
+```
+docs/
+├── README.md           # Project overview
+├── standards/          # Project standards
+│   ├── README.md       # Standards overview
+│   └── *.md           # Individual standards
+├── implementation/     # Implementation guides
+└── troubleshooting/    # Problem-solving guides
+```
+
+## 🔍 Troubleshooting
+
+### Common Issues
+- **MD013 false positive**: Line length disabled but still flagged
+- **MD041 conflicts**: Front matter vs first header rules
+- **MD024 false positives**: Legitimate repeated headers in different sections
+
+### Configuration Overrides
+```json
+{
+  "MD013": false,           // Disable line length
+  "MD024": {"siblings_only": true},  // Allow repeated headers in different sections
+  "MD025": {"front_matter_title": ""}  // Allow front matter titles
+}
+```
+
+### Ignoring Specific Lines
+```markdown
+<!-- markdownlint-disable MD013 -->
+This line is too long but that's okay for this specific case
+<!-- markdownlint-enable MD013 -->
+```

@@ -7,65 +7,82 @@
 
 - name: Configure Transit Engine for Auto-Unseal
   hosts: vault-master-lloyd
-  gather_facts: yes
+  gather_facts: true
   vars:
     vault_addr: 'https://{{ ansible_default_ipv4.address }}:8200'
     transit_mount_path: 'transit'
     autounseal_key_name: 'autounseal'
+    vault_validate_certs: "{{ vault_validate_certs | default(true) }}"  # Default to secure
 
     # Retrieve root token from Infisical (will be set after initialization)
     # For new initialization, this will be empty and we'll generate it
     # For existing setup, we can use the transit token
-    vault_root_token: >-
-      {{ (lookup('infisical.vault.read_secrets',
-                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                 env_slug='prod',
-                 path='/apollo-13/vault',
-                 secret_name='VAULT_TRANSIT_TOKEN')).value | default('') }}
+# vault_root_token will be retrieved via secure task
+
+  pre_tasks:
+    - name: Preflight | Validate no hardcoded IPs in play vars
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []
+      tags: [preflight]
+
+    - name: Retrieve Vault transit token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_TRANSIT_TOKEN'
+        secret_var_name: 'vault_root_token'
+      tags: [secrets]
 
   tasks:
     - name: Check Vault service status
-      systemd:
+      ansible.builtin.systemd:
         name: vault
       register: vault_service
 
     - name: Verify Vault is running
-      assert:
+      ansible.builtin.assert:
         that:
           - vault_service.status.ActiveState == "active"
         fail_msg: 'Vault service is not running. Please start Vault first.'
         success_msg: 'Vault service is active'
 
     - name: Check Vault initialization status
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/sys/init'
         method: GET
-        validate_certs: no
+        validate_certs: "{{ vault_validate_certs }}"
         status_code: [200, 501]
       register: init_status
       delegate_to: localhost
 
+    - name: Share initialization status with target host
+      ansible.builtin.set_fact:
+        vault_initialized: "{{ init_status.json.initialized | default(false) | bool }}"
+      when: not (vault_initialized | default(false) | bool)
+
     - name: Initialize Vault if needed
+      when: not (vault_initialized | default(false) | bool)
       block:
         - name: Initialize Vault cluster
-          uri:
+          ansible.builtin.uri:
             url: '{{ vault_addr }}/v1/sys/init'
             method: POST
             body_format: json
             body:
-              secret_shares: 5
-              secret_threshold: 3
+              secret_shares: 1
+              secret_threshold: 1
               stored_shares: 0
-              recovery_shares: 0
-            validate_certs: no
+              recovery_shares: 5
+              recovery_threshold: 3
+            validate_certs: "{{ vault_validate_certs }}"
             status_code: [200]
           register: init_response
           delegate_to: localhost
 
         - name: Save initialization response
-          copy:
+          ansible.builtin.copy:
             content: '{{ init_response.json | to_nice_json }}'
             dest: '/opt/vault/init-keys-{{ ansible_date_time.epoch }}.json'
             mode: '0600'
@@ -73,7 +90,7 @@
             group: vault
 
         - name: Store root token in Infisical
-          debug:
+          ansible.builtin.debug:
             msg: |
               IMPORTANT: Manually store the following in Infisical:
 
@@ -83,37 +100,38 @@
 
               Store the new root token:
               Secret Name: VAULT_TRANSIT_TOKEN
-              Value: {{ init_response.json.root_token }}
+              Value: [REDACTED - Check /opt/vault/init-keys-{{ ansible_date_time.epoch }}.json]
 
               Also store the recovery keys separately:
-              VAULT_PROD_RECOVERY_KEY_1: {{ init_response.json.keys[0] | default('') }}
-              VAULT_PROD_RECOVERY_KEY_2: {{ init_response.json.keys[1] | default('') }}
-              VAULT_PROD_RECOVERY_KEY_3: {{ init_response.json.keys[2] | default('') }}
-              VAULT_PROD_RECOVERY_KEY_4: {{ init_response.json.keys[3] | default('') }}
-              VAULT_PROD_RECOVERY_KEY_5: {{ init_response.json.keys[4] | default('') }}
+              VAULT_PROD_RECOVERY_KEY_1: [REDACTED - Check init file]
+              VAULT_PROD_RECOVERY_KEY_2: [REDACTED - Check init file]
+              VAULT_PROD_RECOVERY_KEY_3: [REDACTED - Check init file]
+              VAULT_PROD_RECOVERY_KEY_4: [REDACTED - Check init file]
+              VAULT_PROD_RECOVERY_KEY_5: [REDACTED - Check init file]
+          no_log: true
 
         - name: Set root token for immediate use
-          set_fact:
+          ansible.builtin.set_fact:
             vault_root_token: '{{ init_response.json.root_token }}'
-      when: not init_status.json.initialized
+            cacheable: no
 
     - name: Check if Vault is sealed
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/sys/seal-status'
         method: GET
-        validate_certs: no
+        validate_certs: "{{ vault_validate_certs }}"
         status_code: [200]
       register: seal_status
       delegate_to: localhost
 
     - name: Unseal Vault if sealed
-      uri:
+      ansible.builtin.uri:
         url: '{{ vault_addr }}/v1/sys/unseal'
         method: POST
         body_format: json
         body:
           key: '{{ item }}'
-        validate_certs: no
+        validate_certs: "{{ vault_validate_certs }}"
         status_code: [200]
       loop: '{{ vault_unseal_keys | default([]) }}'
       when:
@@ -183,7 +201,7 @@
           - autounseal
         no_parent: true
         renewable: true
-        ttl: '87600h' # 10 years
+        ttl: '720h'   # 30 days; renewable
         display_name: 'auto-unseal-token'
         meta:
           purpose: 'auto-unseal'
@@ -194,7 +212,7 @@
       when: vault_root_token != ''
 
     - name: Display auto-unseal token information
-      debug:
+      ansible.builtin.debug:
         msg: |
           Transit engine configured successfully!
 
@@ -206,7 +224,7 @@
           Environment: prod
           Path: /apollo-13/vault
           Secret Name: VAULT_TRANSIT_TOKEN
-          Value: {{ unseal_token.login.auth.client_token | default('N/A') }}
+          Value: [REDACTED - Token created successfully]
 
           Update production Vault nodes with:
           seal "transit" {
@@ -216,6 +234,7 @@
             key_name = "{{ autounseal_key_name }}"
             mount_path = "{{ transit_mount_path }}/"
           }
+      no_log: true
       when: unseal_token is defined
 
     - name: Verify transit key exists
@@ -229,13 +248,14 @@
       when: vault_root_token != ''
 
     - name: Display transit key information
-      debug:
+      ansible.builtin.debug:
         msg: |
           Transit Key Status:
           - Name: {{ key_verify.data.data.name | default('N/A') }}
           - Type: {{ key_verify.data.data.type | default('N/A') }}
           - Latest Version: {{ key_verify.data.data.latest_version | default('N/A') }}
           - Min Decryption Version: {{ key_verify.data.data.min_decryption_version | default('N/A') }}
+      no_log: true
       when: key_verify is defined
 
     - name: Test transit encryption
@@ -251,10 +271,11 @@
       when: vault_root_token != ''
 
     - name: Verify encryption works
-      debug:
+      ansible.builtin.debug:
         msg: |
           Transit encryption test successful!
-          Ciphertext sample: {{ test_encrypt.data.data.ciphertext | default('N/A') | truncate(50) }}...
+          Ciphertext sample: [REDACTED]...
 
           The transit engine is ready for auto-unseal operations.
+      no_log: true
       when: test_encrypt is defined

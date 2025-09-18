@@ -97,7 +97,7 @@ compose:
 ---
 - name: Clear description of playbook purpose
   hosts: appropriate_group
-  gather_facts: yes # Explicitly set
+  gather_facts: true # Explicitly set
   become: yes # Explicitly set
 
   vars:
@@ -197,14 +197,14 @@ database_password: !vault |
 
 ```yaml
 collections:
-  - name: community.general      # >=8.0.0  - Core community modules
-  - name: community.proxmox      # >=1.0.0  - Proxmox management
-  - name: netbox.netbox          # >=3.13.0 - NetBox integration
-  - name: infisical.vault        # >=1.1.0  - Secrets management
-  - name: community.postgresql   # >=4.1.0  - Database operations
-  - name: ansible.posix          # >=1.5.0  - POSIX operations
-  - name: ansible.utils          # >=2.10.0 - Data utilities
-  - name: community.hashi_vault  # ==7.0.0  - HashiCorp Vault
+  - name: community.general # >=8.0.0  - Core community modules
+  - name: community.proxmox # >=1.0.0  - Proxmox management
+  - name: netbox.netbox # >=3.13.0 - NetBox integration
+  - name: infisical.vault # >=1.1.0  - Secrets management
+  - name: community.postgresql # >=4.1.0  - Database operations
+  - name: ansible.posix # >=1.5.0  - POSIX operations
+  - name: ansible.utils # >=2.10.0 - Data utilities
+  - name: community.hashi_vault # ==7.0.0  - HashiCorp Vault
 ```
 
 #### Installation
@@ -317,7 +317,7 @@ Always test collection updates in development before production deployment.
 ---
 - name: Deploy Nomad job from file
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
 
   vars:
     nomad_host: "{{ lookup('env', 'NOMAD_ADDR') }}"
@@ -514,13 +514,15 @@ roles/service_name/
 
 #### Role Documentation (README.md Template)
 
-```markdown
+````markdown
 # Role: service_name
 
 ## Description
+
 Brief description of what this role does.
 
 ## Requirements
+
 - Ansible >= 2.12
 - Target OS: Ubuntu 20.04+, RHEL 8+
 - Required collections: community.general
@@ -530,16 +532,17 @@ Brief description of what this role does.
 ### Required Variables
 
 ```yaml
-service_version: "1.15.2"          # Service version
-service_datacenter: "dc1"           # Datacenter name
+service_version: "1.15.2" # Service version
+service_datacenter: "dc1" # Datacenter name
 ```
+````
 
 ### Optional Variables
 
 ```yaml
-service_port: 8500                  # Default port
-service_bind_address: "0.0.0.0"     # Bind address
-service_enable_tls: false           # TLS configuration
+service_port: 8500 # Default port
+service_bind_address: "0.0.0.0" # Bind address
+service_enable_tls: false # TLS configuration
 ```
 
 ## Dependencies

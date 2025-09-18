@@ -3,7 +3,7 @@
 
 - name: Configure anonymous Consul ACL for PowerDNS
   hosts: nomad-server-1
-  gather_facts: no
+  gather_facts: false
 
   vars:
     consul_token: 'edf460f9-f79a-e0b8-512c-c07f57efc065'

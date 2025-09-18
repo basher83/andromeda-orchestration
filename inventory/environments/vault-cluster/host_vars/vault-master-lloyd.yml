@@ -13,7 +13,7 @@ vault_datacenter: 'doggos-cluster'
 
 # Auto-unseal configuration
 vault_transit_enabled: true
-vault_transit_address: 'http://192.168.10.11:8200'
+vault_transit_address: 'http://{{ ansible_host }}:8200'  # Self-reference (this vault master)
 vault_transit_key_name: 'autounseal'
 vault_transit_mount_path: 'transit'
 
