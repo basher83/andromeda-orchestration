@@ -3,13 +3,13 @@ FROM ${MOLECULE_IMAGE}
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-apt \
-    sudo \
-    systemd \
-    systemd-sysv \
-    ca-certificates \
+    python3=3.12.3-0ubuntu1 \
+    python3-pip=24.0+dfsg-1ubuntu1 \
+    python3-apt=2.7.7ubuntu1 \
+    sudo=1.9.15p5-3ubuntu5 \
+    systemd=255.4-1ubuntu8 \
+    systemd-sysv=255.4-1ubuntu8 \
+    ca-certificates=20240203 \
     && rm -rf /var/lib/apt/lists/*
 
 # Remove unnecessary systemd services
