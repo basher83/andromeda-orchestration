@@ -141,7 +141,7 @@ PR template for domain migration changes.
 - Rollback procedures
 - Validation criteria
 
-### [Pull Request Template](https://github.com/basher8383/andromeda-orchestration/blob/main/.github/PULL_REQUEST_TEMPLATE.md)
+### [Pull Request Template](../../.github/PULL_REQUEST_TEMPLATE.md)
 
 Comprehensive PR template following the established repository style from PR #119.
 
@@ -154,7 +154,6 @@ Comprehensive PR template following the established repository style from PR #11
 - Risk assessment framework
 
 **Note**: The template has been moved to `.github/` for automatic GitHub integration while maintaining documentation here for reference.
-
 ## 🎯 Purpose
 
 These standards exist to:
