@@ -19,15 +19,12 @@
         allow_empty: true
       tags: [secrets]
 
-    - name: Retrieve Consul token for Vault securely
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
-      vars:
-        secret_name: 'CONSUL_TOKEN_FOR_VAULT'
-        secret_var_name: 'consul_token_value'
-        fallback_env_var: 'CONSUL_TOKEN_FOR_VAULT'
-        infisical_path: '/apollo-13/consul'
-        allow_empty: true
-      tags: [secrets]
+    - name: Compute Consul retry join from inventory
+      ansible.builtin.set_fact:
+        consul_retry_join: >-
+          {{ groups.get('consul_servers', groups.get('vault_production', []))
+             | map('extract', hostvars, 'ansible_host') | list }}
+      when: groups.get('consul_servers', groups.get('vault_production', [])) | length > 0
 
   vars:
     consul_version: '1.20.5'
@@ -38,11 +35,9 @@
     consul_user: 'consul'
     consul_group: 'consul'
 
-    # Consul servers to join
-    consul_retry_join:
-      - '192.168.11.11' # nomad-server-1-lloyd
-      - '192.168.11.12' # nomad-server-2-holly
-      - '192.168.11.13' # nomad-server-3-mable
+    # Consul servers to join (computed dynamically from inventory groups)
+    # Built at runtime from inventory group 'consul_servers' (or vault_production)
+    # Example: ['192.168.11.11', '192.168.11.12', '192.168.11.13']
 
     # Secrets retrieved via centralized task (see pre_tasks)
     consul_encrypt: "{{ consul_encrypt_value | default('') }}"
@@ -269,6 +264,8 @@
     - name: Extract token SecretID
       ansible.builtin.set_fact:
         vault_client_token: '{{ (token_result.stdout | from_json).SecretID }}'
+        cacheable: no
+      no_log: true
 
     - name: Store token in Infisical using infisical CLI
       ansible.builtin.shell: |
