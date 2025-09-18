@@ -6,7 +6,7 @@
 
 - name: Deploy CA Bundle to Consul Agents and Update Vault Service
   hosts: vault_production
-  gather_facts: yes
+  gather_facts: true
 
   vars:
     consul_config_dir: '/etc/consul.d'

@@ -8,7 +8,7 @@
 
 - name: Check Certificate Expiration Status
   hosts: vault_production
-  gather_facts: yes
+  gather_facts: true
   serial: 1 # Check one at a time
 
   vars:
@@ -51,7 +51,7 @@
 
 - name: Perform Automatic Certificate Renewal
   hosts: vault_production
-  gather_facts: yes
+  gather_facts: true
   serial: 1 # Process one node at a time for zero downtime
 
   vars:

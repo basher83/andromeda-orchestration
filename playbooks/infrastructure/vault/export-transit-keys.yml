@@ -7,7 +7,7 @@
 
 - name: Export Transit Keys from Development Vault
   hosts: vault-master-lloyd
-  gather_facts: yes
+  gather_facts: true
   vars:
     vault_addr: 'http://{{ ansible_default_ipv4.address }}:8200'
     backup_dir: '/opt/vault/backup/transit-export-{{ ansible_date_time.epoch }}'

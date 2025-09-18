@@ -7,7 +7,7 @@
 
 - name: Replace Self-Signed Certificates with PKI-Issued Certificates
   hosts: vault_production
-  gather_facts: yes
+  gather_facts: true
   serial: 1 # Process one node at a time for zero downtime
   pre_tasks:
     - name: Enforce dynamic-inventory pattern (no hardcoded IPs)

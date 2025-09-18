@@ -7,7 +7,7 @@
 
 - name: Configure Transit Engine for Auto-Unseal
   hosts: vault-master-lloyd
-  gather_facts: yes
+  gather_facts: true
   vars:
     vault_addr: 'https://{{ ansible_default_ipv4.address }}:8200'
     transit_mount_path: 'transit'

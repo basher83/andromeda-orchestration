@@ -7,7 +7,7 @@
 
 - name: Deploy TLS Certificates for Production Vault Master
   hosts: vault-master-lloyd
-  gather_facts: yes
+  gather_facts: true
   become: yes
   vars:
     vault_tls_dir: /opt/vault/tls
