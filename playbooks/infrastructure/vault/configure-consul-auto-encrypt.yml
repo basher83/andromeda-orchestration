@@ -320,15 +320,17 @@
         timeout: 60
         state: started
 
-    - name: Verify Consul server is in cluster
+    - name: Verify Consul server is in cluster with TLS
       ansible.builtin.command:
-        cmd: consul members
+        cmd: consul members -detailed
       register: consul_members_check
       retries: 6
       delay: 10
-      until: "'alive' in consul_members_check.stdout and inventory_hostname in consul_members_check.stdout"
+      until: >
+        'alive' in consul_members_check.stdout and
+        inventory_hostname in consul_members_check.stdout and
+        ('Encrypted=true' in consul_members_check.stdout or 'Encrypted: true' in consul_members_check.stdout)
       changed_when: false
-
   handlers:
     - name: restart consul server
       ansible.builtin.systemd:
