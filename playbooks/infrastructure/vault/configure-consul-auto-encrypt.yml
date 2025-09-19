@@ -144,10 +144,8 @@
       ansible.builtin.set_fact:
         vault_token: "{{ hostvars['localhost']['vault_token'] }}"
         consul_ca_certificate: "{{ hostvars['localhost']['consul_ca_certificate'] }}"
-        consul_encrypt: "{{ hostvars['localhost']['consul_encrypt'] }}"
         cacheable: no
       no_log: true
-
     - name: Discover Consul servers for retry_join
       ansible.builtin.set_fact:
         consul_retry_join: >-
