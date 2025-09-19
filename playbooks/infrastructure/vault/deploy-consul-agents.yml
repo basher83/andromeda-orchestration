@@ -42,18 +42,22 @@
       tags: [secrets]
 
     - name: Compute Consul retry join from inventory (with fallback)
+      vars:
+        _servers: "{{ groups.get('consul_servers', groups.get('vault_production', [])) }}"
       ansible.builtin.set_fact:
         consul_retry_join: >-
-          {{
-            groups.get('consul_servers', groups.get('vault_production', []))
+          {{ (
+            _servers
             | map('extract', hostvars)
-            | map('dict2items')
-            | map('items2dict')
-            | map('get', 'ansible_host')
-            | map('default', attribute='ansible_default_ipv4.address')
-            | reject('none') | reject('equalto','') | list | unique
-          }}
-      when: groups.get('consul_servers', groups.get('vault_production', [])) | length > 0
+            | map('extract', 'ansible_host')
+            | list
+          ) | zip(
+            _servers | map('extract', hostvars) | map('json_query','ansible_default_ipv4.address') | list
+          )
+          | map('first')
+          | map('default', '')
+          | reject('equalto','') | reject('none') | unique | list }}
+      when: _servers | length > 0
 
   vars:
     consul_version: '1.21.4'
