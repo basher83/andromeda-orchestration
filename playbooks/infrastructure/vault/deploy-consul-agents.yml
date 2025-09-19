@@ -19,6 +19,28 @@
         allow_empty: false
       tags: [secrets]
 
+    - name: Retrieve Consul ACL master token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'CONSUL_MASTER_TOKEN'
+        secret_var_name: 'consul_token_value'
+        fallback_env_var: 'CONSUL_MASTER_TOKEN'
+        infisical_path: '/apollo-13/consul'
+        allow_empty: false
+      tags: [secrets]
+
+    - name: Validate Consul token retrieval
+      ansible.builtin.assert:
+        that:
+          - consul_token_value is defined
+          - consul_token_value != ""
+          - consul_token_value != None
+        fail_msg: |
+          ❌ Failed to retrieve CONSUL_MASTER_TOKEN from Infisical.
+          Please ensure the secret exists at /apollo-13/consul/CONSUL_MASTER_TOKEN
+          or set the CONSUL_MASTER_TOKEN environment variable.
+      tags: [secrets]
+
     - name: Compute Consul retry join from inventory
       ansible.builtin.set_fact:
         consul_retry_join: >-
@@ -28,6 +50,7 @@
 
   vars:
     consul_version: '1.20.5'
+    consul_zip_sha256: 'REPLACE_WITH_ACTUAL_SHA256'  # SHA256 for Consul 1.20.5 linux_amd64
     consul_datacenter: 'dc1'
     consul_data_dir: '/opt/consul/data'
     consul_config_dir: '/etc/consul.d'
@@ -44,14 +67,6 @@
     consul_acl_token: "{{ consul_token_value | default('') }}"
 
   tasks:
-    - name: Compute consul retry join IPs dynamically
-      ansible.builtin.set_fact:
-        consul_retry_join: >-
-          {{ groups['nomad_servers'] | default(groups['consul_server'] | default([]))
-             | map('extract', hostvars) | select | list | default([])
-             | map(attribute='ansible_host') | select | list | default([])
-             | unique | reject('none') | reject('equalto', '') | list }}
-
     - name: Create consul user and group
       block:
         - name: Create consul group

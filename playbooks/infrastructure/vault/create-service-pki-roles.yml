@@ -140,6 +140,7 @@
         fallback_env_var: 'VAULT_TOKEN'
         infisical_path: '/apollo-13/vault'
       tags: [secrets]
+      no_log: true
 
     - name: Validate PKI profile configuration
       ansible.builtin.assert:

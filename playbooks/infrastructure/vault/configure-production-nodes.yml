@@ -152,13 +152,13 @@
           - infisical
           - secrets
           - set
-          - VAULT_RECOVERY_KEY_{{ item.0 + 1 }}={{ item.1 }}
+          - VAULT_RECOVERY_KEY_{{ loop.index }}={{ item }}
           - --path=/apollo-13/vault/recovery-keys
           - --env=prod
       environment:
         INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
         INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
-      loop: "{{ vault_init.json.recovery_keys | default([]) | with_indexed_items }}"
+      loop: "{{ vault_init.json.recovery_keys | default([]) }}"
       delegate_to: localhost
       no_log: true
       changed_when: true
