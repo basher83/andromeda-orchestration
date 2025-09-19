@@ -194,7 +194,9 @@
 
     - name: Summarize TLS port checks
       ansible.builtin.set_fact:
-        tls_ports_open: "{{ port_checks.results | map(attribute='failed') | select('equalto', true) | list | length == 0 }}"
+        tls_ports_open: >-
+          {{ port_checks.results | map(attribute='failed') |
+             select('equalto', true) | list | length == 0 }}
     - name: Test TLS connection to API
       ansible.builtin.uri:
         url: "https://{{ ansible_default_ipv4.address }}:8501/v1/status/leader"
