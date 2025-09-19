@@ -22,9 +22,12 @@ vault_port: 8200
 # Consul configuration
 consul_host: "{{ ansible_host | default('127.0.0.1') }}"  # Consul server host - override for remote targets
 consul_scheme: "http"  # Override to "https" for TLS-enabled deployments
-consul_base_url: "{{ consul_scheme }}://{{ consul_host }}:{{ (consul_scheme == 'https') | ternary(8501, consul_port) }}"
+consul_https_port: 8501
+consul_base_url: >-
+  {{ consul_scheme }}://{{ consul_host }}:{{
+    (consul_scheme == 'https') | ternary(consul_https_port, consul_port)
+  }}
 consul_validate_certs: true  # Set to false for self-signed certificates
-
 # Consul binary download configuration
 consul_version: "1.21.4"  # Update to latest stable version from https://releases.hashicorp.com/consul/
 consul_arch: "linux_amd64"  # Override for different architectures (linux_arm64, darwin_amd64, etc.)
