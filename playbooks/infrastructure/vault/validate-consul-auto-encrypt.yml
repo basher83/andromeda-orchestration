@@ -157,7 +157,7 @@
         - name: Check for auto-encrypt in logs
           ansible.builtin.shell: |
             set -o pipefail
-            journalctl -u consul --since="30 minutes ago" | grep -i "auto.encrypt" | tail -10
+            journalctl -u consul --since="30 minutes ago" | grep -Ei "auto[\.-]encrypt" | tail -10
           args:
             executable: /bin/bash
           register: auto_encrypt_logs
@@ -172,7 +172,6 @@
             executable: /bin/bash
           register: auto_encrypt_info
           changed_when: false
-
         - name: Look for auto-distributed certificates
           ansible.builtin.find:
             paths: "{{ consul_tls_dir }}"
