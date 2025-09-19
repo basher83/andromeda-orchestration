@@ -27,7 +27,12 @@
     - name: Validate no hardcoded IPs
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
       vars:
-        validate_hostlike_vars: {}
+        validate_hostlike_vars:
+          consul_retry_join: >-
+            {{ (groups.get('consul_servers', []) |
+                map('extract', hostvars, 'ansible_host') | list) |
+                join(',') | default('', true) }}
+          vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('', true) }}"
         validate_allowlist:
           - '127.0.0.1'  # Localhost for testing
       tags: [preflight]
@@ -46,16 +51,18 @@
         fail_msg: "❌ Consul service is not running on {{ inventory_hostname }}"
         success_msg: "✅ Consul service is active on {{ inventory_hostname }}"
 
-    - name: Verify TLS is enabled in Consul configuration
+    - name: Inspect TLS encryption via members -detailed
       ansible.builtin.command:
-        cmd: consul info
-      register: consul_info
+        cmd: consul members -detailed
+      register: consul_members_tls
       changed_when: false
       failed_when: false
 
-    - name: Parse Consul info for TLS settings
+    - name: Derive TLS status
       ansible.builtin.set_fact:
-        consul_has_tls: "{{ 'encrypt = true' in consul_info.stdout or 'tls' in consul_info.stdout.lower() }}"
+        consul_has_tls: >-
+          {{ 'Encrypted=true' in (consul_members_tls.stdout | default('')) or
+             'Encrypted: true' in (consul_members_tls.stdout | default('')) }}
 
     - name: Assert TLS is configured
       ansible.builtin.assert:
@@ -63,7 +70,7 @@
           - consul_has_tls
         fail_msg: "❌ TLS encryption not enabled in Consul on {{ inventory_hostname }}"
         success_msg: "✅ TLS encryption enabled on {{ inventory_hostname }}"
-      when: consul_info.rc == 0
+      when: consul_members_tls.rc == 0
 
     - name: Check CA certificate exists
       ansible.builtin.stat:
@@ -206,6 +213,7 @@
       register: tls_api_test
       failed_when: false
       when: inventory_hostname in groups.get('consul_servers', [])
+
     - name: Collect validation summary
       ansible.builtin.set_fact:
         validation_results:
@@ -215,7 +223,9 @@
           tls_enabled: "{{ consul_has_tls | default(false) }}"
           ca_cert_present: "{{ ca_cert_file.stat.exists }}"
           server_certs_present: "{{ server_cert_file.stat.exists | default('N/A') }}"
-          cert_valid: "{{ (((cert_info.not_after | to_datetime).timestamp() | int) - (ansible_date_time.epoch | int)) > 86400 }}"
+          cert_valid: >-
+            {{ (((cert_info.not_after | to_datetime).timestamp() | int) -
+                (ansible_date_time.epoch | int)) > 86400 }}
           cluster_healthy: "{{ all_members_alive | default(false) }}"
           tls_ports_open: "{{ tls_ports_open | default(false) }}"
           auto_encrypt_client: >-
