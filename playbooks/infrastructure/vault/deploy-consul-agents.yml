@@ -299,6 +299,7 @@
           --projectId="7b832220-24c0-45bc-a5f1-ce9794a31259"
       changed_when: false
       delegate_to: localhost
+      no_log: true
       environment:
         INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
         INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
