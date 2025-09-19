@@ -306,7 +306,7 @@
     - name: Wait for Consul server to be healthy
       ansible.builtin.wait_for:
         port: 8300
-        host: "{{ ansible_default_ipv4.address }}"
+        host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         delay: 10
         timeout: 60
         state: started
