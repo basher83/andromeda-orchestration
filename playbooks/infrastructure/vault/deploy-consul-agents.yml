@@ -159,12 +159,11 @@
             check {
               id = "vault-health"
               name = "Vault Health Check"
-              http = >-
-                {{ (vault_scheme | default('https')) }}://
-                {{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}
-                /v1/sys/health?standbyok=true&perfstandbyok=true
-              tls_skip_verify = >-
-                {{ (vault_tls_skip_verify | default(false)) | lower }}
+              http = {{ (vault_scheme | default('https')) ~ '://' ~
+                        (vault_advertise_addr | default(ansible_default_ipv4.address)) ~ ':' ~
+                        (vault_port | default(8200)) ~
+                        '/v1/sys/health?standbyok=true&perfstandbyok=true' }}
+              tls_skip_verify = {{ (vault_tls_skip_verify | default(false) | bool) | tojson }}
               interval = "10s"
               timeout = "5s"
             }
