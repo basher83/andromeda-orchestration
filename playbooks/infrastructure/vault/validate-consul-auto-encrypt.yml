@@ -120,7 +120,7 @@
         - name: Assert certificate is valid for >=24h
           ansible.builtin.assert:
             that:
-              - (cert_info.not_after | to_datetime) - (ansible_date_time.iso8601 | to_datetime) > 86400
+              - (((cert_info.not_after | to_datetime).timestamp() | int) - (ansible_date_time.epoch | int)) > 86400
             fail_msg: "❌ Certificate expiring within 24 hours on {{ inventory_hostname }}"
             success_msg: "✅ Certificate valid for more than 24 hours"
     - name: Verify encrypted communication
