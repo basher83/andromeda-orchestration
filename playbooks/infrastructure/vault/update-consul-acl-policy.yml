@@ -34,12 +34,10 @@
         mode: '0600'
       become: true
 
-    - name: Read policy file content
-      ansible.builtin.slurp:
-        src: '{{ playbook_dir }}/../../../roles/consul/files/policies/vault-client.hcl'
-      register: policy_content
-      become: true
-
+    - name: Load policy file content from controller
+      ansible.builtin.set_fact:
+        policy_rules_raw: "{{ lookup('file', playbook_dir ~ '/../../../roles/consul/files/policies/vault-client.hcl') }}"
+        cacheable: no
     - name: Upsert Vault client ACL policy
       ansible.builtin.uri:
         url: "{{ consul_base_url }}/v1/acl/policy"
