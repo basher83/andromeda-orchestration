@@ -349,10 +349,8 @@
     - name: Get credentials from hostvars
       ansible.builtin.set_fact:
         consul_ca_certificate: "{{ hostvars['localhost']['consul_ca_certificate'] }}"
-        consul_encrypt: "{{ hostvars['localhost']['consul_encrypt'] }}"
         cacheable: no
       no_log: true
-
     - name: Discover Consul servers from inventory
       ansible.builtin.set_fact:
         consul_retry_join: >-
