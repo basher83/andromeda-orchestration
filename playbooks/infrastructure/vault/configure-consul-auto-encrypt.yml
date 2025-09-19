@@ -521,13 +521,15 @@
             {{ 'YES' if 'auto-encrypt' in consul_auto_encrypt_info.stdout | lower else 'NO' }}
         success_msg: "Auto-encrypt is functioning properly on {{ inventory_hostname }}"
 
-    - name: Verify client is in cluster
+    - name: Verify client is in cluster with TLS
       ansible.builtin.command:
-        cmd: consul members
+        cmd: consul members -detailed
       register: consul_members_check
       retries: 6
       delay: 10
-      until: "'alive' in consul_members_check.stdout"
+      until: >
+        'alive' in consul_members_check.stdout and
+        ( 'Encrypted=true' in consul_members_check.stdout or 'Encrypted: true' in consul_members_check.stdout )
       changed_when: false
 
   handlers:
