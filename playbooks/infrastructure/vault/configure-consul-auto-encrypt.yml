@@ -488,15 +488,14 @@
     - name: Query Consul auto-encrypt status
       ansible.builtin.shell: |
         set -o pipefail
-        consul info 2>/dev/null | grep -i "auto.encrypt" || \
-        consul operator autopilot state 2>/dev/null | grep -i "encrypt" || \
+        consul members -detailed 2>/dev/null | grep -E "Encrypted(=|:)\s*true" || \
+        consul info 2>/dev/null | awk '/AutoEncrypt/{flag=1;next}/^[A-Z]/{flag=0}flag' || \
         echo "auto-encrypt-status=unknown"
       args:
         executable: /bin/bash
       register: consul_auto_encrypt_info
       changed_when: false
       failed_when: false
-
     - name: Debug auto-encrypt verification results
       ansible.builtin.debug:
         msg:
