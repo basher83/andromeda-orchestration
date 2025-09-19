@@ -113,6 +113,7 @@
 
     # Consul domain configuration - can be overridden in group_vars
     consul_domain: "consul.spaceships.work"  # Default Consul domain for PKI certificates
+    consul_datacenter: "{{ consul_datacenter | default('dc1') }}"  # Parametrized datacenter name
 
     # Vault configuration - derive from inventory with IPv6 support
     vault_addr: >-
@@ -224,12 +225,16 @@
         role_name: consul-agent
         common_name: "{{ inventory_hostname }}.{{ consul_domain }}"
         alt_names:
-          - "server.dc1.consul"
-          - "consul.service.consul"
+          - "{{ inventory_hostname }}.{{ consul_domain }}"  # Include CN in SANs
+          - "server.{{ consul_datacenter }}.{{ consul_domain }}"
+          - "consul.service.{{ consul_domain }}"
           - "{{ inventory_hostname }}"
-        ip_sans:
-          - "{{ ansible_default_ipv4.address }}"
-          - "127.0.0.1"
+        ip_sans: >-
+          {%- set sans = [ansible_default_ipv4.address, "127.0.0.1"] -%}
+          {%- if ansible_default_ipv6 is defined and ansible_default_ipv6.address is defined -%}
+            {%- set _ = sans.append(ansible_default_ipv6.address) -%}
+          {%- endif -%}
+          {{ sans }}
         ttl: "720h"  # 30 days
         engine_mount_point: "{{ pki_int_path }}"
         validate_certs: "{{ vault_validate_certs }}"
@@ -462,20 +467,6 @@
       until: auto_encrypt_log_check.rc == 0
       changed_when: false
       failed_when: false
-    - name: Check for auto-encrypt client certificate
-      ansible.builtin.stat:
-        path: "{{ consul_tls_dir }}/consul-client-cert.pem"
-      register: client_cert_stat
-
-    - name: Verify certificate recency (if exists)
-      ansible.builtin.set_fact:
-        cert_is_recent: >-
-          {{
-            client_cert_stat.stat.exists and
-            ((ansible_date_time.epoch | int) - client_cert_stat.stat.mtime) < 3600
-          }}
-      when: client_cert_stat.stat.exists | default(false)
-
     - name: Query Consul auto-encrypt status
       ansible.builtin.shell: |
         set -o pipefail
@@ -491,25 +482,23 @@
       ansible.builtin.debug:
         msg:
           - "Log check found auto-encrypt: {{ auto_encrypt_log_check.rc == 0 }}"
-          - "Client certificate exists: {{ client_cert_stat.stat.exists | default(false) }}"
-          - "Certificate is recent (< 1hr old): {{ cert_is_recent | default(false) }}"
-          - "Consul info output: {{ consul_auto_encrypt_info.stdout | default('not available') }}"
+          - "Consul encryption status: {{ consul_auto_encrypt_info.stdout | default('not available') }}"
       when: ansible_verbosity > 0
 
     - name: Assert auto-encrypt is functioning
       ansible.builtin.assert:
         that:
           - >-
-            auto_encrypt_log_check.rc == 0 or
-            client_cert_stat.stat.exists | default(false) or
-            'auto-encrypt' in consul_auto_encrypt_info.stdout | lower
+            auto_encrypt_log_check.rc == 0
+            or ('Encrypted=true' in (consul_auto_encrypt_info.stdout | default('')))
+            or ('Encrypted: true' in (consul_auto_encrypt_info.stdout | default('')))
         fail_msg: |
           Auto-encrypt verification failed on {{ inventory_hostname }}:
           - Log check: {{ 'PASSED' if auto_encrypt_log_check.rc == 0 else 'FAILED' }}
-          - Certificate exists: {{ 'YES' if client_cert_stat.stat.exists | default(false) else 'NO' }}
           - >-
-            Consul info shows auto-encrypt:
-            {{ 'YES' if 'auto-encrypt' in consul_auto_encrypt_info.stdout | lower else 'NO' }}
+            Encrypted members/info:
+            {{ 'YES' if ('Encrypted=true' in (consul_auto_encrypt_info.stdout | default('')))
+               or ('Encrypted: true' in (consul_auto_encrypt_info.stdout | default(''))) else 'NO' }}
         success_msg: "Auto-encrypt is functioning properly on {{ inventory_hostname }}"
 
     - name: Verify client is in cluster with TLS
