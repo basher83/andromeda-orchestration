@@ -20,6 +20,10 @@
     consul_config_dir: /etc/consul.d
 
   pre_tasks:
+    - name: Include domain validation
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/domain-assertions.yml"
+      tags: [validate, preflight]
+
     - name: Validate no hardcoded IPs
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
       vars:
