@@ -18,7 +18,6 @@
 
   vars:
     policy_name: 'vault-client-policy'
-    consul_addr: "{{ (consul_use_tls | default(false)) | ternary('https://127.0.0.1:8501', 'http://127.0.0.1:8500') }}"
 
   tasks:
     - name: Verify master token is set
@@ -43,12 +42,12 @@
 
     - name: Upsert Vault client ACL policy
       ansible.builtin.uri:
-        url: "{{ consul_addr }}/v1/acl/policy"
+        url: "{{ consul_base_url }}/v1/acl/policy"
         method: PUT
         headers:
           X-Consul-Token: "{{ consul_master_token }}"
         body_format: json
-        validate_certs: "{{ consul_validate_certs | default(true) }}"
+        validate_certs: "{{ consul_validate_certs }}"
         ca_path: "{{ consul_ca_path | default(omit) }}"
         timeout: "{{ consul_http_timeout | default(15) }}"
         body:

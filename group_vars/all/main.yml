@@ -20,8 +20,9 @@ nomad_port: 4646
 vault_port: 8200
 
 # Consul configuration
+consul_host: "{{ ansible_host | default('127.0.0.1') }}"  # Consul server host - override for remote targets
 consul_scheme: "http"  # Override to "https" for TLS-enabled deployments
-consul_base_url: "{{ consul_scheme }}://127.0.0.1:{{ consul_port }}"
+consul_base_url: "{{ consul_scheme }}://{{ consul_host }}:{{ (consul_scheme == 'https') | ternary(8501, consul_port) }}"
 consul_validate_certs: true  # Set to false for self-signed certificates
 
 # Consul binary download configuration
