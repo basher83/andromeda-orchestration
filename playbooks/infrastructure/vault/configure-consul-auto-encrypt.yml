@@ -45,15 +45,6 @@
       tags: [secrets]
       no_log: true
 
-    - name: Retrieve Consul gossip encryption key securely
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
-      vars:
-        secret_name: 'GOSSIP_ENCRYPTION_KEY'
-        secret_var_name: 'consul_encrypt'
-        fallback_env_var: 'CONSUL_ENCRYPT'
-        infisical_path: '/apollo-13/consul'
-      tags: [secrets]
-      no_log: true
 
     - name: Include domain validation
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/domain-assertions.yml"
