@@ -7,6 +7,7 @@ This directory contains organized Ansible playbooks for infrastructure managemen
 ### Production Playbooks
 
 - **`consul/`** - Consul service mesh and DNS configuration
+
   - `phase1-consul-dns.yml` - Enable Consul DNS on clusters
   - `phase1-consul-foundation.yml` - Base Consul setup
   - `consul-telemetry-setup.yml` - Configure Consul telemetry
@@ -15,21 +16,25 @@ This directory contains organized Ansible playbooks for infrastructure managemen
   - `create-prometheus-acl.yml` - ACL for Prometheus integration
 
 - **`consul-nomad/`** - Consul and Nomad integration
+
   - `consul-nomad-integration.yml` - Full Consul-Nomad integration setup
   - `enable-consul-nomad-simple.yml` - Simple enablement of Consul-Nomad features
   - Various ACL and token management playbooks
 
 - **`monitoring/`** - Netdata monitoring deployment
+
   - `deploy-netdata-all.yml` - Deploy to all clusters
   - `deploy-netdata-doggos.yml` - Deploy to doggos-homelab
   - `deploy-netdata-og.yml` - Deploy to og-homelab
   - `netdata-configure-mesh.yml` - Configure parent mesh topology
 
 - **`network/`** - Network configuration
+
   - `update-nftables-netdata.yml` - Firewall rules for Netdata
   - `update-nftables-nomad.yml` - Firewall rules for Nomad dynamic ports
 
 - **`nomad/`** - Nomad cluster management
+
   - `cluster-manage.yml` - Manage Nomad cluster operations
   - `cluster-status.yml` - Check Nomad cluster status
   - `deploy-job.yml` - Deploy Nomad jobs using Galaxy modules
@@ -37,6 +42,7 @@ This directory contains organized Ansible playbooks for infrastructure managemen
   - `register-service.yml` - Register services with Nomad
 
 - **`powerdns/`** - PowerDNS deployment and configuration (Phase 2)
+
   - `powerdns-prepare-volumes.yml` - Prepare host volumes on Nomad clients
   - `powerdns-setup-consul-kv.yml` - Automated secret setup in Consul KV
   - `powerdns-consul-acl.yml` - Configure Consul ACLs for PowerDNS
@@ -44,6 +50,7 @@ This directory contains organized Ansible playbooks for infrastructure managemen
   - See `powerdns/README.md` for detailed deployment workflow
 
 - **`user-management/`** - User and access management
+
   - `setup-ansible-user.yml` - Comprehensive ansible user setup with SSH keys and sudo access
   - `deploy-ssh-keys.yml` - Legacy SSH key deployment playbook (use setup-ansible-user.yml instead)
 
@@ -55,6 +62,7 @@ This directory contains organized Ansible playbooks for infrastructure managemen
 ### Hidden Directories
 
 - **`.debug/`** - Troubleshooting and debugging playbooks (10+ files)
+
   - Various `check-*` and `debug-*` playbooks for Netdata troubleshooting
   - Kept hidden to reduce clutter but available when needed
 
@@ -103,6 +111,10 @@ uv run ansible-playbook playbooks/infrastructure/consul/phase1-consul-dns.yml \
 
 # Setup Consul telemetry
 uv run ansible-playbook playbooks/infrastructure/consul/consul-telemetry-setup.yml \
+  -i inventory/doggos-homelab/infisical.proxmox.yml
+
+# Update Consul ACL policy for Vault clients
+uv run ansible-playbook playbooks/infrastructure/vault/update-consul-acl-policy.yml \
   -i inventory/doggos-homelab/infisical.proxmox.yml
 ```
 

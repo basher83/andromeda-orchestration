@@ -18,6 +18,16 @@
           - '::1'
       tags: ['validate']
 
+    - name: Retrieve Vault token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_PROD_ROOT_TOKEN'
+        secret_var_name: 'vault_token'
+        fallback_env_var: 'VAULT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      no_log: true
+      tags: [secrets]
+
     - name: Assert VAULT_ADDR or inventory leader is available
       ansible.builtin.assert:
         that:
@@ -62,20 +72,6 @@
     vault_validate_health_tls: true # Enable TLS validation after CA installation
 
   tasks:
-    - name: Retrieve Vault token from Infisical
-      ansible.builtin.set_fact:
-        vault_token: "{{ lookup('env', 'VAULT_TOKEN') | default((lookup('infisical.vault.read_secrets',
-          universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-          universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-          project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-          env_slug='prod',
-          path='/apollo-13/vault',
-          secret_name='VAULT_PROD_ROOT_TOKEN')).value, true) }}"
-        cacheable: no
-      no_log: true
-      run_once: true
-      delegate_to: localhost
-
     - name: Create backup directory for existing certificates
       ansible.builtin.file:
         path: '{{ backup_dir }}'
@@ -231,7 +227,7 @@
       ansible.builtin.shell:
         cmd: |
           set -o pipefail
-          openssl x509 -in {{ tls_dir }}/tls.crt -text -noout | grep -E "(Subject:|Issuer:)"
+          openssl x509 -in {{ tls_dir }}/tls.crt -text -noout | grep -E "(Subject:|Issuer:|Not After:)"
         executable: /bin/bash
       register: cert_info
       become: true
@@ -240,6 +236,23 @@
     - name: Display certificate information
       ansible.builtin.debug:
         msg: '{{ cert_info.stdout_lines }}'
+
+    - name: Parse certificate expiry and calculate days remaining
+      ansible.builtin.set_fact:
+        cert_expiry_date: >-
+          {{ (cert_info.stdout_lines | select('match', 'Not After : .*') | first
+              | regex_replace('Not After : ', '')) | strptime('%b %d %H:%M:%S %Y %Z') }}
+      when: "cert_info.stdout_lines | select('match', 'Not After : .*') | length > 0"
+
+    - name: Display certificate expiry information
+      ansible.builtin.debug:
+        msg:
+          - '📅 Certificate Expiry Information:'
+          - '   Not After: {{ cert_expiry_date | strftime("%Y-%m-%d %H:%M:%S %Z") }}'
+          - >-
+            Days remaining: {{ ((cert_expiry_date | to_datetime)
+            - (ansible_date_time.iso8601 | to_datetime)).days }}
+      when: "cert_expiry_date is defined"
 
     - name: Test certificate chain validation
       ansible.builtin.shell:

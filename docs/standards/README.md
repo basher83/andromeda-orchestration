@@ -2,7 +2,7 @@
 
 This directory contains the standards, conventions, and operating procedures that govern this repository. These documents explain not just _what_ we do, but more importantly _why_ we do it this way.
 
-📚 **Note**: These standards complement and extend the central standards defined in [Mission Control](https://github.com/basher83/docs/tree/main/mission-control/README.md). When in doubt, defer to Mission Control for organization-wide standards.
+📚 **Note**: These standards complement and extend the central standards defined in [Mission Control](../README.md). When in doubt, defer to Mission Control for organization-wide standards.
 
 ## 📋 Standards Documents
 
@@ -141,6 +141,20 @@ PR template for domain migration changes.
 - Rollback procedures
 - Validation criteria
 
+### [Pull Request Template](../../.github/PULL_REQUEST_TEMPLATE.md)
+
+Comprehensive PR template following the established repository style from [PR #119](https://github.com/basher83/andromeda-orchestration/pull/119).
+
+- **Location**: `.github/PULL_REQUEST_TEMPLATE.md` (automatically used by GitHub)
+- Structured scope definition (What's In/Out of Scope)
+- Testing evidence requirements
+- Breaking change documentation
+- Reviewer checklists
+- Dependency tracking
+- Risk assessment framework
+
+**Note**: The template has been moved to `.github/` for automatic GitHub integration while maintaining documentation here for reference.
+
 ## 🎯 Purpose
 
 These standards exist to:
@@ -176,49 +190,59 @@ Standards evolve. When updating:
 # [Standard Name]
 
 ## Purpose
+
 Why this standard exists and what problem it solves.
 
 ## Background
+
 Context and history leading to this decision.
 
 ## Standard
+
 The actual standard or procedure.
 
 ## Rationale
+
 Why we chose this approach over alternatives.
 
 ## Examples
+
 ### Good Example
+
 [Show correct implementation]
 
 ### Bad Example
+
 [Show what to avoid]
 
 ## Exceptions
+
 When this standard doesn't apply.
 
 ## Migration
+
 How to update existing code/docs to meet this standard.
 
 ## References
+
 Related standards, external documentation, or decisions.
 ```
 
 ## 🔗 Quick Reference
 
-| Standard | Purpose | Key Decision | Status |
-|----------|---------|--------------|--------|
-| Documentation | Organized knowledge | Everything documented, logically placed | ✅ Complete |
-| Ansible | Consistent automation | Dynamic inventory, modular playbooks | ✅ Complete |
-| Nomad | Clean job management | Production/testing/archive separation | ✅ Complete |
-| Infrastructure | Scalable architecture | Service discovery, dynamic configuration | ✅ Complete |
-| Security | Protect sensitive data | Multi-layer scanning, strict gitignore | ✅ Complete |
-| Git | Clean version control | Conventional commits, clear branches | 📝 TODO |
-| Testing | Quality assurance | Mandatory smoke tests, fail fast | ✅ Complete |
-| Development | Efficient workflow | Automated checks, clear process | 📝 TODO |
-| Monitoring | System visibility | Metrics, logs, alerts | 📝 TODO |
-| Linting | Code consistency | Automated enforcement | 📝 TODO |
-| Project Mgmt | Delivery tracking | Visible progress, clear accountability | 📝 TODO |
+| Standard                          | Purpose                | Key Decision                             | Status      |
+| --------------------------------- | ---------------------- | ---------------------------------------- | ----------- |
+| [Documentation](documentation-standards.md) | Organized knowledge    | Everything documented, logically placed  | ✅ Complete |
+| [Ansible](ansible-standards.md)   | Consistent automation  | Dynamic inventory, modular playbooks     | ✅ Complete |
+| [Nomad](nomad-job-standards.md)   | Clean job management   | Production/testing/archive separation    | ✅ Complete |
+| [Infrastructure](infrastructure-standards.md) | Scalable architecture  | Service discovery, dynamic configuration | ✅ Complete |
+| [Security](security-standards.md) | Protect sensitive data | Multi-layer scanning, strict gitignore   | ✅ Complete |
+| [Git](git-standards.md)           | Clean version control  | Conventional commits, clear branches     | 📝 TODO     |
+| [Testing](testing-standards.md)   | Quality assurance      | Mandatory smoke tests, fail fast         | ✅ Complete |
+| [Development](development-workflow.md) | Efficient workflow     | Automated checks, clear process          | 📝 TODO     |
+| [Monitoring](monitoring-observability-standards.md) | System visibility      | Metrics, logs, alerts                    | 📝 TODO     |
+| [Linting](linting-standards.md)   | Code consistency       | Automated enforcement                    | 📝 TODO     |
+| [Project Mgmt](project-management-standards.md) | Delivery tracking      | Visible progress, clear accountability   | 📝 TODO     |
 
 ## 🌐 Relationship with Mission Control
 
@@ -226,7 +250,7 @@ This repository's standards are part of a larger ecosystem:
 
 ### Hierarchy
 
-1. **[Mission Control](https://github.com/basher83/docs/tree/main/mission-control/README.md)** - Organization-wide standards and policies
+1. **[Mission Control](../README.md)** - Organization-wide standards and policies
 2. **Repository Standards** (this directory) - Project-specific implementations
 3. **Service Standards** - Individual service requirements
 

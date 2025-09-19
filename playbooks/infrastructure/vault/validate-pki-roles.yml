@@ -15,6 +15,24 @@
   gather_facts: false
   any_errors_fatal: true
 
+  pre_tasks:
+    - name: Retrieve Vault token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_PROD_ROOT_TOKEN'
+        secret_var_name: 'vault_token'
+        fallback_env_var: 'VAULT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+
+    - name: Validate no hardcoded IPs
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []  # No exceptions allowed
+      tags: [preflight]
+
   module_defaults:
     community.hashi_vault.vault_read:
       url: "{{ vault_addr }}"
@@ -31,17 +49,6 @@
       auth_method: token
       token: "{{ vault_token }}"
       validate_certs: "{{ vault_validate_certs | default(true) }}"
-
-  vars:
-    # Retrieve Vault token from Infisical
-    vault_token: >-
-      {{ (lookup('infisical.vault.read_secrets',
-                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                 env_slug='prod',
-                 path='/apollo-13/vault',
-                 secret_name='VAULT_PROD_ROOT_TOKEN')).value }}
 
     # Vault configuration - dynamically discovered from inventory
     vault_addr: >-
@@ -110,21 +117,21 @@
         max_ttl_hours: 168
         default_ttl_hours: 168
 
-  pre_tasks:
-    - name: Validate no hardcoded IPs
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
-      vars:
-        validate_hostlike_vars:
-          vault_addr: "{{ vault_addr | default('') }}"
-        validate_allowlist: []  # No exceptions allowed
-      tags: [preflight]
-
     # Collection availability is checked by the included validation task
 
+  tasks:
     - name: Verify community.crypto collection is available
+      community.crypto.x509_certificate_info:
+        path: "/dev/null"
+      register: _crypto_probe
+      failed_when: false
+      changed_when: false
+      tags: [preflight]
+
+    - name: Assert community.crypto availability
       ansible.builtin.assert:
         that:
-          - "'community.crypto' in ansible_facts.ansible_collections | default({})"
+          - _crypto_probe is not failed
         fail_msg: |
           ❌ community.crypto collection not installed!
 
@@ -156,7 +163,6 @@
       tags: [preflight]
       no_log: true
 
-  tasks:
     - name: Test Vault connectivity
       community.hashi_vault.vault_read:
         path: "sys/health"

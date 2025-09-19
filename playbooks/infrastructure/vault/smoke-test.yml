@@ -30,14 +30,7 @@
     vault_validate_certs: "{{ vault_validate_certs | default(true) }}"  # Default to true for production security
 
     # Test that we can retrieve secrets from Infisical
-    vault_token_test: >-
-      {{ (lookup('infisical.vault.read_secrets',
-                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                 env_slug='prod',
-                 path='/apollo-13/vault',
-                 secret_name='VAULT_PROD_ROOT_TOKEN')).value | default('FAILED') }}
+    # vault_token_test will be set by pre_tasks
 
     # Operational secrets that should be retrievable
     operational_secrets:
@@ -52,6 +45,15 @@
     test_results: {}
 
   pre_tasks:
+    - name: Retrieve Vault token for testing
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_PROD_ROOT_TOKEN'
+        secret_var_name: 'vault_token_test'
+        fallback_env_var: 'VAULT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+
     # MANDATORY: Validate no hardcoded IPs before proceeding
     - name: Validate dynamic inventory compliance
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
@@ -288,19 +290,24 @@
       when: token_capabilities is defined and token_capabilities is not failed
       register: test7_result
 
+    - name: Retrieve operational secrets securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: "{{ item }}"
+        secret_var_name: "{{ item | lower }}_value"
+        fallback_env_var: "{{ item }}"
+        infisical_path: '/apollo-13/vault'
+      loop: "{{ operational_secrets }}"
+      no_log: true
+      tags: [secrets]
+
     - name: 'SMOKE TEST 8: Verify operational secrets availability'
       block:
-        - name: Retrieve operational secrets into a dict
+        - name: Build operational secrets dict from retrieved values
           ansible.builtin.set_fact:
             operational_secret_values: >-
               {{ (operational_secret_values | default({})) | combine(
-                 { item: (lookup('infisical.vault.read_secrets',
-                                 universal_auth_client_id=lookup('env','INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                                 universal_auth_client_secret=lookup('env','INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                                 env_slug='prod',
-                                 path='/apollo-13/vault',
-                                 secret_name=item)).value | default('') }
+                 { item: lookup('vars', item | lower + '_value') | default('') }
               ) }}
           loop: '{{ operational_secrets }}'
           no_log: true
@@ -346,16 +353,14 @@
           when: test_recovery_keys | bool
           block:
             - name: Attempt to retrieve recovery keys
-              ansible.builtin.set_fact:
-                recovery_key_test: >-
-                  {{ (lookup('infisical.vault.read_secrets',
-                             universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                             universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                             project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                             env_slug='prod',
-                             path='/apollo-13/vault',
-                             secret_name='VAULT_PROD_RECOVERY_KEY_1')).value | default('FAILED') }}
+              ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+              vars:
+                secret_name: 'VAULT_PROD_RECOVERY_KEY_1'
+                secret_var_name: 'recovery_key_test'
+                fallback_env_var: 'VAULT_PROD_RECOVERY_KEY_1'
+                infisical_path: '/apollo-13/vault'
               no_log: true
+              tags: [secrets]
 
             - name: Verify recovery key retrieval
               ansible.builtin.assert:

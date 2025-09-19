@@ -9,44 +9,49 @@
   hosts: vault-master-lloyd
   gather_facts: true
   become: yes
+
+  pre_tasks:
+    - name: Retrieve Consul token for Vault master securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'CONSUL_TOKEN_VAULT_MASTER_LLOYD'
+        secret_var_name: 'consul_token'
+        fallback_env_var: 'CONSUL_TOKEN_VAULT_MASTER_LLOYD'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+
   vars:
     consul_addr: 'http://127.0.0.1:8500'
     vault_addr: 'https://{{ ansible_default_ipv4.address }}:8200'
 
-    # Retrieve Consul token from Infisical
-    consul_token: >-
-      {{ (lookup('infisical.vault.read_secrets',
-                 universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                 universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                 project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                 env_slug='prod',
-                 path='/apollo-13/vault',
-                 secret_name='CONSUL_TOKEN_VAULT_MASTER_LLOYD')).value }}
-
   tasks:
     - name: Check if Consul agent is running
-      systemd:
+      ansible.builtin.systemd:
         name: consul
       register: consul_service
       ignore_errors: yes
 
     - name: Install Consul agent if not present
+      when: not consul_binary.stat.exists
       block:
         - name: Download Consul binary
-          get_url:
-            url: 'https://releases.hashicorp.com/consul/1.21.4/consul_1.21.4_linux_amd64.zip'
+          ansible.builtin.get_url:
+            url: >-
+              https://releases.hashicorp.com/consul/{{ consul_version }}/
+              consul_{{ consul_version }}_{{ consul_arch }}.zip
             dest: /tmp/consul.zip
+            checksum: "sha256:{{ consul_zip_sha256 }}"
             mode: '0644'
 
         - name: Unzip Consul
-          unarchive:
+          ansible.builtin.unarchive:
             src: /tmp/consul.zip
             dest: /usr/local/bin
             remote_src: yes
             mode: '0755'
 
         - name: Create Consul user
-          user:
+          ansible.builtin.user:
             name: consul
             system: yes
             shell: /bin/false
@@ -54,7 +59,7 @@
             create_home: no
 
         - name: Create Consul directories
-          file:
+          ansible.builtin.file:
             path: '{{ item }}'
             state: directory
             owner: consul
@@ -66,7 +71,7 @@
             - /var/log/consul
 
         - name: Create Consul agent configuration
-          copy:
+          ansible.builtin.copy:
             content: |
               {
                 "datacenter": "dc1",
@@ -85,7 +90,7 @@
             mode: '0640'
 
         - name: Create Consul systemd service
-          copy:
+          ansible.builtin.copy:
             content: |
               [Unit]
               Description=Consul
@@ -110,15 +115,15 @@
             mode: '0644'
 
         - name: Start and enable Consul
-          systemd:
+          ansible.builtin.systemd:
             name: consul
             state: started
             enabled: yes
             daemon_reload: yes
-      when: consul_service.status.ActiveState is not defined or consul_service.status.ActiveState != "active"
+          when: consul_service.status.ActiveState is not defined or consul_service.status.ActiveState != "active"
 
     - name: Create Vault service definition
-      copy:
+      ansible.builtin.copy:
         content: |
           {
             "service": {
@@ -154,7 +159,7 @@
       notify: reload consul
 
     - name: Register Vault service via API
-      uri:
+      ansible.builtin.uri:
         url: '{{ consul_addr }}/v1/agent/service/register'
         method: PUT
         headers:
@@ -188,7 +193,7 @@
       delegate_to: localhost
 
     - name: Verify service registration
-      uri:
+      ansible.builtin.uri:
         url: '{{ consul_addr }}/v1/catalog/service/vault'
         method: GET
         headers:
@@ -198,7 +203,7 @@
       delegate_to: localhost
 
     - name: Display registration status
-      debug:
+      ansible.builtin.debug:
         msg: |
           Vault Master registered with Consul successfully!
 
@@ -216,6 +221,6 @@
 
   handlers:
     - name: reload consul
-      systemd:
+      ansible.builtin.systemd:
         name: consul
         state: reloaded

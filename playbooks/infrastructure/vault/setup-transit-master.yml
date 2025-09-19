@@ -6,19 +6,23 @@
   hosts: "{{ target_hosts | default('nomad-server-1-lloyd') }}"
   gather_facts: true
 
-  vars:
-    vault_addr: 'http://{{ ansible_default_ipv4.address }}:8200'
-    # Use Infisical lookup for root token - NO HARDCODED SECRETS
-    vault_token: "{{ lookup('infisical.vault.read_secrets',
-      env='prod',
-      path='/apollo-13/vault',
-      secret_name='VAULT_DEV_ROOT_TOKEN') }}"
-
   pre_tasks:
+    - name: Retrieve Vault dev root token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_DEV_ROOT_TOKEN'
+        secret_var_name: 'vault_token'
+        fallback_env_var: 'VAULT_DEV_ROOT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+
     - name: Validate Infisical token is available
       ansible.builtin.fail:
         msg: 'VAULT_DEV_ROOT_TOKEN not found in Infisical at /apollo-13/vault'
       when: vault_token is undefined or vault_token == ""
+
+  vars:
+    vault_addr: 'http://{{ ansible_default_ipv4.address }}:8200'
 
   tasks:
     - name: Wait for master Vault to be ready

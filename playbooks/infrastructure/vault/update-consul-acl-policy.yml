@@ -1,23 +1,23 @@
 ---
 # Update Consul ACL policy for Vault clients
-# Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/update-consul-acl-policy.yml -i inventory/environments/doggos-homelab/proxmox.yml
+# See: playbooks/infrastructure/README.md#consul-configuration
 
 - name: Update Consul ACL Policy for Vault Clients
   hosts: nomad-server-1-lloyd
   gather_facts: false
 
+  pre_tasks:
+    - name: Retrieve Consul master token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'CONSUL_MASTER_TOKEN'
+        secret_var_name: 'consul_master_token'
+        fallback_env_var: 'CONSUL_MASTER_TOKEN'
+        infisical_path: '/apollo-13/consul'
+      tags: [secrets]
+
   vars:
-    consul_master_token: >-
-      {{ lookup('infisical.vault.read_secrets',
-                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                env_slug='prod',
-                path='/apollo-13/consul',
-                secret_name='CONSUL_MASTER_TOKEN').value }}
     policy_name: 'vault-client-policy'
-    consul_addr: 'http://127.0.0.1:8500'
 
   tasks:
     - name: Verify master token is set
@@ -34,21 +34,46 @@
         mode: '0600'
       become: true
 
-    - name: Update Vault client ACL policy
-      ansible.builtin.shell: |
-        consul acl policy update \
-          -name="{{ policy_name }}" \
-          -description="Policy for Vault Consul client agents (updated)" \
-          -rules=@/tmp/vault-client-policy.hcl \
-          -token="{{ consul_master_token }}"
+    - name: Upsert Vault client ACL policy
+      ansible.builtin.uri:
+        url: "{{ consul_base_url }}/v1/acl/policy"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ consul_master_token }}"
+        body_format: json
+        body:
+          Name: "{{ policy_name }}"
+          Description: "Policy for Vault Consul client agents (updated)"
+          Rules: "{{ policy_rules_raw }}"
+        status_code: [200]
+    - name: Upsert Vault client ACL policy
+      ansible.builtin.uri:
+        url: "{{ consul_base_url }}/v1/acl/policy"
+        method: PUT
+        headers:
+          X-Consul-Token: "{{ consul_master_token }}"
+        body_format: json
+        validate_certs: "{{ consul_validate_certs }}"
+        ca_path: "{{ consul_ca_path | default(omit) }}"
+        timeout: "{{ consul_http_timeout | default(15) }}"
+        body:
+          Name: "{{ policy_name }}"
+          Description: "Policy for Vault Consul client agents (updated)"
+          Rules: "{{ policy_content.content | b64decode }}"
+        status_code: [200, 201]
       register: policy_update
       become: true
+      no_log: true
+      retries: 5
+      delay: 3
+      until: policy_update is succeeded and policy_update.status in [200, 201]
 
     - name: Display policy update result
       ansible.builtin.debug:
         msg:
-          - "✅ Policy '{{ policy_name }}' has been updated"
-          - '{{ policy_update.stdout }}'
+          - "✅ Policy '{{ policy_name }}' has been updated successfully"
+          - "Status: {{ policy_update.status }} ({{ policy_update.status_text | default('OK') }})"
+          - "Response contains sensitive policy data - not displayed for security"
 
     - name: Clean up policy file
       ansible.builtin.file:

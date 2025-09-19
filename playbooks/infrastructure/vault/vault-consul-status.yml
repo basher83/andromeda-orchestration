@@ -1,21 +1,22 @@
 ---
 # Check Vault-Consul integration status
 # Usage:
-# uv run ansible-playbook playbooks/infrastructure/vault/vault-consul-status.yml -i inventory/environments/doggos-homelab/proxmox.yml
+# uv run ansible-playbook playbooks/infrastructure/vault/vault-consul-status.yml \
+#   -i inventory/environments/doggos-homelab/proxmox.yml
 
 - name: Check Vault-Consul Integration Status
   hosts: nomad-server-1-lloyd
   gather_facts: false
 
-  vars:
-    consul_token: >-
-      {{ lookup('infisical.vault.read_secrets',
-                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                env_slug='prod',
-                path='/apollo-13/consul',
-                secret_name='CONSUL_MASTER_TOKEN').value }}
+  pre_tasks:
+    - name: Retrieve Consul master token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'CONSUL_MASTER_TOKEN'
+        secret_var_name: 'consul_token'
+        fallback_env_var: 'CONSUL_MASTER_TOKEN'
+        infisical_path: '/apollo-13/consul'
+      tags: [secrets]
 
   tasks:
     - name: Verify master token is set
@@ -34,26 +35,28 @@
 
     - name: Get healthy Vault services
       ansible.builtin.uri:
-        url: 'http://127.0.0.1:8500/v1/health/service/vault?passing'
+        url: '{{ consul_base_url }}/v1/health/service/vault?passing'
         method: GET
         headers:
           X-Consul-Token: '{{ consul_token }}'
+        validate_certs: '{{ consul_validate_certs | default(true) }}'
         status_code: 200
       register: healthy_vault
       become: true
 
     - name: Get all Vault service health details
       ansible.builtin.uri:
-        url: 'http://127.0.0.1:8500/v1/health/service/vault'
+        url: '{{ consul_base_url }}/v1/health/service/vault'
         method: GET
         headers:
           X-Consul-Token: '{{ consul_token }}'
+        validate_certs: '{{ consul_validate_certs | default(true) }}'
         status_code: 200
       register: all_vault_health
       become: true
 
     - name: Parse node status
-      set_fact:
+      ansible.builtin.set_fact:
         node_summary: |
           {% for node in all_vault_health.json %}
           {{ '✅' if node.Checks[1].Status == 'passing' else '❌' }} {{ node.Node.Node }}: {{ node.Checks[1].Status }}

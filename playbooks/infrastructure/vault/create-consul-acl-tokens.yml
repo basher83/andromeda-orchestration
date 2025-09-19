@@ -8,15 +8,17 @@
   hosts: nomad-server-1-lloyd
   gather_facts: false
 
+  pre_tasks:
+    - name: Retrieve Consul master token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'CONSUL_MASTER_TOKEN'
+        secret_var_name: 'consul_master_token'
+        fallback_env_var: 'CONSUL_MASTER_TOKEN'
+        infisical_path: '/apollo-13/consul'
+      tags: [secrets]
+
   vars:
-    consul_master_token: >-
-      {{ lookup('infisical.vault.read_secrets',
-                universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
-                universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
-                project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
-                env_slug='prod',
-                path='/apollo-13/consul',
-                secret_name='CONSUL_MASTER_TOKEN').value }}
     policy_name: 'vault-client-policy'
     consul_addr: 'http://127.0.0.1:8500'
 
@@ -166,7 +168,6 @@
       ansible.builtin.set_fact:
         node_token_name: "CONSUL_TOKEN_{{ inventory_hostname | upper | replace('-', '_') }}"
         cacheable: no
-        no_log: true
 
     - name: Retrieve token from Infisical
       ansible.builtin.shell: |

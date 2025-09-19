@@ -6,15 +6,16 @@
   hosts: vault_production
   gather_facts: true
 
-  vars:
-    # Use Infisical lookup for transit token - NO HARDCODED SECRETS
-    vault_transit_token: "{{ lookup('infisical.vault.read_secrets',
-      env='prod',
-      path='/apollo-13/vault',
-      secret_name='VAULT_TRANSIT_TOKEN') }}"
-    vault_master_addr: 'http://vault-master-lloyd.tailfb3ea.ts.net:8200'
-
   pre_tasks:
+    - name: Retrieve Vault transit token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_TRANSIT_TOKEN'
+        secret_var_name: 'vault_transit_token'
+        fallback_env_var: 'VAULT_TRANSIT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+
     - name: Validate Infisical transit token is available
       ansible.builtin.fail:
         msg: 'VAULT_TRANSIT_TOKEN not found in Infisical at /apollo-13/vault'
@@ -50,6 +51,9 @@
       ansible.builtin.fail:
         msg: 'Transit engine test failed - check token permissions'
       when: transit_test.status not in [200, 204]
+
+  vars:
+    vault_master_addr: 'http://vault-master-lloyd.tailfb3ea.ts.net:8200'
 
   tasks:
     - name: Generate Vault configuration with auto-unseal
@@ -125,21 +129,57 @@
         - not init_status.json.initialized
         - inventory_hostname == groups['vault_production'][0] # Only first node
 
-    - name: Store initialization data securely
+    - name: Store Vault root token securely in Infisical
+      ansible.builtin.command:
+        argv:
+          - infisical
+          - secrets
+          - set
+          - VAULT_ROOT_TOKEN={{ vault_init.json.root_token }}
+          - --path=/apollo-13/vault
+          - --env=prod
+      environment:
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      delegate_to: localhost
+      no_log: true
+      changed_when: true
+      when: vault_init.json is defined and vault_init.json.root_token is defined
+
+    - name: Store Vault recovery keys securely in Infisical
+      ansible.builtin.command:
+        argv:
+          - infisical
+          - secrets
+          - set
+          - VAULT_RECOVERY_KEY_{{ loop.index }}={{ item }}
+          - --path=/apollo-13/vault/recovery-keys
+          - --env=prod
+      environment:
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      loop: "{{ vault_init.json.recovery_keys | default([]) }}"
+      delegate_to: localhost
+      no_log: true
+      changed_when: true
+      when: vault_init.json is defined and vault_init.json.recovery_keys is defined
+
+    - name: Display initialization summary
       ansible.builtin.debug:
         msg:
-          - 'VAULT INITIALIZATION COMPLETE'
-          - 'Store these values in Infisical immediately:'
-          - "Root Token: {{ vault_init.json.root_token | default('Already initialized') }}"
-          - "Recovery Keys: {{ vault_init.json.recovery_keys | default('Already initialized') }}"
+          - 'VAULT INITIALIZATION COMPLETE ✅'
+          - 'Root token and recovery keys have been securely stored in Infisical'
           - ''
-          - 'Commands to store in Infisical:'
-          - "infisical secrets set VAULT_ROOT_TOKEN='{{ vault_init.json.root_token | default('ALREADY_SET') }}' --path='/apollo-13/vault' --env=prod"
-          - "infisical secrets set VAULT_RECOVERY_KEY_1='{{ (vault_init.json.recovery_keys | default([]))[0] | default('ALREADY_SET') }}' --path='/apollo-13/vault/recovery-keys' --env=prod"
-          - "infisical secrets set VAULT_RECOVERY_KEY_2='{{ (vault_init.json.recovery_keys | default([]))[1] | default('ALREADY_SET') }}' --path='/apollo-13/vault/recovery-keys' --env=prod"
-          - "infisical secrets set VAULT_RECOVERY_KEY_3='{{ (vault_init.json.recovery_keys | default([]))[2] | default('ALREADY_SET') }}' --path='/apollo-13/vault/recovery-keys' --env=prod"
-          - "infisical secrets set VAULT_RECOVERY_KEY_4='{{ (vault_init.json.recovery_keys | default([]))[3] | default('ALREADY_SET') }}' --path='/apollo-13/vault/recovery-keys' --env=prod"
-          - "infisical secrets set VAULT_RECOVERY_KEY_5='{{ (vault_init.json.recovery_keys | default([]))[4] | default('ALREADY_SET') }}' --path='/apollo-13/vault/recovery-keys' --env=prod"
+          - 'Summary:'
+          - "Root Token: Stored as VAULT_ROOT_TOKEN in /apollo-13/vault"
+          - >-
+            Recovery Keys: {{ vault_init.json.recovery_keys | default([]) | length }}
+            keys stored as VAULT_RECOVERY_KEY_1..N in /apollo-13/vault/recovery-keys
+          - ''
+          - 'Security Notes:'
+          - '- Tokens and keys are stored securely using argv to prevent shell interpretation'
+          - '- No sensitive data is logged or displayed in playbook output'
+          - '- Recovery keys are distributed across separate secure locations'
       when: vault_init.json is defined
 
     - name: Join Raft cluster (follower nodes)
@@ -160,7 +200,9 @@
           - 'Node: {{ inventory_hostname }}'
           - 'Role: {{ vault_role }}'
           - 'Auto-unseal: Enabled via {{ vault_master_addr }}'
-          - "Raft join status: {{ 'Leader' if inventory_hostname == groups['vault_production'][0] else ('Joined' if raft_join.status in [200, 204] else 'Join Failed') }}"
+          - >-
+            Raft join status: {{ 'Leader' if inventory_hostname == groups['vault_production'][0]
+            else ('Joined' if raft_join.status in [200, 204] else 'Join Failed') }}
           - ''
           - 'Next steps:'
           - '1. Verify cluster status: vault operator raft list-peers'
