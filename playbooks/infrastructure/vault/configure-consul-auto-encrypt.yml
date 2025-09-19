@@ -113,8 +113,7 @@
 
     # Consul domain configuration - can be overridden in group_vars
     consul_domain: "consul.spaceships.work"  # Default Consul domain for PKI certificates
-    consul_datacenter: "{{ consul_datacenter | default('dc1') }}"  # Parametrized datacenter name
-
+    consul_datacenter: "dc1"  # Override in inventory/group_vars as needed
     # Vault configuration - derive from inventory with IPv6 support
     vault_addr: >-
       {%- if groups['vault'] is defined and groups['vault'] | length > 0 -%}
