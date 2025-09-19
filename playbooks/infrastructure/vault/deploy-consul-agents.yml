@@ -56,6 +56,8 @@
       when: groups.get('consul_servers', groups.get('vault_production', [])) | length > 0
 
   vars:
+    consul_version: '1.21.4'
+    consul_zip_sha256: 'a641502dc2bd28e1ed72d3d48a0e8b98c83104d827cf33bee2aed198c0b849df'
     consul_datacenter: 'dc1'
     consul_data_dir: '/opt/consul/data'
     consul_config_dir: '/etc/consul.d'

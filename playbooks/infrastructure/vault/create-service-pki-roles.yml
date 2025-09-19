@@ -49,10 +49,10 @@
     pki_service_roles:
       - name: "consul-agent"
         description: "Consul Agent Certificates for mTLS Communication"
-        allowed_domains: >
-          {{ (['consul.service.consul', 'consul.spaceships.work', 'server.dc1.consul', 'client.dc1.consul']
-              if pki_profile == 'prod'
-              else ['consul.service.consul', 'consul.spaceships.work', '*.consul', '*.consul.spaceships.work']) }}
+        allowed_domains: >-
+          {{ ['consul.service.consul', 'consul.spaceships.work', 'server.dc1.consul', 'client.dc1.consul']
+             if pki_profile == 'prod'
+             else ['consul.service.consul', 'consul.spaceships.work', '*.consul', '*.consul.spaceships.work'] }}
         allow_subdomains: true
         allow_bare_domains: true
         allow_localhost: "{{ pki_profile == 'dev' }}"
@@ -69,7 +69,7 @@
 
       - name: "nomad-agent"
         description: "Nomad Agent Certificates for mTLS Communication"
-        allowed_domains: >
+        allowed_domains: >-
           {{ ['nomad.service.consul', 'nomad.spaceships.work', 'server.global.nomad', 'client.global.nomad']
              if pki_profile == 'prod'
              else ['nomad.service.consul', 'nomad.spaceships.work', '*.nomad', '*.nomad.spaceships.work'] }}
@@ -89,7 +89,7 @@
 
       - name: "vault-agent"
         description: "Vault Agent Certificates for mTLS Communication"
-        allowed_domains: >
+        allowed_domains: >-
           {{ ['vault.service.consul', 'vault.spaceships.work',
               'active.vault.service.consul', 'standby.vault.service.consul']
              if pki_profile == 'prod'
