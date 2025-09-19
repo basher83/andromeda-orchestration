@@ -207,22 +207,22 @@
       failed_when: false
       when: inventory_hostname in groups.get('consul_servers', [])
     - name: Collect validation summary
-      ansible.builtin.set_fact:
-        validation_results:
-          hostname: "{{ inventory_hostname }}"
-          is_server: "{{ inventory_hostname in groups.get('consul_servers', []) }}"
-          service_active: "{{ consul_service.status.ActiveState == 'active' }}"
-          tls_enabled: "{{ consul_has_tls | default(false) }}"
-          ca_cert_present: "{{ ca_cert_file.stat.exists }}"
-          server_certs_present: "{{ server_cert_file.stat.exists | default('N/A') }}"
-          cert_valid: "{{ cert_check.rc == 0 }}"
-          cluster_healthy: "{{ all_members_alive | default(false) }}"
-          tls_ports_open: "{{ port_checks.results | selectattr('state', 'defined') | list | length > 0 }}"
-          auto_encrypt_client: >-
-            {{ auto_encrypt_logs.stdout_lines | default([]) | length > 0
-               if inventory_hostname in groups.get('consul_clients', [])
-               else 'N/A' }}
-
+     - name: Collect validation summary
+       ansible.builtin.set_fact:
+         validation_results:
+           hostname: "{{ inventory_hostname }}"
+           is_server: "{{ inventory_hostname in groups.get('consul_servers', []) }}"
+           service_active: "{{ consul_service.status.ActiveState == 'active' }}"
+           tls_enabled: "{{ consul_has_tls | default(false) }}"
+           ca_cert_present: "{{ ca_cert_file.stat.exists }}"
+           server_certs_present: "{{ server_cert_file.stat.exists | default('N/A') }}"
+           cert_valid: "{{ (((cert_info.not_after | to_datetime).timestamp() | int) - (ansible_date_time.epoch | int)) > 86400 }}"
+           cluster_healthy: "{{ all_members_alive | default(false) }}"
+           tls_ports_open: "{{ tls_ports_open | default(false) }}"
+           auto_encrypt_client: >-
+             {{ auto_encrypt_logs.stdout_lines | default([]) | length > 0
+                if inventory_hostname in groups.get('consul_clients', [])
+                else 'N/A' }}
 - name: Display Validation Summary
   hosts: localhost
   gather_facts: false
