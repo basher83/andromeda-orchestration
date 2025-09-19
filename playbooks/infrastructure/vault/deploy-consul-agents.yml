@@ -41,16 +41,21 @@
           or set the CONSUL_MASTER_TOKEN environment variable.
       tags: [secrets]
 
-    - name: Compute Consul retry join from inventory
+    - name: Compute Consul retry join from inventory (with fallback)
       ansible.builtin.set_fact:
         consul_retry_join: >-
-          {{ groups.get('consul_servers', groups.get('vault_production', []))
-             | map('extract', hostvars, 'ansible_host') | list }}
+          {{
+            groups.get('consul_servers', groups.get('vault_production', []))
+            | map('extract', hostvars)
+            | map('dict2items')
+            | map('items2dict')
+            | map('get', 'ansible_host')
+            | map('default', attribute='ansible_default_ipv4.address')
+            | reject('none') | reject('equalto','') | list | unique
+          }}
       when: groups.get('consul_servers', groups.get('vault_production', [])) | length > 0
 
   vars:
-    consul_version: '1.20.5'
-    consul_zip_sha256: 'REPLACE_WITH_ACTUAL_SHA256'  # SHA256 for Consul 1.20.5 linux_amd64
     consul_datacenter: 'dc1'
     consul_data_dir: '/opt/consul/data'
     consul_config_dir: '/etc/consul.d'
@@ -152,8 +157,12 @@
             check {
               id = "vault-health"
               name = "Vault Health Check"
-              http = "https://{{ ansible_default_ipv4.address }}:8200/v1/sys/health?standbyok=true&perfstandbyok=true"
-              tls_skip_verify = true
+              http = >-
+                {{ (vault_scheme | default('https')) }}://
+                {{ ansible_default_ipv4.address }}:{{ vault_port | default(8200) }}
+                /v1/sys/health?standbyok=true&perfstandbyok=true
+              tls_skip_verify = >-
+                {{ (vault_tls_skip_verify | default(false)) | lower }}
               interval = "10s"
               timeout = "5s"
             }
