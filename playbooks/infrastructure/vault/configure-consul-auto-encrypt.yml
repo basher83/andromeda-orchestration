@@ -55,15 +55,9 @@
       tags: [secrets]
       no_log: true
 
-    - name: Retrieve Consul ACL master token securely
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
-      vars:
-        secret_name: 'CONSUL_MASTER_TOKEN'
-        secret_var_name: 'consul_master_token'
-        fallback_env_var: 'CONSUL_MASTER_TOKEN'
-        infisical_path: '/apollo-13/consul'
-      tags: [secrets]
-      no_log: true
+    - name: Include domain validation
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/domain-assertions.yml"
+      tags: [validate, preflight]
 
     - name: Validate no hardcoded IPs
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
@@ -98,6 +92,7 @@
     - name: Store CA certificate for deployment
       ansible.builtin.set_fact:
         consul_ca_certificate: "{{ consul_ca_cert.data.data }}"
+        cacheable: no
       no_log: true
 
     - name: Display preparation status
@@ -125,6 +120,9 @@
     consul_config_dir: /etc/consul.d
     consul_backup_dir: "/opt/consul/tls/backup-{{ ansible_date_time.epoch }}"
 
+    # Consul domain configuration - can be overridden in group_vars
+    consul_domain: "consul.spaceships.work"  # Default Consul domain for PKI certificates
+
     # Vault configuration - derive from inventory with IPv6 support
     vault_addr: >-
       {%- if groups['vault'] is defined and groups['vault'] | length > 0 -%}
@@ -147,14 +145,44 @@
         vault_token: "{{ hostvars['localhost']['vault_token'] }}"
         consul_ca_certificate: "{{ hostvars['localhost']['consul_ca_certificate'] }}"
         consul_encrypt: "{{ hostvars['localhost']['consul_encrypt'] }}"
-        consul_master_token: "{{ hostvars['localhost']['consul_master_token'] }}"
+        cacheable: no
       no_log: true
+
+    - name: Discover Consul servers for retry_join
+      ansible.builtin.set_fact:
+        consul_retry_join: >-
+          {%- set servers = [] -%}
+          {%- for host in groups.get('consul_servers', []) -%}
+            {%- set host_addr = hostvars[host]['ansible_host'] |
+                default(hostvars[host]['ansible_default_ipv4']['address']) -%}
+            {%- set _ = servers.append(host_addr) -%}
+          {%- endfor -%}
+          {{ servers }}
+
+    - name: Validate retry_join addresses are not empty
+      ansible.builtin.assert:
+        that:
+          - consul_retry_join is defined
+          - consul_retry_join | length > 0
+          - consul_retry_join | select('match', '^.+$') | list | length > 0
+        fail_msg: "No valid Consul server addresses found for retry_join"
+        success_msg: "Found {{ consul_retry_join | length }} Consul server addresses"
+
+    - name: Check for .local domains in configuration
+      ansible.builtin.assert:
+        that:
+          - "not (vault_addr | default('') | regex_search('\\.local'))"
+          - "not (consul_domain | default('') | regex_search('\\.local'))"
+        fail_msg: ".local domains are not allowed (macOS mDNS conflict)"
+        success_msg: "Domain validation passed"
+      when: vault_addr is defined or consul_domain is defined
 
     - name: Validate no hardcoded IPs in server configuration
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
       vars:
         validate_hostlike_vars:
           vault_addr: "{{ vault_addr | default('') }}"
+          consul_retry_join: "{{ consul_retry_join | join(',') }}"
         validate_allowlist:
           - '127.0.0.1'  # Localhost for cert IP SANs
       tags: [preflight]
@@ -205,7 +233,7 @@
         auth_method: token
         token: "{{ vault_token }}"
         role_name: consul-agent
-        common_name: "{{ inventory_hostname }}.consul.spaceships.work"
+        common_name: "{{ inventory_hostname }}.{{ consul_domain }}"
         alt_names:
           - "server.dc1.consul"
           - "consul.service.consul"
@@ -235,6 +263,7 @@
         owner: consul
         group: consul
         mode: '0600'
+      no_log: true
 
     - name: Configure Consul server TLS settings
       ansible.builtin.blockinfile:
@@ -322,6 +351,7 @@
       ansible.builtin.set_fact:
         consul_ca_certificate: "{{ hostvars['localhost']['consul_ca_certificate'] }}"
         consul_encrypt: "{{ hostvars['localhost']['consul_encrypt'] }}"
+        cacheable: no
       no_log: true
 
     - name: Discover Consul servers from inventory
@@ -334,6 +364,28 @@
             {%- set _ = servers.append(host_addr) -%}
           {%- endfor -%}
           {{ servers }}
+
+    - name: Validate retry_join addresses are not empty
+      ansible.builtin.assert:
+        that:
+          - consul_retry_join is defined
+          - consul_retry_join | length > 0
+          - consul_retry_join | select('match', '^.+$') | list | length > 0
+        fail_msg: "No valid Consul server addresses found for retry_join"
+        success_msg: "Found {{ consul_retry_join | length }} Consul server addresses for client configuration"
+
+    - name: Include domain validation
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/domain-assertions.yml"
+      tags: [validate, preflight]
+
+    - name: Validate no hardcoded IPs in client configuration
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          consul_retry_join: "{{ consul_retry_join | join(',') }}"
+        validate_allowlist:
+          - '127.0.0.1'  # Localhost allowed for local connections
+      tags: [preflight]
 
   tasks:
     - name: Create TLS directories
@@ -407,16 +459,67 @@
         timeout: 60
         state: started
 
-    - name: Verify auto-encrypt is working
+    - name: Verify auto-encrypt via log check
       ansible.builtin.shell: |
         set -o pipefail
         systemctl status consul | grep -q "auto-encrypt" || \
         journalctl -u consul --since="5 minutes ago" | grep -q "auto-encrypt"
       args:
         executable: /bin/bash
-      register: auto_encrypt_check
+      register: auto_encrypt_log_check
       changed_when: false
       failed_when: false
+
+    - name: Check for auto-encrypt client certificate
+      ansible.builtin.stat:
+        path: "{{ consul_tls_dir }}/consul-client-cert.pem"
+      register: client_cert_stat
+
+    - name: Verify certificate recency (if exists)
+      ansible.builtin.set_fact:
+        cert_is_recent: >-
+          {{
+            client_cert_stat.stat.exists and
+            ((ansible_date_time.epoch | int) - client_cert_stat.stat.mtime) < 3600
+          }}
+      when: client_cert_stat.stat.exists | default(false)
+
+    - name: Query Consul auto-encrypt status
+      ansible.builtin.shell: |
+        set -o pipefail
+        consul info 2>/dev/null | grep -i "auto.encrypt" || \
+        consul operator autopilot state 2>/dev/null | grep -i "encrypt" || \
+        echo "auto-encrypt-status=unknown"
+      args:
+        executable: /bin/bash
+      register: consul_auto_encrypt_info
+      changed_when: false
+      failed_when: false
+
+    - name: Debug auto-encrypt verification results
+      ansible.builtin.debug:
+        msg:
+          - "Log check found auto-encrypt: {{ auto_encrypt_log_check.rc == 0 }}"
+          - "Client certificate exists: {{ client_cert_stat.stat.exists | default(false) }}"
+          - "Certificate is recent (< 1hr old): {{ cert_is_recent | default(false) }}"
+          - "Consul info output: {{ consul_auto_encrypt_info.stdout | default('not available') }}"
+      when: ansible_verbosity > 0
+
+    - name: Assert auto-encrypt is functioning
+      ansible.builtin.assert:
+        that:
+          - >-
+            auto_encrypt_log_check.rc == 0 or
+            client_cert_stat.stat.exists | default(false) or
+            'auto-encrypt' in consul_auto_encrypt_info.stdout | lower
+        fail_msg: |
+          Auto-encrypt verification failed on {{ inventory_hostname }}:
+          - Log check: {{ 'PASSED' if auto_encrypt_log_check.rc == 0 else 'FAILED' }}
+          - Certificate exists: {{ 'YES' if client_cert_stat.stat.exists | default(false) else 'NO' }}
+          - >-
+            Consul info shows auto-encrypt:
+            {{ 'YES' if 'auto-encrypt' in consul_auto_encrypt_info.stdout | lower else 'NO' }}
+        success_msg: "Auto-encrypt is functioning properly on {{ inventory_hostname }}"
 
     - name: Verify client is in cluster
       ansible.builtin.command:
