@@ -190,7 +190,7 @@
     - name: Verify TLS ports are listening
       ansible.builtin.wait_for:
         port: "{{ item }}"
-        host: "{{ ansible_default_ipv4.address }}"
+        host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
         state: started
         timeout: 5
       loop:
@@ -198,7 +198,6 @@
         - 8503  # gRPC TLS
       register: port_checks
       failed_when: false
-
     - name: Summarize TLS port checks
       ansible.builtin.set_fact:
         tls_ports_open: >-
