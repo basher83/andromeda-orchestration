@@ -205,12 +205,12 @@
     - name: Test TLS connection to API
       ansible.builtin.uri:
         url: "https://{{ ansible_default_ipv4.address }}:8501/v1/status/leader"
-        validate_certs: false
+        validate_certs: true
+        ca_path: "{{ consul_tls_dir }}/ca.pem"
         status_code: [200, 403]  # 403 if ACLs enabled without token
       register: tls_api_test
       failed_when: false
       when: inventory_hostname in groups.get('consul_servers', [])
-
     - name: Collect validation summary
       ansible.builtin.set_fact:
         validation_results:
