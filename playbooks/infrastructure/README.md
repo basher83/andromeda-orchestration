@@ -115,7 +115,7 @@ uv run ansible-playbook playbooks/infrastructure/consul/consul-telemetry-setup.y
 
 # Update Consul ACL policy for Vault clients
 uv run ansible-playbook playbooks/infrastructure/vault/update-consul-acl-policy.yml \
-  -i inventory/environments/doggos-homelab/proxmox.yml
+  -i inventory/doggos-homelab/infisical.proxmox.yml
 ```
 
 ### Nomad Management
