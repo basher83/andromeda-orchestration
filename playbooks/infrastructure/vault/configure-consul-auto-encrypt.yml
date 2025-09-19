@@ -253,6 +253,7 @@
         owner: consul
         group: consul
         mode: '0644'
+      no_log: true
 
     - name: Deploy server private key
       ansible.builtin.copy:
