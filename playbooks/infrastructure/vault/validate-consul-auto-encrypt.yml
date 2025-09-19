@@ -112,27 +112,17 @@
                 {{ consul_tls_dir }}/ca.pem
               {%- endif -%}
 
-        - name: Check certificate expiration (24 hours minimum)
-          ansible.builtin.command:
-            cmd: openssl x509 -in {{ cert_to_check }} -noout -checkend 86400
-          register: cert_check
-          changed_when: false
-          failed_when: false
+        - name: Read certificate info
+          community.crypto.x509_certificate_info:
+            path: "{{ cert_to_check }}"
+          register: cert_info
 
-        - name: Get certificate details
-          ansible.builtin.command:
-            cmd: openssl x509 -in {{ cert_to_check }} -noout -text
-          register: cert_details
-          changed_when: false
-          when: inventory_hostname in groups.get('consul_servers', [])
-
-        - name: Assert certificate is valid
+        - name: Assert certificate is valid for >=24h
           ansible.builtin.assert:
             that:
-              - cert_check.rc == 0
+              - (cert_info.not_after | to_datetime) - (ansible_date_time.iso8601 | to_datetime) > 86400
             fail_msg: "❌ Certificate expiring within 24 hours on {{ inventory_hostname }}"
             success_msg: "✅ Certificate valid for more than 24 hours"
-
     - name: Verify encrypted communication
       ansible.builtin.command:
         cmd: consul members -detailed
