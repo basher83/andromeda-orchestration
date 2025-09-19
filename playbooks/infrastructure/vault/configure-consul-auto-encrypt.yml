@@ -466,9 +466,11 @@
       args:
         executable: /bin/bash
       register: auto_encrypt_log_check
+      retries: 3
+      delay: 5
+      until: auto_encrypt_log_check.rc == 0
       changed_when: false
       failed_when: false
-
     - name: Check for auto-encrypt client certificate
       ansible.builtin.stat:
         path: "{{ consul_tls_dir }}/consul-client-cert.pem"
