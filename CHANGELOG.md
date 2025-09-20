@@ -7,6 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2025-01-19] - PKI Infrastructure & mTLS Foundation
+
+### Added
+
+- **Complete PKI Infrastructure for mTLS Implementation**
+
+  - Implemented hierarchical PKI with Root CA and Intermediate CA in Vault
+  - Created 7 specialized PKI roles for service certificates:
+    - `consul-agent`: Consul mTLS communication (30-day TTL, 1-year max)
+    - `nomad-agent`: Nomad mTLS communication (30-day TTL, 1-year max)
+    - `vault-agent`: Vault mTLS communication (30-day TTL, 1-year max)
+    - `client-auth`: Client authentication (7-day TTL)
+    - `infrastructure`: Infrastructure services
+    - `application`: Application services
+    - `database`: Database services
+  - Added production/development PKI profiles for security flexibility
+  - Implemented certificate validation and testing framework
+
+- **Vault Cluster Re-initialization & Transit Auto-Unseal**
+
+  - Complete re-initialization of Vault production cluster with recovery keys
+  - Created transit auto-unseal infrastructure on master vault
+  - Implemented automated policy deployment for transit engine
+  - Added secure token rotation and Infisical integration
+  - Created `roles/vault/templates/autounseal.hcl.j2` policy template
+
+- **Vault Management Playbooks**
+
+  - `playbooks/infrastructure/vault/generate-root-token.yml`: Generate root tokens using recovery keys
+  - `playbooks/infrastructure/vault/reset-vault-cluster.yml`: Safe cluster reset with confirmation
+  - `playbooks/infrastructure/vault/setup-transit-autounseal.yml`: Configure transit auto-unseal
+  - `playbooks/infrastructure/vault/setup-pki-root-ca.yml`: Deploy PKI Root CA
+  - `playbooks/infrastructure/vault/setup-pki-intermediate-ca.yml`: Deploy Intermediate CA
+  - `playbooks/infrastructure/vault/create-service-pki-roles.yml`: Create service PKI roles
+  - Enhanced validation playbooks with proper error handling
+
+### Changed
+
+- **Vault Configuration Updates**
+
+  - Fixed recursive variable definitions in Vault playbooks
+  - Updated PKI mount paths from `pki-int` to `pki_int` for consistency
+  - Changed Vault connectivity from HTTPS to HTTP for initial setup
+  - Enhanced IP validation to work without ansible.utils collection issues
+
+- **Infrastructure Validation**
+
+  - Modified `tasks/validate-no-hardcoded-ips.yml` to test ipaddr filter directly
+  - Fixed domain assertion regex checks in validation tasks
+  - Improved error handling for Ansible collection availability
+
+### Fixed
+
+- **Vault Cluster Issues**
+
+  - Resolved recovery key mismatch preventing cluster access
+  - Fixed expired root tokens through complete re-initialization
+  - Corrected vault address configuration (HTTP vs HTTPS)
+  - Fixed ansible.utils collection detection problems
+
+- **Playbook Configuration**
+
+  - Resolved recursive variable loops (`vault_validate_certs`, `pki_profile`)
+  - Fixed module_defaults structure in validation playbooks
+  - Corrected Infisical secret lookup syntax and paths
+
+### Security
+
+- **PKI Security Implementation**
+
+  - RSA 2048-bit keys for all service certificates
+  - Strict domain validation in production mode
+  - Hostname enforcement and subdomain controls
+  - Organization fields for certificate identification
+  - TTL limits to prevent excessive certificate lifetimes
+  - IP SANs enabled for service communication only
+
+### Infrastructure Impact
+
+- **Scope**: Complete Vault PKI infrastructure deployment
+- **Services Ready for mTLS**: Consul, Nomad, Vault services
+- **Certificate Hierarchy**: Root CA → Intermediate CA → Service Certificates
+- **Auto-Unseal**: Transit engine configured for production cluster
+- **Next Phase**: Ready for PKI-002 (Consul Auto-Encrypt implementation)
+
 ## [2025-01-09] - MegaLinter Integration & Code Quality Automation
 
 ### Added

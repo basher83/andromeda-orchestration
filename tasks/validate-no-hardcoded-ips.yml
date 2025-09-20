@@ -17,12 +17,19 @@
 #         database_host: "{{ database_host | default('') }}"
 #       validate_allowlist: []
 
-- name: validate-no-hardcoded-ips | Check for ansible.utils collection availability
+- name: validate-no-hardcoded-ips | Test ansible.utils ipaddr filter availability
+  ansible.builtin.set_fact:
+    _test_ipaddr: "{{ '192.168.1.1' | ansible.utils.ipaddr | default('FILTER_NOT_FOUND') }}"
+  ignore_errors: true
+  register: _ipaddr_test
+
+- name: validate-no-hardcoded-ips | Verify ansible.utils collection is functional
   ansible.builtin.assert:
     that:
-      - "'ansible.utils' in ansible_facts.ansible_collections | default({})"
+      - _test_ipaddr != 'FILTER_NOT_FOUND'
+      - _ipaddr_test is not failed
     fail_msg: |
-      ❌ ansible.utils collection not installed!
+      ❌ ansible.utils collection or ipaddr filter not available!
 
       To fix this:
       1. Run: uv run ansible-galaxy collection install 'ansible.utils:>=2.10'

@@ -21,6 +21,6 @@
       - "cluster_subdomain | lower == cluster_subdomain"
       - "'.' not in cluster_subdomain"
       - "cluster_subdomain | length <= 63"
-      - "cluster_subdomain | regex_search('^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$')"
+      - "cluster_subdomain | regex_search('^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$') is not none"
     fail_msg: "cluster_subdomain must be defined for this inventory"
     success_msg: "Cluster subdomain: {{ cluster_subdomain }}"

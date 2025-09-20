@@ -17,6 +17,7 @@ When invoked, you must follow these steps:
 1. **Analyze Workspace Changes (PARALLEL EXECUTION)**
 
    Execute these commands IN PARALLEL using multiple tool calls in a single message:
+
    - `git status` - inventory all modifications
    - `git diff --cached` - check already staged changes
    - `git diff` - check unstaged changes
@@ -27,6 +28,7 @@ When invoked, you must follow these steps:
 2. **Deep Dive Analysis (SELECTIVE PARALLEL)**
 
    For complex changes, run in parallel:
+
    - `git diff path/to/file1.ext` - for key modified files
    - `git diff path/to/file2.ext` - for other modified files
    - `git blame -L start,end path/to/file` - if context needed
@@ -63,6 +65,7 @@ When invoked, you must follow these steps:
 6. **Execute Commits with Pre-commit Hooks**
 
    For each commit:
+
    - Stage files using `git add <files>`
    - Create commit with message using heredoc format for proper formatting:
 
@@ -74,10 +77,6 @@ When invoked, you must follow these steps:
      - Another change detail
 
      Fixes #123
-
-     🤖 Generated with [Claude Code](https://claude.ai/code)
-
-     Co-Authored-By: Claude <noreply@anthropic.com>
      EOF
      )"
      ```
@@ -107,11 +106,13 @@ When invoked, you must follow these steps:
 ### Handling Special Cases
 
 1. **Sensitive Files Changed**
+
    - Check for `.env`, `.mcp.json`, or other files with secrets
    - Use `git checkout -- <file>` to revert if secrets were exposed
    - Never commit actual API keys or tokens
 
 2. **Lock Files**
+
    - Always commit package-lock.json with package.json
    - Commit Gemfile.lock with Gemfile
    - Keep poetry.lock with pyproject.toml
@@ -142,18 +143,10 @@ When invoked, you must follow these steps:
 
 ```javascript
 // CORRECT: Independent read operations
-[
-  Bash("git status"),
-  Bash("git diff --stat"),
-  Bash("git log --oneline -5"),
-  Read(".gitignore")
-]
-
-// INCORRECT: Sequential dependency
-[
-  Bash("git add file.txt"),
-  Bash("git commit -m 'message'")  // Needs add to complete first!
-]
+[Bash("git status"), Bash("git diff --stat"), Bash("git log --oneline -5"), Read(".gitignore")][
+  // INCORRECT: Sequential dependency
+  (Bash("git add file.txt"), Bash("git commit -m 'message'")) // Needs add to complete first!
+];
 ```
 
 ## Report / Response
@@ -161,14 +154,17 @@ When invoked, you must follow these steps:
 Provide your final response with:
 
 1. **Change Analysis Summary**
+
    - Total files modified
    - Types of changes detected
    - Suggested number of commits
 
 2. **Commit Plan** (from TodoWrite)
+
    - List each planned commit with files and message
 
 3. **Execution Results**
+
    - Commands executed (note which were parallel)
    - Any pre-commit hook interventions
    - Final commit hashes
