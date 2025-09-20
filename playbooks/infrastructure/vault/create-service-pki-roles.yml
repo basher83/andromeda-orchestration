@@ -19,20 +19,20 @@
 
 - name: Create Service PKI Roles for mTLS Implementation
   hosts: localhost
-  gather_facts: false
+  gather_facts: true
 
   vars:
     # PKI Profile Configuration
     # Set to 'prod' for production security settings, 'dev' for development flexibility
-    pki_profile: "{{ pki_profile | default('prod') }}"
+    pki_profile: "prod"  # Use 'dev' for development environment
 
     # TLS Certificate Validation
     # Default to true for production security, can be overridden for self-signed certs
-    vault_validate_certs: "{{ vault_validate_certs | default(true) }}"
+    vault_validate_certs: "{{ lookup('env', 'VAULT_SKIP_VERIFY') | default('false', true) | lower == 'false' }}"
 
     # Vault configuration - derived from inventory with IPv6 support
     vault_addr: >-
-      {%- if groups['vault'] is defined and groups['vault'] | length > 0 -%}
+      {%- if groups is defined and 'vault' in groups and groups['vault'] | length > 0 -%}
         {%- set vault_host = hostvars[groups['vault'][0]]['ansible_host'] -%}
         {%- if vault_host | ansible.utils.ipaddr('ipv6') -%}
           https://[{{ vault_host }}]:8200
@@ -42,7 +42,7 @@
       {%- else -%}
         {{ lookup('env', 'VAULT_ADDR') | default('https://vault.service.consul:8200', true) }}
       {%- endif -%}
-    pki_int_path: "pki-int"
+    pki_int_path: "pki_int"
 
     # PKI role definitions for HashiCorp services
     # Security settings are controlled by pki_profile variable

@@ -15,55 +15,11 @@
   gather_facts: false
   any_errors_fatal: true
 
-  pre_tasks:
-    - name: Retrieve Vault token securely
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
-      vars:
-        secret_name: 'VAULT_PROD_ROOT_TOKEN'
-        secret_var_name: 'vault_token'
-        fallback_env_var: 'VAULT_TOKEN'
-        infisical_path: '/apollo-13/vault'
-      tags: [secrets]
-
-    - name: Validate no hardcoded IPs
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
-      vars:
-        validate_hostlike_vars:
-          vault_addr: "{{ vault_addr | default('') }}"
-        validate_allowlist: []  # No exceptions allowed
-      tags: [preflight]
-
-  module_defaults:
-    community.hashi_vault.vault_read:
-      url: "{{ vault_addr }}"
-      auth_method: token
-      token: "{{ vault_token }}"
-      validate_certs: "{{ vault_validate_certs | default(true) }}"
-    community.hashi_vault.vault_list:
-      url: "{{ vault_addr }}"
-      auth_method: token
-      token: "{{ vault_token }}"
-      validate_certs: "{{ vault_validate_certs | default(true) }}"
-    community.hashi_vault.vault_pki_generate_certificate:
-      url: "{{ vault_addr }}"
-      auth_method: token
-      token: "{{ vault_token }}"
-      validate_certs: "{{ vault_validate_certs | default(true) }}"
-
-    # Vault configuration - dynamically discovered from inventory
-    vault_addr: >-
-      {%- if groups.get('vault', []) | length > 0 -%}
-        {%- set vault_host = groups['vault'] | first -%}
-        {%- set vault_ip = hostvars[vault_host]['ansible_host'] -%}
-        {%- if vault_ip | ansible.utils.ipaddr('ipv6') and not vault_ip.startswith('[') -%}
-          https://[{{ vault_ip }}]:8200
-        {%- else -%}
-          https://{{ vault_ip }}:8200
-        {%- endif -%}
-      {%- else -%}
-        {{ lookup('env', 'VAULT_ADDR') | default('https://vault.service.consul:8200', true) }}
-      {%- endif -%}
-    pki_int_path: "pki-int"
+  vars:
+    # Vault configuration - use environment variable
+    vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://192.168.10.31:8200', true) }}"
+    vault_validate_certs: false
+    pki_int_path: "pki_int"
 
     # Expected PKI roles for validation
     expected_roles:
@@ -117,7 +73,40 @@
         max_ttl_hours: 168
         default_ttl_hours: 168
 
-    # Collection availability is checked by the included validation task
+  pre_tasks:
+    - name: Retrieve Vault token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_PROD_ROOT_TOKEN'
+        secret_var_name: 'vault_token'
+        fallback_env_var: 'VAULT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+
+    - name: Validate no hardcoded IPs
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []  # No exceptions allowed
+      tags: [preflight]
+
+  module_defaults:
+    community.hashi_vault.vault_read:
+      url: "{{ vault_addr }}"
+      auth_method: token
+      token: "{{ vault_token }}"
+      validate_certs: "{{ vault_validate_certs }}"
+    community.hashi_vault.vault_list:
+      url: "{{ vault_addr }}"
+      auth_method: token
+      token: "{{ vault_token }}"
+      validate_certs: "{{ vault_validate_certs }}"
+    community.hashi_vault.vault_pki_generate_certificate:
+      url: "{{ vault_addr }}"
+      auth_method: token
+      token: "{{ vault_token }}"
+      validate_certs: "{{ vault_validate_certs }}"
 
   tasks:
     - name: Verify community.crypto collection is available

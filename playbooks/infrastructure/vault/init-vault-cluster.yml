@@ -62,8 +62,8 @@
     vault_recovery_shares: 5
     vault_recovery_threshold: 3
     vault_secret_shares: 0  # No secret shares when using auto-unseal
-    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Default false during init (HTTP)
-    vault_scheme: "{{ vault_scheme | default('https') }}"  # Default to HTTPS for production
+    vault_validate_certs: false  # Default false during init (HTTP)
+    vault_scheme: "http"  # Using HTTP as TLS is not enabled yet
 
   tasks:
     - name: Check Vault initialization status

@@ -9,11 +9,21 @@
   hosts: localhost
   gather_facts: false
 
+  pre_tasks:
+    - name: Retrieve Vault token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_PROD_ROOT_TOKEN'
+        secret_var_name: 'vault_token'
+        fallback_env_var: 'VAULT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+      no_log: true
+
   vars:
     vault_addr: "{{ lookup('env', 'VAULT_ADDR') }}"
-    vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
-    vault_validate_certs: "{{ vault_validate_certs | default(false) }}"  # Set to true for production with proper CA
-    vault_ca_path: "{{ vault_ca_path | default(omit) }}"  # Optional CA certificate path
+    vault_validate_certs: false  # Set to true for production with proper CA
+    vault_ca_path: "{{ omit }}"  # Optional CA certificate path
 
     # PKI Configuration
     pki_path: 'pki'
