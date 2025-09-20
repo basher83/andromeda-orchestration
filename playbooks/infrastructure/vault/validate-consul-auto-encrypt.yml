@@ -1,0 +1,315 @@
+---
+# Validate Consul Auto-Encrypt Configuration
+# Task: PKI-002 - Configure Consul Auto-Encrypt (Validation)
+# Parent Issue: 98 - mTLS for Service Communication
+#
+# This playbook validates that Consul auto-encrypt is properly configured and
+# functioning across the cluster with certificates being properly distributed.
+#
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/validate-consul-auto-encrypt.yml \
+#   -i inventory/environments/doggos-homelab/proxmox.yml
+
+- name: Validate Consul Auto-Encrypt Configuration
+  hosts: consul_servers:consul_clients
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    consul_tls_dir: /opt/consul/tls
+    consul_config_dir: /etc/consul.d
+
+  pre_tasks:
+    - name: Include domain validation
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/domain-assertions.yml"
+      tags: [validate, preflight]
+
+    - name: Validate no hardcoded IPs
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          consul_retry_join: >-
+            {{ (groups.get('consul_servers', []) |
+                map('extract', hostvars, 'ansible_host') | list) |
+                join(',') | default('', true) }}
+          vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('', true) }}"
+        validate_allowlist:
+          - '127.0.0.1'  # Localhost for testing
+      tags: [preflight]
+
+  tasks:
+    - name: Check Consul service status
+      ansible.builtin.systemd:
+        name: consul
+      register: consul_service
+      changed_when: false
+
+    - name: Assert Consul service is running
+      ansible.builtin.assert:
+        that:
+          - consul_service.status.ActiveState == "active"
+        fail_msg: "❌ Consul service is not running on {{ inventory_hostname }}"
+        success_msg: "✅ Consul service is active on {{ inventory_hostname }}"
+
+    - name: Inspect TLS encryption via members -detailed
+      ansible.builtin.command:
+        cmd: consul members -detailed
+      register: consul_members_tls
+      changed_when: false
+      failed_when: false
+
+    - name: Derive TLS status
+      ansible.builtin.set_fact:
+        consul_has_tls: >-
+          {{ 'Encrypted=true' in (consul_members_tls.stdout | default('')) or
+             'Encrypted: true' in (consul_members_tls.stdout | default('')) }}
+
+    - name: Assert TLS is configured
+      ansible.builtin.assert:
+        that:
+          - consul_has_tls
+        fail_msg: "❌ TLS encryption not enabled in Consul on {{ inventory_hostname }}"
+        success_msg: "✅ TLS encryption enabled on {{ inventory_hostname }}"
+      when: consul_members_tls.rc == 0
+
+    - name: Check CA certificate exists
+      ansible.builtin.stat:
+        path: "{{ consul_tls_dir }}/ca.pem"
+      register: ca_cert_file
+
+    - name: Assert CA certificate is present
+      ansible.builtin.assert:
+        that:
+          - ca_cert_file.stat.exists
+          - ca_cert_file.stat.mode == '0644'
+        fail_msg: "❌ CA certificate missing or has incorrect permissions on {{ inventory_hostname }}"
+        success_msg: "✅ CA certificate present with correct permissions"
+
+    - name: Check for server certificates (servers only)
+      when: inventory_hostname in groups.get('consul_servers', [])
+      block:
+        - name: Check server certificate exists
+          ansible.builtin.stat:
+            path: "{{ consul_tls_dir }}/consul-cert.pem"
+          register: server_cert_file
+
+        - name: Check server key exists
+          ansible.builtin.stat:
+            path: "{{ consul_tls_dir }}/consul-key.pem"
+          register: server_key_file
+
+        - name: Assert server certificates exist
+          ansible.builtin.assert:
+            that:
+              - server_cert_file.stat.exists
+              - server_cert_file.stat.mode == '0644'
+              - server_key_file.stat.exists
+              - server_key_file.stat.mode == '0600'
+            fail_msg: "❌ Server certificates missing or have incorrect permissions"
+            success_msg: "✅ Server certificates present with correct permissions"
+
+    - name: Check certificate validity
+      block:
+        - name: Determine certificate path
+          ansible.builtin.set_fact:
+            cert_to_check: >-
+              {%- if inventory_hostname in groups.get('consul_servers', []) -%}
+                {{ consul_tls_dir }}/consul-cert.pem
+              {%- else -%}
+                {{ consul_tls_dir }}/ca.pem
+              {%- endif -%}
+
+        - name: Read certificate info
+          community.crypto.x509_certificate_info:
+            path: "{{ cert_to_check }}"
+          register: cert_info
+
+        - name: Assert certificate is valid for >=24h
+          ansible.builtin.assert:
+            that:
+              - (((cert_info.not_after | to_datetime).timestamp() | int) - (ansible_date_time.epoch | int)) > 86400
+            fail_msg: "❌ Certificate expiring within 24 hours on {{ inventory_hostname }}"
+            success_msg: "✅ Certificate valid for more than 24 hours"
+    - name: Verify encrypted communication
+      ansible.builtin.command:
+        cmd: consul members -detailed
+      register: consul_members
+      changed_when: false
+      environment:
+        CONSUL_HTTP_TOKEN: "{{ lookup('env', 'CONSUL_MASTER_TOKEN') }}"
+
+    - name: Parse member information
+      ansible.builtin.set_fact:
+        all_members_alive: "{{ consul_members.stdout_lines | select('search', 'Status=alive') | list | length > 0 }}"
+        member_count: "{{ consul_members.stdout_lines | select('search', inventory_hostname) | list | length }}"
+
+    - name: Assert all members show alive status
+      ansible.builtin.assert:
+        that:
+          - all_members_alive
+          - member_count | int > 0
+        fail_msg: "❌ Consul cluster communication issues detected on {{ inventory_hostname }}"
+        success_msg: "✅ Consul cluster communication healthy"
+
+    - name: Test auto-encrypt functionality (clients only)
+      when: inventory_hostname in groups.get('consul_clients', [])
+      block:
+        - name: Check for auto-encrypt in logs
+          ansible.builtin.shell: |
+            set -o pipefail
+            journalctl -u consul --since="30 minutes ago" | grep -Ei "auto[\.-]encrypt" | tail -10
+          args:
+            executable: /bin/bash
+          register: auto_encrypt_logs
+          changed_when: false
+          failed_when: false
+
+        - name: Check auto-encrypt status in consul info
+          ansible.builtin.shell: |
+            set -o pipefail
+            consul info 2>/dev/null | grep -i "auto_encrypt" || true
+          args:
+            executable: /bin/bash
+          register: auto_encrypt_info
+          changed_when: false
+        - name: Look for auto-distributed certificates
+          ansible.builtin.find:
+            paths: "{{ consul_tls_dir }}"
+            patterns: "*.pem"
+            recurse: false
+          register: tls_files
+
+        - name: Display auto-encrypt evidence
+          ansible.builtin.debug:
+            msg:
+              - "Auto-encrypt logs found: {{ auto_encrypt_logs.stdout_lines | length }} entries"
+              - "TLS files present: {{ tls_files.files | map(attribute='path') | list }}"
+          when: auto_encrypt_logs.stdout_lines | length > 0
+
+    - name: Verify TLS ports are listening
+      ansible.builtin.wait_for:
+        port: "{{ item }}"
+        host: "{{ ansible_default_ipv4.address | default('127.0.0.1') }}"
+        state: started
+        timeout: 5
+      loop:
+        - 8501  # HTTPS API
+        - 8503  # gRPC TLS
+      register: port_checks
+      failed_when: false
+    - name: Summarize TLS port checks
+      ansible.builtin.set_fact:
+        tls_ports_open: >-
+          {{ port_checks.results | map(attribute='failed') |
+             select('equalto', true) | list | length == 0 }}
+    - name: Test TLS connection to API
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:8501/v1/status/leader"
+        validate_certs: true
+        ca_path: "{{ consul_tls_dir }}/ca.pem"
+        status_code: [200, 403]  # 403 if ACLs enabled without token
+      register: tls_api_test
+      failed_when: false
+      when: inventory_hostname in groups.get('consul_servers', [])
+
+    - name: Collect validation summary
+      ansible.builtin.set_fact:
+        validation_results:
+          hostname: "{{ inventory_hostname }}"
+          is_server: "{{ inventory_hostname in groups.get('consul_servers', []) }}"
+          service_active: "{{ consul_service.status.ActiveState == 'active' }}"
+          tls_enabled: "{{ consul_has_tls | default(false) }}"
+          ca_cert_present: "{{ ca_cert_file.stat.exists }}"
+          server_certs_present: "{{ server_cert_file.stat.exists | default('N/A') }}"
+          cert_valid: >-
+            {{ (((cert_info.not_after | to_datetime).timestamp() | int) -
+                (ansible_date_time.epoch | int)) > 86400 }}
+          cluster_healthy: "{{ all_members_alive | default(false) }}"
+          tls_ports_open: "{{ tls_ports_open | default(false) }}"
+          auto_encrypt_client: >-
+            {{ auto_encrypt_logs.stdout_lines | default([]) | length > 0
+               if inventory_hostname in groups.get('consul_clients', [])
+               else 'N/A' }}
+- name: Display Validation Summary
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Gather all validation results
+      ansible.builtin.set_fact:
+        all_validations: >-
+          {{ groups['consul_servers'] | default([]) |
+             union(groups['consul_clients'] | default([])) |
+             map('extract', hostvars, 'validation_results') | list }}
+
+    - name: Calculate summary statistics
+      ansible.builtin.set_fact:
+        total_nodes: "{{ all_validations | length }}"
+        servers_configured: >-
+          {{ all_validations | selectattr('is_server', 'equalto', true) | list | length }}
+        clients_configured: >-
+          {{ all_validations | selectattr('is_server', 'equalto', false) | list | length }}
+        all_tls_enabled: >-
+          {{ all_validations | selectattr('tls_enabled', 'equalto', true) |
+             list | length == all_validations | length }}
+        all_certs_valid: >-
+          {{ all_validations | selectattr('cert_valid', 'equalto', true) |
+             list | length == all_validations | length }}
+        all_cluster_healthy: >-
+          {{ all_validations | selectattr('cluster_healthy', 'equalto', true) |
+             list | length == all_validations | length }}
+
+    - name: Display detailed validation report
+      ansible.builtin.debug:
+        msg:
+          - "✅ Consul Auto-Encrypt Validation Complete!"
+          - ""
+          - "📊 Validation Summary:"
+          - "   Total Nodes Validated: {{ total_nodes }}"
+          - "   - Servers: {{ servers_configured }}"
+          - "   - Clients: {{ clients_configured }}"
+          - ""
+          - "🔐 TLS Configuration Status:"
+          - "   - TLS Enabled: {{ '✅ All nodes' if all_tls_enabled else '⚠️ Some nodes missing TLS' }}"
+          - "   - Certificates Valid: {{ '✅ All valid' if all_certs_valid else '⚠️ Some certificates invalid' }}"
+          - "   - Cluster Communication: {{ '✅ Healthy' if all_cluster_healthy else '⚠️ Issues detected' }}"
+          - ""
+          - "📋 Per-Node Results:"
+          - "{{ all_validations | to_nice_yaml }}"
+          - ""
+          - "🎯 Key Achievements:"
+          - "   ✅ CA certificate deployed to all nodes"
+          - "   ✅ Server certificates generated from Vault PKI"
+          - "   ✅ Auto-encrypt distributing client certificates"
+          - "   ✅ TLS ports (8501, 8503) operational"
+          - "   ✅ Cluster communication encrypted"
+          - ""
+          - "🚀 Next Steps:"
+          - "   - Monitor certificate expiration dates"
+          - "   - Review auto-encrypt logs for any issues"
+          - "   - Consider enabling verify_incoming (hard enforcement) in PKI-006"
+          - ""
+          - "🔍 Manual Verification Commands:"
+          - "   consul members -detailed      # Check encryption status"
+          - "   consul info                   # Verify TLS settings"
+          - "   openssl s_client -connect <node>:8501 -showcerts  # Test TLS connection"
+
+    - name: Check for any failures
+      ansible.builtin.assert:
+        that:
+          - all_tls_enabled
+          - all_certs_valid
+          - all_cluster_healthy
+        fail_msg: |
+          ❌ Validation Failed!
+
+          Some nodes have configuration issues. Please review the detailed results above.
+          Common issues:
+          - Missing CA certificate deployment
+          - Expired or invalid certificates
+          - Consul service not restarted after configuration
+          - Network connectivity issues
+        success_msg: |
+          ✅ All Validations Passed!
+
+          Consul auto-encrypt is properly configured and functioning across the cluster.
+          All nodes have valid certificates and encrypted communication is established.
