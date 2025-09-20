@@ -1,0 +1,69 @@
+---
+# Setup Transit Auto-Unseal for Vault Production Cluster
+# This playbook configures the master vault with the necessary
+# policy and token for transit auto-unseal
+#
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/setup-transit-autounseal.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
+
+- name: Setup Transit Auto-Unseal on Master Vault
+  hosts: localhost
+  gather_facts: true
+
+  vars:
+    vault_master_addr: "http://192.168.10.30:8200"
+    vault_master_token: "master-root-2025"
+
+  tasks:
+    - name: Include transit auto-unseal setup tasks
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../roles/vault/tasks/setup_transit_autounseal.yml"
+
+    - name: Update Vault configuration on production nodes
+      ansible.builtin.shell: |
+        ssh {{ item }} "sudo sed -i 's|token = \\\".*\\\"|token = \\\"{{ new_transit_token.login.auth.client_token }}\\\"|' /etc/vault.d/vault.hcl && sudo systemctl restart vault"
+      loop:
+        - vault-prod-1-holly
+        - vault-prod-2-mable
+        - vault-prod-3-lloyd
+      when: new_transit_token is defined and new_transit_token is not failed
+      delegate_to: localhost
+
+    - name: Wait for Vault services to start
+      ansible.builtin.wait_for:
+        port: 8200
+        host: "{{ hostvars[item]['ansible_host'] }}"
+        delay: 5
+        timeout: 30
+      loop:
+        - vault-prod-1-holly
+        - vault-prod-2-mable
+        - vault-prod-3-lloyd
+      when: new_transit_token is defined and new_transit_token is not failed
+      delegate_to: localhost
+
+    - name: Check Vault status on all nodes
+      ansible.builtin.uri:
+        url: "http://{{ hostvars[item]['ansible_host'] }}:8200/v1/sys/health"
+        method: GET
+        status_code: [200, 501, 503]
+      loop:
+        - vault-prod-1-holly
+        - vault-prod-2-mable
+        - vault-prod-3-lloyd
+      register: vault_health_checks
+      delegate_to: localhost
+
+    - name: Display Vault cluster status
+      ansible.builtin.debug:
+        msg:
+          - "✅ Transit Auto-Unseal Setup Complete!"
+          - ""
+          - "Vault Cluster Status:"
+          - "{% for result in vault_health_checks.results %}"
+          - "  - {{ result.item }}: {{ 'Healthy' if result.status == 200 else 'Not initialized' if result.status == 501 else 'Sealed' }}"
+          - "{% endfor %}"
+          - ""
+          - "Next steps:"
+          - "  1. Initialize the cluster: init-vault-cluster.yml"
+          - "  2. The cluster will auto-unseal using the transit engine"

@@ -1,0 +1,93 @@
+---
+# Setup transit auto-unseal on master vault
+# This creates the necessary policy and token for production vault nodes
+
+- name: Check if transit engine is enabled
+  community.hashi_vault.vault_read:
+    url: "{{ vault_master_addr | default('http://192.168.10.30:8200') }}"
+    auth_method: token
+    token: "{{ vault_master_token | default('master-root-2025') }}"
+    path: "sys/mounts/transit"
+  register: transit_mount_check
+  failed_when: false
+  delegate_to: localhost
+
+- name: Enable transit engine if not already enabled
+  community.hashi_vault.vault_write:
+    url: "{{ vault_master_addr | default('http://192.168.10.30:8200') }}"
+    auth_method: token
+    token: "{{ vault_master_token | default('master-root-2025') }}"
+    path: "sys/mounts/transit"
+    data:
+      type: "transit"
+      description: "Transit engine for auto-unseal"
+  when: transit_mount_check.data is not defined
+  delegate_to: localhost
+
+- name: Create auto-unseal key if it doesn't exist
+  community.hashi_vault.vault_write:
+    url: "{{ vault_master_addr | default('http://192.168.10.30:8200') }}"
+    auth_method: token
+    token: "{{ vault_master_token | default('master-root-2025') }}"
+    path: "transit/keys/autounseal"
+    data:
+      type: "aes256-gcm96"
+      exportable: false
+      allow_plaintext_backup: false
+  failed_when: false
+  delegate_to: localhost
+
+- name: Template autounseal policy
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/autounseal.hcl.j2"
+    dest: /tmp/autounseal.hcl
+    mode: '0644'
+  delegate_to: localhost
+  vars:
+    transit_mount_path: "transit"
+    autounseal_key_name: "autounseal"
+    role_path: "{{ playbook_dir }}/../../../roles/vault"
+
+- name: Write autounseal policy to Vault
+  ansible.builtin.shell: |
+    export VAULT_ADDR="{{ vault_master_addr | default('http://192.168.10.30:8200') }}"
+    export VAULT_TOKEN="{{ vault_master_token | default('master-root-2025') }}"
+    vault policy write autounseal /tmp/autounseal.hcl
+  delegate_to: localhost
+  changed_when: true
+
+- name: Create new transit token for auto-unseal
+  community.hashi_vault.vault_token_create:
+    url: "{{ vault_master_addr | default('http://192.168.10.30:8200') }}"
+    auth_method: token
+    token: "{{ vault_master_token | default('master-root-2025') }}"
+    policies:
+      - autounseal
+    no_parent: true
+    renewable: true
+    period: "768h"
+    display_name: "auto-unseal-token-{{ ansible_date_time.epoch }}"
+    meta:
+      purpose: "transit-auto-unseal"
+      created: "{{ ansible_date_time.iso8601 }}"
+  register: new_transit_token
+  delegate_to: localhost
+
+- name: Update transit token in Infisical
+  ansible.builtin.shell: |
+    infisical secrets set VAULT_TRANSIT_TOKEN="{{ new_transit_token.login.auth.client_token }}" \
+      --env=prod \
+      --path=/apollo-13/vault
+  environment:
+    INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+    INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+  delegate_to: localhost
+  when: new_transit_token is not failed
+
+- name: Display new transit token
+  ansible.builtin.debug:
+    msg:
+      - "✅ Transit auto-unseal setup complete!"
+      - "New token: {{ new_transit_token.login.auth.client_token }}"
+      - "Token stored in Infisical at /apollo-13/vault/VAULT_TRANSIT_TOKEN"
+  when: new_transit_token is not failed

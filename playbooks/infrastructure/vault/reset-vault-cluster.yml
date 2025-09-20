@@ -1,0 +1,137 @@
+---
+# Reset Vault Cluster - WARNING: DESTRUCTIVE OPERATION
+# This playbook completely resets the Vault cluster by removing all data
+# Use only when you need to completely re-initialize the cluster
+#
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/reset-vault-cluster.yml \
+#   -i inventory/environments/vault-cluster/production.yaml \
+#   -e confirm_reset=yes
+#
+# Safety: Requires explicit confirmation via confirm_reset=yes
+
+- name: Reset Vault Cluster - DESTRUCTIVE OPERATION
+  hosts: vault_production
+  become: true
+  gather_facts: true
+  serial: 1
+
+  vars:
+    vault_data_dir: /opt/vault/data
+    vault_service: vault
+
+  pre_tasks:
+    - name: Require explicit confirmation
+      ansible.builtin.assert:
+        that:
+          - confirm_reset is defined
+          - confirm_reset | lower == 'yes'
+        fail_msg: |
+          ⚠️  SAFETY CHECK FAILED
+
+          This playbook will PERMANENTLY DELETE all Vault data!
+          You must explicitly confirm by adding: -e confirm_reset=yes
+
+          This will:
+          - Stop Vault service on all nodes
+          - Delete all Raft data
+          - Delete all secrets
+          - Require complete re-initialization
+        success_msg: "Confirmation received - proceeding with reset"
+
+    - name: Final warning
+      ansible.builtin.pause:
+        prompt: |
+          ⚠️  FINAL WARNING ⚠️
+
+          You are about to PERMANENTLY DELETE all Vault data on:
+          - {{ inventory_hostname }} ({{ ansible_host }})
+
+          This action CANNOT be undone!
+
+          Press Ctrl+C within 10 seconds to abort, or wait to continue...
+        seconds: 10
+
+  tasks:
+    - name: Stop Vault service
+      ansible.builtin.systemd:
+        name: "{{ vault_service }}"
+        state: stopped
+      become: true
+      ignore_errors: true
+
+    - name: Check if data directory exists
+      ansible.builtin.stat:
+        path: "{{ vault_data_dir }}"
+      register: data_dir_stat
+
+    - name: Remove Vault data directory
+      ansible.builtin.file:
+        path: "{{ vault_data_dir }}"
+        state: absent
+      when: data_dir_stat.stat.exists
+      become: true
+
+    - name: Recreate empty data directory
+      ansible.builtin.file:
+        path: "{{ vault_data_dir }}"
+        state: directory
+        owner: vault
+        group: vault
+        mode: '0755'
+      become: true
+
+    - name: Start Vault service
+      ansible.builtin.systemd:
+        name: "{{ vault_service }}"
+        state: started
+        enabled: true
+      become: true
+
+    - name: Wait for Vault to be ready
+      ansible.builtin.wait_for:
+        port: 8200
+        host: "{{ ansible_host }}"
+        delay: 5
+        timeout: 30
+
+    - name: Check Vault initialization status
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}:8200/v1/sys/init"
+        method: GET
+        status_code: [200, 501]
+      register: init_status
+
+    - name: Report node status
+      ansible.builtin.debug:
+        msg:
+          - "✅ Node reset complete: {{ inventory_hostname }}"
+          - "   - Data cleared: {{ vault_data_dir }}"
+          - "   - Service status: Started"
+          - "   - Initialized: {{ init_status.json.initialized | default(false) }}"
+
+- name: Initialize Fresh Vault Cluster
+  hosts: vault_production[0]
+  gather_facts: false
+  run_once: true
+
+  tasks:
+    - name: Wait before initialization
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Run initialization playbook
+      ansible.builtin.debug:
+        msg:
+          - "✅ All nodes have been reset"
+          - ""
+          - "📋 Next steps:"
+          - "   1. Run the initialization playbook:"
+          - "      uv run ansible-playbook playbooks/infrastructure/vault/init-vault-cluster.yml \\"
+          - "        -i inventory/environments/vault-cluster/production.yaml"
+          - ""
+          - "   2. The playbook will:"
+          - "      - Initialize the cluster with transit auto-unseal"
+          - "      - Generate new recovery keys"
+          - "      - Create a new root token"
+          - "      - Store credentials in Infisical"

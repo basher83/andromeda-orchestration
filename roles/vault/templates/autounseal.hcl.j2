@@ -1,0 +1,13 @@
+# Auto-unseal policy for transit seal
+path "{{ transit_mount_path | default('transit') }}/encrypt/{{ autounseal_key_name | default('autounseal') }}" {
+  capabilities = ["update"]
+}
+
+path "{{ transit_mount_path | default('transit') }}/decrypt/{{ autounseal_key_name | default('autounseal') }}" {
+  capabilities = ["update"]
+}
+
+# Allow reading key configuration
+path "{{ transit_mount_path | default('transit') }}/keys/{{ autounseal_key_name | default('autounseal') }}" {
+  capabilities = ["read"]
+}

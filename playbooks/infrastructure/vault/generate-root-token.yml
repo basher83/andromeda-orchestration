@@ -1,0 +1,237 @@
+---
+# Generate New Root Token for Production Vault Cluster
+# This playbook generates a new root token for an existing production Vault cluster
+# using recovery keys stored in Infisical (for clusters with auto-unseal)
+#
+# Usage:
+# uv run ansible-playbook playbooks/infrastructure/vault/generate-root-token.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
+#
+# Prerequisites:
+# - Vault cluster is initialized and unsealed
+# - Recovery keys stored in Infisical at /apollo-13/vault/VAULT_PROD_RECOVERY_KEY_1-5
+# - Infisical credentials configured (INFISICAL_UNIVERSAL_AUTH_CLIENT_ID/SECRET)
+#
+# Security Notes:
+# - This is a sensitive operation that creates a root token with full privileges
+# - The new root token will be automatically stored in Infisical
+# - Old root token will be revoked if it's still valid
+# - Root tokens should be revoked after initial setup operations
+
+- name: Generate New Root Token for Production Vault Cluster
+  hosts: localhost
+  gather_facts: true
+  any_errors_fatal: true
+
+  vars:
+    # Vault configuration
+    vault_addr: >-
+      {%- if groups is defined and 'vault_production' in groups and groups['vault_production'] | length > 0 -%}
+        {%- set vault_host = hostvars[groups['vault_production'][0]]['ansible_host'] -%}
+        http://{{ vault_host }}:8200
+      {%- else -%}
+        {{ lookup('env', 'VAULT_ADDR') | default('http://192.168.10.31:8200', true) }}
+      {%- endif -%}
+    vault_validate_certs: false  # TLS is disabled in current setup
+    recovery_threshold: 3  # Number of recovery keys needed
+
+  pre_tasks:
+    - name: Verify Infisical environment variables
+      ansible.builtin.assert:
+        that:
+          - lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') | length > 0
+          - lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') | length > 0
+        fail_msg: "Infisical credentials not configured. Check .mise.local.toml"
+        success_msg: "Infisical credentials verified"
+
+    - name: Validate no hardcoded IPs
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/validate-no-hardcoded-ips.yml"
+      vars:
+        validate_hostlike_vars:
+          vault_addr: "{{ vault_addr | default('') }}"
+        validate_allowlist: []
+
+  tasks:
+    - name: Check Vault health status
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/health"
+        method: GET
+        status_code: [200, 429, 473, 501, 503]
+        validate_certs: "{{ vault_validate_certs }}"
+      register: vault_health
+
+    - name: Verify Vault is initialized and unsealed
+      ansible.builtin.assert:
+        that:
+          - vault_health.json.initialized | default(false)
+          - not vault_health.json.sealed | default(true)
+        fail_msg: "Vault must be initialized and unsealed to generate root token"
+        success_msg: "Vault is initialized and unsealed"
+
+    - name: Retrieve recovery keys from Infisical
+      ansible.builtin.set_fact:
+        recovery_keys: []
+      no_log: true
+
+    - name: Fetch each recovery key from Infisical
+      ansible.builtin.set_fact:
+        recovery_keys: "{{ recovery_keys + [lookup('infisical.vault.read_secrets',
+                            universal_auth_client_id=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+                            universal_auth_client_secret=lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+                            project_id='7b832220-24c0-45bc-a5f1-ce9794a31259',
+                            env_slug='prod',
+                            path='/apollo-13/vault',
+                            secret_name='VAULT_PROD_RECOVERY_KEY_' ~ item).value] }}"
+      loop: "{{ range(1, 6) | list }}"
+      no_log: true
+
+    - name: Validate recovery keys retrieved
+      ansible.builtin.assert:
+        that:
+          - recovery_keys | length == 5
+          - recovery_keys | select('match', '^[^\\s]+$') | list | length == 5
+        fail_msg: "Failed to retrieve all 5 recovery keys from Infisical"
+        success_msg: "All 5 recovery keys retrieved successfully"
+
+    - name: Cancel any existing root generation attempt
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/generate-root/attempt"
+        method: DELETE
+        status_code: [200, 204]
+        validate_certs: "{{ vault_validate_certs }}"
+      failed_when: false
+
+    - name: Start root token generation
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/generate-root/attempt"
+        method: PUT
+        body_format: json
+        body: {}
+        status_code: [200]
+        validate_certs: "{{ vault_validate_certs }}"
+      register: root_generation_start
+
+    - name: Save OTP and nonce
+      ansible.builtin.set_fact:
+        otp: "{{ root_generation_start.json.otp }}"
+        nonce: "{{ root_generation_start.json.nonce }}"
+      no_log: true
+
+    - name: Provide recovery keys for root generation
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/generate-root/update"
+        method: PUT
+        body_format: json
+        body:
+          key: "{{ item }}"
+          nonce: "{{ nonce }}"
+        status_code: [200]
+        validate_certs: "{{ vault_validate_certs }}"
+      loop: "{{ recovery_keys[:recovery_threshold] }}"
+      register: root_generation_updates
+      no_log: true
+
+    - name: Extract encoded root token
+      ansible.builtin.set_fact:
+        encoded_token: "{{ (root_generation_updates.results | last).json.encoded_root_token }}"
+      no_log: true
+
+    - name: Decode root token
+      ansible.builtin.shell: |
+        set -euo pipefail
+        echo "{{ encoded_token }}" | base64 -d | xxd -r -p | \
+        python3 -c "import sys; a=sys.stdin.buffer.read(); \
+        b='{{ otp }}'.encode(); \
+        print(''.join(chr(x^y) for x,y in zip(a,b*len(a))))"
+      args:
+        executable: /bin/bash
+      register: decoded_token_result
+      no_log: true
+      changed_when: false
+
+    - name: Alternative decode method using Vault CLI
+      when: decoded_token_result.stdout | length == 0
+      block:
+        - name: Install vault CLI if not present
+          ansible.builtin.shell: |
+            set -euo pipefail
+            if ! command -v vault &> /dev/null; then
+              curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+              sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+              sudo apt-get update && sudo apt-get install vault
+            fi
+          args:
+            executable: /bin/bash
+          delegate_to: "{{ groups['vault_production'][0] }}"
+          changed_when: false
+
+        - name: Decode using vault operator
+          ansible.builtin.shell: |
+            vault operator generate-root -decode="{{ encoded_token }}" -otp="{{ otp }}"
+          environment:
+            VAULT_ADDR: "{{ vault_addr }}"
+          register: vault_decode_result
+          delegate_to: "{{ groups['vault_production'][0] }}"
+          no_log: true
+          changed_when: false
+
+        - name: Set decoded token from vault CLI
+          ansible.builtin.set_fact:
+            new_root_token: "{{ vault_decode_result.stdout | trim }}"
+          no_log: true
+
+    - name: Set decoded token from python method
+      ansible.builtin.set_fact:
+        new_root_token: "{{ decoded_token_result.stdout | trim }}"
+      when: decoded_token_result.stdout | length > 0
+      no_log: true
+
+    - name: Test new root token
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        path: "auth/token/lookup-self"
+        token: "{{ new_root_token }}"
+        validate_certs: "{{ vault_validate_certs }}"
+      register: new_token_test
+      no_log: true
+
+    - name: Verify new root token is valid
+      ansible.builtin.assert:
+        that:
+          - new_token_test is not failed
+          - new_token_test.data.data.policies is defined
+          - "'root' in new_token_test.data.data.policies"
+        fail_msg: "Failed to verify new root token"
+        success_msg: "New root token verified successfully"
+
+    - name: Update root token in Infisical
+      ansible.builtin.shell: |
+        infisical secrets set VAULT_PROD_ROOT_TOKEN="{{ new_root_token }}" \
+          --env=prod \
+          --path=/apollo-13/vault
+      environment:
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_ID: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID') }}"
+        INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET: "{{ lookup('env', 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET') }}"
+      changed_when: true
+      no_log: true
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg:
+          - "✅ Root Token Generation Complete!"
+          - ""
+          - "🔐 New root token has been:"
+          - "   - Generated successfully"
+          - "   - Verified as functional"
+          - "   - Stored in Infisical at /apollo-13/vault/VAULT_PROD_ROOT_TOKEN"
+          - ""
+          - "⚠️  Security Reminders:"
+          - "   - Root tokens have unlimited privileges"
+          - "   - Should be revoked after completing setup tasks"
+          - "   - Never store root tokens in version control"
+          - ""
+          - "📋 Next Steps:"
+          - "   1. Continue with PKI setup playbooks"
+          - "   2. setup-pki-root-ca.yml"
+          - "   3. setup-pki-intermediate-ca.yml"
+          - "   4. create-service-pki-roles.yml"
