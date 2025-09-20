@@ -1,0 +1,171 @@
+---
+# Deploy Consul Auto-Encrypt with mTLS
+# Task: PKI-002 - Configure Consul Auto-Encrypt
+# Parent Issue: 98 - mTLS for Service Communication
+#
+# This simplified playbook generates and distributes certificates for Consul
+# nodes using Vault PKI, enabling mTLS across the cluster.
+#
+# Usage:
+# export VAULT_ADDR="http://192.168.10.31:8200"
+# uv run ansible-playbook playbooks/infrastructure/vault/deploy-consul-auto-encrypt.yml \
+#   -i inventory/environments/doggos-homelab/proxmox.yml
+
+- name: Deploy Consul Auto-Encrypt with mTLS
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # Vault configuration
+    vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://192.168.10.31:8200', true) }}"
+    vault_validate_certs: false
+    pki_int_path: "pki_int"
+
+    # TLS directories
+    consul_tls_dir: /opt/consul/tls
+    consul_config_dir: /etc/consul.d
+
+  pre_tasks:
+    - name: Retrieve Vault token securely
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../tasks/infisical-secret-lookup.yml"
+      vars:
+        secret_name: 'VAULT_PROD_ROOT_TOKEN'
+        secret_var_name: 'vault_token'
+        fallback_env_var: 'VAULT_TOKEN'
+        infisical_path: '/apollo-13/vault'
+      tags: [secrets]
+      no_log: true
+
+    - name: Verify Vault token retrieval
+      ansible.builtin.assert:
+        that:
+          - vault_token is defined
+          - vault_token | length > 0
+          - vault_token != 'FAILED'
+        fail_msg: "Failed to retrieve Vault token from Infisical"
+        success_msg: "Vault token successfully retrieved"
+      no_log: true
+
+  tasks:
+    # Step 1: Generate CA Certificate from Vault
+    - name: Generate Consul CA certificate from Vault
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        path: "{{ pki_int_path }}/cert/ca"
+        validate_certs: "{{ vault_validate_certs }}"
+      register: consul_ca_cert
+      become: false
+      no_log: true
+
+    - name: Store CA certificate locally
+      ansible.builtin.copy:
+        content: "{{ consul_ca_cert.data.data.certificate }}"
+        dest: "/tmp/consul-ca.crt"
+        mode: '0644'
+      delegate_to: localhost
+      become: false
+
+    # Step 2: Generate certificates for Consul servers
+    - name: Generate certificates for Consul servers
+      community.hashi_vault.vault_pki_generate_certificate:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        engine_mount_point: "{{ pki_int_path }}"
+        role_name: "consul-agent"
+        common_name: "server.dc1.consul"
+        alt_names:
+          - "consul.service.consul"
+          - "consul.spaceships.work"
+          - "server.dc1.consul"
+        ip_sans:
+          - "127.0.0.1"
+          - "192.168.10.11"  # nomad-server-1-lloyd
+          - "192.168.10.12"  # nomad-server-2-holly
+          - "192.168.10.13"  # nomad-server-3-mable
+        ttl: "720h"
+        validate_certs: "{{ vault_validate_certs }}"
+      register: server_certificate
+      become: false
+      no_log: true
+
+    - name: Save server certificate locally
+      ansible.builtin.copy:
+        content: |
+          {{ server_certificate.data.data.certificate }}
+          {{ server_certificate.data.data.issuing_ca }}
+        dest: "/tmp/consul-server.crt"
+        mode: '0644'
+      become: false
+      no_log: true
+
+    - name: Save server private key locally
+      ansible.builtin.copy:
+        content: "{{ server_certificate.data.data.private_key }}"
+        dest: "/tmp/consul-server.key"
+        mode: '0600'
+      become: false
+      no_log: true
+
+    # Step 3: Generate certificate for Consul clients (including Vault nodes)
+    - name: Generate certificate for Consul clients
+      community.hashi_vault.vault_pki_generate_certificate:
+        url: "{{ vault_addr }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        engine_mount_point: "{{ pki_int_path }}"
+        role_name: "consul-agent"
+        common_name: "client.dc1.consul"
+        alt_names:
+          - "consul.service.consul"
+        ip_sans:
+          - "127.0.0.1"
+        ttl: "720h"
+        validate_certs: "{{ vault_validate_certs }}"
+      register: client_certificate
+      become: false
+      no_log: true
+
+    - name: Save client certificate locally
+      ansible.builtin.copy:
+        content: |
+          {{ client_certificate.data.data.certificate }}
+          {{ client_certificate.data.data.issuing_ca }}
+        dest: "/tmp/consul-client.crt"
+        mode: '0644'
+      become: false
+      no_log: true
+
+    - name: Save client private key locally
+      ansible.builtin.copy:
+        content: "{{ client_certificate.data.data.private_key }}"
+        dest: "/tmp/consul-client.key"
+        mode: '0600'
+      become: false
+      no_log: true
+
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ Consul Auto-Encrypt certificates generated!"
+          - ""
+          - "📁 Certificates saved in /tmp/:"
+          - "   - CA Certificate: consul-ca.crt"
+          - "   - Server Certificate: consul-server.crt"
+          - "   - Server Private Key: consul-server.key"
+          - "   - Client Certificate: consul-client.crt"
+          - "   - Client Private Key: consul-client.key"
+          - ""
+          - "🚀 Next Steps:"
+          - "   1. Deploy certificates to Consul nodes"
+          - "   2. Configure Consul TLS settings"
+          - "   3. Restart Consul services"
+          - ""
+          - "📋 These certificates can be used for:"
+          - "   - All 3 Consul servers (nomad-server-*)"
+          - "   - All 3 Consul clients (nomad-client-*)"
+          - "   - All 4 Vault nodes with Consul agents"
+
+# Next playbook would deploy these certificates to the actual nodes
+# and configure Consul for auto-encrypt

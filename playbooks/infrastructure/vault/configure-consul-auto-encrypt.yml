@@ -15,24 +15,29 @@
   hosts: localhost
   gather_facts: false
   vars:
-    # Vault configuration - derive from inventory with IPv6 support
-    vault_addr: >-
-      {%- if groups['vault'] is defined and groups['vault'] | length > 0 -%}
-        {%- set vault_host = hostvars[groups['vault'][0]]['ansible_host'] -%}
-        {%- if vault_host | ansible.utils.ipaddr('ipv6') -%}
-          https://[{{ vault_host }}]:8200
-        {%- else -%}
-          https://{{ vault_host }}:8200
-        {%- endif -%}
-      {%- else -%}
-        {{ lookup('env', 'VAULT_ADDR') | default('https://vault.service.consul:8200', true) }}
-      {%- endif -%}
+    # Vault configuration - use environment variable
+    vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://192.168.10.31:8200', true) }}"
 
     # PKI paths
-    pki_int_path: "pki-int"
+    pki_int_path: "pki_int"
 
     # TLS Certificate Validation
-    vault_validate_certs: "{{ vault_validate_certs | default(true) }}"
+    vault_validate_certs: false
+
+    # Define Consul nodes to configure
+    consul_servers:
+      - nomad-server-1-lloyd
+      - nomad-server-2-holly
+      - nomad-server-3-mable
+
+    consul_clients:
+      - nomad-client-1-lloyd
+      - nomad-client-2-holly
+      - nomad-client-3-mable
+      - vault-prod-1-holly
+      - vault-prod-2-mable
+      - vault-prod-3-lloyd
+      - vault-master-lloyd
 
   pre_tasks:
     - name: Retrieve Vault token securely

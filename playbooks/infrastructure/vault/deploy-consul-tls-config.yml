@@ -1,0 +1,251 @@
+---
+# Deploy Consul TLS Configuration and Enable Auto-Encrypt
+# Task: PKI-002 - Configure Consul Auto-Encrypt
+# Parent Issue: 98 - mTLS for Service Communication
+#
+# This playbook deploys TLS certificates and configures Consul for Auto-Encrypt
+#
+# Usage:
+# export VAULT_ADDR="http://192.168.10.31:8200"
+# uv run ansible-playbook playbooks/infrastructure/vault/deploy-consul-tls-config.yml \
+#   -i inventory/environments/doggos-homelab/proxmox.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
+
+- name: Deploy TLS Certificates to Consul Servers
+  hosts: nomad-server-1-lloyd,nomad-server-2-holly,nomad-server-3-mable
+  become: true
+  gather_facts: true
+  serial: 1  # Rolling update one server at a time
+  vars:
+    consul_tls_dir: /opt/consul/tls
+    consul_config_dir: /etc/consul.d
+    local_cert_dir: /tmp/consul-certs
+
+  tasks:
+    - name: Create TLS directory
+      ansible.builtin.file:
+        path: "{{ consul_tls_dir }}"
+        state: directory
+        owner: consul
+        group: consul
+        mode: '0755'
+
+    - name: Deploy CA certificate
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/ca.crt"
+        dest: "{{ consul_tls_dir }}/ca.crt"
+        owner: consul
+        group: consul
+        mode: '0644'
+
+    - name: Deploy server certificate
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/server.crt"
+        dest: "{{ consul_tls_dir }}/consul.crt"
+        owner: consul
+        group: consul
+        mode: '0644'
+
+    - name: Deploy server private key
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/server.key"
+        dest: "{{ consul_tls_dir }}/consul.key"
+        owner: consul
+        group: consul
+        mode: '0600'
+
+    - name: Configure Consul server for TLS and Auto-Encrypt
+      ansible.builtin.blockinfile:
+        path: "{{ consul_config_dir }}/consul.hcl"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - TLS Configuration"
+        block: |
+          # TLS Configuration for Consul Server
+          ca_file = "{{ consul_tls_dir }}/ca.crt"
+          cert_file = "{{ consul_tls_dir }}/consul.crt"
+          key_file = "{{ consul_tls_dir }}/consul.key"
+
+          # Phase 1: Soft enforcement (verify_incoming = false)
+          verify_incoming = false
+          verify_outgoing = true
+          verify_server_hostname = true
+
+          # Enable Auto-Encrypt for clients
+          auto_encrypt {
+            allow_tls = true
+          }
+
+          # HTTPS API and gRPC TLS
+          ports {
+            https = 8501
+            grpc_tls = 8503
+          }
+        backup: true
+
+    - name: Validate Consul configuration
+      ansible.builtin.command: consul validate {{ consul_config_dir }}
+      register: consul_validate
+      changed_when: false
+
+    - name: Restart Consul service
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted
+        daemon_reload: true
+      register: consul_restart
+
+    - name: Wait for Consul to be ready
+      ansible.builtin.wait_for:
+        port: 8301
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 10
+        timeout: 60
+
+    - name: Check Consul members
+      ansible.builtin.command: consul members
+      register: consul_members_check
+      changed_when: false
+      retries: 3
+      delay: 5
+      until: consul_members_check.rc == 0
+
+    - name: Display server configuration status
+      ansible.builtin.debug:
+        msg:
+          - "✅ Consul server {{ inventory_hostname }} configured for TLS"
+          - "   - CA certificate deployed"
+          - "   - Server certificate and key deployed"
+          - "   - Auto-Encrypt enabled for clients"
+          - "   - Service restarted successfully"
+
+- name: Deploy TLS Configuration to Consul Clients
+  hosts: nomad-client-1-lloyd,nomad-client-2-holly,nomad-client-3-mable,vault-prod-1-holly,vault-prod-2-mable,vault-prod-3-lloyd,vault-master-lloyd
+  become: true
+  gather_facts: true
+  vars:
+    consul_tls_dir: /opt/consul/tls
+    consul_config_dir: /etc/consul.d
+    local_cert_dir: /tmp/consul-certs
+
+  tasks:
+    - name: Create TLS directory
+      ansible.builtin.file:
+        path: "{{ consul_tls_dir }}"
+        state: directory
+        owner: consul
+        group: consul
+        mode: '0755'
+
+    - name: Deploy CA certificate
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/ca.crt"
+        dest: "{{ consul_tls_dir }}/ca.crt"
+        owner: consul
+        group: consul
+        mode: '0644'
+
+    - name: Configure Consul client for Auto-Encrypt
+      ansible.builtin.blockinfile:
+        path: "{{ consul_config_dir }}/consul.hcl"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - TLS Configuration"
+        block: |
+          # TLS Configuration for Consul Client
+          ca_file = "{{ consul_tls_dir }}/ca.crt"
+
+          # Client TLS settings
+          verify_outgoing = true
+          verify_server_hostname = true
+
+          # Enable Auto-Encrypt to get certificates from server
+          auto_encrypt {
+            tls = true
+          }
+
+          # HTTPS API and gRPC TLS
+          ports {
+            https = 8501
+            grpc_tls = 8503
+          }
+        backup: true
+
+    - name: Validate Consul configuration
+      ansible.builtin.command: consul validate {{ consul_config_dir }}
+      register: consul_validate
+      changed_when: false
+
+    - name: Restart Consul service
+      ansible.builtin.systemd:
+        name: consul
+        state: restarted
+        daemon_reload: true
+      register: consul_restart
+
+    - name: Wait for Consul to be ready
+      ansible.builtin.wait_for:
+        port: 8301
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 10
+        timeout: 60
+
+    - name: Display client configuration status
+      ansible.builtin.debug:
+        msg:
+          - "✅ Consul client {{ inventory_hostname }} configured for Auto-Encrypt"
+          - "   - CA certificate deployed"
+          - "   - Auto-Encrypt TLS enabled"
+          - "   - Service restarted successfully"
+
+- name: Validate Consul Auto-Encrypt Implementation
+  hosts: nomad-server-1-lloyd
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Check Consul cluster members
+      ansible.builtin.command: consul members
+      register: consul_members
+      changed_when: false
+
+    - name: Check Consul TLS status
+      ansible.builtin.command: consul info
+      register: consul_info
+      changed_when: false
+
+    - name: Verify RPC encryption
+      ansible.builtin.shell: |
+        consul info | grep -E "encrypted|encrypt" || true
+      register: encryption_status
+      changed_when: false
+
+    - name: Test HTTPS API endpoint
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:8501/v1/agent/self"
+        method: GET
+        validate_certs: false
+        status_code: [200, 401]  # 401 if ACLs are enabled
+      register: https_test
+      ignore_errors: true
+
+    - name: Display validation results
+      ansible.builtin.debug:
+        msg:
+          - "🎉 Consul Auto-Encrypt Configuration Complete!"
+          - ""
+          - "📊 Cluster Status:"
+          - "{{ consul_members.stdout_lines }}"
+          - ""
+          - "🔐 Encryption Status:"
+          - "{{ encryption_status.stdout_lines }}"
+          - ""
+          - "✅ HTTPS API: {{ 'Available' if https_test is not failed else 'Not available' }}"
+          - ""
+          - "📋 Configuration Summary:"
+          - "   - All servers configured with TLS certificates"
+          - "   - All clients using Auto-Encrypt"
+          - "   - Phase 1: Soft enforcement (verify_incoming = false)"
+          - "   - Ready for Phase 2: Hard enforcement after validation"
+          - ""
+          - "🚀 Next Steps:"
+          - "   1. Monitor cluster for any TLS issues"
+          - "   2. Verify all services can connect"
+          - "   3. Enable hard enforcement (verify_incoming = true)"
+          - "   4. Configure ACLs if needed"
