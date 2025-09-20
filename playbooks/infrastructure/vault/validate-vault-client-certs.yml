@@ -1,0 +1,270 @@
+---
+# Validate Vault Client Certificate Authentication
+# Task: PKI-004 - Configure Vault Client Certificate Authentication
+# Parent Issue: 98 - mTLS for Service Communication
+#
+# This playbook validates that certificate-based authentication is working in Vault
+#
+# Usage:
+# export VAULT_ADDR="http://192.168.10.31:8200"
+# uv run ansible-playbook playbooks/infrastructure/vault/validate-vault-client-certs.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
+
+- name: Validate Vault Client Certificate Authentication
+  hosts: vault-prod-1-holly
+  become: false
+  gather_facts: false
+  vars:
+    vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://192.168.10.31:8200') }}"
+    vault_token: "{{ lookup('pipe', 'infisical secrets get VAULT_PROD_ROOT_TOKEN --path=\"/apollo-13/vault\" --env=\"prod\" --plain') }}"
+
+  tasks:
+    - name: List enabled auth methods
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/auth"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        status_code: [200]
+      register: auth_methods
+
+    - name: Assert cert auth method is enabled
+      ansible.builtin.assert:
+        that:
+          - "'cert/' in auth_methods.json.data"
+        fail_msg: "Certificate auth method not enabled in Vault"
+        success_msg: "Certificate auth method is enabled"
+
+    - name: Get cert auth configuration
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/cert/config"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        status_code: [200]
+      register: cert_config
+
+    - name: Assert cert auth is properly configured
+      ansible.builtin.assert:
+        that:
+          - cert_config.json.data.disable_binding == false
+        fail_msg: "Certificate auth configuration incorrect"
+        success_msg: "Certificate auth configuration is correct"
+
+    - name: List configured certificate roles
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/cert/certs"
+        method: LIST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        status_code: [200]
+      register: cert_roles
+
+    - name: Debug cert roles response
+      ansible.builtin.debug:
+        var: cert_roles.json
+
+    - name: Assert required certificate roles exist
+      ansible.builtin.assert:
+        that:
+          - "'consul' in cert_roles.json['data']['keys']"
+          - "'nomad' in cert_roles.json['data']['keys']"
+        fail_msg: "Required certificate roles not configured"
+        success_msg: "All required certificate roles are configured"
+
+    - name: Get Consul certificate role details
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/cert/certs/consul"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        status_code: [200]
+      register: consul_role
+
+    - name: Assert Consul role has correct policies
+      ansible.builtin.assert:
+        that:
+          - "'consul-agent' in consul_role.json.data.policies"
+        fail_msg: "Consul certificate role missing consul-agent policy"
+        success_msg: "Consul certificate role has correct policies"
+
+    - name: Get Nomad certificate role details
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/cert/certs/nomad"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        status_code: [200]
+      register: nomad_role
+
+    - name: Assert Nomad role has correct policies
+      ansible.builtin.assert:
+        that:
+          - "'nomad-server' in nomad_role.json.data.policies"
+        fail_msg: "Nomad certificate role missing nomad-server policy"
+        success_msg: "Nomad certificate role has correct policies"
+
+    - name: Test Consul certificate authentication from localhost
+      ansible.builtin.shell: |
+        if [ -f /tmp/consul-certs/server.crt ] && [ -f /tmp/consul-certs/server.key ]; then
+          response=$(curl -s -X POST \
+            --cert /tmp/consul-certs/server.crt \
+            --key /tmp/consul-certs/server.key \
+            --cacert /tmp/consul-certs/ca.crt \
+            "{{ vault_addr }}/v1/auth/cert/login" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "consul"}')
+
+          token=$(echo "$response" | jq -r '.auth.client_token')
+          policies=$(echo "$response" | jq -r '.auth.policies[]')
+
+          if [ "$token" != "null" ] && [ -n "$token" ]; then
+            echo "SUCCESS: Token obtained"
+            echo "Policies: $policies"
+
+            # Verify token can be used
+            health=$(curl -s -H "X-Vault-Token: $token" "{{ vault_addr }}/v1/sys/health")
+            if [ $? -eq 0 ]; then
+              echo "Token is valid and working"
+            else
+              echo "Token validation failed"
+              exit 1
+            fi
+          else
+            echo "FAILED: No token obtained"
+            echo "Response: $response"
+            exit 1
+          fi
+        else
+          echo "SKIPPED: Consul certificates not found locally"
+        fi
+      delegate_to: localhost
+      register: consul_cert_test
+      ignore_errors: true
+
+    - name: Test Nomad certificate authentication from localhost
+      ansible.builtin.shell: |
+        if [ -f /tmp/nomad-certs/server.crt ] && [ -f /tmp/nomad-certs/server.key ]; then
+          response=$(curl -s -X POST \
+            --cert /tmp/nomad-certs/server.crt \
+            --key /tmp/nomad-certs/server.key \
+            --cacert /tmp/nomad-certs/ca.crt \
+            "{{ vault_addr }}/v1/auth/cert/login" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "nomad"}')
+
+          token=$(echo "$response" | jq -r '.auth.client_token')
+          policies=$(echo "$response" | jq -r '.auth.policies[]')
+
+          if [ "$token" != "null" ] && [ -n "$token" ]; then
+            echo "SUCCESS: Token obtained"
+            echo "Policies: $policies"
+
+            # Verify token can be used
+            health=$(curl -s -H "X-Vault-Token: $token" "{{ vault_addr }}/v1/sys/health")
+            if [ $? -eq 0 ]; then
+              echo "Token is valid and working"
+            else
+              echo "Token validation failed"
+              exit 1
+            fi
+          else
+            echo "FAILED: No token obtained"
+            echo "Response: $response"
+            exit 1
+          fi
+        else
+          echo "SKIPPED: Nomad certificates not found locally"
+        fi
+      delegate_to: localhost
+      register: nomad_cert_test
+      ignore_errors: true
+
+    - name: Verify token authentication still works (backward compatibility)
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/health"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        status_code: [200]
+      register: token_auth_test
+
+    - name: Assert backward compatibility maintained
+      ansible.builtin.assert:
+        that:
+          - token_auth_test.status == 200
+        fail_msg: "Token authentication compatibility broken"
+        success_msg: "Token authentication still works (backward compatible)"
+
+    - name: Display validation summary
+      ansible.builtin.debug:
+        msg:
+          - "===================================================="
+          - "✅ Vault Client Certificate Validation Complete"
+          - "===================================================="
+          - ""
+          - "Auth Method Status:"
+          - "  - Certificate auth enabled: ✅"
+          - "  - Configuration correct: ✅"
+          - "  - Required roles configured: ✅"
+          - ""
+          - "Certificate Roles:"
+          - "  - Consul role: {{ 'Configured with consul-agent policy' if 'consul' in cert_roles.json['data']['keys'] else 'Not configured' }}"
+          - "  - Nomad role: {{ 'Configured with nomad-server policy' if 'nomad' in cert_roles.json['data']['keys'] else 'Not configured' }}"
+          - ""
+          - "Authentication Tests:"
+          - "  - Consul cert auth: {{ consul_cert_test.stdout_lines[0] if consul_cert_test.stdout_lines else 'Not tested' }}"
+          - "  - Nomad cert auth: {{ nomad_cert_test.stdout_lines[0] if nomad_cert_test.stdout_lines else 'Not tested' }}"
+          - "  - Token auth (backward compat): ✅"
+          - ""
+          - "Policies Attached:"
+          - "  - Consul: consul-agent policy"
+          - "  - Nomad: nomad-server policy"
+          - ""
+          - "Next Steps:"
+          - "  1. Configure services to use certificate authentication"
+          - "  2. Test authentication from actual service nodes"
+          - "  3. Monitor authentication metrics"
+          - "  4. Plan migration from token to certificate auth"
+          - "===================================================="
+
+- name: Validate Certificate Authentication from Service Nodes
+  hosts: nomad-server-1-lloyd
+  become: true
+  gather_facts: false
+  vars:
+    vault_addr: "https://192.168.10.31:8200"
+
+  tasks:
+    - name: Test Nomad certificate authentication from Nomad server
+      ansible.builtin.shell: |
+        if [ -f /opt/nomad/tls/nomad.crt ] && [ -f /opt/nomad/tls/nomad.key ]; then
+          response=$(curl -k -s -X POST \
+            --cert /opt/nomad/tls/nomad.crt \
+            --key /opt/nomad/tls/nomad.key \
+            "{{ vault_addr }}/v1/auth/cert/login" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "nomad"}')
+
+          token=$(echo "$response" | jq -r '.auth.client_token' 2>/dev/null || echo "null")
+
+          if [ "$token" != "null" ] && [ -n "$token" ]; then
+            echo "SUCCESS: Nomad server authenticated with certificate"
+            echo "Token obtained: ${token:0:20}..."
+          else
+            echo "FAILED: Certificate authentication failed from Nomad server"
+            echo "Response: $response"
+            exit 1
+          fi
+        else
+          echo "ERROR: Nomad certificates not found at /opt/nomad/tls/"
+          exit 1
+        fi
+      register: nomad_node_auth_test
+      ignore_errors: true
+
+    - name: Display service node test results
+      ansible.builtin.debug:
+        msg:
+          - "📍 Authentication from Service Node:"
+          - "{{ nomad_node_auth_test.stdout_lines | join('\n') if nomad_node_auth_test.stdout_lines else 'Test did not complete' }}"

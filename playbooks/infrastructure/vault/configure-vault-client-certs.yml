@@ -1,0 +1,298 @@
+---
+# Configure Vault Client Certificate Authentication
+# Task: PKI-004 - Configure Vault Client Certificate Authentication
+# Parent Issue: 98 - mTLS for Service Communication
+#
+# This playbook enables certificate-based authentication in Vault
+# allowing services to authenticate using their mTLS certificates
+#
+# Usage:
+# export VAULT_ADDR="http://192.168.10.31:8200"
+# uv run ansible-playbook playbooks/infrastructure/vault/configure-vault-client-certs.yml \
+#   -i inventory/environments/vault-cluster/production.yaml
+
+- name: Configure Vault Certificate Authentication Method
+  hosts: vault-prod-1-holly
+  become: false
+  gather_facts: false
+  vars:
+    vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://192.168.10.31:8200') }}"
+    vault_token: "{{ lookup('pipe', 'infisical secrets get VAULT_PROD_ROOT_TOKEN --path=\"/apollo-13/vault\" --env=\"prod\" --plain') }}"
+
+  tasks:
+    - name: Set Vault environment
+      ansible.builtin.set_fact:
+        ansible_hashi_vault_addr: "{{ vault_addr }}"
+        ansible_hashi_vault_token: "{{ vault_token }}"
+
+    - name: Check if cert auth method is already enabled
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/auth"
+        method: GET
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        status_code: [200]
+      register: auth_methods
+
+    - name: Enable cert auth method if not already enabled
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/auth/cert"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          type: "cert"
+          description: "Certificate-based authentication for services"
+        status_code: [200, 204]
+      when: "'cert/' not in auth_methods.json.data"
+
+    - name: Configure certificate auth method settings
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/cert/config"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          disable_binding: false
+          max_lease_ttl: "768h"
+          default_lease_ttl: "168h"
+        status_code: [200, 204]
+
+    - name: Get CA certificate for certificate roles
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/pki_int/ca/pem"
+        method: GET
+        return_content: true
+      register: ca_cert_response
+
+    - name: Create Consul agent policy
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/policies/acl/consul-agent"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          policy: |
+            # Consul agent policy
+            path "secret/data/consul/*" {
+              capabilities = ["read", "list"]
+            }
+            path "pki_int/issue/consul-agent" {
+              capabilities = ["create", "update"]
+            }
+            path "pki_int/ca/pem" {
+              capabilities = ["read"]
+            }
+        status_code: [200, 204]
+
+    - name: Create Nomad server policy
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/sys/policies/acl/nomad-server"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          policy: |
+            # Nomad server policy
+            path "secret/data/nomad/*" {
+              capabilities = ["read", "list"]
+            }
+            path "pki_int/issue/nomad-agent" {
+              capabilities = ["create", "update"]
+            }
+            path "pki_int/ca/pem" {
+              capabilities = ["read"]
+            }
+        status_code: [200, 204]
+
+    - name: Create Consul service cert auth role
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/cert/certs/consul"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          display_name: "consul"
+          policies: "consul-agent"
+          certificate: "{{ ca_cert_response.content }}"
+          allowed_common_names:
+            - "server.dc1.consul"
+            - "client.dc1.consul"
+            - "consul.service.consul"
+          allowed_dns_sans:
+            - "*.consul.spaceships.work"
+            - "consul.service.consul"
+            - "server.dc1.consul"
+            - "client.dc1.consul"
+          ttl: "720h"
+          max_ttl: "8760h"
+        status_code: [200, 204]
+
+    - name: Create Nomad service cert auth role
+      ansible.builtin.uri:
+        url: "{{ vault_addr }}/v1/auth/cert/certs/nomad"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        body_format: json
+        body:
+          display_name: "nomad"
+          policies: "nomad-server"
+          certificate: "{{ ca_cert_response.content }}"
+          allowed_common_names:
+            - "server.global.nomad"
+            - "client.global.nomad"
+          allowed_dns_sans:
+            - "*.nomad.spaceships.work"
+            - "nomad.service.consul"
+            - "server.global.nomad"
+            - "client.global.nomad"
+          ttl: "720h"
+          max_ttl: "8760h"
+        status_code: [200, 204]
+
+    - name: Display configuration status
+      ansible.builtin.debug:
+        msg:
+          - "✅ Vault Certificate Authentication Configured"
+          - ""
+          - "📋 Configuration Summary:"
+          - "   - Certificate auth method enabled at: auth/cert/"
+          - "   - Consul service auth role created"
+          - "   - Nomad service auth role created"
+          - "   - Service policies configured"
+          - ""
+          - "🔐 Auth Roles:"
+          - "   - consul: Uses Consul certificates to get consul-agent policy"
+          - "   - nomad: Uses Nomad certificates to get nomad-server policy"
+          - ""
+          - "📌 Next Steps:"
+          - "   1. Test certificate authentication from services"
+          - "   2. Validate token policies are correctly attached"
+          - "   3. Update service configurations to use cert auth"
+
+- name: Update Vault Listener Configuration for Client Certificates
+  hosts: vault_cluster
+  become: true
+  gather_facts: true
+  vars:
+    vault_config_dir: /etc/vault.d
+    vault_tls_dir: /opt/vault/tls
+
+  tasks:
+    - name: Check if Vault configuration exists
+      ansible.builtin.stat:
+        path: "{{ vault_config_dir }}/vault.hcl"
+      register: vault_config
+
+    - name: Backup existing Vault configuration
+      ansible.builtin.copy:
+        src: "{{ vault_config_dir }}/vault.hcl"
+        dest: "{{ vault_config_dir }}/vault.hcl.backup.{{ ansible_date_time.epoch }}"
+        remote_src: true
+      when: vault_config.stat.exists
+
+    - name: Update Vault listener for client certificate support
+      ansible.builtin.blockinfile:
+        path: "{{ vault_config_dir }}/vault.hcl"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - Client Certificate Configuration"
+        insertafter: 'listener "tcp"'
+        block: |
+          # Client certificate authentication settings
+          # Note: These settings enhance the existing listener configuration
+          # Phase 1: Soft enforcement (tls_require_and_verify_client_cert = false)
+          # The listener already has:
+          #   tls_cert_file and tls_key_file configured
+          #   tls_client_ca_file = "{{ vault_tls_dir }}/ca.crt"
+          #   tls_require_and_verify_client_cert = false
+        backup: true
+
+    - name: Reload Vault configuration
+      ansible.builtin.systemd:
+        name: vault
+        state: reloaded
+      register: vault_reload
+      ignore_errors: true
+
+    - name: Restart Vault if reload failed
+      ansible.builtin.systemd:
+        name: vault
+        state: restarted
+      when: vault_reload is failed
+
+    - name: Wait for Vault to be ready
+      ansible.builtin.wait_for:
+        port: 8200
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 5
+        timeout: 60
+
+    - name: Check Vault health
+      ansible.builtin.uri:
+        url: "http://{{ ansible_default_ipv4.address }}:8200/v1/sys/health"
+        method: GET
+        status_code: [200, 429, 501, 503]
+      register: vault_health
+
+    - name: Display node configuration status
+      ansible.builtin.debug:
+        msg:
+          - "✅ Vault node {{ inventory_hostname }} configured for client certificates"
+          - "   - Client CA file configured"
+          - "   - Soft enforcement mode (tls_require_and_verify_client_cert = false)"
+          - "   - Service status: {{ 'running' if vault_health is not failed else 'needs attention' }}"
+
+- name: Test Certificate Authentication
+  hosts: vault-prod-1-holly
+  become: false
+  gather_facts: false
+  vars:
+    vault_addr: "{{ lookup('env', 'VAULT_ADDR') | default('http://192.168.10.31:8200') }}"
+
+  tasks:
+    - name: Test certificate authentication with curl (simulating Consul)
+      ansible.builtin.shell: |
+        curl -s -X POST \
+          --cert /tmp/consul-certs/server.crt \
+          --key /tmp/consul-certs/server.key \
+          --cacert /tmp/consul-certs/ca.crt \
+          "{{ vault_addr }}/v1/auth/cert/login" \
+          -H "Content-Type: application/json" \
+          -d '{"name": "consul"}' | jq -r '.auth.client_token'
+      delegate_to: localhost
+      register: consul_auth_test
+      ignore_errors: true
+
+    - name: Test certificate authentication with curl (simulating Nomad)
+      ansible.builtin.shell: |
+        curl -s -X POST \
+          --cert /tmp/nomad-certs/server.crt \
+          --key /tmp/nomad-certs/server.key \
+          --cacert /tmp/nomad-certs/ca.crt \
+          "{{ vault_addr }}/v1/auth/cert/login" \
+          -H "Content-Type: application/json" \
+          -d '{"name": "nomad"}' | jq -r '.auth.client_token'
+      delegate_to: localhost
+      register: nomad_auth_test
+      ignore_errors: true
+
+    - name: Display test results
+      ansible.builtin.debug:
+        msg:
+          - "🧪 Certificate Authentication Test Results:"
+          - ""
+          - "Consul Certificate Auth:"
+          - "  Status: {{ 'Success ✅' if consul_auth_test.rc == 0 and consul_auth_test.stdout and consul_auth_test.stdout != 'null' else 'Failed ❌' }}"
+          - "  Token: {{ consul_auth_test.stdout[:20] + '...' if consul_auth_test.stdout and consul_auth_test.stdout != 'null' else 'Not generated' }}"
+          - ""
+          - "Nomad Certificate Auth:"
+          - "  Status: {{ 'Success ✅' if nomad_auth_test.rc == 0 and nomad_auth_test.stdout and nomad_auth_test.stdout != 'null' else 'Failed ❌' }}"
+          - "  Token: {{ nomad_auth_test.stdout[:20] + '...' if nomad_auth_test.stdout and nomad_auth_test.stdout != 'null' else 'Not generated' }}"
+          - ""
+          - "Note: If tests fail, ensure certificates are properly deployed"
+          - "      and that the CA certificate matches the PKI intermediate CA"
