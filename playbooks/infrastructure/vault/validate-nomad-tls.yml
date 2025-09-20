@@ -1,0 +1,231 @@
+---
+# Validate Nomad TLS Configuration
+# Task: PKI-003 - Configure Nomad TLS for Cluster Communication
+# Parent Issue: 98 - mTLS for Service Communication
+#
+# This playbook validates that Nomad TLS is properly configured and working
+#
+# Usage:
+# export VAULT_ADDR="http://192.168.10.31:8200"
+# uv run ansible-playbook playbooks/infrastructure/vault/validate-nomad-tls.yml \
+#   -i inventory/environments/doggos-homelab/proxmox.yml
+
+- name: Validate Nomad TLS Configuration
+  hosts: nomad-server-1-lloyd,nomad-server-2-holly,nomad-server-3-mable,nomad-client-1-lloyd,nomad-client-2-holly,nomad-client-3-mable
+  become: true
+  gather_facts: true
+  vars:
+    nomad_tls_dir: /opt/nomad/tls
+
+  tasks:
+    - name: Check if TLS certificates exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: cert_files
+      loop:
+        - "{{ nomad_tls_dir }}/ca.crt"
+        - "{{ nomad_tls_dir }}/nomad.crt"
+        - "{{ nomad_tls_dir }}/nomad.key"
+
+    - name: Assert all certificate files exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.size > 0
+        fail_msg: "Certificate file {{ item.item }} does not exist or is empty"
+        success_msg: "Certificate file {{ item.item }} exists"
+      loop: "{{ cert_files.results }}"
+
+    - name: Verify certificate validity
+      ansible.builtin.command: >
+        openssl x509 -in {{ nomad_tls_dir }}/nomad.crt -text -noout -checkend 86400
+      register: cert_check
+      changed_when: false
+
+    - name: Assert certificate is valid
+      ansible.builtin.assert:
+        that:
+          - cert_check.rc == 0
+        fail_msg: "Certificate is expired or expiring within 24 hours"
+        success_msg: "Certificate is valid and not expiring soon"
+
+    - name: Source environment and verify Nomad agent info
+      ansible.builtin.shell: |
+        source /etc/environment
+        nomad agent-info 2>&1 | head -20
+      register: nomad_agent_info
+      changed_when: false
+
+    - name: Check TLS configuration in agent info
+      ansible.builtin.assert:
+        that:
+          - "'tls.http = true' in nomad_agent_info.stdout or 'tls.http=true' in nomad_agent_info.stdout or 'http = true' in nomad_agent_info.stdout"
+        fail_msg: "TLS not properly configured in Nomad"
+        success_msg: "TLS is enabled in Nomad configuration"
+
+    - name: Test HTTPS API endpoint
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:4646/v1/status/leader"
+        validate_certs: false
+        timeout: 10
+        status_code: 200
+      register: api_test
+      when: inventory_hostname in groups.get('nomad_servers', []) or 'server' in inventory_hostname
+
+    - name: Assert API responds over HTTPS (servers)
+      ansible.builtin.assert:
+        that:
+          - api_test.status == 200
+        fail_msg: "Nomad HTTPS API not responding correctly"
+        success_msg: "Nomad HTTPS API is working"
+      when: inventory_hostname in groups.get('nomad_servers', []) or 'server' in inventory_hostname
+
+    - name: Check Nomad server members (servers only)
+      ansible.builtin.shell: |
+        source /etc/environment
+        nomad server members
+      register: server_members
+      changed_when: false
+      when: inventory_hostname in groups.get('nomad_servers', []) or 'server' in inventory_hostname
+      ignore_errors: true
+
+    - name: Assert all servers are alive (servers only)
+      ansible.builtin.assert:
+        that:
+          - server_members.rc == 0
+          - "'alive' in server_members.stdout"
+        fail_msg: "Nomad server cluster health issues detected"
+        success_msg: "All Nomad servers are alive and healthy"
+      when:
+        - inventory_hostname in groups.get('nomad_servers', []) or 'server' in inventory_hostname
+        - server_members is not skipped
+
+    - name: Check environment variables are set
+      ansible.builtin.shell: |
+        source /etc/environment
+        echo "NOMAD_ADDR=$NOMAD_ADDR"
+        echo "NOMAD_CACERT=$NOMAD_CACERT"
+        [ -n "$NOMAD_ADDR" ] && [ -n "$NOMAD_CACERT" ]
+      register: env_check
+      changed_when: false
+
+    - name: Assert Nomad client environment is configured
+      ansible.builtin.assert:
+        that:
+          - env_check.rc == 0
+        fail_msg: "Nomad client environment variables not properly configured"
+        success_msg: "Nomad environment variables are properly set"
+
+    - name: Verify certificate matches node role
+      ansible.builtin.shell: |
+        openssl x509 -in {{ nomad_tls_dir }}/nomad.crt -text -noout | grep "CN=" | head -1
+      register: cert_cn
+      changed_when: false
+
+    - name: Assert certificate CN matches node role
+      ansible.builtin.assert:
+        that:
+          - >
+            ('server' in inventory_hostname and 'server.global.nomad' in cert_cn.stdout) or
+            ('client' in inventory_hostname and 'client.global.nomad' in cert_cn.stdout)
+        fail_msg: "Certificate CN does not match node role"
+        success_msg: "Certificate CN correctly matches node role"
+
+- name: Validate Nomad Cluster Communication
+  hosts: nomad-server-1-lloyd
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Test cluster-wide operations
+      ansible.builtin.shell: |
+        source /etc/environment
+        nomad node status
+      register: node_status
+      changed_when: false
+
+    - name: Count ready nodes
+      ansible.builtin.shell: |
+        source /etc/environment
+        nomad node status | grep -c "ready" || echo "0"
+      register: ready_nodes
+      changed_when: false
+
+    - name: Assert nodes are ready
+      ansible.builtin.assert:
+        that:
+          - ready_nodes.stdout | int >= 3
+        fail_msg: "Not enough Nomad nodes in ready state (expected at least 3)"
+        success_msg: "{{ ready_nodes.stdout }} Nomad nodes are ready"
+
+    - name: Verify Raft peers (servers only)
+      ansible.builtin.shell: |
+        source /etc/environment
+        nomad operator raft list-peers
+      register: raft_peers
+      changed_when: false
+
+    - name: Assert Raft communication is working
+      ansible.builtin.assert:
+        that:
+          - raft_peers.rc == 0
+          - "'voter' in raft_peers.stdout"
+        fail_msg: "Nomad Raft communication issues detected"
+        success_msg: "Nomad Raft communication is working correctly"
+
+    - name: Test job submission capability
+      ansible.builtin.shell: |
+        source /etc/environment
+        cat << 'EOF' | nomad job validate -
+        job "tls-test" {
+          type = "batch"
+          datacenters = ["dc1"]
+          group "test" {
+            task "echo" {
+              driver = "raw_exec"
+              config {
+                command = "echo"
+                args = ["TLS test successful"]
+              }
+            }
+          }
+        }
+        EOF
+      register: job_validate
+      changed_when: false
+
+    - name: Assert job validation works
+      ansible.builtin.assert:
+        that:
+          - job_validate.rc == 0
+        fail_msg: "Job validation failed - TLS may be blocking operations"
+        success_msg: "Job validation successful - TLS not blocking operations"
+
+    - name: Display validation summary
+      ansible.builtin.debug:
+        msg:
+          - "===================================================="
+          - "✅ Nomad TLS Validation Complete"
+          - "===================================================="
+          - ""
+          - "Certificate Status:"
+          - "  - All certificates deployed and valid"
+          - "  - Certificates not expiring within 24 hours"
+          - "  - Certificate CNs match node roles"
+          - ""
+          - "Cluster Health:"
+          - "  - All servers alive and communicating"
+          - "  - {{ ready_nodes.stdout }} client nodes ready"
+          - "  - Raft consensus working"
+          - ""
+          - "TLS Configuration:"
+          - "  - HTTP TLS enabled"
+          - "  - RPC TLS enabled"
+          - "  - HTTPS API responding"
+          - "  - Environment variables configured"
+          - ""
+          - "Operational Status:"
+          - "  - Job validation working"
+          - "  - Cluster operations normal"
+          - "  - Ready for production workloads"
+          - "===================================================="

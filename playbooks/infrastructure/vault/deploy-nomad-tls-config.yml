@@ -1,0 +1,294 @@
+---
+# Deploy Nomad TLS Configuration
+# Task: PKI-003 - Configure Nomad TLS for Cluster Communication
+# Parent Issue: 98 - mTLS for Service Communication
+#
+# This playbook deploys TLS certificates and configures Nomad for encrypted communication
+#
+# Usage:
+# export VAULT_ADDR="http://192.168.10.31:8200"
+# uv run ansible-playbook playbooks/infrastructure/vault/deploy-nomad-tls-config.yml \
+#   -i inventory/environments/doggos-homelab/proxmox.yml
+
+- name: Deploy TLS Certificates to Nomad Servers
+  hosts: nomad-server-1-lloyd,nomad-server-2-holly,nomad-server-3-mable
+  become: true
+  gather_facts: true
+  serial: 1  # Rolling update one server at a time
+  vars:
+    nomad_tls_dir: /opt/nomad/tls
+    nomad_config_dir: /etc/nomad.d
+    local_cert_dir: /tmp/nomad-certs
+    nomad_node_role: server
+
+  tasks:
+    - name: Create TLS directory
+      ansible.builtin.file:
+        path: "{{ nomad_tls_dir }}"
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: '0755'
+
+    - name: Deploy CA certificate
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/ca.crt"
+        dest: "{{ nomad_tls_dir }}/ca.crt"
+        owner: nomad
+        group: nomad
+        mode: '0644'
+
+    - name: Deploy server certificate
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/server.crt"
+        dest: "{{ nomad_tls_dir }}/nomad.crt"
+        owner: nomad
+        group: nomad
+        mode: '0644'
+
+    - name: Deploy server private key
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/server.key"
+        dest: "{{ nomad_tls_dir }}/nomad.key"
+        owner: nomad
+        group: nomad
+        mode: '0600'
+
+    - name: Configure Nomad server for TLS
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_dir }}/nomad.hcl"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - TLS Configuration"
+        block: |
+          # TLS Configuration for Nomad Server
+          tls {
+            http = true
+            rpc  = true
+
+            ca_file   = "{{ nomad_tls_dir }}/ca.crt"
+            cert_file = "{{ nomad_tls_dir }}/nomad.crt"
+            key_file  = "{{ nomad_tls_dir }}/nomad.key"
+
+            # Phase 1: Soft enforcement for HTTPS clients
+            verify_https_client    = false
+            verify_server_hostname = true
+
+            # TLS minimum version
+            tls_min_version = "tls12"
+          }
+        backup: true
+
+    - name: Update environment variables for TLS
+      ansible.builtin.lineinfile:
+        path: /etc/environment
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+        create: true
+      loop:
+        - { key: "NOMAD_ADDR", value: "https://127.0.0.1:4646" }
+        - { key: "NOMAD_CACERT", value: "{{ nomad_tls_dir }}/ca.crt" }
+        - { key: "NOMAD_CLIENT_CERT", value: "{{ nomad_tls_dir }}/nomad.crt" }
+        - { key: "NOMAD_CLIENT_KEY", value: "{{ nomad_tls_dir }}/nomad.key" }
+
+    - name: Validate Nomad configuration
+      ansible.builtin.command: nomad config validate {{ nomad_config_dir }}
+      register: nomad_validate
+      changed_when: false
+
+    - name: Restart Nomad service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      register: nomad_restart
+
+    - name: Wait for Nomad API to be ready
+      ansible.builtin.wait_for:
+        port: 4646
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 10
+        timeout: 60
+
+    - name: Check Nomad server members
+      ansible.builtin.shell: |
+        . /etc/environment
+        nomad server members || true
+      register: nomad_members_check
+      changed_when: false
+
+    - name: Display server configuration status
+      ansible.builtin.debug:
+        msg:
+          - "✅ Nomad server {{ inventory_hostname }} configured for TLS"
+          - "   - CA certificate deployed"
+          - "   - Server certificate and key deployed"
+          - "   - TLS enabled for HTTP and RPC"
+          - "   - Service restarted successfully"
+
+- name: Deploy TLS Configuration to Nomad Clients
+  hosts: nomad-client-1-lloyd,nomad-client-2-holly,nomad-client-3-mable
+  become: true
+  gather_facts: true
+  vars:
+    nomad_tls_dir: /opt/nomad/tls
+    nomad_config_dir: /etc/nomad.d
+    local_cert_dir: /tmp/nomad-certs
+    nomad_node_role: client
+
+  tasks:
+    - name: Create TLS directory
+      ansible.builtin.file:
+        path: "{{ nomad_tls_dir }}"
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: '0755'
+
+    - name: Deploy CA certificate
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/ca.crt"
+        dest: "{{ nomad_tls_dir }}/ca.crt"
+        owner: nomad
+        group: nomad
+        mode: '0644'
+
+    - name: Deploy client certificate
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/client.crt"
+        dest: "{{ nomad_tls_dir }}/nomad.crt"
+        owner: nomad
+        group: nomad
+        mode: '0644'
+
+    - name: Deploy client private key
+      ansible.builtin.copy:
+        src: "{{ local_cert_dir }}/client.key"
+        dest: "{{ nomad_tls_dir }}/nomad.key"
+        owner: nomad
+        group: nomad
+        mode: '0600'
+
+    - name: Configure Nomad client for TLS
+      ansible.builtin.blockinfile:
+        path: "{{ nomad_config_dir }}/nomad.hcl"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - TLS Configuration"
+        block: |
+          # TLS Configuration for Nomad Client
+          tls {
+            http = true
+            rpc  = true
+
+            ca_file   = "{{ nomad_tls_dir }}/ca.crt"
+            cert_file = "{{ nomad_tls_dir }}/nomad.crt"
+            key_file  = "{{ nomad_tls_dir }}/nomad.key"
+
+            # Client TLS settings
+            verify_server_hostname = true
+
+            # TLS minimum version
+            tls_min_version = "tls12"
+          }
+        backup: true
+
+    - name: Update environment variables for TLS
+      ansible.builtin.lineinfile:
+        path: /etc/environment
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+        create: true
+      loop:
+        - { key: "NOMAD_ADDR", value: "https://127.0.0.1:4646" }
+        - { key: "NOMAD_CACERT", value: "{{ nomad_tls_dir }}/ca.crt" }
+        - { key: "NOMAD_CLIENT_CERT", value: "{{ nomad_tls_dir }}/nomad.crt" }
+        - { key: "NOMAD_CLIENT_KEY", value: "{{ nomad_tls_dir }}/nomad.key" }
+
+    - name: Validate Nomad configuration
+      ansible.builtin.command: nomad config validate {{ nomad_config_dir }}
+      register: nomad_validate
+      changed_when: false
+
+    - name: Restart Nomad service
+      ansible.builtin.systemd:
+        name: nomad
+        state: restarted
+        daemon_reload: true
+      register: nomad_restart
+      throttle: 3  # Restart 3 clients at a time
+
+    - name: Wait for Nomad to be ready
+      ansible.builtin.wait_for:
+        port: 4647
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 10
+        timeout: 60
+
+    - name: Display client configuration status
+      ansible.builtin.debug:
+        msg:
+          - "✅ Nomad client {{ inventory_hostname }} configured for TLS"
+          - "   - CA certificate deployed"
+          - "   - Client certificate and key deployed"
+          - "   - TLS enabled for HTTP and RPC"
+          - "   - Service restarted successfully"
+
+- name: Validate Nomad TLS Implementation
+  hosts: nomad-server-1-lloyd
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Source environment and check Nomad server members
+      ansible.builtin.shell: |
+        . /etc/environment
+        nomad server members
+      register: nomad_members
+      changed_when: false
+
+    - name: Check Nomad node status
+      ansible.builtin.shell: |
+        . /etc/environment
+        nomad node status
+      register: nomad_nodes
+      changed_when: false
+
+    - name: Test HTTPS API endpoint
+      ansible.builtin.uri:
+        url: "https://{{ ansible_default_ipv4.address }}:4646/v1/status/leader"
+        method: GET
+        validate_certs: false
+        status_code: 200
+      register: https_test
+
+    - name: Verify TLS configuration
+      ansible.builtin.shell: |
+        . /etc/environment
+        nomad agent-info | grep -E "tls|TLS" || true
+      register: tls_status
+      changed_when: false
+
+    - name: Display validation results
+      ansible.builtin.debug:
+        msg:
+          - "🎉 Nomad TLS Configuration Complete!"
+          - ""
+          - "📊 Cluster Status:"
+          - "{{ nomad_members.stdout_lines }}"
+          - ""
+          - "📋 Node Status:"
+          - "{{ nomad_nodes.stdout_lines | first(10) }}"
+          - ""
+          - "🔐 TLS Status:"
+          - "{{ tls_status.stdout_lines }}"
+          - ""
+          - "✅ HTTPS API: Available and responding"
+          - ""
+          - "📋 Configuration Summary:"
+          - "   - All servers configured with TLS certificates"
+          - "   - All clients configured with TLS certificates"
+          - "   - Phase 1: Soft enforcement (verify_https_client = false)"
+          - "   - HTTP and RPC encryption enabled"
+          - ""
+          - "🚀 Next Steps:"
+          - "   1. Monitor cluster for any TLS issues"
+          - "   2. Verify all jobs can still be deployed"
+          - "   3. Enable client verification in PKI-006"
+          - "   4. Configure Vault and Nomad integration with mTLS"
