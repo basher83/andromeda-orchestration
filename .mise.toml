@@ -23,7 +23,7 @@ act = "0.2.81" # GitHub Actions local testing
 jq = "latest"  # JSON processing
 
 # HashiCorp CLIs for status checks only
-consul = "1.21.4"
+consul = "1.21.5"
 nomad = "1.10.4"
 vault = "1.20.3"
 eza = "0.23.0"
