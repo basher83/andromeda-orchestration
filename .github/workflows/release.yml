@@ -13,6 +13,8 @@ name: Release
 jobs:
   release:
     name: Create Release
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
