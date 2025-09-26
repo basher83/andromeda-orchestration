@@ -25,7 +25,7 @@ jq = "latest"  # JSON processing
 # HashiCorp CLIs for status checks only
 consul = "1.21.5"
 nomad = "1.10.4"
-vault = "1.20.3"
+vault = "1.20.4"
 eza = "0.23.0"
 fd = "10.3.0"
 rg = "14.1.1"
