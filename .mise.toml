@@ -8,7 +8,7 @@
 
 [tools]
 # Core Python/Ansible tools
-python = "3.13.7"
+python = "3.14.0"
 uv = "0.8.22"
 pre-commit = "4.3.0"
 
