@@ -14,7 +14,7 @@ dependencies = [
     "packaging>=21.0",
     "pytz>=2023.3",
     # Required by community.hashi_vault collection for Vault modules
-    "hvac==2.3.0",
+    "hvac==2.4.0",
     "infisicalsdk>=1.0.11",
     "python-nomad>=2.1.0",
     # Required for HTTPS connections in Ansible
