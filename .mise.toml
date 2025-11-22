@@ -14,7 +14,7 @@ pre-commit = "4.4.0"
 
 # Linting tools
 ruff = "0.14.5"
-markdownlint-cli2 = "0.19.0"
+markdownlint-cli2 = "0.19.1"
 yamllint = "1.35.1"
 "pipx:ansible-lint" = "latest"
 
