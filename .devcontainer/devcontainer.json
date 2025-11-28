@@ -14,7 +14,7 @@
     }
   },
   "features": {
-    "ghcr.io/skriptfabrik/devcontainer-features/infisical-cli:1": {},
+    "ghcr.io/skriptfabrik/devcontainer-features/infisical-cli:1@sha256:30d903442eae96fab2e68dacafb1eeab15795b405c6790b3c2e36d336a253052": {},
     "ghcr.io/tailscale/codespace/tailscale": {}
   },
   "image": "mcr.microsoft.com/devcontainers/universal:5@sha256:987eada1cc06457aae24b94513c7f8576caa2fa807c5f494674d20d71add10f8",
