@@ -14,10 +14,10 @@
     }
   },
   "features": {
-    "ghcr.io/skriptfabrik/devcontainer-features/infisical-cli:1": {},
+    "ghcr.io/skriptfabrik/devcontainer-features/infisical-cli:1@sha256:30d903442eae96fab2e68dacafb1eeab15795b405c6790b3c2e36d336a253052": {},
     "ghcr.io/tailscale/codespace/tailscale": {}
   },
-  "image": "mcr.microsoft.com/devcontainers/universal:4",
+  "image": "mcr.microsoft.com/devcontainers/universal:4@sha256:470388ee9a70db70d66930001b4bb2dd38a8c968c6b0b241171882c855df403b",
   "mounts": [
     "source=mise-data-volume,target=/mnt/mise-data,type=volume"
   ],
