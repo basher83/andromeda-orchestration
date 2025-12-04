@@ -21,7 +21,7 @@ collections:
 
   # PostgreSQL management
   - name: community.postgresql
-    version: ">=4.1.0,<4.2.0"
+    version: ">=4.2.0,<4.3.0"
 
   # Additional useful collections
   - name: ansible.posix
