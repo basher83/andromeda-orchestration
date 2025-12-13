@@ -8,14 +8,14 @@
 
 [tools]
 # Core Python/Ansible tools
-python = "3.14.0"
+python = "3.14.2"
 uv = "0.9.17"
 pre-commit = "4.5.0"
 
 # Linting tools
-ruff = "0.14.7"
-markdownlint-cli2 = "0.19.1"
-yamllint = "1.35.1"
+ruff = "0.14.9"
+markdownlint-cli2 = "0.20.0"
+yamllint = "1.37.1"
 "pipx:ansible-lint" = "latest"
 
 # Optional tools (comment out if not needed)
