@@ -9,8 +9,8 @@
 [tools]
 # Core Python/Ansible tools
 python = "3.14.2"
-uv = "0.9.17"
-pre-commit = "4.5.0"
+uv = "0.9.18"
+pre-commit = "4.5.1"
 
 # Linting tools
 ruff = "0.14.9"
