@@ -19,7 +19,7 @@ yamllint = "1.37.1"
 "pipx:ansible-lint" = "latest"
 
 # Optional tools (comment out if not needed)
-act = "0.2.83" # GitHub Actions local testing
+act = "0.2.84" # GitHub Actions local testing
 jq = "latest"  # JSON processing
 
 # HashiCorp CLIs for status checks only
