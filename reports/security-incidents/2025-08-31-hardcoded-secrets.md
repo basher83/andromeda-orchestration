@@ -57,7 +57,7 @@ Security scans (Infisical and KICS) identified hardcoded secrets in the reposito
 
 ### Priority 2: Infrastructure Improvements (Next Sprint)
 
-2. **Secret Management Migration**
+1. **Secret Management Migration**
 
    ```hcl
    # WRONG - What we have now
@@ -84,15 +84,15 @@ Security scans (Infisical and KICS) identified hardcoded secrets in the reposito
 
 ### Priority 3: Long-term Improvements (Backlog)
 
-3. **Archive Cleanup**
+1. **Archive Cleanup**
    - [ ] Review and remove unnecessary `.archive/` directories
    - [ ] Document any kept archives for historical reference
 
-4. **TLS Implementation**
+2. **TLS Implementation**
    - [ ] Add TLS to internal services where appropriate
    - [ ] Document TLS strategy for homelab environment
 
-5. **Git History**
+3. **Git History**
    - [ ] Consider cleanup if deploying to production
    - [ ] Current assessment: Not required for internal homelab
 
