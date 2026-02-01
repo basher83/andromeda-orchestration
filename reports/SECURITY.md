@@ -72,14 +72,14 @@ cp reports/consul/consul_assessment.yml reports/consul/consul_assessment_sanitiz
 # - Convert to Markdown for better readability
 ```
 
-2. **Review before committing:**
+1. **Review before committing:**
 
 ```bash
 # Double-check for sensitive data
 rg -i "(192\.168|10\.|token|secret)" reports/consul/consul_assessment_sanitized.md
 ```
 
-3. **Commit only sanitized version:**
+1. **Commit only sanitized version:**
 
 ```bash
 git add reports/consul/consul_assessment_sanitized.md
