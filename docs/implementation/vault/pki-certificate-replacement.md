@@ -76,20 +76,20 @@ listener "tcp" {
 ls -la ~/.ssh/production
 ```
 
-2. **Infisical Authentication**: Set environment variables:
+1. **Infisical Authentication**: Set environment variables:
 
 ```bash
 export INFISICAL_UNIVERSAL_AUTH_CLIENT_ID='your-client-id'
 export INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET='your-client-secret'
 ```
 
-3. **Vault Leader Identification**: The playbook must point to the active Vault leader:
+1. **Vault Leader Identification**: The playbook must point to the active Vault leader:
 
    - Check with: `vault status` on each node
    - Update `vault_addr` in playbook if leader changes
    - Current leader (2025-08-29): vault-prod-3-lloyd (192.168.10.33)
 
-4. **PKI Infrastructure**: Ensure intermediate CA is configured (Issue #96)
+2. **PKI Infrastructure**: Ensure intermediate CA is configured (Issue #96)
 
 ### Single Node Deployment
 
