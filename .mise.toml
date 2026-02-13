@@ -13,7 +13,7 @@ uv = "0.10.2"
 pre-commit = "4.5.1"
 
 # Linting tools
-ruff = "0.15.0"
+ruff = "0.15.1"
 markdownlint-cli2 = "0.20.0"
 yamllint = "1.38.0"
 "pipx:ansible-lint" = "latest"
