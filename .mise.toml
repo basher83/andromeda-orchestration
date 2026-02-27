@@ -9,7 +9,7 @@
 [tools]
 # Core Python/Ansible tools
 python = "3.14.3"
-uv = "0.10.6"
+uv = "0.10.7"
 pre-commit = "4.5.1"
 
 # Linting tools
@@ -23,7 +23,7 @@ act = "0.2.84" # GitHub Actions local testing
 jq = "latest"  # JSON processing
 
 # HashiCorp CLIs for status checks only
-consul = "1.22.4"
+consul = "1.22.5"
 nomad = "1.10.4"
 vault = "1.21.2"
 eza = "0.23.0"
