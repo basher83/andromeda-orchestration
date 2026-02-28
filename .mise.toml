@@ -8,23 +8,23 @@
 
 [tools]
 # Core Python/Ansible tools
-python = "3.14.0"
-uv = "0.9.9"
+python = "3.14.3"
+uv = "0.10.7"
 
 # Linting tools
-ruff = "0.14.5"
-markdownlint-cli2 = "0.19.0"
-yamllint = "1.35.1"
+ruff = "0.15.4"
+markdownlint-cli2 = "0.21.0"
+yamllint = "1.38.0"
 "pipx:ansible-lint" = "latest"
 
 # Optional tools (comment out if not needed)
-act = "0.2.82" # GitHub Actions local testing
+act = "0.2.84" # GitHub Actions local testing
 jq = "latest"  # JSON processing
 
 # HashiCorp CLIs for status checks only
-consul = "1.22.0"
+consul = "1.22.5"
 nomad = "1.10.4"
-vault = "1.21.0"
+vault = "1.21.2"
 eza = "0.23.0"
 fd = "10.3.0"
 rg = "14.1.1"
