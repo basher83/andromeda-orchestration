@@ -9,7 +9,7 @@
 [tools]
 # Core Python/Ansible tools
 python = "3.14.3"
-uv = "0.10.7"
+uv = "0.10.8"
 
 # Linting tools
 ruff = "0.15.4"
