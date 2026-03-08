@@ -8,16 +8,15 @@
 
 ## Executive Summary
 
-The andromeda-orchestration repository is a well-structured Ansible automation project for homelab infrastructure management. It demonstrates strong fundamentals in secret management (Infisical/Vault integration), documentation culture, and tooling setup. However, the review identified **67 findings** across 6 domains that warrant attention.
+The andromeda-orchestration repository is a well-structured Ansible automation project for homelab infrastructure management. It demonstrates strong fundamentals in secret management (Infisical/Vault integration), documentation culture, and tooling setup. However, the review identified **54 findings** across 6 domains that warrant attention.
 
 ### Finding Distribution
 
 | Severity | Count | Key Areas |
 |----------|-------|-----------|
-| CRITICAL | 1 | Debug code in production module |
+| CRITICAL | 2 | Debug code in production module, incomplete domain migration |
 | HIGH | 20 | Hardcoded IPs, security configs, dead code, duplication |
-| MEDIUM | 33 | Missing tests, incomplete features, config issues |
-| LOW | 13 | Style, documentation gaps, minor optimizations |
+| MEDIUM | 32 | Missing tests, incomplete features, config issues |
 
 ### Top 5 Priorities
 
@@ -58,10 +57,10 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 
 #### SEC-004: SSH Host Key Checking Disabled
 
-- **Files:** `playbooks/infrastructure/user-management/setup-ansible-user.yml:10`, `deploy-ssh-keys.yml:7`
+- **Files:** `ansible.cfg:9`, `playbooks/infrastructure/user-management/setup-ansible-user.yml:10`, `deploy-ssh-keys.yml:7`
 - **Severity:** HIGH
-- **Description:** `StrictHostKeyChecking=no` disables SSH host key verification, creating MITM vulnerability.
-- **Fix:** Use `StrictHostKeyChecking=accept-new` or maintain a managed known_hosts file.
+- **Description:** `host_key_checking = False` set globally in `ansible.cfg` and `StrictHostKeyChecking=no` in playbooks disables SSH host key verification, creating MITM vulnerability. Acceptable for homelab but should be documented and scoped.
+- **Fix:** Use `StrictHostKeyChecking=accept-new` or maintain a managed known_hosts file. Add explanatory comment in `ansible.cfg` and consider enabling for production inventory.
 
 #### SEC-005: Unrestricted NOPASSWD Sudo Configuration
 
@@ -171,13 +170,6 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 - **Description:** `deprecation_warnings=False` masks important deprecations that could break in future Ansible versions.
 - **Fix:** Enable deprecation warnings and address identified issues.
 
-#### CQ-003: Host Key Checking Disabled Globally
-
-- **File:** `ansible.cfg:9`
-- **Severity:** MEDIUM
-- **Description:** `host_key_checking = False` set globally. Acceptable for homelab but should be documented.
-- **Fix:** Add explanatory comment and consider enabling for production inventory.
-
 #### CQ-004: Inconsistent failed_when/changed_when Usage
 
 - **Severity:** MEDIUM
@@ -199,40 +191,13 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 - **Description:** Contains only README.md with no tasks, defaults, handlers, or templates.
 - **Fix:** Either implement the full role structure or remove/archive.
 
-#### CQ-007: Empty Nomad Role meta/main.yml
-
-- **File:** `roles/nomad/meta/main.yml`
-- **Severity:** LOW
-- **Description:** Meta file contains only `---` with no dependency declarations.
-- **Fix:** Add galaxy_info and explicit dependencies (e.g., system_base).
-
 ### 2.3 Playbook Quality
-
-#### CQ-008: Incomplete Smoke Test Playbooks
-
-- **Files:** 5 smoke test playbooks with TODO placeholders
-  - `playbooks/infrastructure/consul/smoke-test.yml`
-  - `playbooks/infrastructure/nomad/smoke-test.yml`
-  - `playbooks/infrastructure/proxmox/smoke-test.yml`
-  - `playbooks/infrastructure/traefik/smoke-test.yml`
-  - `playbooks/infrastructure/dns-ipam/smoke-test.yml`
-- **Severity:** MEDIUM
-- **Fix:** Complete implementations following the Vault smoke test pattern.
 
 #### CQ-009: TODO to Refactor Fix Playbook into Role
 
 - **File:** `playbooks/fix/fix-dns-resolution-loop.yml:2`
 - **Severity:** MEDIUM
 - **Fix:** Convert to proper role under `roles/`.
-
-### 2.4 Python Code Quality
-
-#### CQ-010: TODO in CSI Volume Module
-
-- **File:** `plugins/modules/nomad_csi_volume.py:113`
-- **Severity:** LOW
-- **Description:** Unresolved TODO about min/max value implementation.
-- **Fix:** Complete implementation or create tracking issue.
 
 ---
 
@@ -242,7 +207,7 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 
 #### SIMP-001: 7 Overlapping Netdata Roles
 
-- **Impact:** HIGH
+- **Severity:** HIGH
 - **Effort:** MODERATE
 - **Files affected:**
   - `roles/netdata/` (main orchestrator)
@@ -252,36 +217,18 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
   - `roles/netdata_cloud/` (separate role)
   - `roles/netdata_consul/` (separate role)
   - `roles/netdata_consul_template/` (README only)
-- **Description:** The main `netdata` role uses `include_tasks` to orchestrate, while 6 separate roles duplicate overlapping functionality. Only the main role is referenced by playbooks - the separate roles appear unused.
+- **Description:** The main `netdata` role uses `include_tasks` to orchestrate, while 6 separate roles duplicate overlapping functionality. Only the main role is referenced by playbooks - the separate roles appear unused. This fragmentation also causes duplicate configuration templates (`netdata.conf.j2`, `stream.conf.j2`, `consul-service.json.j2` each exist in two roles) and duplicate Infisical lookup patterns (identical secret retrieval code in `netdata_cloud` and `netdata_streaming` instead of using the shared `tasks/infisical-secret-lookup.yml`).
 - **Fix:** Consolidate into a single unified netdata role:
   - Merge all defaults into `netdata/defaults/main.yml`
   - Keep modular task files as includes within the main role
-  - Delete the 6 separate roles
+  - Delete the 6 separate roles and their duplicate templates
+  - Replace manual Infisical lookups with `include_tasks` referencing the shared task file
 
-### 3.2 Template Duplication
-
-#### SIMP-002: Duplicate Netdata Configuration Templates
-
-- **Impact:** HIGH
-- **Files:**
-  - `roles/netdata/templates/netdata.conf.j2` (97 lines) vs `roles/netdata_configure/templates/netdata.conf.j2` (59 lines)
-  - `roles/netdata_streaming/templates/stream.conf.j2` (104 lines) vs `roles/netdata/templates/stream.conf.j2` (58 lines)
-  - `roles/netdata_consul/templates/consul-service.json.j2` vs `roles/netdata/templates/consul-netdata.json.j2`
-- **Fix:** Resolved by SIMP-001 consolidation.
-
-#### SIMP-003: Duplicate Infisical Lookup Patterns
-
-- **Impact:** HIGH
-- **Effort:** EASY
-- **Files:** `roles/netdata_cloud/tasks/main.yml:11-35`, `roles/netdata_streaming/tasks/main.yml:11-39`
-- **Description:** Both roles contain identical Infisical secret retrieval patterns. A reusable task file already exists at `tasks/infisical-secret-lookup.yml` but isn't being used.
-- **Fix:** Replace manual lookups with `include_tasks` referencing the shared task file.
-
-### 3.3 Dead Code
+### 3.2 Dead Code
 
 #### SIMP-004: Unused Roles
 
-- **Impact:** HIGH
+- **Severity:** HIGH
 - **Effort:** EASY
 - **Roles never directly referenced by playbooks:**
   - `roles/netdata_install/`
@@ -296,32 +243,32 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 #### SIMP-005: FIXME Comments in Netdata Install
 
 - **File:** `roles/netdata/tasks/install.yml:14,25`
-- **Impact:** MEDIUM
+- **Severity:** MEDIUM
 - **Description:** FIXME about idempotency and redundant directory creation that the installer already handles.
 - **Fix:** Remove redundant directory creation task, resolve idempotency concern.
 
-### 3.4 Over-Engineering
+### 3.3 Over-Engineering
 
 #### SIMP-006: Complex Vault Configuration Logic
 
 - **Files:** `roles/vault/tasks/config_prod.yml` (184 lines), `roles/vault/templates/vault.hcl.j2` (132 lines)
-- **Impact:** MEDIUM
+- **Severity:** MEDIUM
 - **Effort:** MODERATE
 - **Description:** Deeply nested conditionals for storage backend, TLS, and auto-unseal configuration.
 - **Fix:** Split into separate template files per backend, use Jinja2 includes.
 
 #### SIMP-007: Variable Scatter Across Multiple Defaults Files
 
-- **Impact:** MEDIUM
+- **Severity:** MEDIUM
 - **Description:** Netdata variables defined across 4+ different defaults files with inconsistent naming.
 - **Fix:** Consolidate all defaults into single role defaults and/or `group_vars/all/netdata.yml`.
 
-### 3.5 Inline Playbook Variables
+### 3.4 Inline Playbook Variables
 
 #### SIMP-008: Variables That Should Be in group_vars
 
 - **File:** `playbooks/infrastructure/monitoring/update-netdata-configs.yml:9-29`
-- **Impact:** MEDIUM
+- **Severity:** MEDIUM
 - **Effort:** EASY
 - **Description:** Common variables (config paths, users, ports) defined inline instead of in group_vars.
 - **Fix:** Move to `group_vars/all/netdata.yml`.
@@ -427,7 +374,7 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 
 #### GAP-001: Incomplete Domain Migration (.local to spaceships.work)
 
-- **Impact:** CRITICAL
+- **Severity:** CRITICAL
 - **Description:** ROADMAP Phase 4 domain migration marked "Critical priority" but infrastructure application is PENDING. PostgreSQL credentials not configured, PowerDNS zones not synced, DNS cutover not executed.
 - **Blocked by:** PostgreSQL deployment with Vault credential integration.
 - **Action:** Execute Phase 4 completion sequence.
@@ -436,18 +383,25 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 
 #### GAP-002: 5 Smoke Tests Are Placeholders
 
-- **Impact:** HIGH
+- **Severity:** HIGH
+- **Files:**
+  - `playbooks/infrastructure/consul/smoke-test.yml`
+  - `playbooks/infrastructure/nomad/smoke-test.yml`
+  - `playbooks/infrastructure/proxmox/smoke-test.yml`
+  - `playbooks/infrastructure/traefik/smoke-test.yml`
+  - `playbooks/infrastructure/dns-ipam/smoke-test.yml`
 - **Components without real smoke tests:** Consul, Nomad, Proxmox, Traefik, DNS/IPAM
 - **Action:** Implement following the Vault smoke test pattern.
 
 #### GAP-003: No Molecule Tests for 12 of 13 Roles
 
-- **Impact:** MEDIUM
-- **Action:** Create molecule.yml configurations for all roles.
+- **Severity:** MEDIUM
+- **Description:** The `tests/` directory contains only `test_localhost.yml` with no Python unit tests for custom modules and no molecule scenarios for roles.
+- **Action:** Create molecule.yml configurations for all roles and implement unit tests for custom modules.
 
 #### GAP-004: No Integration Tests Between Services
 
-- **Impact:** HIGH
+- **Severity:** HIGH
 - **Missing:** Consul-Nomad ACL, Vault-Consul auth, PowerDNS-NetBox sync, Nomad-Consul DNS
 - **Action:** Create `playbooks/infrastructure/integration-tests/` directory.
 
@@ -455,28 +409,28 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 
 #### GAP-005: No Backup/Disaster Recovery Automation
 
-- **Impact:** HIGH
+- **Severity:** HIGH
 - **Missing:** PostgreSQL backups, Vault state backups, NetBox config backups, Consul KV snapshots
 - **Reference:** `docs/project-management/tasks/pki-015-pki-disaster-recovery.md` (plan exists, no implementation)
 - **Action:** Implement backup playbooks for all critical services.
 
 #### GAP-006: No Certificate Renewal Automation (ACME)
 
-- **Impact:** HIGH
+- **Severity:** HIGH
 - **Description:** ROADMAP Phase 5 mentions DNS-01 ACME but no implementation exists.
 - **Action:** Create Nomad periodic job and Vault ACME configuration playbook.
 
 #### GAP-007: Nomad ACLs Currently Disabled
 
 - **File:** `docs/operations/infrastructure-state.md:59`
-- **Impact:** HIGH
+- **Severity:** HIGH
 - **Action:** Create Nomad ACL enforcement playbook.
 
 ### 5.4 CI/CD Gaps
 
 #### GAP-008: Missing CI Workflow
 
-- **Impact:** HIGH
+- **Severity:** HIGH
 - **Description:** README references `.github/workflows/ci.yml` but file doesn't exist. Only 3 workflows (mega-linter, release, sync-labels).
 - **Missing:** Syntax validation, smoke test execution, security scanning.
 - **Action:** Create `ci.yml` workflow.
@@ -484,7 +438,7 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 #### GAP-009: MegaLinter Errors Not Blocking
 
 - **File:** `.mega-linter.yml:21-35`
-- **Impact:** MEDIUM
+- **Severity:** MEDIUM
 - **Description:** `DISABLE_ERRORS_LINTERS` for most linters means errors don't fail the build, contradicting PR requirements.
 - **Action:** Remove non-essential linters from DISABLE_ERRORS list.
 
@@ -493,13 +447,13 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 #### GAP-010: Incomplete Monitoring Standards
 
 - **File:** `docs/standards/monitoring-observability-standards.md`
-- **Impact:** MEDIUM
+- **Severity:** MEDIUM
 - **Description:** 84% incomplete with multiple [TODO] placeholders.
 - **Action:** Complete with metrics, alerting thresholds, and dashboard requirements.
 
 #### GAP-011: No Certificate Expiry Monitoring
 
-- **Impact:** MEDIUM
+- **Severity:** MEDIUM
 - **Action:** Create alerting for PKI certificate expiry across all services.
 
 ### 5.6 Documentation Gaps
@@ -507,11 +461,13 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 #### GAP-012: 5 Standards Documents Marked TODO
 
 - **File:** `docs/standards/README.md`
+- **Severity:** MEDIUM
 - **Missing:** git-standards.md, development-workflow.md, monitoring-observability-standards.md, linting-standards.md, project-management-standards.md
 - **Action:** Complete the standards documents.
 
 #### GAP-013: Missing Operational Runbooks
 
+- **Severity:** MEDIUM
 - **Missing:** PowerDNS upgrade, NetBox migration, domain migration troubleshooting, Nomad deployment checklist
 - **Action:** Create in `docs/operations/procedures/`.
 
@@ -527,13 +483,6 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 - **Severity:** MEDIUM
 - **Description:** References `implementation/netbox-integration.md` which doesn't exist. Actual files are `implementation/dns-ipam/netbox-integration-patterns.md`.
 - **Fix:** Update reference.
-
-#### DOC-002: Stale Infrastructure State Documentation
-
-- **File:** `docs/operations/infrastructure-state.md`
-- **Severity:** LOW
-- **Description:** Last updated 2025-09-10, doesn't reflect current Phase 3-4 progress.
-- **Fix:** Update to reflect current deployment status.
 
 #### DOC-003: 78 References to .local Domain Still Present
 
@@ -559,35 +508,12 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 
 ### 6.3 Developer Experience
 
-#### DOC-006: Minimal DevContainer Configuration
-
-- **File:** `.devcontainer/devcontainer.json`
-- **Severity:** LOW
-- **Description:** Missing VS Code extensions, workspace settings, and integrated testing commands.
-- **Fix:** Extend with recommended extensions and post-creation commands.
-
 #### DOC-007: Missing Custom Module Documentation
 
 - **Files:** `plugins/modules/nomad_csi_volume.py`, `plugins/module_utils/debug.py`
 - **Severity:** MEDIUM
 - **Description:** Custom Ansible modules lack usage documentation and examples.
 - **Fix:** Create `docs/implementation/custom-modules.md`.
-
-### 6.4 Project Organization
-
-#### DOC-008: Tests Directory Nearly Empty
-
-- **File:** `tests/` (contains only `test_localhost.yml`)
-- **Severity:** MEDIUM
-- **Description:** No Python unit tests for custom modules, no molecule scenarios for roles.
-- **Fix:** Implement comprehensive testing structure.
-
-#### DOC-009: Reports Directory Without Retention Policy
-
-- **File:** `reports/` (49 files, 302KB)
-- **Severity:** LOW
-- **Description:** Auto-generated reports accumulating without cleanup policy.
-- **Fix:** Create cleanup script and document retention policy.
 
 ---
 
@@ -601,8 +527,10 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 | P0 | Replace `eval()` in generate-mcp-config.sh | SEC-002 | 30 min |
 | P1 | Pin all container images to specific versions | INFRA-002 | 1 hr |
 | P1 | Re-enable Traefik health checks | INFRA-001 | 1 hr |
+| P1 | Add checksum verification for Docker Compose download | SEC-003 | 1 hr |
 | P1 | Disable Traefik debug mode | SEC-006 | 15 min |
 | P1 | Fix Vault TLS skip verification | SEC-007 | 30 min |
+| P1 | Enable TLS for production Vault deployment | SEC-008 | 2 hrs |
 | P1 | Fix broken INDEX.md reference | DOC-001 | 5 min |
 
 ### Phase 2: High Priority (Next 2 Sprints)
@@ -617,6 +545,8 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 | P2 | Enforce FQCN across codebase | CQ-001 | 4 hrs |
 | P2 | Add update/restart policies to Nomad jobs | INFRA-003 | 2 hrs |
 | P2 | Implement backup automation | GAP-005 | 2-3 days |
+| P2 | Fail on missing ACL token instead of env fallback | INFRA-006 | 1 hr |
+| P2 | Add pre-task validation for vault-master-lloyd host | INFRA-010 | 1 hr |
 
 ### Phase 3: Medium Priority (Next Month)
 
@@ -640,7 +570,6 @@ The andromeda-orchestration repository is a well-structured Ansible automation p
 | P4 | Create operational runbooks | GAP-013 | 2-3 days |
 | P4 | Restrict sudo to specific commands | SEC-005 | 2 hrs |
 | P4 | Implement HTTPS for all internal services | SEC-013 | 2-3 days |
-| P4 | Enhance devcontainer setup | DOC-006 | 2 hrs |
 | P4 | Create custom module documentation | DOC-007 | 4 hrs |
 
 ---
@@ -681,17 +610,11 @@ The repository demonstrates several areas of excellence:
 | SEC-013 | Security | MEDIUM | HTTP for internal services |
 | CQ-001 | Quality | HIGH | FQCN violations |
 | CQ-002 | Quality | MEDIUM | Deprecation warnings disabled |
-| CQ-003 | Quality | MEDIUM | Host key checking disabled |
 | CQ-004 | Quality | MEDIUM | Missing failed_when/changed_when |
 | CQ-005 | Quality | MEDIUM | Missing consul_dns README |
 | CQ-006 | Quality | MEDIUM | Incomplete netdata_consul_template role |
-| CQ-007 | Quality | LOW | Empty nomad meta/main.yml |
-| CQ-008 | Quality | MEDIUM | 5 placeholder smoke tests |
 | CQ-009 | Quality | MEDIUM | Fix playbook needs refactoring |
-| CQ-010 | Quality | LOW | TODO in CSI volume module |
 | SIMP-001 | Simplification | HIGH | 7 fragmented netdata roles |
-| SIMP-002 | Simplification | HIGH | Duplicate templates |
-| SIMP-003 | Simplification | HIGH | Duplicate Infisical patterns |
 | SIMP-004 | Simplification | HIGH | 6-7 unused roles |
 | SIMP-005 | Simplification | MEDIUM | FIXME in netdata install |
 | SIMP-006 | Simplification | MEDIUM | Complex Vault config logic |
@@ -722,11 +645,7 @@ The repository demonstrates several areas of excellence:
 | GAP-012 | Feature Gap | MEDIUM | 5 TODO standards docs |
 | GAP-013 | Feature Gap | MEDIUM | Missing operational runbooks |
 | DOC-001 | Documentation | MEDIUM | Broken INDEX.md reference |
-| DOC-002 | Documentation | LOW | Stale infrastructure state |
 | DOC-003 | Documentation | MEDIUM | 78 .local references remain |
 | DOC-004 | Documentation | MEDIUM | Placeholder release notes |
 | DOC-005 | Documentation | MEDIUM | Full codebase validation on every push |
-| DOC-006 | Documentation | LOW | Minimal devcontainer |
 | DOC-007 | Documentation | MEDIUM | Missing module docs |
-| DOC-008 | Documentation | MEDIUM | Empty tests directory |
-| DOC-009 | Documentation | LOW | Reports without retention |
