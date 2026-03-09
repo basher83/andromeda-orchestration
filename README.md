@@ -1,30 +1,14 @@
 # Andromeda Orchestration
 
+> **ARCHIVED** — This repository is no longer actively maintained. The HashiStack (Consul, Nomad, Vault) infrastructure it managed has been decommissioned and replaced with a Kubernetes cluster. The repo is preserved as a historical reference.
+
 ---
-
-![GitHub last commit](https://img.shields.io/github/last-commit/basher83/andromeda-orchestration?path=README.md&display_timestamp=author&style=plastic&logo=github)
-[![CI](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml/badge.svg)](https://github.com/basher83/andromeda-orchestration/actions/workflows/ci.yml)
-[![MegaLinter](https://github.com/basher83/andromeda-orchestration/workflows/MegaLinter/badge.svg?branch=main)](https://github.com/basher83/andromeda-orchestration/actions?query=workflow%3AMegaLinter+branch%3Amain)
-
-![Ansible](https://img.shields.io/badge/Ansible-000000?style=plastic&logo=ansible&logoColor=)
-
-![Proxmox](https://img.shields.io/badge/Proxmox-000000?style=plastic&logo=proxmox&logoColor=)
-
-![Vault](https://img.shields.io/badge/Vault-000000?style=plastic&logo=vault&logoColor=)
-![Nomad](https://img.shields.io/badge/Nomad-000000?style=plastic&logo=nomad&logoColor=)
-![Consul](https://img.shields.io/badge/Consul-000000?style=plastic&logo=consul&logoColor=)
-
-![Tailscale](https://img.shields.io/badge/Tailscale-000000?style=plastic&logo=tailscale&logoColor=)
-
-![NetBox](https://img.shields.io/badge/NetBox-000000?style=plastic&logo=netbox&logoColor=)
-![Infisical](https://img.shields.io/badge/Infisical-000000?style=plastic&logo=infisical&logoColor=)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/basher83/assets/refs/heads/main/space-gifs/undraw_space-exploration_dhu1.svg" alt="Space Exploration" width="400">
 </p>
 
-An Ansible automation project for comprehensive homelab infrastructure management, with NetBox integration for network
-source-of-truth and secure credential management through Infisical.
+Ansible automation for homelab infrastructure management using a HashiCorp stack (Consul, Nomad, Vault) on Proxmox, with NetBox as network source-of-truth and Infisical for credential management.
 
 ## Overview
 
